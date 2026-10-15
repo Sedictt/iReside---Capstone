@@ -1,11 +1,12 @@
+import { extensionForImageType, fileContentMatchesType } from "@/lib/validation/upload";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { COMMUNITY_LIMITS, isSafeImageMimeType } from "@/lib/validation/schemas/operations.schema";
 
 const BUCKET_NAME = "community-images";
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
-const MAX_FILES = 4;
-const ALLOWED_IMAGE_PREFIX = "image/";
+const MAX_FILE_SIZE_BYTES = COMMUNITY_LIMITS.photoBytes; // 10MB
+const MAX_FILES = COMMUNITY_LIMITS.maxPhotos;
 
 const sanitizeFileName = (name: string) =>
     name
@@ -61,7 +62,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const formData = await request.formData();
+    const formData = await request.formData().catch(() => null);
+    if (!formData) {
+        return NextResponse.json({ error: "Upload must be sent as form data." }, { status: 400 });
+    }
     const files = formData.getAll("files").filter((item): item is File => item instanceof File);
 
     if (files.length === 0) {
@@ -81,9 +85,15 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "One of the files exceeds the size limit." }, { status: 400 });
         }
 
-        if (!file.type || !file.type.startsWith(ALLOWED_IMAGE_PREFIX)) {
+        if (!isSafeImageMimeType(file.type)) {
             return NextResponse.json(
                 { error: "Only image uploads are allowed. Please use JPEG, PNG, GIF, or WebP." },
+                { status: 400 }
+            );
+        }
+        if (!(await fileContentMatchesType(file))) {
+            return NextResponse.json(
+                { error: "One of the files is not a valid image. Upload the original photo." },
                 { status: 400 }
             );
         }
@@ -98,8 +108,7 @@ export async function POST(request: Request) {
 
         for (let index = 0; index < files.length; index += 1) {
             const file = files[index];
-            const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
-            const safeExt = sanitizeFileName(ext ?? "jpg") || "jpg";
+            const safeExt = extensionForImageType(file.type);
             const safeBase = sanitizeFileName(file.name.replace(/\.[^.]+$/, "")) || `image-${index + 1}`;
             const path = `${user.id}/${timestamp}-${index + 1}-${safeBase}.${safeExt}`;
             const bytes = await file.arrayBuffer();
@@ -123,7 +132,7 @@ export async function POST(request: Request) {
 
                 console.error("Supabase upload error:", uploadError);
                 return NextResponse.json(
-                    { error: userMessage, details: uploadError.message },
+                    { error: userMessage },
                     { status: 500 }
                 );
             }

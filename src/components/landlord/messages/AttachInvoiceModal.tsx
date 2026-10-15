@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 import type { ContactItem } from "./types";
 import { sendConversationMessage } from "@/lib/messages/client";
 import Link from "next/link";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 interface InvoiceEntry {
     id: string;
@@ -39,40 +41,40 @@ interface AttachInvoiceModalProps {
     onSuccess: () => void;
 }
 
-function getStatusBadge(statusTone: InvoiceEntry["statusTone"], statusLabel: string) {
+function getStatusBadge(statusTone: InvoiceEntry["statusTone"], statusLabel: string, t: (phrase: string) => string) {
     switch (statusTone) {
         case "paid":
             return (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                     <CheckCircle2 className="size-3" />
-                    {statusLabel || "Paid"}
+                    {statusLabel ? t(statusLabel) : t("Paid")}
                 </span>
             );
         case "pending":
             return (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
                     <Clock className="size-3" />
-                    {statusLabel || "Pending"}
+                    {statusLabel ? t(statusLabel) : t("Pending")}
                 </span>
             );
         case "failed":
             return (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20">
                     <AlertCircle className="size-3" />
-                    {statusLabel || "Failed"}
+                    {statusLabel ? t(statusLabel) : t("Failed")}
                 </span>
             );
         case "refunded":
             return (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
                     <RotateCcw className="size-3" />
-                    {statusLabel || "Refunded"}
+                    {statusLabel ? t(statusLabel) : t("Refunded")}
                 </span>
             );
         default:
             return (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-surface-3 text-medium border border-divider">
-                    {statusLabel || "Status"}
+                    {statusLabel ? t(statusLabel) : t("Status")}
                 </span>
             );
     }
@@ -85,6 +87,7 @@ export function AttachInvoiceModal({
     contact,
     onSuccess,
 }: AttachInvoiceModalProps) {
+    const { t } = useLanguageContext();
     const [invoices, setInvoices] = useState<InvoiceEntry[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [attachingId, setAttachingId] = useState<string | null>(null);
@@ -113,7 +116,7 @@ export function AttachInvoiceModal({
             } catch (err) {
                 console.error("Failed to load invoices for attachment:", err);
                 if (isMounted) {
-                    setError("Could not load invoices. Please try again.");
+                    setError(t("Could not load invoices. Please try again."));
                 }
             } finally {
                 if (isMounted) {
@@ -178,7 +181,7 @@ export function AttachInvoiceModal({
             onClose();
         } catch (err: any) {
             console.error("Failed to attach invoice to chat:", err);
-            setError(err.message || "Failed to attach invoice to chat.");
+            setError(tr(err.message || t("Failed to attach invoice to chat.")));
         } finally {
             setAttachingId(null);
         }
@@ -213,15 +216,16 @@ export function AttachInvoiceModal({
                             </div>
                             <div>
                                 <h3 className="text-lg font-black tracking-tight text-high">
-                                    Attach Bill or Invoice
+                                    {t("Attach Bill or Invoice")}
                                 </h3>
                                 <p className="text-xs font-medium text-medium">
-                                    {contact?.name ? `${contact.name} (${contact.unit})` : "Resident"}
+                                    {contact?.name ? `${contact.name} (${contact.unit})` : t("Resident")}
                                 </p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
+                            aria-label={t("Close")}
                             className="rounded-full p-2 text-disabled hover:text-high hover:bg-surface-3 transition-colors"
                         >
                             <X className="size-5" />
@@ -249,9 +253,9 @@ export function AttachInvoiceModal({
                                 <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-surface-2 text-disabled mb-3">
                                     <Receipt className="size-6" />
                                 </div>
-                                <h4 className="text-sm font-bold text-high">No Invoices Found</h4>
+                                <h4 className="text-sm font-bold text-high">{t("No Invoices Found")}</h4>
                                 <p className="text-xs text-disabled mt-1 max-w-xs mx-auto">
-                                    There are no pending or past bills recorded for this resident.
+                                    {t("There are no pending or past bills recorded for this resident.")}
                                 </p>
                                 <Link
                                     href="/landlord/invoices?action=create"
@@ -259,7 +263,7 @@ export function AttachInvoiceModal({
                                     className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-2xl neumorphic-primary text-white text-xs font-black shadow-md hover:scale-105 transition-all"
                                 >
                                     <Plus className="size-3.5" />
-                                    Create New Invoice
+                                    {t("Create New Invoice")}
                                 </Link>
                             </div>
                         ) : (
@@ -277,9 +281,9 @@ export function AttachInvoiceModal({
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-2 flex-wrap">
                                                     <span className="text-xs font-black text-high truncate">
-                                                        {invoice.typeLabel || "Monthly Rent"}
+                                                        {t(invoice.typeLabel || "Monthly Rent")}
                                                     </span>
-                                                    {getStatusBadge(invoice.statusTone, invoice.statusLabel)}
+                                                    {getStatusBadge(invoice.statusTone, invoice.statusLabel, t)}
                                                 </div>
                                                 <div className="flex items-center gap-2 mt-1 text-[10px] text-disabled">
                                                     <span className="flex items-center gap-1">
@@ -308,12 +312,12 @@ export function AttachInvoiceModal({
                                                 {isAttaching ? (
                                                     <>
                                                         <Loader2 className="size-3.5 animate-spin" />
-                                                        Sending…
+                                                        {t("Sending…")}
                                                     </>
                                                 ) : (
                                                     <>
                                                         <Send className="size-3.5" />
-                                                        Attach
+                                                        {t("Attach")}
                                                     </>
                                                 )}
                                             </button>

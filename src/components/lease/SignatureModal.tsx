@@ -4,6 +4,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { RefreshCw, Check, Download, AlertCircle, Maximize2, Lock, Trash2, Undo } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface SignatureModalProps {
     isOpen: boolean;
@@ -18,6 +19,7 @@ export function SignatureModal({
     onClear,
     onClose,
 }: SignatureModalProps) {
+    const { t } = useLanguageContext();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [hasSignature, setHasSignature] = useState(false);
@@ -102,10 +104,10 @@ export function SignatureModal({
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-white/10 bg-[#0f172a] px-6 py-4">
                         <div>
-                            <h2 className="text-lg font-black text-white">Finalize Lease</h2>
-                            <p className="text-xs text-zinc-400">Review the document and provide your digital signature below.</p>
+                            <h2 className="text-lg font-black text-white">{t("Finalize Lease")}</h2>
+                            <p className="text-xs text-zinc-400">{t("Review the document and provide your digital signature below.")}</p>
                         </div>
-                        <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors">
+                        <button onClick={onClose} aria-label={t("Close")} className="text-zinc-400 hover:text-white transition-colors">
                             <Trash2 className="size-4" />
                         </button>
                     </div>
@@ -113,15 +115,15 @@ export function SignatureModal({
                     <div className="p-6">
                         <div className="mb-4 flex items-start gap-3 rounded-lg bg-yellow-500/10 p-3 text-xs text-yellow-200 border border-yellow-500/20">
                             <AlertCircle className="size-4 shrink-0 text-yellow-500" />
-                            <p>By signing, you agree to the Terms of Service and acknowledge the legal weight of this signature.</p>
+                            <p>{t("By signing, you agree to the Terms of Service and acknowledge the legal weight of this signature.")}</p>
                         </div>
 
                         <div className="mb-6">
                             <div className="mb-2 flex items-center justify-between">
-                                <span className="text-xs font-black uppercase tracking-wider text-zinc-400">Signature</span>
+                                <span className="text-xs font-black uppercase tracking-wider text-zinc-400">{t("Signature")}</span>
                                 <div className="flex bg-zinc-800 rounded-lg p-0.5">
-                                    <button className="rounded px-3 py-0.5 text-xs font-medium bg-zinc-600 text-white shadow-sm">Draw</button>
-                                    <button className="rounded px-3 py-0.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors">Type</button>
+                                    <button className="rounded px-3 py-0.5 text-xs font-medium bg-zinc-600 text-white shadow-sm">{t("Draw")}</button>
+                                    <button className="rounded px-3 py-0.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors">{t("signature.mode.type", undefined, "Type")}</button>
                                 </div>
                             </div>
 
@@ -141,13 +143,13 @@ export function SignatureModal({
                                 />
                                 {!hasSignature && (
                                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                                        <span className="font-serif text-3xl text-zinc-700 opacity-50 select-none italic">Sign Here</span>
+                                        <span className="font-serif text-3xl text-zinc-700 opacity-50 select-none italic">{t("Sign Here")}</span>
                                     </div>
                                 )}
                                 <button
                                     onClick={handleClear}
                                     className="absolute bottom-3 right-3 rounded-full bg-zinc-800 p-2 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors border border-white/5"
-                                    title="Clear Signature"
+                                    title={t("Clear Signature")}
                                 >
                                     <RefreshCw className="size-3.5" />
                                 </button>
@@ -164,7 +166,7 @@ export function SignatureModal({
                         >
                             <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 transition-opacity group-hover:animate-shimmer" />
                             <Check className="size-4" />
-                            <span>Sign & Complete Lease</span>
+                            <span>{t("Sign & Complete Lease")}</span>
                         </button>
 
                         <div className="grid grid-cols-2 gap-3">
@@ -172,17 +174,17 @@ export function SignatureModal({
                                 onClick={handleClear}
                                 className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-zinc-800/50 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white hover:border-white/20"
                             >
-                                Clear
+                                {t("Clear")}
                             </button>
                             <button className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-zinc-800/50 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white hover:border-white/20">
                                 <Undo className="size-4" />
-                                Download
+                                {t("Download")}
                             </button>
                         </div>
 
                         <div className="mt-6 flex items-center justify-center gap-1.5 text-[10px] text-zinc-500 uppercase tracking-widest font-mono">
                             <Lock className="size-2.5" />
-                            Secure 256-Bit Encryption
+                            {t("Secure 256-Bit Encryption")}
                         </div>
                     </div>
                 </motion.div>

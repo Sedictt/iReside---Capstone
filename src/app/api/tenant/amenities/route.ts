@@ -14,7 +14,6 @@ export async function GET() {
         return NextResponse.json({ amenities: amenities || [], categories });
     } catch (error) {
         console.error("[GET /api/tenant/amenities] Error:", error);
-        const message = error instanceof Error ? error.message : "Failed to fetch amenities";
-        return NextResponse.json({ error: message }, { status: 500 });
+        return NextResponse.json({ error: "Failed to fetch amenities" }, { status: 500 });
     }
 }

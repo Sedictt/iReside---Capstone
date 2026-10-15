@@ -1,7 +1,7 @@
 "use client";
 
 import Image from 'next/image';
-import { useState, useEffect, Suspense, type ChangeEvent } from "react";
+import { useState, useEffect, useMemo, Suspense, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
     Building2,
@@ -45,11 +45,24 @@ import { useProperty } from "@/context/PropertyContext";
 import { playSound } from "@/hooks/useSound";
 import { useAppToast } from "@/hooks/useAppToast";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { textRule } from "@/lib/validation/rules";
+import {
+    baseRentRule,
+    occupancyLimitRule,
+    propertyAddressRule,
+    propertyNameRule,
+    totalFloorsRule,
+    totalUnitsRule,
+    unitPrefixRule,
+} from "@/lib/validation/schemas/properties.schema";
 import { 
     VALENZUELA_BARANGAYS, 
     formatValenzuelaAddress, 
     parseValenzuelaAddress 
 } from "@/lib/constants/valenzuela-address";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -74,6 +87,31 @@ const DEFAULT_OCCUPANCY: Record<SupportedPropertyEnum, number> = {
 };
 
 const MAX_PROPERTY_UPLOAD_FILES = 12;
+/** Matches the 8 MB per-image limit enforced by /api/landlord/properties/media. */
+const MAX_PROPERTY_IMAGE_BYTES = 8 * 1024 * 1024;
+const MANUAL_ADDRESS_MAX = 120;
+const STREET_MAX = 100;
+
+type WizardField = "propertyName" | "address" | "totalUnits" | "floorCount" | "occupancyLimit" | "unitPrefix" | "baseRent" | "contractFile";
+
+const STEP_FIELDS: Record<Step, WizardField[]> = {
+    1: ["propertyName", "address"],
+    2: ["totalUnits", "floorCount", "occupancyLimit", "unitPrefix"],
+    3: ["baseRent"],
+    4: ["contractFile"],
+};
+
+/** API field names → wizard field names, so server `fieldErrors` land on the right input. */
+const SERVER_FIELD_MAP: Record<string, WizardField> = {
+    name: "propertyName",
+    address: "address",
+    total_units: "totalUnits",
+    total_floors: "floorCount",
+    occupancy_limit: "occupancyLimit",
+    unit_prefix: "unitPrefix",
+    base_rent_amount: "baseRent",
+    contract_file: "contractFile",
+};
 const SAVE_SAFETY_TIMEOUT_MS = 45_000;
 const MEDIA_UPLOAD_TIMEOUT_MS = 25_000;
 const PROPERTY_LOAD_TIMEOUT_MS = 12_000;
@@ -89,6 +127,7 @@ function NewAssetContent() {
     const { properties, refreshProperties, setSelectedPropertyId } = useProperty();
     const supabase = createClient();
     const toast = useAppToast();
+    const { t } = useLanguageContext();
     
     const [step, setStep] = useState<Step>(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -103,7 +142,6 @@ function NewAssetContent() {
     const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
     const [coverExistingUrl, setCoverExistingUrl] = useState<string | null>(null);
     const [coverNewIndex, setCoverNewIndex] = useState<number | null>(null);
-    const [errors, setErrors] = useState<Record<string, string>>({});
     const [billingGuideOpen, setBillingGuideOpen] = useState(false);
     const [billingGuideInitialTab, setBillingGuideInitialTab] = useState<string>("fixed_charge");
     const [assetClassGuideOpen, setAssetClassGuideOpen] = useState(false);
@@ -150,6 +188,53 @@ function NewAssetContent() {
 
     const hasHydratedEditData = formData.propertyName.trim().length > 0 && formData.address.trim().length > 0;
 
+    // Inline validation: same rules as POST/PUT /api/landlord/properties.
+    const validationValues = useMemo(
+        () => ({
+            propertyName: formData.propertyName,
+            address: isManualAddress ? formData.address : addressStreet,
+            totalUnits: formData.totalUnits,
+            floorCount: formData.floorCount,
+            occupancyLimit: formData.occupancyLimit,
+            unitPrefix: formData.unitPrefix,
+            baseRent: formData.baseRent,
+            contractFile: formData.contractFile,
+            contractMode: formData.contractMode,
+            isManualAddress,
+            fullAddress: formData.address,
+        }),
+        [formData, isManualAddress, addressStreet]
+    );
+    const form = useFormValidation(validationValues, {
+        propertyName: (v) => propertyNameRule(v),
+        address: (v, all) => {
+            if (all.isManualAddress) return propertyAddressRule(v, MANUAL_ADDRESS_MAX);
+            if (!String(v ?? "").trim()) return t("Please enter your house/building number and street name.");
+            return textRule(v, { label: "Street address", max: STREET_MAX }) ?? propertyAddressRule(all.fullAddress);
+        },
+        totalUnits: (v) => totalUnitsRule(v),
+        floorCount: (v) => totalFloorsRule(v),
+        occupancyLimit: (v) => occupancyLimitRule(v),
+        unitPrefix: (v) => (String(v ?? "").trim() ? unitPrefixRule(v) : t("Please choose or type a room label (e.g. Room or Unit).")),
+        baseRent: (v) => (!v ? t("Please enter the standard monthly rent amount (greater than ₱0).") : baseRentRule(v)),
+        contractFile: (v, all) =>
+            all.contractMode === "upload" && !v
+                ? t("Please choose a lease contract file to upload or select Standard Digital Lease.")
+                : undefined,
+    });
+    // Rule messages are English; translate them for display (unknown phrases fall back to English).
+    const tErr = (message?: string) => (message ? t(message) : message);
+    const errors: Partial<Record<WizardField, string>> = {
+        propertyName: tErr(form.errorFor("propertyName")),
+        address: tErr(form.errorFor("address")),
+        totalUnits: tErr(form.errorFor("totalUnits")),
+        floorCount: tErr(form.errorFor("floorCount")),
+        occupancyLimit: tErr(form.errorFor("occupancyLimit")),
+        unitPrefix: tErr(form.errorFor("unitPrefix")),
+        baseRent: tErr(form.errorFor("baseRent")),
+        contractFile: tErr(form.errorFor("contractFile")),
+    };
+
     useEffect(() => {
         if (!isEditMode || !id) return;
         const controller = new AbortController();
@@ -161,7 +246,7 @@ function NewAssetContent() {
             try {
                 const response = await fetch(`/api/landlord/properties/${id}`, { signal: controller.signal });
                 const payload = await response.json();
-                if (!response.ok || !payload.property) throw new Error(payload.error || "Failed to load property details.");
+                if (!response.ok || !payload.property) throw new Error(payload.error || t("Failed to load property details."));
 
                 const p = payload.property;
                 let contractMode: "generate" | "upload" = "generate";
@@ -211,7 +296,7 @@ function NewAssetContent() {
                 setExistingImageUrls(Array.isArray(p.images) ? p.images : []);
                 setCoverExistingUrl(Array.isArray(p.images) ? p.images[0] : null);
             } catch (error) {
-                setLoadError(error instanceof Error ? error.message : "Failed to load property details.");
+                setLoadError(error instanceof Error ? tr(error.message) : t("Failed to load property details."));
             } finally {
                 window.clearTimeout(timeout);
                 setIsLoadingProperty(false);
@@ -252,84 +337,29 @@ function NewAssetContent() {
     }, [mediaFiles]);
 
     const handleInputChange = (field: string, value: any) => {
+        // Inline errors are derived from the values, so they clear as soon as the input becomes valid.
         setFormData(prev => ({ ...prev, [field]: value }));
-        setErrors(prev => {
-            if (!prev[field] && !(field === "contractMode" && prev.contractFile)) return prev;
-            const next = { ...prev };
-            delete next[field];
-            if (field === "contractMode" && value === "generate") {
-                delete next.contractFile;
-            }
-            return next;
-        });
     };
 
     const handleMediaFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const selectedFile = handleMediaSelection(e, {
             preset: "image",
-            notify: (msg, desc) => toast.error(desc ? `${msg}: ${desc}` : msg),
+            maxSizeBytes: MAX_PROPERTY_IMAGE_BYTES,
+            notify: (msg, desc) => toast.error(desc ? `${t(msg)}: ${t(desc)}` : t(msg)),
         });
         if (!selectedFile) return;
         setMediaFiles([selectedFile]);
         setCoverNewIndex(0);
-        toast.info("New cover photo selected! Click 'Save Changes' to update.");
+        toast.info(t("New cover photo selected! Click 'Save Changes' to update."));
     };
 
     const validateStep = (currentStep: Step): boolean => {
-        const nextErrors: Record<string, string> = {};
-
-        if (currentStep === 1) {
-            if (!formData.propertyName.trim()) {
-                nextErrors.propertyName = "Please enter your property name.";
-            }
-            if (!isManualAddress) {
-                if (!addressStreet.trim()) {
-                    nextErrors.address = "Please enter your house/building number and street name.";
-                }
-            } else if (!formData.address.trim()) {
-                nextErrors.address = "Please enter the complete property address.";
-            }
-        } else if (currentStep === 2) {
-            const units = parseInt(formData.totalUnits, 10);
-            if (isNaN(units) || units < 1) {
-                nextErrors.totalUnits = "Please enter at least 1 room or unit.";
-            } else if (units > 99) {
-                nextErrors.totalUnits = "Total units cannot exceed 99 (2 digits).";
-            }
-            const floors = parseInt(formData.floorCount, 10);
-            if (isNaN(floors) || floors < 1) {
-                nextErrors.floorCount = "Please enter at least 1 floor.";
-            } else if (floors > 99) {
-                nextErrors.floorCount = "Number of floors cannot exceed 99 (2 digits).";
-            }
-            const occupancy = parseInt(formData.occupancyLimit, 10);
-            if (isNaN(occupancy) || occupancy < 1) {
-                nextErrors.occupancyLimit = "Please enter the maximum guests allowed per room.";
-            } else if (occupancy > 99) {
-                nextErrors.occupancyLimit = "Max tenants per room cannot exceed 99 (2 digits).";
-            }
-            if (!formData.unitPrefix.trim()) {
-                nextErrors.unitPrefix = "Please choose or type a room label (e.g. Room or Unit).";
-            }
-        } else if (currentStep === 3) {
-            if (!formData.baseRent || formData.baseRent <= 0) {
-                nextErrors.baseRent = "Please enter the standard monthly rent amount (greater than ₱0).";
-            }
-        } else if (currentStep === 4) {
-            if (formData.contractMode === "upload" && !formData.contractFile) {
-                nextErrors.contractFile = "Please choose a lease contract file to upload or select Standard Digital Lease.";
-            }
-        }
-
-        setErrors(nextErrors);
-
-        if (Object.keys(nextErrors).length > 0) {
-            const firstErrorMessage = Object.values(nextErrors)[0];
-            toast.error(firstErrorMessage);
-            return false;
-        }
-
-        return true;
+        const fields = STEP_FIELDS[currentStep];
+        if (form.validateFields(fields)) return true;
+        // Reveal + focus happen inline; the toast keeps the existing summary feedback.
+        const firstError = fields.map((field) => form.errors[field]).find(Boolean);
+        if (firstError) toast.error(t(firstError));
+        return false;
     };
 
     const handleNext = () => {
@@ -342,13 +372,14 @@ function NewAssetContent() {
         if (step > 1) {
             setStep(s => (s - 1) as Step);
         } else if (properties.length === 0) {
-            toast.info("Please set up your first property to access your dashboard.");
+            toast.info(t("Please set up your first property to access your dashboard."));
         } else {
             router.push("/landlord/properties");
         }
     };
 
     const handleSubmit = async () => {
+        if (isSubmitting) return; // double-click guard
         for (let s = 1; s <= 4; s++) {
             if (!validateStep(s as Step)) {
                 setStep(s as Step);
@@ -358,7 +389,7 @@ function NewAssetContent() {
         setIsSubmitting(true);
         setSaveStage("Saving configuration...");
         try {
-            if (!user) throw new Error("Session expired. Please log in again.");
+            if (!user) throw new Error(t("Session expired. Please log in again."));
 
             let currentImages = [...existingImageUrls];
 
@@ -389,7 +420,7 @@ function NewAssetContent() {
                             setCoverExistingUrl(newCoverUrl);
                             setMediaFiles([]);
                         } else {
-                            throw new Error(mediaData?.error || "Failed to upload cover photo.");
+                            throw new Error(mediaData?.error || t("Failed to upload cover photo."));
                         }
                     } catch (uploadErr) {
                         console.error("Cover photo upload error:", uploadErr);
@@ -429,10 +460,22 @@ function NewAssetContent() {
                 body: JSON.stringify(payload),
             });
 
-            const result = await response.json();
+            const result = await response.json().catch(() => ({}));
 
             if (!response.ok || !result.success) {
-                throw new Error(result.error || "Failed to save property.");
+                const serverFieldErrors: Record<string, string> = {};
+                for (const [key, message] of Object.entries((result.fieldErrors ?? {}) as Record<string, string>)) {
+                    const field = SERVER_FIELD_MAP[key.split(".")[0]];
+                    if (field && !serverFieldErrors[field]) serverFieldErrors[field] = message;
+                }
+                if (Object.keys(serverFieldErrors).length > 0) {
+                    const firstStep = ([1, 2, 3, 4] as Step[]).find((s) =>
+                        STEP_FIELDS[s].some((field) => serverFieldErrors[field])
+                    );
+                    if (firstStep) setStep(firstStep);
+                    form.setServerErrors(serverFieldErrors);
+                }
+                throw new Error(result.error || t("Failed to save property."));
             }
 
             // If new property was created and there were media files, upload them now with the real property ID
@@ -475,15 +518,15 @@ function NewAssetContent() {
                     } catch {}
                 }
                 setSelectedPropertyId(result.propertyId);
-                toast.success("Property registered! Next, configure your unit map to place your units.");
+                toast.success(t("Property registered! Next, configure your unit map to place your units."));
                 router.push(`/landlord/unit-map?propertyId=${result.propertyId}`);
             } else {
-                toast.success(isEditMode ? "Property updated successfully!" : "Property created successfully!");
+                toast.success(isEditMode ? t("Property updated successfully!") : t("Property created successfully!"));
                 router.push("/landlord/properties");
             }
         } catch (e) {
             console.error("Save error:", e);
-            toast.error(e instanceof Error ? e.message : "Failed to save property. Please try again.");
+            toast.error(e instanceof Error ? tr(e.message) : t("Failed to save property. Please try again."));
         } finally {
             setIsSubmitting(false);
             setSaveStage(null);
@@ -513,7 +556,7 @@ function NewAssetContent() {
                             className="group flex items-center gap-2 text-xs sm:text-sm font-bold text-muted-foreground hover:text-foreground transition-all bg-card/90 hover:bg-card px-3.5 py-1.5 rounded-full border border-border/80 shadow-xs cursor-pointer"
                         >
                             <ArrowLeft className="size-3.5 group-hover:-translate-x-1 transition-transform" />
-                            <span>{step === 1 ? "Cancel" : "Back"}</span>
+                            <span>{step === 1 ? t("Cancel") : t("Back")}</span>
                         </button>
                     ) : step > 1 ? (
                         <button
@@ -522,17 +565,17 @@ function NewAssetContent() {
                             className="group flex items-center gap-2 text-xs sm:text-sm font-bold text-muted-foreground hover:text-foreground transition-all bg-card/90 hover:bg-card px-3.5 py-1.5 rounded-full border border-border/80 shadow-xs cursor-pointer"
                         >
                             <ArrowLeft className="size-3.5 group-hover:-translate-x-1 transition-transform" />
-                            <span>Back</span>
+                            <span>{t("Back")}</span>
                         </button>
                     ) : (
                         <div className="flex items-center gap-2 text-xs font-bold text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/25">
-                            <span>First-Time Property Setup</span>
+                            <span>{t("First-Time Property Setup")}</span>
                         </div>
                     )}
 
                     <div className="flex items-center gap-2 bg-card/90 px-3.5 py-1.5 rounded-full border border-border/80 shadow-xs text-xs font-bold text-foreground">
                         <span className="size-2 rounded-full bg-primary animate-pulse" />
-                        <span>{isEditMode ? "Edit Property" : "New Property Setup"}</span>
+                        <span>{isEditMode ? t("Edit Property") : t("New Property Setup")}</span>
                     </div>
                 </div>
 
@@ -543,12 +586,12 @@ function NewAssetContent() {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div>
                                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[11px] font-bold text-primary mb-1">
-                                    <span>Step {step} of 4</span>
+                                    <span>{t("Step {step} of {total}", { step, total: 4 })}</span>
                                     <span className="text-muted-foreground">•</span>
-                                    <span>{STEPS[step - 1].shortTitle}</span>
+                                    <span>{t(STEPS[step - 1].shortTitle)}</span>
                                 </div>
                                 <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
-                                    {isEditMode ? "Edit Property" : "Add New Property"}
+                                    {isEditMode ? t("Edit Property") : t("Add New Property")}
                                 </h1>
                             </div>
 
@@ -571,7 +614,7 @@ function NewAssetContent() {
                                                             ? "bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 cursor-pointer"
                                                             : "bg-muted/50 text-muted-foreground/50 border border-border/40 cursor-not-allowed"
                                                 )}
-                                                aria-label={`Step ${s.id}: ${s.label}`}
+                                                aria-label={t("Step {step}: {label}", { step: s.id, label: t(s.label) })}
                                             >
                                                 {step > s.id ? (
                                                     <Check className="size-3.5 text-primary stroke-[3]" />
@@ -583,7 +626,7 @@ function NewAssetContent() {
                                                 "text-[10px] sm:text-[11px] font-semibold whitespace-nowrap text-center transition-colors",
                                                 step === s.id ? "text-primary font-bold" : step > s.id ? "text-foreground" : "text-muted-foreground/60"
                                             )}>
-                                                {s.label}
+                                                {t(s.label)}
                                             </span>
                                         </div>
                                         {idx < STEPS.length - 1 && (
@@ -604,9 +647,9 @@ function NewAssetContent() {
                         {step === 1 && (
                             <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
                                 <div>
-                                    <h2 className="text-xl font-bold tracking-tight text-foreground">Property Details</h2>
+                                    <h2 className="text-xl font-bold tracking-tight text-foreground">{t("Property Details")}</h2>
                                     <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
-                                        Enter your property name and address so tenants know where they are moving in.
+                                        {t("Enter your property name and address so tenants know where they are moving in.")}
                                     </p>
                                 </div>
 
@@ -617,16 +660,17 @@ function NewAssetContent() {
                                         <div className="space-y-1">
                                             <div className="flex items-center justify-between">
                                                 <label htmlFor="property-name" className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                                                    <span>Property Name</span>
+                                                    <span>{t("Property Name")}</span>
                                                     <span className="text-rose-500 font-bold">*</span>
                                                 </label>
                                                 <span className="text-[10px] text-muted-foreground font-mono">
                                                     {formData.propertyName.length}/60
                                                 </span>
                                             </div>
-                                            <input 
+                                            <input
+                                                {...form.fieldProps("propertyName")}
                                                 id="property-name"
-                                                type="text" 
+                                                type="text"
                                                 maxLength={60}
                                                 value={formData.propertyName} 
                                                 onInput={(e) => {
@@ -639,15 +683,15 @@ function NewAssetContent() {
                                                     "w-full bg-background border-2 border-border/80 rounded-xl px-3.5 py-2 text-sm font-semibold text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/10",
                                                     errors.propertyName && "border-rose-500 focus:border-rose-500 focus:ring-rose-500/20"
                                                 )}
-                                                placeholder="e.g. Sunrise Apartments or Villa Teresa" 
+                                                placeholder={t("e.g. Sunrise Apartments or Villa Teresa")} 
                                             />
                                             {errors.propertyName ? (
-                                                <p className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                                                <p id={form.errorId("propertyName")} role="alert" className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
                                                     {errors.propertyName}
                                                 </p>
                                             ) : (
                                                 <p className="text-[11px] text-muted-foreground">
-                                                    The name your tenants will see for this building. Max 60 characters.
+                                                    {t("The name your tenants will see for this building. Max 60 characters.")}
                                                 </p>
                                             )}
                                         </div>
@@ -657,7 +701,7 @@ function NewAssetContent() {
                                             <div className="flex items-center justify-between">
                                                 <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                                     <MapPin className="size-3.5 text-primary" />
-                                                    <span>Complete Address</span>
+                                                    <span>{t("Complete Address")}</span>
                                                     <span className="text-rose-500 font-bold">*</span>
                                                 </label>
                                                 {!isManualAddress ? (
@@ -666,7 +710,7 @@ function NewAssetContent() {
                                                         onClick={() => setIsManualAddress(true)}
                                                         className="text-[11px] font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                                                     >
-                                                        Outside Valenzuela? Click here
+                                                        {t("Outside Valenzuela? Click here")}
                                                     </button>
                                                 ) : (
                                                     <button
@@ -680,7 +724,7 @@ function NewAssetContent() {
                                                         }}
                                                         className="text-[11px] font-bold text-primary hover:underline cursor-pointer"
                                                     >
-                                                        ← Valenzuela Address Helper
+                                                        ← {t("Valenzuela Address Helper")}
                                                     </button>
                                                 )}
                                             </div>
@@ -691,7 +735,7 @@ function NewAssetContent() {
                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                         {/* City */}
                                                         <div className="space-y-1 sm:col-span-1">
-                                                            <label htmlFor="address-city" className="text-[11px] font-semibold text-muted-foreground">City</label>
+                                                            <label htmlFor="address-city" className="text-[11px] font-semibold text-muted-foreground">{t("City")}</label>
                                                             <select
                                                                 id="address-city"
                                                                 value={addressCity}
@@ -705,27 +749,27 @@ function NewAssetContent() {
                                                                 className="w-full bg-background border-2 border-border/80 rounded-xl px-3 py-1.5 text-xs font-bold text-foreground outline-none focus:border-primary cursor-pointer"
                                                             >
                                                                 <option value="Valenzuela City">Valenzuela City</option>
-                                                                <option value="other">Other (Manual)</option>
+                                                                <option value="other">{t("Other (Manual)")}</option>
                                                             </select>
                                                         </div>
 
                                                         {/* Barangay (takes 2 columns for generous room) */}
                                                         <div className="space-y-1 sm:col-span-2">
-                                                            <label htmlFor="address-barangay" className="text-[11px] font-semibold text-muted-foreground">Barangay</label>
+                                                            <label htmlFor="address-barangay" className="text-[11px] font-semibold text-muted-foreground">{t("Barangay")}</label>
                                                             <select
                                                                 id="address-barangay"
                                                                 value={addressBarangay}
                                                                 onChange={(e) => handleStructuredAddressChange(addressStreet, e.target.value, addressCity)}
                                                                 className="w-full bg-background border-2 border-border/80 rounded-xl px-3 py-1.5 text-xs font-bold text-foreground outline-none focus:border-primary cursor-pointer truncate"
                                                             >
-                                                                <optgroup label="District 1 (Polo / North)">
+                                                                <optgroup label={t("District 1 (Polo / North)")}>
                                                                     {VALENZUELA_BARANGAYS.filter(b => b.district === 1).map(b => (
                                                                         <option key={b.name} value={b.name}>
                                                                             {b.name} (ZIP {b.zipCode})
                                                                         </option>
                                                                     ))}
                                                                 </optgroup>
-                                                                <optgroup label="District 2 (Central / East)">
+                                                                <optgroup label={t("District 2 (Central / East)")}>
                                                                     {VALENZUELA_BARANGAYS.filter(b => b.district === 2).map(b => (
                                                                         <option key={b.name} value={b.name}>
                                                                             {b.name} (ZIP {b.zipCode})
@@ -740,12 +784,12 @@ function NewAssetContent() {
                                                     <div className="space-y-1">
                                                         <div className="flex items-center justify-between">
                                                             <label htmlFor="address-street" className="text-[11px] font-semibold text-muted-foreground">
-                                                                House / Building No. & Street Name <span className="text-rose-500">*</span>
+                                                                {t("House / Building No. & Street Name")} <span className="text-rose-500">*</span>
                                                             </label>
                                                             <div className="flex items-center gap-2">
                                                                 {activeBarangay?.popularStreets && activeBarangay.popularStreets.length > 0 && (
                                                                     <span className="text-[10px] text-muted-foreground">
-                                                                        Suggestions available
+                                                                        {t("Suggestions available")}
                                                                     </span>
                                                                 )}
                                                                 <span className="text-[10px] text-muted-foreground font-mono">
@@ -754,6 +798,7 @@ function NewAssetContent() {
                                                             </div>
                                                         </div>
                                                         <input
+                                                            {...form.fieldProps("address")}
                                                             id="address-street"
                                                             type="text"
                                                             list="valenzuela-popular-streets"
@@ -765,7 +810,7 @@ function NewAssetContent() {
                                                                 }
                                                             }}
                                                             onChange={(e) => handleStructuredAddressChange(e.target.value.slice(0, 100), addressBarangay, addressCity)}
-                                                            placeholder="e.g. 123 MacArthur Highway or Block 4 Lot 12"
+                                                            placeholder={t("e.g. 123 MacArthur Highway or Block 4 Lot 12")}
                                                             className={cn(
                                                                 "w-full bg-background border-2 border-border/80 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-semibold text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/10",
                                                                 errors.address && "border-rose-500 focus:border-rose-500 focus:ring-rose-500/20"
@@ -778,7 +823,7 @@ function NewAssetContent() {
                                                         </datalist>
 
                                                         {errors.address && (
-                                                            <p className="text-xs font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                                                            <p id={form.errorId("address")} role="alert" className="text-xs font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
                                                                 {errors.address}
                                                             </p>
                                                         )}
@@ -787,20 +832,21 @@ function NewAssetContent() {
                                             ) : (
                                                 /* Manual Textarea Mode */
                                                 <div className="space-y-1">
-                                                    <textarea 
+                                                    <textarea
+                                                        {...form.fieldProps("address")}
                                                         id="property-address"
-                                                        rows={2} 
-                                                        maxLength={120}
+                                                        rows={2}
+                                                        maxLength={MANUAL_ADDRESS_MAX}
                                                         value={formData.address} 
                                                         onChange={e => handleInputChange("address", e.target.value)} 
                                                         className={cn(
                                                             "w-full bg-background border-2 border-border/80 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-medium text-foreground outline-none resize-none transition-all placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/10",
                                                             errors.address && "border-rose-500 focus:border-rose-500 focus:ring-rose-500/20"
                                                         )}
-                                                        placeholder="e.g. 123 Rizal Street, Barangay Poblacion, Meycauayan, Bulacan" 
+                                                        placeholder={t("e.g. 123 Rizal Street, Barangay Poblacion, Meycauayan, Bulacan")} 
                                                     />
                                                     {errors.address && (
-                                                        <p className="text-xs font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                                                        <p id={form.errorId("address")} role="alert" className="text-xs font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
                                                             {errors.address}
                                                         </p>
                                                     )}
@@ -819,18 +865,18 @@ function NewAssetContent() {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-1.5">
                                                 <Camera className="size-3.5 text-primary" />
-                                                <label className="text-xs font-bold text-foreground">Building Photo</label>
+                                                <label className="text-xs font-bold text-foreground">{t("Building Photo")}</label>
                                                 <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full border border-border/60">
-                                                    Optional
+                                                    {t("Optional")}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 <span className="text-[10px] font-bold text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md border border-border/60">
-                                                    Max 10MB
+                                                    {t("Max 10MB")}
                                                 </span>
                                                 {mediaFiles.length > 0 && (
                                                     <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                                                        Selected
+                                                        {t("Selected")}
                                                     </span>
                                                 )}
                                             </div>
@@ -841,7 +887,7 @@ function NewAssetContent() {
                                                 <>
                                                     <Image 
                                                         src={mediaPreviewUrls[0] || existingImageUrls[0]} 
-                                                        alt="Property Cover" 
+                                                        alt={t("Property Cover")} 
                                                         fill 
                                                         className="object-cover" 
                                                     />
@@ -851,7 +897,7 @@ function NewAssetContent() {
                                                             className="bg-card text-foreground px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md cursor-pointer hover:bg-card/90"
                                                         >
                                                             <Camera className="size-3.5 text-primary" />
-                                                            <span>Change Photo</span>
+                                                            <span>{t("Change Photo")}</span>
                                                         </label>
                                                     </div>
                                                 </>
@@ -864,12 +910,12 @@ function NewAssetContent() {
                                                         <Upload className="size-4" />
                                                     </div>
                                                     <div>
-                                                        <span className="text-xs font-bold text-foreground block">Choose a Photo</span>
+                                                        <span className="text-xs font-bold text-foreground block">{t("Choose a Photo")}</span>
                                                         <span className="text-[10px] text-muted-foreground mt-0.5 block">
-                                                            JPG, PNG, or WebP (Max 10MB)
+                                                            {t("JPG, PNG, or WebP (Max 10MB)")}
                                                         </span>
                                                         <span className="text-[10px] text-muted-foreground/70 block mt-0.5">
-                                                            skip and add later
+                                                            {t("skip and add later")}
                                                         </span>
                                                     </div>
                                                 </label>
@@ -890,7 +936,7 @@ function NewAssetContent() {
                                                     className="text-[11px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
                                                 >
                                                     <Camera className="size-3" />
-                                                    <span>Change</span>
+                                                    <span>{t("Change")}</span>
                                                 </label>
                                                 <button
                                                     type="button"
@@ -903,7 +949,7 @@ function NewAssetContent() {
                                                     className="text-[11px] font-bold text-rose-500 hover:underline flex items-center gap-1 cursor-pointer"
                                                 >
                                                     <X className="size-3" />
-                                                    <span>Remove</span>
+                                                    <span>{t("Remove")}</span>
                                                 </button>
                                             </div>
                                         )}
@@ -916,9 +962,9 @@ function NewAssetContent() {
                         {step === 2 && (
                             <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
                                 <div>
-                                    <h2 className="text-xl font-bold tracking-tight text-foreground">Rooms & Floors</h2>
+                                    <h2 className="text-xl font-bold tracking-tight text-foreground">{t("Rooms & Floors")}</h2>
                                     <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
-                                        Choose your property type and enter how many rooms and floors your building has.
+                                        {t("Choose your property type and enter how many rooms and floors your building has.")}
                                     </p>
                                 </div>
 
@@ -927,7 +973,7 @@ function NewAssetContent() {
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                             <Home className="size-3.5 text-primary" />
-                                            <span>Property Type</span>
+                                            <span>{t("Property Type")}</span>
                                         </h3>
                                         <button
                                             type="button"
@@ -938,7 +984,7 @@ function NewAssetContent() {
                                             className="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
                                         >
                                             <HelpCircle className="size-3.5" />
-                                            <span>Type Guide</span>
+                                            <span>{t("Type Guide")}</span>
                                         </button>
                                     </div>
 
@@ -975,7 +1021,7 @@ function NewAssetContent() {
                                                 >
                                                     <div className="flex items-center justify-between w-full mb-1">
                                                         <span className={cn("text-xs sm:text-sm font-bold", isSelected ? "text-primary" : "text-foreground")}>
-                                                            {opt.label}
+                                                            {t(opt.label)}
                                                         </span>
                                                         <div className={cn(
                                                             "size-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
@@ -985,7 +1031,7 @@ function NewAssetContent() {
                                                         </div>
                                                     </div>
                                                     <p className="text-[11px] text-muted-foreground leading-snug">
-                                                        {opt.desc}
+                                                        {t(opt.desc)}
                                                     </p>
                                                 </button>
                                             );
@@ -999,19 +1045,22 @@ function NewAssetContent() {
                                     <div className="lg:col-span-6 space-y-3">
                                         <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                             <Grid className="size-3.5 text-primary" />
-                                            <span>Building Size & Capacity</span>
+                                            <span>{t("Building Size & Capacity")}</span>
                                         </h3>
 
                                         <div className="space-y-2.5">
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div className="space-y-1">
                                                     <label className="text-[11px] font-bold text-foreground">
-                                                        Total Units / Rooms <span className="text-rose-500">*</span>
+                                                        {t("Total Units / Rooms")} <span className="text-rose-500">*</span>
                                                     </label>
                                                     <input 
+                                                        {...form.fieldProps("totalUnits")}
                                                         type="number" 
                                                         min="1"
                                                         max="99"
+                                                        step="1"
+                                                        inputMode="numeric"
                                                         maxLength={2}
                                                         value={formData.totalUnits}
                                                         onKeyDown={(e) => {
@@ -1027,6 +1076,7 @@ function NewAssetContent() {
                                                             handleInputChange("totalUnits", raw);
                                                         }}
                                                         onBlur={() => {
+                                                            form.touch("totalUnits");
                                                             if (!formData.totalUnits || parseInt(formData.totalUnits, 10) < 1) {
                                                                 handleInputChange("totalUnits", "1");
                                                             }
@@ -1037,18 +1087,21 @@ function NewAssetContent() {
                                                         )}
                                                     />
                                                     {errors.totalUnits && (
-                                                        <p className="text-[10px] font-semibold text-rose-500">{errors.totalUnits}</p>
+                                                        <p id={form.errorId("totalUnits")} role="alert" className="text-[10px] font-semibold text-rose-500">{errors.totalUnits}</p>
                                                     )}
                                                 </div>
 
                                                 <div className="space-y-1">
                                                     <label className="text-[11px] font-bold text-foreground">
-                                                        Number of Floors <span className="text-rose-500">*</span>
+                                                        {t("Number of Floors")} <span className="text-rose-500">*</span>
                                                     </label>
                                                     <input 
+                                                        {...form.fieldProps("floorCount")}
                                                         type="number" 
                                                         min="1"
                                                         max="99"
+                                                        step="1"
+                                                        inputMode="numeric"
                                                         maxLength={2}
                                                         value={formData.floorCount}
                                                         onKeyDown={(e) => {
@@ -1066,6 +1119,7 @@ function NewAssetContent() {
                                                             handleInputChange("floorCount", val);
                                                         }}
                                                         onBlur={() => {
+                                                            form.touch("floorCount");
                                                             if (!formData.floorCount || parseInt(formData.floorCount, 10) < 1) {
                                                                 handleInputChange("floorCount", "1");
                                                             }
@@ -1076,19 +1130,22 @@ function NewAssetContent() {
                                                         )}
                                                     />
                                                     {errors.floorCount && (
-                                                        <p className="text-[10px] font-semibold text-rose-500">{errors.floorCount}</p>
+                                                        <p id={form.errorId("floorCount")} role="alert" className="text-[10px] font-semibold text-rose-500">{errors.floorCount}</p>
                                                     )}
                                                 </div>
                                             </div>
 
                                             <div className="space-y-1">
                                                 <label className="text-[11px] font-bold text-foreground">
-                                                    Max Tenants per Room <span className="text-rose-500">*</span>
+                                                    {t("Max Tenants per Room")} <span className="text-rose-500">*</span>
                                                 </label>
                                                 <input 
+                                                    {...form.fieldProps("occupancyLimit")}
                                                     type="number" 
                                                     min="1"
                                                     max="99"
+                                                    step="1"
+                                                    inputMode="numeric"
                                                     maxLength={2}
                                                     value={formData.occupancyLimit}
                                                     onKeyDown={(e) => {
@@ -1104,6 +1161,7 @@ function NewAssetContent() {
                                                         handleInputChange("occupancyLimit", raw);
                                                     }}
                                                     onBlur={() => {
+                                                        form.touch("occupancyLimit");
                                                         if (!formData.occupancyLimit || parseInt(formData.occupancyLimit, 10) < 1) {
                                                             handleInputChange("occupancyLimit", "1");
                                                         }
@@ -1114,10 +1172,10 @@ function NewAssetContent() {
                                                     )}
                                                 />
                                                 <p className="text-[11px] text-muted-foreground">
-                                                    Standard capacity per room (e.g. 1 to 5 people). Max 2 digits.
+                                                    {t("Standard capacity per room (e.g. 1 to 5 people). Max 2 digits.")}
                                                 </p>
                                                 {errors.occupancyLimit && (
-                                                    <p className="text-[10px] font-semibold text-rose-500">{errors.occupancyLimit}</p>
+                                                    <p id={form.errorId("occupancyLimit")} role="alert" className="text-[10px] font-semibold text-rose-500">{errors.occupancyLimit}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -1127,14 +1185,14 @@ function NewAssetContent() {
                                     <div className="lg:col-span-6 space-y-3">
                                         <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                             <Hash className="size-3.5 text-primary" />
-                                            <span>Room Naming & Numbering</span>
+                                            <span>{t("Room Naming & Numbering")}</span>
                                         </h3>
 
                                         <div className="space-y-2.5">
                                             {/* Room Label chips & custom input */}
                                             <div className="space-y-1.5">
                                                 <div className="flex items-center justify-between">
-                                                    <label className="text-[11px] font-bold text-foreground">Room Label</label>
+                                                    <label className="text-[11px] font-bold text-foreground">{t("Room Label")}</label>
                                                     {isCustomPrefix && (
                                                         <button
                                                             type="button"
@@ -1144,7 +1202,7 @@ function NewAssetContent() {
                                                             }}
                                                             className="text-[10px] text-primary hover:underline font-semibold cursor-pointer"
                                                         >
-                                                            Reset to presets
+                                                            {t("Reset to presets")}
                                                         </button>
                                                     )}
                                                 </div>
@@ -1182,7 +1240,7 @@ function NewAssetContent() {
                                                                 : "bg-background text-muted-foreground hover:text-foreground hover:bg-muted border border-dashed border-border/90"
                                                         )}
                                                     >
-                                                        + Custom
+                                                        + {t("Custom")}
                                                     </button>
                                                 </div>
 
@@ -1190,12 +1248,13 @@ function NewAssetContent() {
                                                     <div className="pt-0.5 space-y-1">
                                                         <div className="relative">
                                                             <input 
+                                                                {...form.fieldProps("unitPrefix")}
                                                                 type="text"
                                                                 autoFocus
                                                                 maxLength={10}
                                                                 value={formData.unitPrefix}
                                                                 onChange={(e) => handleInputChange("unitPrefix", e.target.value)}
-                                                                placeholder="Type custom label (e.g. Suite, Apt, Pod)"
+                                                                placeholder={t("Type custom label (e.g. Suite, Apt, Pod)")}
                                                                 className={cn(
                                                                     "w-full bg-background border-2 border-border/80 rounded-xl px-3 py-1.5 text-xs font-bold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 pr-14",
                                                                     errors.unitPrefix && "border-rose-500"
@@ -1206,7 +1265,7 @@ function NewAssetContent() {
                                                             </span>
                                                         </div>
                                                         {errors.unitPrefix && (
-                                                            <p className="text-[10px] font-semibold text-rose-500">{errors.unitPrefix}</p>
+                                                            <p id={form.errorId("unitPrefix")} role="alert" className="text-[10px] font-semibold text-rose-500">{errors.unitPrefix}</p>
                                                         )}
                                                     </div>
                                                 )}
@@ -1214,7 +1273,7 @@ function NewAssetContent() {
 
                                             {/* Numbering Scheme */}
                                             <div className="space-y-1">
-                                                <label className="text-[11px] font-bold text-foreground">Numbering Style</label>
+                                                <label className="text-[11px] font-bold text-foreground">{t("Numbering Style")}</label>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <button
                                                         type="button"
@@ -1226,7 +1285,7 @@ function NewAssetContent() {
                                                                 : "bg-background border-border/80 hover:border-border"
                                                         )}
                                                     >
-                                                        <p className="text-xs font-bold text-foreground">By Floor</p>
+                                                        <p className="text-xs font-bold text-foreground">{t("By Floor")}</p>
                                                         <p className="text-[10px] text-muted-foreground">101, 102 / 201</p>
                                                     </button>
 
@@ -1240,7 +1299,7 @@ function NewAssetContent() {
                                                                 : "bg-background border-border/80 hover:border-border"
                                                         )}
                                                     >
-                                                        <p className="text-xs font-bold text-foreground">In Order</p>
+                                                        <p className="text-xs font-bold text-foreground">{t("In Order")}</p>
                                                         <p className="text-[10px] text-muted-foreground">1, 2, 3...</p>
                                                     </button>
                                                 </div>
@@ -1250,7 +1309,7 @@ function NewAssetContent() {
                                             <div className="rounded-xl border border-border/80 bg-muted/15 px-3 py-1.5 flex items-center justify-between gap-2">
                                                 <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
                                                     <Eye className="size-3.5 text-primary" />
-                                                    <span>Preview:</span>
+                                                    <span>{t("Preview:")}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1 overflow-x-auto">
                                                     {generateUnitList(
@@ -1268,7 +1327,7 @@ function NewAssetContent() {
                                                     ))}
                                                     {(parseInt(formData.totalUnits) || 1) > 4 && (
                                                         <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">
-                                                            +{(parseInt(formData.totalUnits) || 1) - 4} more
+                                                            {t("+{count} more", { count: (parseInt(formData.totalUnits) || 1) - 4 })}
                                                         </span>
                                                     )}
                                                 </div>
@@ -1283,9 +1342,9 @@ function NewAssetContent() {
                         {step === 3 && (
                             <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
                                 <div>
-                                    <h2 className="text-xl font-bold tracking-tight text-foreground">Rent & Utility Bills</h2>
+                                    <h2 className="text-xl font-bold tracking-tight text-foreground">{t("Rent & Utility Bills")}</h2>
                                     <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
-                                        Set your standard monthly rent and choose how electricity and water will be billed.
+                                        {t("Set your standard monthly rent and choose how electricity and water will be billed.")}
                                     </p>
                                 </div>
 
@@ -1295,7 +1354,7 @@ function NewAssetContent() {
                                         {/* Standard Base Rent */}
                                         <div className="space-y-1">
                                             <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                                                <span>Standard Monthly Rent</span>
+                                                <span>{t("Standard Monthly Rent")}</span>
                                                 <span className="text-rose-500 font-bold">*</span>
                                             </label>
                                             <div className="relative">
@@ -1303,6 +1362,7 @@ function NewAssetContent() {
                                                     ₱
                                                 </div>
                                                 <input 
+                                                    {...form.fieldProps("baseRent")}
                                                     type="text" 
                                                     inputMode="decimal"
                                                     maxLength={10}
@@ -1320,10 +1380,10 @@ function NewAssetContent() {
                                                 />
                                             </div>
                                             {errors.baseRent ? (
-                                                <p className="text-[11px] font-semibold text-rose-500 mt-0.5">{errors.baseRent}</p>
+                                                <p id={form.errorId("baseRent")} role="alert" className="text-[11px] font-semibold text-rose-500 mt-0.5">{errors.baseRent}</p>
                                             ) : (
                                                 <p className="text-[11px] text-muted-foreground">
-                                                    Base rent per room or unit. You can customize rates for specific rooms later.
+                                                    {t("Base rent per room or unit. You can customize rates for specific rooms later.")}
                                                 </p>
                                             )}
                                         </div>
@@ -1332,8 +1392,8 @@ function NewAssetContent() {
                                         <div className="space-y-2">
                                             <div className="flex items-center justify-between">
                                                 <div>
-                                                    <label className="text-xs font-bold text-foreground">Electricity & Water Billing</label>
-                                                    <p className="text-[10px] text-muted-foreground">How will utility bills be handled?</p>
+                                                    <label className="text-xs font-bold text-foreground">{t("Electricity & Water Billing")}</label>
+                                                    <p className="text-[10px] text-muted-foreground">{t("How will utility bills be handled?")}</p>
                                                 </div>
                                                 <button
                                                     type="button"
@@ -1344,7 +1404,7 @@ function NewAssetContent() {
                                                     className="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
                                                 >
                                                     <HelpCircle className="size-3.5" />
-                                                    <span>Billing Guide</span>
+                                                    <span>{t("Billing Guide")}</span>
                                                 </button>
                                             </div>
 
@@ -1388,12 +1448,12 @@ function NewAssetContent() {
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex items-center justify-between">
                                                                     <p className={cn("text-xs sm:text-sm font-bold truncate", isSelected ? "text-primary" : "text-foreground")}>
-                                                                        {opt.label}
+                                                                        {t(opt.label)}
                                                                     </p>
                                                                     {isSelected && <CheckCircle2 className="size-3.5 text-primary shrink-0 ml-1" />}
                                                                 </div>
                                                                 <p className="text-[11px] text-muted-foreground truncate">
-                                                                    {opt.desc}
+                                                                    {t(opt.desc)}
                                                                 </p>
                                                             </div>
                                                         </button>
@@ -1408,9 +1468,9 @@ function NewAssetContent() {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-1.5">
                                                 <Layers className="size-3.5 text-primary" />
-                                                <h3 className="text-xs font-bold text-foreground">Property Amenities</h3>
+                                                <h3 className="text-xs font-bold text-foreground">{t("Property Amenities")}</h3>
                                                 <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full border border-border/60">
-                                                    Optional
+                                                    {t("Optional")}
                                                 </span>
                                             </div>
                                         </div>
@@ -1428,9 +1488,9 @@ function NewAssetContent() {
                         {step === 4 && (
                             <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
                                 <div>
-                                    <h2 className="text-xl font-bold tracking-tight text-foreground">House Rules & Lease Agreement</h2>
+                                    <h2 className="text-xl font-bold tracking-tight text-foreground">{t("House Rules & Lease Agreement")}</h2>
                                     <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
-                                        Choose rules tenants must follow and how to handle rental agreements.
+                                        {t("Choose rules tenants must follow and how to handle rental agreements.")}
                                     </p>
                                 </div>
 
@@ -1439,9 +1499,9 @@ function NewAssetContent() {
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-1.5">
                                             <ShieldCheck className="size-3.5 text-primary" />
-                                            <h3 className="text-xs font-bold text-foreground">House Rules</h3>
+                                            <h3 className="text-xs font-bold text-foreground">{t("House Rules")}</h3>
                                             <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full border border-border/60">
-                                                Optional
+                                                {t("Optional")}
                                             </span>
                                         </div>
                                         <PropertyRulesSelector
@@ -1455,7 +1515,7 @@ function NewAssetContent() {
                                     <div className="space-y-2 pt-3 border-t border-border/60">
                                         <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                             <FileText className="size-3.5 text-primary" />
-                                            <span>Rental Contract / Lease Agreement</span>
+                                            <span>{t("Rental Contract / Lease Agreement")}</span>
                                         </h3>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1486,14 +1546,14 @@ function NewAssetContent() {
                                                             )}>
                                                                 {formData.contractMode === "generate" && <div className="size-1.5 rounded-full bg-black" />}
                                                             </div>
-                                                            <span className="text-xs sm:text-sm font-bold text-foreground">Standard Digital Lease</span>
+                                                            <span className="text-xs sm:text-sm font-bold text-foreground">{t("Standard Digital Lease")}</span>
                                                         </div>
                                                         <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                                                            Recommended
+                                                            {t("Recommended")}
                                                         </span>
                                                     </div>
                                                     <p className="text-[11px] text-muted-foreground pl-6 leading-relaxed">
-                                                        Auto-generated standard rental agreement with your rent amount and house rules. No paperwork needed.
+                                                        {t("Auto-generated standard rental agreement with your rent amount and house rules. No paperwork needed.")}
                                                     </p>
                                                 </div>
 
@@ -1507,7 +1567,7 @@ function NewAssetContent() {
                                                         className="px-3 py-1.5 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                                                     >
                                                         <Eye className="size-3.5" />
-                                                        <span>Preview Standard Lease</span>
+                                                        <span>{t("Preview Standard Lease")}</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -1539,11 +1599,11 @@ function NewAssetContent() {
                                                             )}>
                                                                 {formData.contractMode === "upload" && <div className="size-1.5 rounded-full bg-black" />}
                                                             </div>
-                                                            <span className="text-xs sm:text-sm font-bold text-foreground">Upload My Own Contract</span>
+                                                            <span className="text-xs sm:text-sm font-bold text-foreground">{t("Upload My Own Contract")}</span>
                                                         </div>
                                                     </div>
                                                     <p className="text-[11px] text-muted-foreground pl-6 leading-relaxed">
-                                                        Have your own existing printed or PDF contract? Upload it to use for all leases in this property.
+                                                        {t("Have your own existing printed or PDF contract? Upload it to use for all leases in this property.")}
                                                     </p>
                                                 </div>
 
@@ -1554,15 +1614,16 @@ function NewAssetContent() {
                                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground border border-border/80 rounded-lg text-xs font-bold cursor-pointer transition-colors"
                                                     >
                                                         <Upload className="size-3 text-primary" />
-                                                        <span>{formData.contractFile ? "File: " + formData.contractFile : "Choose PDF"}</span>
+                                                        <span>{formData.contractFile ? t("File: {name}", { name: formData.contractFile }) : t("Choose PDF")}</span>
                                                     </label>
                                                     <input 
+                                                        {...form.fieldProps("contractFile")}
                                                         id="contract-upload-input"
                                                         type="file" 
                                                         onChange={(e) => {
                                                             const file = handleMediaSelection(e, {
                                                                 preset: "document_only",
-                                                                notify: (msg, desc) => toast.error(desc ? `${msg}: ${desc}` : msg),
+                                                                notify: (msg, desc) => toast.error(desc ? `${t(msg)}: ${t(desc)}` : t(msg)),
                                                             });
                                                             if (file) {
                                                                 handleInputChange("contractFile", file.name);
@@ -1572,7 +1633,7 @@ function NewAssetContent() {
                                                         accept={MEDIA_ACCEPT_STRINGS.document_only}
                                                     />
                                                     {errors.contractFile && (
-                                                        <p className="text-xs font-semibold text-rose-500 mt-1">{errors.contractFile}</p>
+                                                        <p id={form.errorId("contractFile")} role="alert" className="text-xs font-semibold text-rose-500 mt-1">{errors.contractFile}</p>
                                                     )}
                                                 </div>
                                             </div>
@@ -1593,7 +1654,7 @@ function NewAssetContent() {
                                 className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border/80 text-foreground hover:bg-muted font-bold text-xs sm:text-sm transition-colors cursor-pointer"
                             >
                                 <ArrowLeft className="size-3.5" />
-                                <span>Back</span>
+                                <span>{t("Back")}</span>
                             </button>
                         ) : properties.length > 0 ? (
                             <button
@@ -1603,7 +1664,7 @@ function NewAssetContent() {
                                 className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted font-bold text-xs sm:text-sm transition-colors cursor-pointer"
                             >
                                 <ArrowLeft className="size-3.5" />
-                                <span>Cancel</span>
+                                <span>{t("Cancel")}</span>
                             </button>
                         ) : (
                             <div />
@@ -1618,16 +1679,16 @@ function NewAssetContent() {
                             {isSubmitting ? (
                                 <>
                                     <Loader2 className="size-3.5 animate-spin text-black" />
-                                    <span>{saveStage || "Saving..."}</span>
+                                    <span>{saveStage ? t(saveStage) : t("Saving...")}</span>
                                 </>
                             ) : step === 4 ? (
                                 <>
-                                    <span>{isEditMode ? "Save Changes" : "Complete & Save Property"}</span>
+                                    <span>{isEditMode ? t("Save Changes") : t("Complete & Save Property")}</span>
                                     <Check className="size-3.5 stroke-[3]" />
                                 </>
                             ) : (
                                 <>
-                                    <span>Continue</span>
+                                    <span>{t("Continue")}</span>
                                     <ArrowRight className="size-3.5 stroke-[3]" />
                                 </>
                             )}
@@ -1654,8 +1715,8 @@ function NewAssetContent() {
                                 )} />
                                 <span className="text-[11px] sm:text-xs font-bold text-foreground truncate max-w-[140px] sm:max-w-none">
                                     {mediaFiles.length > 0 
-                                        ? "New cover photo staged" 
-                                        : `Editing: ${formData.propertyName || "Property"}`}
+                                        ? t("New cover photo staged")
+                                        : t("Editing: {name}", { name: formData.propertyName || t("Property") })}
                                 </span>
                             </div>
 
@@ -1668,12 +1729,12 @@ function NewAssetContent() {
                                 {isSubmitting ? (
                                     <>
                                         <Loader2 className="size-3.5 animate-spin" />
-                                        <span>{saveStage || "Saving..."}</span>
+                                        <span>{saveStage ? t(saveStage) : t("Saving...")}</span>
                                     </>
                                 ) : (
                                     <>
                                         <Save className="size-3.5" />
-                                        <span>Save Changes</span>
+                                        <span>{t("Save Changes")}</span>
                                     </>
                                 )}
                             </button>

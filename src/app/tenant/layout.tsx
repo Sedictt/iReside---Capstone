@@ -11,6 +11,8 @@ import { NotificationProvider } from "@/context/NotificationContext";
 import { ProfileCardProvider } from "@/context/ProfileCardContext";
 import { ProfileCard } from "@/components/ui/ProfileCard";
 import { NotificationBanner } from "@/components/navigation/NotificationBanner";
+import { PendingLeaseSignatureBanner } from "@/components/tenant/PendingLeaseSignatureBanner";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export default function TenantLayout({
     children,
@@ -18,6 +20,7 @@ export default function TenantLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const { t } = useLanguageContext();
     
     const isChatPage = pathname === "/tenant/messages";
     const isOnboardingPage = pathname.startsWith("/tenant/onboarding");
@@ -38,14 +41,17 @@ export default function TenantLayout({
                         storageKey="ireside-tenant-theme"
                     >
                     <div className={cn(
-                        "tenant-light min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 flex overflow-hidden",
+                        "tenant-light min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 flex",
+                        // Settings keeps its topic list in view while scrolling; clip (unlike hidden) allows sticky.
+                        isSettingsPage ? "overflow-clip" : "overflow-hidden",
                         (isChatPage || isUnitMapPage) && "h-screen"
                     )}>
                         {!useImmersiveLayout && <TenantSidebar />}
                         
                         <main 
                             className={cn(
-                                "min-w-0 h-full flex-1 flex flex-col overflow-x-hidden relative",
+                                "min-w-0 h-full flex-1 flex flex-col relative",
+                                isSettingsPage ? "overflow-x-clip" : "overflow-x-hidden",
                                 !useImmersiveLayout && "ml-[280px]"
                             )}
                         >
@@ -53,12 +59,13 @@ export default function TenantLayout({
                                 "w-full z-[100] pointer-events-none",
                                 !useImmersiveLayout && "w-full px-4 sm:px-6 lg:px-8 md:pr-[104px] lg:pr-[112px]"
                             )}>
-                                <NotificationBanner />
+                                {!isDocsPage && <NotificationBanner />}
+                                {!useImmersiveLayout && <PendingLeaseSignatureBanner />}
                             </div>
                             <Suspense fallback={
                                 <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
                                     <Loader2 className="size-8 animate-spin text-primary" />
-                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Loading...</p>
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("Loading...")}</p>
                                 </div>
                             }>
                                 <div

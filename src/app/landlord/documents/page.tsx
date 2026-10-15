@@ -24,6 +24,7 @@ import { LeaseDocument } from "@/components/lease/LeaseDocument";
 import { useProperty } from "@/context/PropertyContext";
 import { isPreseededPhone } from "@/lib/validation/brand-setup";
 import { m as motion, AnimatePresence } from "framer-motion";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { 
     UserCircle2, 
     Files
@@ -51,13 +52,13 @@ interface LandlordProfile {
 }
 
 export default function DocumentsPage() {
+    const { t, locale } = useLanguageContext();
     const [documentList, setDocumentList] = useState<Document[]>([]);
     const [landlordProfile, setLandlordProfile] = useState<LandlordProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedTemplate, setSelectedTemplate] = useState<Document | null>(null);
     const [showPreview, setShowPreview] = useState(false);
     const [previewStartDate, setPreviewStartDate] = useState("");
-    const [previewEndDate, setPreviewEndDate] = useState("");
     const [activeTab, setActiveTab] = useState<"compliance" | "leases">("compliance");
     const { selectedPropertyId } = useProperty();
     const [searchQuery, setSearchQuery] = useState("");
@@ -92,7 +93,6 @@ export default function DocumentsPage() {
 
     useEffect(() => {
         setPreviewStartDate(new Date().toISOString().split('T')[0]);
-        setPreviewEndDate(new Date(Date.now() + 31536000000).toISOString().split('T')[0]);
     }, []);
 
     const getIcon = (category: string) => {
@@ -110,7 +110,7 @@ export default function DocumentsPage() {
             <div className="flex h-screen items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="size-10 animate-spin text-primary" />
-                    <p className="text-sm font-black uppercase tracking-widest text-neutral-500">Loading Documents...</p>
+                    <p className="text-sm font-black uppercase tracking-widest text-neutral-500">{t("Loading Documents...")}</p>
                 </div>
             </div>
         );
@@ -168,15 +168,15 @@ export default function DocumentsPage() {
                                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                                 <span className="relative inline-flex size-2 rounded-full bg-primary"></span>
                             </span>
-                            Document Archive
+                            {t("Document Archive")}
                         </div>
                         
                         <div className="space-y-2">
                             <h1 className="text-5xl font-black tracking-tighter md:text-6xl">
-                            Professional <span className="text-primary">Documents.</span>
+                            {t("Professional")} <span className="text-primary">{t("Documents.")}</span>
                             </h1>
                             <p className="max-w-xl text-lg font-medium leading-relaxed opacity-70">
-                                Access your lease agreements, contract templates, and identity records in one secure location.
+                                {t("Access your lease agreements, contract templates, and identity records in one secure location.")}
                             </p>
                         </div>
                     </div>
@@ -194,7 +194,7 @@ export default function DocumentsPage() {
                                 )}
                             >
                                 <UserCircle2 className="size-4" />
-                                Personal & Compliance
+                                {t("Personal & Compliance")}
                                 {activeTab === "compliance" && (
                                     <motion.div layoutId="docTab" className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full" />
                                 )}
@@ -207,7 +207,7 @@ export default function DocumentsPage() {
                                 )}
                             >
                                 <Files className="size-4" />
-                                Property & Leases
+                                {t("Property & Leases")}
                                 {activeTab === "leases" && (
                                     <motion.div layoutId="docTab" className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full" />
                                 )}
@@ -226,9 +226,9 @@ export default function DocumentsPage() {
                                         <div className="flex items-center justify-between px-2">
                                             <h2 className="text-xl font-black tracking-tight flex items-center gap-3">
                                                 <Fingerprint className="size-5 text-primary" />
-                                                Identity & Compliance
+                                                {t("Identity & Compliance")}
                                             </h2>
-                                            <span className="text-[10px] font-black uppercase tracking-widest opacity-50">{registrationDocuments.length} Records</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest opacity-50">{t("{count} Records", { count: registrationDocuments.length })}</span>
                                         </div>
 
                                         <div className="grid gap-4">
@@ -247,14 +247,14 @@ export default function DocumentsPage() {
                                                             <div className="flex items-center gap-2">
                                                                 <h3 className="text-base font-black truncate">{docRecord.name}</h3>
                                                                 <span className="rounded-full neumorphic-inset px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter">
-                                                                    {docRecord.category}
+                                                                    {t(docRecord.category)}
                                                                 </span>
                                                             </div>
                                                             <p className="text-sm opacity-50 truncate">{docRecord.description}</p>
                                                             <div className="flex items-center gap-4 pt-1">
                                                                 <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest opacity-40" suppressHydrationWarning>
                                                                     <Clock className="size-3" />
-                                                                    Uploaded {new Date(docRecord.updatedAt).toLocaleDateString()}
+                                                                    {t("Uploaded {date}", { date: new Date(docRecord.updatedAt).toLocaleDateString(locale) })}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -264,6 +264,8 @@ export default function DocumentsPage() {
                                                                 href={docRecord.url} 
                                                                 target="_blank" 
                                                                 rel="noreferrer"
+                                                                aria-label={t("View document")}
+                                                                title={t("View document")}
                                                                 className="flex size-10 items-center justify-center rounded-xl neumorphic-extruded transition-all hover:text-primary"
                                                             >
                                                                 <Eye className="size-4" />
@@ -288,10 +290,10 @@ export default function DocumentsPage() {
                                             <div className="space-y-1">
                                                 <h2 className="text-xl font-black tracking-tight flex items-center gap-3">
                                                     <FileText className="size-5 text-primary" />
-                                                    Lease Contracts
+                                                    {t("Lease Contracts")}
                                                 </h2>
                                                 <p className="text-[10px] font-black uppercase tracking-widest opacity-50">
-                                                    {filteredLeaseDocuments.length} Total Documents Found
+                                                    {t("{count} Total Documents Found", { count: filteredLeaseDocuments.length })}
                                                 </p>
                                             </div>
 
@@ -302,7 +304,7 @@ export default function DocumentsPage() {
                                                     </div>
                                                     <input maxLength={60} 
                                                         type="text"
-                                                        placeholder="Search records..."
+                                                        placeholder={t("Search records...")}
                                                         value={searchQuery}
                                                         onChange={(event) => setSearchQuery(event.target.value)}
                                                         className="w-full h-12 neumorphic-inset rounded-2xl pl-11 pr-4 text-sm focus:outline-none transition-all"
@@ -315,10 +317,10 @@ export default function DocumentsPage() {
                                                         onChange={(event) => setStatusFilter(event.target.value)}
                                                         className="h-12 neumorphic-inset rounded-2xl px-4 text-xs font-black focus:outline-none transition-all appearance-none pr-10 cursor-pointer"
                                                     >
-                                                        <option value="all">ALL STATUS</option>
-                                                        <option value="active">ACTIVE ONLY</option>
-                                                        <option value="pending">PENDING SIGN</option>
-                                                        <option value="terminated">ARCHIVED</option>
+                                                        <option value="all">{t("ALL STATUS")}</option>
+                                                        <option value="active">{t("ACTIVE ONLY")}</option>
+                                                        <option value="pending">{t("PENDING SIGN")}</option>
+                                                        <option value="terminated">{t("ARCHIVED")}</option>
                                                     </select>
                                                     <Filter className="absolute right-4 top-1/2 -translate-y-1/2 size-3 opacity-50 pointer-events-none" />
                                                 </div>
@@ -329,9 +331,9 @@ export default function DocumentsPage() {
                                                         onChange={(event) => setTypeFilter(event.target.value)}
                                                         className="h-12 neumorphic-inset rounded-2xl px-4 text-xs font-black focus:outline-none transition-all appearance-none pr-10 cursor-pointer"
                                                     >
-                                                        <option value="all">ALL TYPES</option>
-                                                        <option value="lease">EXECUTED</option>
-                                                        <option value="template">TEMPLATES</option>
+                                                        <option value="all">{t("ALL TYPES")}</option>
+                                                        <option value="lease">{t("EXECUTED")}</option>
+                                                        <option value="template">{t("TEMPLATES")}</option>
                                                     </select>
                                                     <ArrowUpDown className="absolute right-4 top-1/2 -translate-y-1/2 size-3 opacity-50 pointer-events-none" />
                                                 </div>
@@ -363,14 +365,14 @@ export default function DocumentsPage() {
                                                                             "rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter",
                                                                             docRecord.isTemplate ? "bg-amber-500/10 text-amber-500" : "bg-primary/10 text-primary"
                                                                         )}>
-                                                                            {docRecord.isTemplate ? "TEMPLATE" : "EXECUTED"}
+                                                                            {docRecord.isTemplate ? t("TEMPLATE") : t("EXECUTED")}
                                                                         </span>
                                                                     </div>
                                                                     <p className="text-sm opacity-50 truncate">{docRecord.description}</p>
                                                                     <div className="flex items-center gap-4 pt-1">
                                                                         <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest opacity-40">
                                                                             <Clock className="size-3" />
-                                                                            <span suppressHydrationWarning>Ref: {docRecord.id.slice(0, 8)} • <span suppressHydrationWarning>{new Date(docRecord.updatedAt).toLocaleDateString()}</span></span>
+                                                                            <span suppressHydrationWarning>{t("Ref: {ref}", { ref: docRecord.id.slice(0, 8) })} • <span suppressHydrationWarning>{new Date(docRecord.updatedAt).toLocaleDateString(locale)}</span></span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -382,6 +384,8 @@ export default function DocumentsPage() {
                                                                                 setSelectedTemplate(docRecord);
                                                                                 setShowPreview(true);
                                                                             }}
+                                                                            aria-label={t("Preview template")}
+                                                                            title={t("Preview template")}
                                                                             className="flex size-10 items-center justify-center rounded-xl neumorphic-extruded transition-all hover:text-primary"
                                                                         >
                                                                             <Maximize2 className="size-4" />
@@ -392,6 +396,8 @@ export default function DocumentsPage() {
                                                                                 href={docRecord.url}
                                                                                 target="_blank"
                                                                                 rel="noreferrer"
+                                                                                aria-label={t("View document")}
+                                                                                title={t("View document")}
                                                                                 className="flex size-10 items-center justify-center rounded-xl neumorphic-extruded transition-all hover:text-primary"
                                                                             >
                                                                                 <Eye className="size-4" />
@@ -399,6 +405,8 @@ export default function DocumentsPage() {
                                                                             <a 
                                                                                 href={docRecord.url}
                                                                                 download={`${docRecord.name.replace(/\s+/g, '_')}.pdf`}
+                                                                                aria-label={t("Download")}
+                                                                                title={t("Download")}
                                                                                 className="flex size-10 items-center justify-center rounded-xl neumorphic-extruded transition-all hover:text-primary"
                                                                             >
                                                                                 <Download className="size-4" />
@@ -413,8 +421,8 @@ export default function DocumentsPage() {
                                             ) : (
                                                 <div className="rounded-[2rem] neumorphic-inset p-12 text-center h-[400px] flex flex-col items-center justify-center">
                                                     <FileText className="size-10 opacity-30 mx-auto mb-4" />
-                                                    <p className="text-sm font-black opacity-50 uppercase tracking-widest">No Documents Found</p>
-                                                    <p className="text-xs opacity-40 mt-1">Select a different property or try a different search term.</p>
+                                                    <p className="text-sm font-black opacity-50 uppercase tracking-widest">{t("No Documents Found")}</p>
+                                                    <p className="text-xs opacity-40 mt-1">{t("Select a different property or try a different search term.")}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -425,6 +433,7 @@ export default function DocumentsPage() {
                                                 <button 
                                                     onClick={() => setCurrentPage(previousPage => Math.max(1, previousPage - 1))}
                                                     disabled={currentPage === 1}
+                                                    aria-label={t("Previous page")}
                                                     className="flex size-12 items-center justify-center rounded-2xl neumorphic-extruded transition-all hover:text-primary disabled:opacity-50"
                                                 >
                                                     <ChevronLeft className="size-5" />
@@ -450,6 +459,7 @@ export default function DocumentsPage() {
                                                 <button 
                                                     onClick={() => setCurrentPage(previousPage => Math.min(totalPages, previousPage + 1))}
                                                     disabled={currentPage === totalPages}
+                                                    aria-label={t("Next page")}
                                                     className="flex size-12 items-center justify-center rounded-2xl neumorphic-extruded transition-all hover:text-primary disabled:opacity-50"
                                                 >
                                                     <ChevronRight className="size-5" />
@@ -474,13 +484,14 @@ export default function DocumentsPage() {
                                     <ShieldCheck className="size-6 text-primary" />
                                 </div>
                                 <div>
-                                    <h4 className="text-lg font-black uppercase tracking-widest">Document Preview</h4>
-                                    <p className="text-[10px] opacity-50 font-black uppercase tracking-widest">Standard Template</p>
+                                    <h4 className="text-lg font-black uppercase tracking-widest">{t("Document Preview")}</h4>
+                                    <p className="text-[10px] opacity-50 font-black uppercase tracking-widest">{t("Standard Template")}</p>
                                 </div>
                             </div>
 
                             <button 
                                 onClick={() => setShowPreview(false)}
+                                aria-label={t("Close")}
                                 className="size-12 neumorphic-extruded rounded-full flex items-center justify-center transition-all"
                             >
                                 <X className="size-6" />
@@ -493,7 +504,8 @@ export default function DocumentsPage() {
                                     className="shadow-none border-none max-w-none p-8 sm:p-10"
                                     id="PREVIEW-MODE"
                                     start_date={previewStartDate}
-                                    end_date={previewEndDate}
+                                    end_date={null}
+                                    term_type="open_ended"
                                     monthly_rent={selectedTemplate.templateData?.base_rent_amount || 0}
                                     security_deposit={selectedTemplate.templateData?.base_rent_amount || 0}
                                     signed_at={null}

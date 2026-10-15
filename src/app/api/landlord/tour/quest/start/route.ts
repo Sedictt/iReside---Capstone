@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { z } from "zod";
+import { parseJsonBody } from "@/lib/validation/server";
 import {
     LANDLORD_QUESTS,
     LANDLORD_PRODUCT_TOUR_STEPS,
@@ -15,8 +17,11 @@ export async function POST(request: Request) {
     const { userId, supabase } = authContext;
     const adminClient = createAdminClient();
 
+    const parsed = await parseJsonBody(request, z.object({ questId: z.string().trim().min(1, "Quest ID is required.").max(64) }));
+    if (!parsed.ok) return parsed.response;
+    const questId = parsed.data.questId as LandlordQuestId;
+
     try {
-        const { questId } = (await request.json()) as { questId: LandlordQuestId };
         const quest = LANDLORD_QUESTS.find((q) => q.id === questId);
 
         if (!quest) {

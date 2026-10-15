@@ -7,6 +7,7 @@ import { Cookie, X, ShieldCheck, Settings, Shield } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useLanguageContext } from "@/context/LanguageContext"
 
 /**
  * User cookie preference categories.
@@ -22,6 +23,7 @@ type ConsentSettings = {
 export const OPEN_COOKIE_PREFERENCES_EVENT = "ireside:open-cookie-preferences"
 
 export function CookieConsent() {
+  const { t } = useLanguageContext()
   const [isVisible, setIsVisible] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [isManaging, setIsManaging] = useState(false)
@@ -64,8 +66,8 @@ export function CookieConsent() {
   const commitConsent = (settings: ConsentSettings) => {
     localStorage.setItem("ireside-consent-v1", JSON.stringify(settings))
     setIsVisible(false)
-    toast.success("Privacy settings updated", {
-      description: "Your preferences are now active across iReside.",
+    toast.success(t("Privacy settings updated"), {
+      description: t("Your preferences are now active across iReside."),
       icon: <ShieldCheck className="size-4 text-primary" />,
     })
   }
@@ -127,16 +129,16 @@ export function CookieConsent() {
                     </div>
                     <div className="flex-1 space-y-1.5">
                       <h3 className="font-display text-xl font-black tracking-tight text-foreground">
-                        Privacy Preferences
+                        {t("Privacy Preferences")}
                       </h3>
                       <p className="text-sm leading-relaxed text-muted-foreground">
-                        iReside uses only essential cookies to keep you signed in and remember your settings. We do not use advertising or third-party tracking.
+                        {t("iReside uses only essential cookies to keep you signed in and remember your settings. We do not use advertising or third-party tracking.")}
                       </p>
                       <p className="text-xs text-muted-foreground/60">
-                        By continuing, you agree to our{" "}
-                        <Link href="/terms" className="underline hover:text-primary transition-colors">Terms of Service</Link>
-                        {" "}and{" "}
-                        <Link href="/privacy" className="underline hover:text-primary transition-colors">Privacy Policy</Link>.
+                        {t("By continuing, you agree to our")}{" "}
+                        <Link href="/terms" className="underline hover:text-primary transition-colors">{t("Terms of Service")}</Link>
+                        {" "}{t("and")}{" "}
+                        <Link href="/privacy" className="underline hover:text-primary transition-colors">{t("Privacy Policy")}</Link>.
                       </p>
                     </div>
                   </div>
@@ -147,13 +149,13 @@ export function CookieConsent() {
                         onClick={handleAcceptAll}
                         className="flex-1 h-12 rounded-2xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-[0.97]"
                       >
-                        Accept all cookies
+                        {t("Accept all cookies")}
                       </Button>
                       <Button
                         variant="outline"
                         onClick={() => setIsManaging(true)}
                         className="px-4 h-12 rounded-2xl border-border bg-transparent hover:bg-muted/50 transition-colors"
-                        aria-label="Customize settings"
+                        aria-label={t("Customize settings")}
                       >
                         <Settings className="size-5" />
                       </Button>
@@ -163,11 +165,11 @@ export function CookieConsent() {
                         onClick={handleAcceptEssential}
                         className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-primary/20"
                       >
-                        Essential only
+                        {t("Essential only")}
                       </button>
                       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-tighter font-black text-muted-foreground/40">
                         <Shield className="size-3" />
-                        Encrypted & Private
+                        {t("Encrypted & Private")}
                       </div>
                     </div>
                   </div>
@@ -183,10 +185,11 @@ export function CookieConsent() {
                       <button 
                         onClick={() => setIsManaging(false)}
                         className="p-1.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
+                        aria-label={t("Close")}
                       >
                         <X className="size-5" />
                       </button>
-                      <h3 className="font-display text-lg font-black tracking-tight">Configure Privacy</h3>
+                      <h3 className="font-display text-lg font-black tracking-tight">{t("Configure Privacy")}</h3>
                     </div>
                   </div>
 
@@ -216,14 +219,14 @@ export function CookieConsent() {
                       onClick={handleSaveSettings}
                       className="flex-1 h-11 rounded-2xl bg-primary text-primary-foreground font-bold shadow-md shadow-primary/10"
                     >
-                      Save my choices
+                      {t("Save my choices")}
                     </Button>
                     <Button
                       variant="ghost"
                       onClick={handleAcceptAll}
                       className="flex-1 h-11 rounded-2xl text-primary font-bold hover:bg-primary/5"
                     >
-                      Enable all
+                      {t("Enable all")}
                     </Button>
                   </div>
                 </motion.div>
@@ -249,6 +252,7 @@ function SettingToggle({
   onToggle?: () => void
   readOnly?: boolean
 }) {
+  const { t } = useLanguageContext()
   return (
     <div 
       className={cn(
@@ -259,8 +263,8 @@ function SettingToggle({
       onClick={!readOnly ? onToggle : undefined}
     >
       <div className="flex-1 pr-4">
-        <h4 className="text-sm font-black text-foreground leading-tight">{title}</h4>
-        <p className="text-[11px] text-muted-foreground mt-1 leading-snug">{description}</p>
+        <h4 className="text-sm font-black text-foreground leading-tight">{t(title)}</h4>
+        <p className="text-[11px] text-muted-foreground mt-1 leading-snug">{t(description)}</p>
       </div>
       <div className={cn(
         "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors",

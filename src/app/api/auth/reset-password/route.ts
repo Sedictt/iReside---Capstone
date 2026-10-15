@@ -2,29 +2,19 @@ import { NextResponse } from "next/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { verifyPasswordResetToken } from "@/lib/auth/reset-token";
 import { sendPasswordResetConfirmationEmail } from "@/lib/email";
+import { parseJsonBody } from "@/lib/validation/server";
+import { passwordResetSchema } from "@/lib/validation/schemas/account.schema";
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const { email, resetToken, newPassword } = body;
-
-        if (!email || !resetToken || !newPassword) {
-            return NextResponse.json(
-                { error: "Missing required fields." },
-                { status: 400 }
-            );
-        }
-
-        if (typeof newPassword !== "string" || newPassword.length < 6) {
-            return NextResponse.json(
-                { error: "Password must be at least 6 characters long." },
-                { status: 400 }
-            );
-        }
+        // Same policy as setup and settings: 8+ chars with letters and a number/symbol.
+        const parsed = await parseJsonBody(request, passwordResetSchema);
+        if (!parsed.ok) return parsed.response;
+        const { email, resetToken, newPassword } = parsed.data;
 
         // Validate cryptographic reset token
         const verification = verifyPasswordResetToken(resetToken);
-        if (!verification.valid || !verification.userId || verification.email !== email.trim().toLowerCase()) {
+        if (!verification.valid || !verification.userId || verification.email !== email) {
             return NextResponse.json(
                 { error: "Session expired or invalid. Please verify your OTP code again." },
                 { status: 401 }

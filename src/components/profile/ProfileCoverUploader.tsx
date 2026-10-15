@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Camera, UploadCloud, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
 
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
@@ -19,6 +20,7 @@ type ProfileCoverUploaderProps = {
 export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: ProfileCoverUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
+    const { t } = useLanguageContext();
     const [coverUrl, setCoverUrl] = useState<string | null>(initialCoverUrl);
     const [isUploading, setIsUploading] = useState(false);
 
@@ -30,7 +32,7 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = handleMediaSelection(event, {
             preset: "image",
-            notify: (message, description) => toast.error(message, { description }),
+            notify: (message, description) => toast.error(t(message), { description: description ? t(description) : description }),
         });
 
         if (!file) return;
@@ -55,7 +57,7 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
             }
 
             setCoverUrl(payload.coverUrl);
-            toast.success("Cover photo updated");
+            toast.success(t("Cover photo updated"));
             
             // Sync Server Component
             router.refresh();
@@ -63,7 +65,7 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
             window.dispatchEvent(new CustomEvent("profile-updated"));
         } catch (error) {
             console.error(error);
-            toast.error("Failed to upload cover photo");
+            toast.error(t("Failed to upload cover photo"));
             setCoverUrl(initialCoverUrl);
         } finally {
             URL.revokeObjectURL(previewUrl);
@@ -78,7 +80,7 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
                 {coverUrl ? (
                     <Image
                         src={coverUrl}
-                        alt={`${fullName}'s cover photo`}
+                        alt={t("{name}'s cover photo", { name: fullName })}
                         fill
                         sizes="100vw"
                         className="object-cover opacity-60 group-hover:scale-105 transition-transform duration-[10s]"
@@ -107,7 +109,7 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
                     className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 hover:bg-background text-foreground border border-border/80 backdrop-blur-md text-[10px] font-black tracking-widest uppercase transition-all duration-300 shadow-xl disabled:opacity-50 cursor-pointer"
                 >
                     <Camera className="size-3.5" />
-                    {isUploading ? "Uploading..." : "Change Cover"}
+                    {isUploading ? t("Uploading...") : t("Change Cover")}
                 </button>
             </div>
 
@@ -115,7 +117,7 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="flex flex-col items-center gap-2 opacity-50">
                         <UploadCloud className="size-8 text-muted-foreground" />
-                        <span className="text-[10px] font-black tracking-widest uppercase text-muted-foreground">Upload Cover Photo</span>
+                        <span className="text-[10px] font-black tracking-widest uppercase text-muted-foreground">{t("Upload Cover Photo")}</span>
                     </div>
                 </div>
             )}

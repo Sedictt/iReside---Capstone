@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
+import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { generateSigningToken } from "@/lib/jwt";
+import { generateTemporaryPassword } from "@/lib/security/passwords";
 
 import { hashToken } from "@/lib/jwt";
 import { logAuditEvent } from "@/lib/audit-logging";
 import { sendSigningLinkEmail } from "@/lib/email";
+import { getAppBaseUrl } from "@/lib/app-url";
 
 /**
  * POST /api/landlord/applications/[applicationId]/signing-link
@@ -21,6 +24,9 @@ export async function POST(
   context: { params: Promise<{ applicationId: string }> }
 ) {
   const { applicationId } = await context.params;
+  if (!isId(applicationId)) {
+    return NextResponse.json({ error: "Application not found." }, { status: 404 });
+  }
 
   // Get authenticated user
   const authContext = await requireAuthenticatedUser(request);
@@ -79,7 +85,7 @@ export async function POST(
       // Create tenant account automatically if it doesn't exist
       console.log(`[signing-link] No profile found for ${application.applicant_email}. Provisioning account...`);
       const adminClient = createServiceRoleSupabaseClient();
-      const tempPassword = Math.random().toString(36).slice(-12);
+      const tempPassword = generateTemporaryPassword(12);
 
       
       const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
@@ -259,9 +265,8 @@ export async function POST(
     const property = unit?.property || unit?.properties as any;
     const contractTemplate = property?.contract_template || {};
 
+    // Auto-created leases are open-ended (no fixed end date).
     const startDate = new Date().toISOString().split('T')[0];
-    const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + 12);
 
     // Use default values since financial data isn't stored in applications table
     const monthlyRent = 0; // Will be updated later if needed
@@ -275,7 +280,8 @@ export async function POST(
         landlord_id: userId,
         status: "pending_signature",
         start_date: startDate,
-        end_date: endDate.toISOString().split('T')[0],
+        term_type: "open_ended",
+        end_date: null,
         monthly_rent: monthlyRent,
         security_deposit: securityDeposit,
         terms: contractTemplate,
@@ -381,8 +387,7 @@ export async function POST(
   }
 
   // Generate signing URL
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const signingUrl = `${baseUrl}/signing/tenant/${application.lease_id}?token=${token}`;
+  const signingUrl = `${getAppBaseUrl(new URL(request.url).origin)}/signing/tenant/${application.lease_id}?token=${token}`;
 
   // Send signing link email to tenant
   const propertyName = lease?.units?.properties?.name || "Property";

@@ -1,18 +1,22 @@
 import { NextResponse } from "next/server";
+import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { sendLandlordCredentialsCopy, sendTenantOnboardingReminder } from "@/lib/email";
 import { TENANT_PRODUCT_TOUR_ROUTE } from "@/lib/product-tour";
+import { generateTemporaryPassword } from "@/lib/security/passwords";
+import { buildAppUrl, buildAuthCallbackUrl } from "@/lib/app-url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
+/** Temporary password from a CSPRNG (see lib/security/passwords). */
 function generateTempPassword(): string {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
-    return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    return generateTemporaryPassword(12);
 }
 
 export async function POST(request: Request, context: { params: Promise<{ applicationId: string }> }) {
     const { applicationId } = await context.params;
+    if (!isId(applicationId)) {
+      return NextResponse.json({ error: "Application not found." }, { status: 404 });
+    }
     const adminClient = createServiceRoleSupabaseClient();
 
     const authContext = await requireAuthenticatedUser(request);
@@ -100,6 +104,7 @@ export async function POST(request: Request, context: { params: Promise<{ applic
         const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
             type: "recovery",
             email: tenantEmail,
+            options: { redirectTo: buildAuthCallbackUrl("/auth/reset-password") },
         });
         if (linkError) {
             console.error("[resend-credentials] generateLink error:", linkError);
@@ -167,6 +172,7 @@ export async function POST(request: Request, context: { params: Promise<{ applic
         const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
             type: "recovery",
             email: tenantEmail,
+            options: { redirectTo: buildAuthCallbackUrl("/auth/reset-password") },
         });
         if (linkError) {
             console.error("[resend-credentials] generateLink error:", linkError);
@@ -187,7 +193,7 @@ export async function POST(request: Request, context: { params: Promise<{ applic
         .eq("id", userId)
         .maybeSingle();
 
-    const onboardingUrl = `${APP_URL}${TENANT_PRODUCT_TOUR_ROUTE}`;
+    const onboardingUrl = buildAppUrl(TENANT_PRODUCT_TOUR_ROUTE);
 
     try {
         await sendTenantOnboardingReminder({

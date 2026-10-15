@@ -1,25 +1,36 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const CRON_SECRET = process.env.CRON_SECRET;
+function isAuthorizedCronRequest(authHeader: string | null): boolean {
+    const secret = process.env.CRON_SECRET;
+    if (!secret) {
+        // Fail closed in production: without a secret anyone could trigger billing for every landlord.
+        return process.env.NODE_ENV !== "production";
+    }
+    const expected = Buffer.from(`Bearer ${secret}`);
+    const provided = Buffer.from(authHeader ?? "");
+    return provided.length === expected.length && timingSafeEqual(provided, expected);
+}
 
 export async function POST(request: Request) {
     const authHeader = request.headers.get("authorization");
 
-    if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
+    if (!isAuthorizedCronRequest(authHeader)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const adminClient = createAdminClient();
 
     const { searchParams } = new URL(request.url);
     const targetMonth = searchParams.get("month");
 
-    const now = targetMonth 
-        ? new Date(targetMonth + "-01") 
-        : new Date();
-    
-    const billingMonth = now.toISOString().slice(0, 7);
+    // YYYY-MM with a real month; anything else used to throw on toISOString() (500).
+    if (targetMonth !== null && !/^\d{4}-(0[1-9]|1[0-2])$/.test(targetMonth)) {
+        return NextResponse.json({ error: "month must be in YYYY-MM format." }, { status: 400 });
+    }
+
+    const adminClient = createAdminClient();
+
+    const billingMonth = targetMonth ?? new Date().toISOString().slice(0, 7);
 
     try {
         const { data: landlords, error: landlordError } = await adminClient

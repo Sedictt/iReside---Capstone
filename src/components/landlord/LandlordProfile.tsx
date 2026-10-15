@@ -26,6 +26,7 @@ import {
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 // Types
 type Section = "My Profile" | "Security" | "Teams" | "Team Member" | "Notifications" | "Billing" | "Data Export" | "Delete Account";
@@ -42,6 +43,7 @@ const SIDEBAR_ITEMS = [
 ];
 
 export function LandlordProfile() {
+    const { t } = useLanguageContext();
     const [activeTab, setActiveTab] = useState<Section>("Security");
 
     // Security State
@@ -61,22 +63,22 @@ export function LandlordProfile() {
                 return (
                     <div className="space-y-8 max-w-4xl">
                         <div>
-                            <h2 className="text-xl font-black text-white mb-6">Security</h2>
+                            <h2 className="text-xl font-black text-white mb-6">{t("Security")}</h2>
 
                             {/* Email Address */}
                             <div className="py-6 border-b border-white/5">
                                 <div className="flex items-start justify-between">
                                     <div className="space-y-1">
-                                        <h3 className="text-sm font-medium text-white">Email address</h3>
-                                        <p className="text-sm text-zinc-400">The email address associated with your account.</p>
+                                        <h3 className="text-sm font-medium text-white">{t("Email address")}</h3>
+                                        <p className="text-sm text-zinc-400">{t("The email address associated with your account.")}</p>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <div className="text-right">
                                             <p className="text-sm font-medium text-white">{email}</p>
-                                            <p className="text-xs text-red-500 font-medium">Unverified</p>
+                                            <p className="text-xs text-red-500 font-medium">{t("Unverified")}</p>
                                         </div>
                                         <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm font-medium text-zinc-300 hover:bg-white/5 transition-colors">
-                                            Edit <Edit2 className="size-3" />
+                                            {t("Edit")} <Edit2 className="size-3" />
                                         </button>
                                     </div>
                                 </div>
@@ -86,11 +88,11 @@ export function LandlordProfile() {
                             <div className="py-6 border-b border-white/5">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <h3 className="text-sm font-medium text-white">Password</h3>
-                                        <p className="text-sm text-zinc-400">Set a unique password to protect your account.</p>
+                                        <h3 className="text-sm font-medium text-white">{t("Password")}</h3>
+                                        <p className="text-sm text-zinc-400">{t("Set a unique password to protect your account.")}</p>
                                     </div>
                                     <button className="px-4 py-2 rounded-lg border border-white/10 text-sm font-medium text-zinc-300 hover:bg-white/5 transition-colors">
-                                        Change Password
+                                        {t("Change Password")}
                                     </button>
                                 </div>
                             </div>
@@ -99,8 +101,8 @@ export function LandlordProfile() {
                             <div className="py-6 border-b border-white/5">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <h3 className="text-sm font-medium text-white">2-step verification</h3>
-                                        <p className="text-sm text-zinc-400">Make your account extra secure. Along with your password, you'll need to enter a code.</p>
+                                        <h3 className="text-sm font-medium text-white">{t("2-step verification")}</h3>
+                                        <p className="text-sm text-zinc-400">{t("Make your account extra secure. Along with your password, you'll need to enter a code.")}</p>
                                     </div>
                                     <button
                                         onClick={() => setIsTwoFactorEnabled(!isTwoFactorEnabled)}
@@ -123,10 +125,10 @@ export function LandlordProfile() {
                             <div className="py-6 border-b border-white/5">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <h3 className="text-sm font-medium text-white">Restricted Members</h3>
-                                        <p className="text-sm text-zinc-400">This will shut down your account. Your account will be reactive when you sign in again.</p>
+                                        <h3 className="text-sm font-medium text-white">{t("Restricted Members")}</h3>
+                                        <p className="text-sm text-zinc-400">{t("This will shut down your account. Your account will be reactive when you sign in again.")}</p>
                                     </div>
-                                    <span className="text-sm text-zinc-400">None</span>
+                                    <span className="text-sm text-zinc-400">{t("None")}</span>
                                 </div>
                             </div>
 
@@ -134,11 +136,11 @@ export function LandlordProfile() {
                             <div className="py-6 border-b border-white/5">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <h3 className="text-sm font-medium text-white">Deactivate my account</h3>
-                                        <p className="text-sm text-zinc-400">This will shut down your account. Your account will be reactive when you sign in again.</p>
+                                        <h3 className="text-sm font-medium text-white">{t("Deactivate my account")}</h3>
+                                        <p className="text-sm text-zinc-400">{t("This will shut down your account. Your account will be reactive when you sign in again.")}</p>
                                     </div>
                                     <button className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">
-                                        Deactivate
+                                        {t("Deactivate")}
                                     </button>
                                 </div>
                             </div>
@@ -147,11 +149,11 @@ export function LandlordProfile() {
                             <div className="py-6">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <h3 className="text-sm font-medium text-white">Delete Account</h3>
-                                        <p className="text-sm text-zinc-400">This will delete your account. Your account will be permanently deleted from Prodeel.</p>
+                                        <h3 className="text-sm font-medium text-white">{t("Delete Account")}</h3>
+                                        <p className="text-sm text-zinc-400">{t("This will delete your account. Your account will be permanently deleted from Prodeel.")}</p>
                                     </div>
                                     <button className="text-sm font-medium text-red-500 hover:text-red-400 transition-colors">
-                                        Delete
+                                        {t("Delete")}
                                     </button>
                                 </div>
                             </div>
@@ -172,7 +174,7 @@ export function LandlordProfile() {
                                         <div className="flex items-center gap-2 mb-1">
                                             <h1 className="text-xl font-black text-white">Elite Property Management Group</h1>
                                             <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-blue-400 border border-blue-500/20">
-                                                <CheckCircle className="size-3" /> Verified
+                                                <CheckCircle className="size-3" /> {t("Verified")}
                                             </span>
                                         </div>
                                         <p className="text-sm text-zinc-400 mb-4 flex items-center gap-1">
@@ -180,14 +182,14 @@ export function LandlordProfile() {
                                         </p>
                                         <div className="flex gap-4">
                                             <div className="rounded-lg bg-[#0f172a] px-3 py-1.5 border border-white/5">
-                                                <p className="text-[10px] uppercase text-zinc-500 font-black tracking-wider">Total Properties</p>
+                                                <p className="text-[10px] uppercase text-zinc-500 font-black tracking-wider">{t("Total Properties")}</p>
                                                 <div className="flex items-baseline gap-2">
                                                     <span className="text-lg font-black text-white">24</span>
                                                     <span className="text-xs font-medium text-emerald-500">+2%</span>
                                                 </div>
                                             </div>
                                             <div className="rounded-lg bg-[#0f172a] px-3 py-1.5 border border-white/5">
-                                                <p className="text-[10px] uppercase text-zinc-500 font-black tracking-wider">Total Units</p>
+                                                <p className="text-[10px] uppercase text-zinc-500 font-black tracking-wider">{t("Total Units")}</p>
                                                 <div className="flex items-baseline gap-2">
                                                     <span className="text-lg font-black text-white">148</span>
                                                     <span className="text-xs font-medium text-emerald-500">+12%</span>
@@ -199,7 +201,7 @@ export function LandlordProfile() {
                                 <div className="flex items-center gap-3">
                                     <button className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#0f172a] px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors shadow-sm">
                                         <Edit2 className="size-4" />
-                                        Edit Profile
+                                        {t("Edit Profile")}
                                     </button>
                                 </div>
                             </div>
@@ -210,24 +212,24 @@ export function LandlordProfile() {
                 return (
                     <div className="space-y-6">
                         <div className="border-b border-white/5 pb-6">
-                            <h2 className="text-xl font-black text-white mb-2">Payment & Payout Settings</h2>
-                            <p className="text-sm text-zinc-400">Configure how you receive rental payments from your tenants.</p>
+                            <h2 className="text-xl font-black text-white mb-2">{t("Payment & Payout Settings")}</h2>
+                            <p className="text-sm text-zinc-400">{t("Configure how you receive rental payments from your tenants.")}</p>
                         </div>
 
                         <div className="grid gap-6 md:grid-cols-2">
                             <div className="space-y-2">
-                                <label className="text-xs font-black uppercase tracking-wider text-zinc-500">Default Payout Method</label>
+                                <label className="text-xs font-black uppercase tracking-wider text-zinc-500">{t("Default Payout Method")}</label>
                                 <div className="relative">
                                     <select className="w-full appearance-none rounded-lg bg-[#0f172a] border border-white/10 px-4 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors">
                                         <option>GCash (E-Wallet)</option>
                                         <option>Bank Transfer (BDO)</option>
-                                        <option>Check Deposit</option>
+                                        <option>{t("Check Deposit")}</option>
                                     </select>
                                     <ChevronRight className="pointer-events-none absolute right-3 top-3 size-4 rotate-90 text-zinc-500" />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-black uppercase tracking-wider text-zinc-500">GCash Mobile Number</label>
+                                <label className="text-xs font-black uppercase tracking-wider text-zinc-500">{t("GCash Mobile Number")}</label>
                                 <div className="relative">
                                     <Smartphone className="absolute left-3 top-2.5 size-4 text-zinc-500" />
                                     <input maxLength={15}
@@ -247,10 +249,10 @@ export function LandlordProfile() {
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-black text-white text-sm">Verified GCash Account</span>
+                                        <span className="font-black text-white text-sm">{t("Verified GCash Account")}</span>
                                     </div>
-                                    <p className="text-xs text-zinc-400 max-w-sm">Your QR code is active and will be shown to tenants during their payment flow. Last updated on Oct 12, 2023.</p>
-                                    <button className="mt-2 text-xs font-medium text-blue-400 hover:text-blue-300">Replace QR Code</button>
+                                    <p className="text-xs text-zinc-400 max-w-sm">{t("Your QR code is active and will be shown to tenants during their payment flow. Last updated on Oct 12, 2023.")}</p>
+                                    <button className="mt-2 text-xs font-medium text-blue-400 hover:text-blue-300">{t("Replace QR Code")}</button>
                                 </div>
                             </div>
                             <div className="size-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
@@ -263,16 +265,16 @@ export function LandlordProfile() {
                 return (
                     <div className="space-y-6">
                         <div className="border-b border-white/5 pb-6">
-                            <h2 className="text-xl font-black text-white mb-2">Notification Matrix</h2>
-                            <p className="text-sm text-zinc-400">Control how and when you want to be alerted about your properties.</p>
+                            <h2 className="text-xl font-black text-white mb-2">{t("Notification Matrix")}</h2>
+                            <p className="text-sm text-zinc-400">{t("Control how and when you want to be alerted about your properties.")}</p>
                         </div>
 
                         <div className="divide-y divide-white/5">
                             {/* Row 1 */}
                             <div className="flex items-center justify-between py-6">
                                 <div className="space-y-1">
-                                    <p className="text-sm font-medium text-white">New Inquiries</p>
-                                    <p className="text-sm text-zinc-400">Alerts when potential tenants message you about listings.</p>
+                                    <p className="text-sm font-medium text-white">{t("New Inquiries")}</p>
+                                    <p className="text-sm text-zinc-400">{t("Alerts when potential tenants message you about listings.")}</p>
                                 </div>
                                 <div className="flex items-center gap-6">
                                     <div className="flex items-center gap-2">
@@ -282,7 +284,7 @@ export function LandlordProfile() {
                                         >
                                             <div className={cn("absolute top-1 left-1 size-3 bg-white rounded-full shadow-sm transform transition-transform", emailNotification ? "translate-x-4" : "")} />
                                         </div>
-                                        <span className="text-xs text-zinc-400">Email</span>
+                                        <span className="text-xs text-zinc-400">{t("Email")}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div
@@ -291,7 +293,7 @@ export function LandlordProfile() {
                                         >
                                             <div className={cn("absolute top-1 left-1 size-3 bg-white rounded-full shadow-sm transform transition-transform", smsNotification ? "translate-x-4" : "")} />
                                         </div>
-                                        <span className="text-xs text-zinc-400">SMS</span>
+                                        <span className="text-xs text-zinc-400">{t("SMS")}</span>
                                     </div>
                                 </div>
                             </div>
@@ -299,8 +301,8 @@ export function LandlordProfile() {
                             {/* Row 2 */}
                             <div className="flex items-center justify-between py-6">
                                 <div className="space-y-1">
-                                    <p className="text-sm font-medium text-white">Maintenance Requests</p>
-                                    <p className="text-sm text-zinc-400">Urgent notifications for repairs and tenant issues.</p>
+                                    <p className="text-sm font-medium text-white">{t("Maintenance Requests")}</p>
+                                    <p className="text-sm text-zinc-400">{t("Urgent notifications for repairs and tenant issues.")}</p>
                                 </div>
                                 <div className="flex items-center gap-6">
                                     <div className="flex items-center gap-2">
@@ -310,7 +312,7 @@ export function LandlordProfile() {
                                         >
                                             <div className={cn("absolute top-1 left-1 size-3 bg-white rounded-full shadow-sm transform transition-transform", maintEmail ? "translate-x-4" : "")} />
                                         </div>
-                                        <span className="text-xs text-zinc-400">Email</span>
+                                        <span className="text-xs text-zinc-400">{t("Email")}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div
@@ -319,7 +321,7 @@ export function LandlordProfile() {
                                         >
                                             <div className={cn("absolute top-1 left-1 size-3 bg-white rounded-full shadow-sm transform transition-transform", maintSms ? "translate-x-4" : "")} />
                                         </div>
-                                        <span className="text-xs text-zinc-400">SMS</span>
+                                        <span className="text-xs text-zinc-400">{t("SMS")}</span>
                                     </div>
                                 </div>
                             </div>
@@ -329,7 +331,7 @@ export function LandlordProfile() {
             default:
                 return (
                     <div className="flex items-center justify-center h-64 border border-dashed border-white/10 rounded-xl text-zinc-500">
-                        Content for {activeTab} coming soon
+                        {t("Content for {section} coming soon", { section: t(activeTab) })}
                     </div>
                 );
         }
@@ -341,7 +343,7 @@ export function LandlordProfile() {
             <aside className="w-full lg:w-64 flex-shrink-0">
                 <div className="sticky top-24 space-y-8">
                     <div>
-                        <h2 className="text-xl font-black text-white mb-6 px-3">Account Settings</h2>
+                        <h2 className="text-xl font-black text-white mb-6 px-3">{t("Account Settings")}</h2>
                         <nav className="space-y-1">
                             {SIDEBAR_ITEMS.map((item) => (
                                 <button
@@ -357,7 +359,7 @@ export function LandlordProfile() {
                                     )}
                                 >
                                     <item.icon className="size-4" />
-                                    {item.label}
+                                    {t(item.label)}
                                 </button>
                             ))}
                         </nav>

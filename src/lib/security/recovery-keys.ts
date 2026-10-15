@@ -14,12 +14,18 @@ const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
  * Derives a 32-byte key from environment secrets.
  */
 function getMasterKey(): Buffer {
-    const rawSecret =
+    const configuredSecret =
         process.env.SECURITY_KEY_SECRET ||
         process.env.SUPABASE_SERVICE_ROLE_KEY ||
-        process.env.NEXTAUTH_SECRET ||
-        "ireside-default-secret-seed-should-be-configured-in-env";
+        process.env.NEXTAUTH_SECRET;
 
+    // A public fallback would let anyone decrypt stored recovery keys, so
+    // production fails closed instead.
+    if (!configuredSecret && process.env.NODE_ENV === "production") {
+        throw new Error("SECURITY_KEY_SECRET (or SUPABASE_SERVICE_ROLE_KEY) must be configured in production.");
+    }
+
+    const rawSecret = configuredSecret || "ireside-default-secret-seed-should-be-configured-in-env";
     return crypto.createHash("sha256").update(rawSecret).digest();
 }
 

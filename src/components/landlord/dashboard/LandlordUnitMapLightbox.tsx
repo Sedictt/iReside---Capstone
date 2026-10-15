@@ -6,12 +6,14 @@ import { Map, ArrowRight, Layers, Grid, ShieldCheck } from "lucide-react";
 import { useProperty } from "@/context/PropertyContext";
 import { useLandlordSetup } from "@/hooks/useLandlordSetup";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export function LandlordUnitMapLightbox() {
     const router = useRouter();
     const pathname = usePathname();
     const { properties, selectedPropertyId, setSelectedPropertyId } = useProperty();
     const setup = useLandlordSetup();
+    const { t } = useLanguageContext();
     const [hasMounted, setHasMounted] = useState(false);
     const [isDismissed, setIsDismissed] = useState(false);
 
@@ -54,6 +56,8 @@ export function LandlordUnitMapLightbox() {
         properties.find((p) => p.id === activePropertyId && !p.isMapSetupComplete) ||
         properties.find((p) => !p.isMapSetupComplete) || 
         properties[0];
+
+    const [registeredBefore, registeredAfter] = t("Your property {property} has been registered! Before you can invite residents, collect rent, or assign maintenance tickets, you must place your units on the unit map.").split("{property}");
 
     const handleConfigureUnitMap = () => {
         if (unconfiguredProperty) {
@@ -102,17 +106,17 @@ export function LandlordUnitMapLightbox() {
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">
-                            Step 2 of 5 • Unit Map
+                            {t("Step {step} of {total} • Unit Map", { step: 2, total: 5 })}
                         </span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                            Mandatory Setup
+                            {t("Mandatory Setup")}
                         </span>
                     </div>
                     <h1 id="unit-map-setup-lightbox-title" className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight">
-                        Configure Your Unit Map
+                        {t("Configure Your Unit Map")}
                     </h1>
                     <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        Your property <span className="font-bold text-foreground">"{unconfiguredProperty?.name || "Primary Property"}"</span> has been registered! Before you can invite residents, collect rent, or assign maintenance tickets, you must place your units on the unit map.
+                        {registeredBefore}<span className="font-bold text-foreground">"{unconfiguredProperty?.name || t("Primary Property")}"</span>{registeredAfter}
                     </p>
                 </div>
 
@@ -124,10 +128,10 @@ export function LandlordUnitMapLightbox() {
                         </div>
                         <div>
                             <h3 className="text-xs font-black text-foreground">
-                                1. Floor Level Assignments
+                                {t("1. Floor Level Assignments")}
                             </h3>
                             <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Review unit distributions per floor or customize multi-story floor assignments.
+                                {t("Review unit distributions per floor or customize multi-story floor assignments.")}
                             </p>
                         </div>
                     </div>
@@ -138,10 +142,10 @@ export function LandlordUnitMapLightbox() {
                         </div>
                         <div>
                             <h3 className="text-xs font-black text-foreground">
-                                2. One-Click Unit Map Generation
+                                {t("2. One-Click Unit Map Generation")}
                             </h3>
                             <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Auto-generate your interactive 2D unit-map layout with automatic unit placement.
+                                {t("Auto-generate your interactive 2D unit-map layout with automatic unit placement.")}
                             </p>
                         </div>
                     </div>
@@ -152,10 +156,10 @@ export function LandlordUnitMapLightbox() {
                         </div>
                         <div>
                             <h3 className="text-xs font-black text-foreground">
-                                3. Full Workspace Unlocking
+                                {t("3. Full Workspace Unlocking")}
                             </h3>
                             <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Once your unit layout is saved, resident profiles, billing ledgers, and maintenance become fully active.
+                                {t("Once your unit layout is saved, resident profiles, billing ledgers, and maintenance become fully active.")}
                             </p>
                         </div>
                     </div>
@@ -169,12 +173,12 @@ export function LandlordUnitMapLightbox() {
                         className="group relative w-full flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-primary px-6 py-4 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-105 active:scale-98 cursor-pointer"
                     >
                         <span className="text-xs sm:text-sm font-black uppercase tracking-wider relative z-10">
-                            {isUnitMapPage ? "Start Unit Map Setup" : "Configure Unit Map Now"}
+                            {isUnitMapPage ? t("Start Unit Map Setup") : t("Configure Unit Map Now")}
                         </span>
                         <ArrowRight className="size-4 relative z-10 transition-transform group-hover:translate-x-1" />
                     </button>
                     <p className="mt-3 text-center text-[10px] font-medium text-muted-foreground/70">
-                        This step cannot be skipped. Units must be spatially configured to manage occupancy and leases.
+                        {t("This step cannot be skipped. Units must be spatially configured to manage occupancy and leases.")}
                     </p>
                 </div>
             </div>

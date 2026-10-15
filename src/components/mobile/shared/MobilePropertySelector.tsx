@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { useProperty } from '@/context/PropertyContext';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 import { 
     ChevronDown, 
     Building2, 
@@ -15,6 +16,7 @@ import {
 
 export function MobilePropertySelector({ className }: { className?: string }) {
     const { properties, selectedPropertyId, setSelectedPropertyId, selectedProperty, loading } = useProperty();
+    const { t } = useLanguageContext();
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
@@ -38,7 +40,8 @@ export function MobilePropertySelector({ className }: { className?: string }) {
     );
 
     const isAll = !selectedPropertyId || selectedPropertyId === 'all';
-    const currentName = isAll ? 'ALL PROPERTIES' : (selectedProperty?.name?.toUpperCase() || 'ALL PROPERTIES');
+    const allPropertiesLabel = t('All Properties').toUpperCase();
+    const currentName = isAll ? allPropertiesLabel : (selectedProperty?.name?.toUpperCase() || allPropertiesLabel);
 
     if (loading && properties.length === 0) {
         return (
@@ -81,7 +84,7 @@ export function MobilePropertySelector({ className }: { className?: string }) {
                     {/* Text block */}
                     <div className="flex flex-col min-w-0">
                         <span className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">
-                            PROPERTY
+                            {t('Property')}
                         </span>
                         <span className="text-[12px] font-black uppercase tracking-widest text-foreground truncate mt-0.5">
                             {currentName}
@@ -103,7 +106,7 @@ export function MobilePropertySelector({ className }: { className?: string }) {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40 pointer-events-none" />
                         <input
                             type="text"
-                            placeholder="SEARCH PROPERTIES…"
+                            placeholder={t('Search properties…').toUpperCase()}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onClick={(e) => e.stopPropagation()}
@@ -113,6 +116,7 @@ export function MobilePropertySelector({ className }: { className?: string }) {
                             <button
                                 type="button"
                                 onClick={() => setSearchQuery('')}
+                                aria-label={t('Clear search')}
                                 className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/50 hover:text-foreground"
                             >
                                 <X className="size-3.5" />
@@ -143,7 +147,7 @@ export function MobilePropertySelector({ className }: { className?: string }) {
                                 </div>
                                 <div className="flex flex-1 flex-col items-start overflow-hidden">
                                     <span className="text-[11px] font-black uppercase tracking-widest text-foreground">
-                                        ALL PROPERTIES
+                                        {t('All Properties')}
                                     </span>
                                 </div>
                                 {isAll && (
@@ -155,14 +159,14 @@ export function MobilePropertySelector({ className }: { className?: string }) {
                         {/* Section Header: YOUR PROPERTIES */}
                         <div className="px-3 pt-1">
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
-                                YOUR PROPERTIES
+                                {t('Your Properties')}
                             </p>
                         </div>
 
                         {/* Properties list */}
                         {filteredProperties.length === 0 ? (
                             <div className="p-8 text-center">
-                                <p className="text-xs font-medium text-muted-foreground/40 italic">No properties found</p>
+                                <p className="text-xs font-medium text-muted-foreground/40 italic">{t('No properties found')}</p>
                             </div>
                         ) : (
                             filteredProperties.map((property) => {

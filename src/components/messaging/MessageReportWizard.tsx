@@ -23,6 +23,14 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { textRule } from "@/lib/validation/rules";
+import { MESSAGE_LIMITS } from "@/lib/validation/schemas/operations.schema";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type MessageReportCategory = "spam" | "phishing" | "harassment" | "profanity" | "other";
 
@@ -159,6 +167,7 @@ export function MessageReportWizard({
   reportedUserLabel,
   initialMessageId,
 }: MessageReportWizardProps) {
+  const { t } = useLanguageContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [state, dispatch] = useReducer(messageReportReducer, {
@@ -180,6 +189,24 @@ export function MessageReportWizard({
 
   const canAttachMore = state.screenshots.length < 4;
 
+  const reportValues = useMemo(
+    () => ({ category: state.category, reportedMessageId: state.reportedMessageId, exactMessage: state.exactMessage, details: state.details }),
+    [state.category, state.reportedMessageId, state.exactMessage, state.details]
+  );
+  const form = useFormValidation(reportValues, {
+    reportedMessageId: (value) =>
+      value && !UUID_PATTERN.test(String(value).trim()) ? t("Message ID must be a valid message identifier.") : undefined,
+    exactMessage: (value, all) => {
+      const lengthError = textRule(value, { label: "Exact content", max: MESSAGE_LIMITS.reportExactMessage });
+      if (lengthError) return lengthError;
+      if (all.category === "profanity" && String(value ?? "").trim().length < 3 && !String(all.reportedMessageId ?? "").trim()) {
+        return t("Paste the offending message or a message ID for profanity reports.");
+      }
+      return undefined;
+    },
+    details: (value) => textRule(value, { label: "Details", max: MESSAGE_LIMITS.reportDetails }),
+  });
+
   const hasAnyEvidence = useMemo(() => {
     return Boolean(state.details.trim()) || Boolean(state.exactMessage.trim()) || Boolean(state.reportedMessageId.trim()) || state.screenshots.length > 0;
   }, [state.details, state.exactMessage, state.reportedMessageId, state.screenshots.length]);
@@ -191,6 +218,7 @@ export function MessageReportWizard({
       URL.revokeObjectURL(preview);
     });
     dispatch({ type: "RESET" });
+    form.reset();
   };
 
   const handleClose = () => {
@@ -201,7 +229,7 @@ export function MessageReportWizard({
   const addScreenshots = (files: File[]) => {
     if (files.length === 0) return;
     if (files.length + state.screenshots.length > 4) {
-      toast.error("Limit exceeded", { description: "You can attach up to 4 screenshots." });
+      toast.error(t("Limit exceeded"), { description: t("You can attach up to 4 screenshots.") });
       return;
     }
 
@@ -228,7 +256,8 @@ export function MessageReportWizard({
   };
 
   const submit = async () => {
-    if (!targetUserId || !conversationId) return;
+    if (!targetUserId || !conversationId || state.isSubmitting) return;
+    if (!form.validateAll()) return;
     dispatch({ type: "SET_ERROR", payload: null });
     dispatch({ type: "SET_SUBMITTING", payload: true });
     try {
@@ -241,11 +270,14 @@ export function MessageReportWizard({
       state.screenshots.forEach((s) => formData.append("screenshots", s));
 
       const response = await fetch(`/api/messages/users/${targetUserId}/reports`, { method: "POST", body: formData });
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-      if (!response.ok) throw new Error(payload?.error ?? "Failed to submit report.");
+      const payload = (await response.json().catch(() => null)) as { error?: string; fieldErrors?: Record<string, string> } | null;
+      if (!response.ok) {
+        form.setServerErrors(payload?.fieldErrors);
+        throw new Error(payload?.error ?? t("Failed to submit report."));
+      }
       handleClose();
     } catch (e) {
-      dispatch({ type: "SET_ERROR", payload: e instanceof Error ? e.message : "Failed to submit report." });
+      dispatch({ type: "SET_ERROR", payload: e instanceof Error ? e.message : t("Failed to submit report.") });
     } finally {
       dispatch({ type: "SET_SUBMITTING", payload: false });
     }
@@ -270,16 +302,16 @@ export function MessageReportWizard({
                   <ShieldAlert className="size-6" />
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="text-xl font-black tracking-tight text-high">Security Report</h3>
+                  <h3 className="text-xl font-black tracking-tight text-high">{t("Security Report")}</h3>
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-disabled">
-                    {reportedUserLabel ? `Submitting for ${reportedUserLabel}` : "Citizen Safety & Verification"}
+                    {reportedUserLabel ? t("Submitting for {name}", { name: reportedUserLabel }) : t("Citizen Safety & Verification")}
                   </p>
                 </div>
               </div>
               <button 
                 onClick={handleClose} 
                 className="rounded-2xl p-2.5 hover:bg-surface-2 transition-all active:scale-90" 
-                aria-label="Close report wizard"
+                aria-label={t("Close report wizard")}
               >
                 <X className="size-6" />
               </button>
@@ -289,7 +321,7 @@ export function MessageReportWizard({
               {/* Category Selection */}
               <section>
                 <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-4 ml-1">
-                  Violation Category
+                  {t("Violation Category")}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {CATEGORY_META.map((c) => {
@@ -330,10 +362,10 @@ export function MessageReportWizard({
                           "text-[10px] font-black uppercase tracking-widest mb-1 transition-colors",
                           isActive ? theme.icon : "text-high"
                         )}>
-                          {c.label}
+                          {t(c.label)}
                         </span>
                         <span className="text-[10px] font-medium text-disabled line-clamp-1 group-hover:text-medium transition-colors">
-                          {c.helper}
+                          {t(c.helper)}
                         </span>
                         {isActive && (
                           <motion.div 
@@ -353,63 +385,69 @@ export function MessageReportWizard({
               <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="message-id" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
-                    Message Identifier
+                    {t("Message Identifier")}
                   </label>
                   <div className="group relative">
                     <input maxLength={60}
+                      {...form.fieldProps("reportedMessageId")}
                       id="message-id"
                       value={state.reportedMessageId}
                       onChange={(e) => dispatch({ type: "SET_REPORTED_MESSAGE_ID", payload: normalizePastedMessageId(e.target.value) })}
-                      placeholder="Paste message ID..."
+                      placeholder={t("Paste message ID...")}
                       className="w-full h-12 rounded-2xl border border-border bg-surface-2 px-4 text-sm font-medium focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all font-mono"
                     />
                     <button
                       type="button"
                       onClick={handlePasteMessageId}
                       className="absolute right-2 top-2 p-1.5 rounded-xl text-disabled hover:text-primary hover:bg-primary/5 transition-all"
-                      title="Paste from clipboard"
+                      title={t("Paste from clipboard")}
                     >
                       <ClipboardPaste className="size-4" />
                     </button>
                   </div>
+                  <FieldError id={form.errorId("reportedMessageId")} message={form.errorFor("reportedMessageId")} />
                   <p className="mt-2 text-[10px] font-medium text-disabled px-1">
-                    Enables exact snapshot verification for faster moderation.
+                    {t("Enables exact snapshot verification for faster moderation.")}
                   </p>
                 </div>
 
                 <div>
                   <label htmlFor="exact-content" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
-                    Exact Content (Optional)
+                    {t("Exact Content (Optional)")}
                   </label>
                   <textarea maxLength={500}
+                    {...form.fieldProps("exactMessage")}
                     id="exact-content"
                     value={state.exactMessage}
                     onChange={(e) => dispatch({ type: "SET_EXACT_MESSAGE", payload: e.target.value })}
-                    placeholder="Copy-paste the offending text..."
+                    placeholder={t("Copy-paste the offending text...")}
                     className="w-full h-12 rounded-2xl border border-border bg-surface-2 px-4 py-3 text-sm font-medium focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all resize-none min-h-[48px]"
                   />
+                  <FieldError id={form.errorId("exactMessage")} message={form.errorFor("exactMessage")} />
                 </div>
               </section>
 
               {/* Details */}
               <section>
                 <label htmlFor="incident-narrative" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
-                  Incident Narrative
+                  {t("Incident Narrative")}
                 </label>
                 <textarea maxLength={500}
+                  {...form.fieldProps("details")}
                   id="incident-narrative"
                   value={state.details}
                   onChange={(e) => dispatch({ type: "SET_DETAILS", payload: e.target.value })}
-                  placeholder="Provide context, dates, or why this behavior is unsafe..."
+                  placeholder={t("Provide context, dates, or why this behavior is unsafe...")}
                   className="w-full rounded-[2rem] border border-border bg-surface-2 p-5 text-sm font-medium focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all h-32 resize-none"
                 />
+                <FieldError id={form.errorId("details")} message={form.errorFor("details")} />
               </section>
 
               {/* Screenshots */}
               <section>
                 <div className="flex items-center justify-between mb-3 ml-1">
                   <label htmlFor="screenshot-input" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled">
-                    Visual Evidence
+                    {t("Visual Evidence")}
                   </label>
                   <span className="text-[10px] font-black uppercase tracking-widest text-disabled">{state.screenshots.length}/4</span>
                 </div>
@@ -425,11 +463,12 @@ export function MessageReportWizard({
                         exit={{ opacity: 0, scale: 0.8 }}
                         className="group relative size-24 rounded-2xl border border-border overflow-hidden bg-surface-3 shadow-sm"
                       >
-                        <Image src={url} alt={`Preview ${idx}`} fill sizes="96px" className="object-cover" />
+                        <Image src={url} alt={t("Preview {index}", { index: idx })} fill sizes="96px" className="object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
                           <button
                             type="button"
                             onClick={() => removeScreenshot(idx)}
+                            aria-label={t("Remove screenshot")}
                             className="p-2 rounded-xl bg-red-500 text-white shadow-lg active:scale-90"
                           >
                             <Trash2 className="size-4" />
@@ -449,7 +488,7 @@ export function MessageReportWizard({
                           <Camera className="size-5" />
                         </div>
                         <span className="text-[9px] font-black uppercase tracking-widest text-disabled group-hover:text-primary">
-                          Add
+                          {t("Add")}
                         </span>
                       </motion.button>
                     )}
@@ -467,7 +506,7 @@ export function MessageReportWizard({
                       preset: "image",
                       multiple: true,
                       maxFiles: 4,
-                      notify: (msg, desc) => toast.error(msg, { description: desc }),
+                      notify: (msg, desc) => toast.error(tr(msg), { description: desc }),
                     });
                     if (validFiles && validFiles.length > 0) {
                       addScreenshots(validFiles);
@@ -492,7 +531,7 @@ export function MessageReportWizard({
             <div className="shrink-0 border-t border-divider p-6 bg-surface-1/50 flex items-center justify-between gap-4">
               <div className="hidden sm:flex items-center gap-2 text-disabled">
                 <ShieldAlert className="size-4" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Confidential Submission</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">{t("Confidential Submission")}</span>
               </div>
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <button
@@ -500,7 +539,7 @@ export function MessageReportWizard({
                   onClick={handleClose}
                   className="flex-1 sm:flex-none px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-all active:scale-95"
                 >
-                  Cancel
+                  {t("Cancel")}
                 </button>
                 <button
                   type="button"
@@ -514,11 +553,11 @@ export function MessageReportWizard({
                   {state.isSubmitting ? (
                     <>
                       <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Encrypting...</span>
+                      <span>{t("Encrypting...")}</span>
                     </>
                   ) : (
                     <>
-                      <span>Submit Official Report</span>
+                      <span>{t("Submit Official Report")}</span>
                       <ChevronRight className="size-4" />
                     </>
                   )}

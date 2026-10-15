@@ -18,6 +18,7 @@ import {
     ExternalLink,
     Compass
 } from "lucide-react";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface IrisDeepInsightsModalProps {
     isOpen: boolean;
@@ -45,6 +46,7 @@ export function IrisDeepInsightsModal({
     analysis,
     landlordFirstName,
 }: IrisDeepInsightsModalProps) {
+    const { t } = useLanguageContext();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -108,7 +110,7 @@ export function IrisDeepInsightsModal({
         const collectionRate = collectionKpi?.value || "100%";
         const maintenanceCost = maintenanceKpi?.value || "₱0";
         const turnoverRate = turnoverKpi?.value || "0%";
-        const resolutionSpeed = efficiencyKpi?.value || "1-2 Days";
+        const resolutionSpeed = efficiencyKpi?.value || t("1-2 Days");
 
         const parseNum = (val: string) => {
             const parsed = parseFloat(val.replace(/[^0-9.-]/g, ""));
@@ -131,14 +133,14 @@ export function IrisDeepInsightsModal({
             numericOccupancy,
             numericPending,
             numericCollection,
-            occupiedUnits: occupiedMetric?.value || `${tenantsCount} occupied`,
+            occupiedUnits: occupiedMetric?.value || t("{count} occupied", { count: tenantsCount }),
             urgentIssues: urgentMetric?.value || pendingIssuesCount,
             renewalsSoon: renewalsMetric?.value || "0",
             outstandingRent: outstandingMetric?.value || "₱0",
         };
-    }, [stats]);
+    }, [stats, t]);
 
-    const firstName = landlordFirstName?.trim() || "Landlord";
+    const firstName = landlordFirstName?.trim() || t("Landlord");
 
     if (!mounted || typeof window === "undefined") return null;
 
@@ -179,21 +181,21 @@ export function IrisDeepInsightsModal({
                                         type="button"
                                         onClick={onBackToSummary}
                                         className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors pr-2 border-r border-white/10"
-                                        aria-label="Back to quick summary"
+                                        aria-label={t("Back to quick summary")}
                                     >
                                         <ArrowLeft className="size-4" />
-                                        <span className="hidden sm:inline">Overview</span>
+                                        <span className="hidden sm:inline">{t("Overview")}</span>
                                     </button>
                                 )}
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <div className="size-2 rounded-full bg-primary" />
                                         <h2 id="deep-insights-title" className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                                            Deep Portfolio Insights
+                                            {t("Deep Portfolio Insights")}
                                         </h2>
                                     </div>
                                     <p className="text-xs font-medium text-muted-foreground mt-0.5">
-                                        Actionable operational breakdown and forward guidance for {firstName}.
+                                        {t("Actionable operational breakdown and forward guidance for {name}.", { name: firstName })}
                                     </p>
                                 </div>
                             </div>
@@ -202,7 +204,7 @@ export function IrisDeepInsightsModal({
                                 type="button"
                                 onClick={onClose}
                                 className="rounded-2xl p-2.5 text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all active:scale-95"
-                                aria-label="Close modal"
+                                aria-label={t("Close modal")}
                             >
                                 <X className="size-5" />
                             </button>
@@ -218,7 +220,7 @@ export function IrisDeepInsightsModal({
                                             <Compass className="size-5 text-primary" />
                                         </div>
                                         <div className="space-y-1">
-                                            <h3 className="text-xs font-black uppercase tracking-widest text-primary">Executive Summary</h3>
+                                            <h3 className="text-xs font-black uppercase tracking-widest text-primary">{t("Executive Summary")}</h3>
                                             <p className="text-sm font-semibold leading-relaxed text-foreground/90">
                                                 {analysis.summary}
                                             </p>
@@ -230,18 +232,18 @@ export function IrisDeepInsightsModal({
                             {/* 4 Health Pillars Scorecard */}
                             <div>
                                 <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground/80 mb-4 flex items-center gap-2">
-                                    <span>Core Operational Pillars</span>
+                                    <span>{t("Core Operational Pillars")}</span>
                                 </h3>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {/* Pillar 1: Cash Flow */}
                                     <div className="rounded-2xl border border-white/5 bg-white/[0.02] dark:bg-card/40 p-4 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Cash Flow</span>
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Cash Flow")}</span>
                                             <TrendingUp className="size-4 text-emerald-400" />
                                         </div>
                                         <div className="text-xl font-black text-foreground">{metrics.earningsValue}</div>
                                         <div className="text-[11px] font-medium text-muted-foreground flex items-center justify-between">
-                                            <span>Collection:</span>
+                                            <span>{t("Collection:")}</span>
                                             <span className="font-bold text-foreground">{metrics.collectionRate}</span>
                                         </div>
                                     </div>
@@ -249,12 +251,12 @@ export function IrisDeepInsightsModal({
                                     {/* Pillar 2: Occupancy */}
                                     <div className="rounded-2xl border border-white/5 bg-white/[0.02] dark:bg-card/40 p-4 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Occupancy</span>
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Occupancy")}</span>
                                             <Building2 className="size-4 text-sky-400" />
                                         </div>
                                         <div className="text-xl font-black text-foreground">{metrics.occupancyValue}</div>
                                         <div className="text-[11px] font-medium text-muted-foreground flex items-center justify-between">
-                                            <span>Units Occupied:</span>
+                                            <span>{t("Units Occupied:")}</span>
                                             <span className="font-bold text-foreground">{metrics.occupiedUnits}</span>
                                         </div>
                                     </div>
@@ -262,12 +264,12 @@ export function IrisDeepInsightsModal({
                                     {/* Pillar 3: Residents */}
                                     <div className="rounded-2xl border border-white/5 bg-white/[0.02] dark:bg-card/40 p-4 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Tenants</span>
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Tenants")}</span>
                                             <Users className="size-4 text-indigo-400" />
                                         </div>
                                         <div className="text-xl font-black text-foreground">{metrics.tenantsCount}</div>
                                         <div className="text-[11px] font-medium text-muted-foreground flex items-center justify-between">
-                                            <span>Renewals Soon:</span>
+                                            <span>{t("Renewals Soon:")}</span>
                                             <span className="font-bold text-foreground">{metrics.renewalsSoon}</span>
                                         </div>
                                     </div>
@@ -275,13 +277,13 @@ export function IrisDeepInsightsModal({
                                     {/* Pillar 4: Operations */}
                                     <div className="rounded-2xl border border-white/5 bg-white/[0.02] dark:bg-card/40 p-4 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Maintenance</span>
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Maintenance")}</span>
                                             <Wrench className="size-4 text-amber-400" />
                                         </div>
-                                        <div className="text-xl font-black text-foreground">{metrics.pendingIssuesCount} Open</div>
+                                        <div className="text-xl font-black text-foreground">{t("{count} Open", { count: metrics.pendingIssuesCount })}</div>
                                         <div className="text-[11px] font-medium text-muted-foreground flex items-center justify-between">
-                                            <span>Avg Speed:</span>
-                                            <span className="font-bold text-foreground">{metrics.resolutionSpeed}</span>
+                                            <span>{t("Avg Speed:")}</span>
+                                            <span className="font-bold text-foreground">{t(metrics.resolutionSpeed)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -290,7 +292,7 @@ export function IrisDeepInsightsModal({
                             {/* Detailed Analytical Breakdown */}
                             <div className="space-y-4">
                                 <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
-                                    <span>Strategic Portfolio Diagnosis</span>
+                                    <span>{t("Strategic Portfolio Diagnosis")}</span>
                                 </h3>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -301,17 +303,17 @@ export function IrisDeepInsightsModal({
                                                 <TrendingUp className="size-4" />
                                             </div>
                                             <div>
-                                                <h4 className="text-sm font-black text-foreground">Revenue & Collections</h4>
-                                                <p className="text-[10px] font-medium text-muted-foreground">Invoicing health & payment flow</p>
+                                                <h4 className="text-sm font-black text-foreground">{t("Revenue & Collections")}</h4>
+                                                <p className="text-[10px] font-medium text-muted-foreground">{t("Invoicing health & payment flow")}</p>
                                             </div>
                                         </div>
                                         <p className="text-xs font-medium leading-relaxed text-muted-foreground">
                                             {metrics.numericCollection >= 90
-                                                ? `Collection efficiency is strong at ${metrics.collectionRate}. Inflows remain stable, supporting routine maintenance and operating margins.`
-                                                : `Collection rate is currently at ${metrics.collectionRate}. Prioritize following up on outstanding balances to maintain predictable cash reserves.`}
+                                                ? t("Collection efficiency is strong at {rate}. Inflows remain stable, supporting routine maintenance and operating margins.", { rate: metrics.collectionRate })
+                                                : t("Collection rate is currently at {rate}. Prioritize following up on outstanding balances to maintain predictable cash reserves.", { rate: metrics.collectionRate })}
                                         </p>
                                         <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs">
-                                            <span className="text-muted-foreground">Outstanding Balance:</span>
+                                            <span className="text-muted-foreground">{t("Outstanding Balance:")}</span>
                                             <span className="font-black text-foreground">{metrics.outstandingRent}</span>
                                         </div>
                                     </div>
@@ -323,18 +325,18 @@ export function IrisDeepInsightsModal({
                                                 <Building2 className="size-4" />
                                             </div>
                                             <div>
-                                                <h4 className="text-sm font-black text-foreground">Occupancy & Retention</h4>
-                                                <p className="text-[10px] font-medium text-muted-foreground">Unit fill rate and lease lifecycle</p>
+                                                <h4 className="text-sm font-black text-foreground">{t("Occupancy & Retention")}</h4>
+                                                <p className="text-[10px] font-medium text-muted-foreground">{t("Unit fill rate and lease lifecycle")}</p>
                                             </div>
                                         </div>
                                         <p className="text-xs font-medium leading-relaxed text-muted-foreground">
                                             {metrics.numericOccupancy >= 85
-                                                ? `Occupancy is optimal at ${metrics.occupancyValue}. Focus on tenant satisfaction and proactively discussing lease extensions for upcoming renewals.`
-                                                : `Occupancy stands at ${metrics.occupancyValue}. Filling vacant units will unlock additional monthly revenue and lower per-unit operating costs.`}
+                                                ? t("Occupancy is optimal at {rate}. Focus on tenant satisfaction and proactively discussing lease extensions for upcoming renewals.", { rate: metrics.occupancyValue })
+                                                : t("Occupancy stands at {rate}. Filling vacant units will unlock additional monthly revenue and lower per-unit operating costs.", { rate: metrics.occupancyValue })}
                                         </p>
                                         <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs">
-                                            <span className="text-muted-foreground">Upcoming Renewals:</span>
-                                            <span className="font-black text-foreground">{metrics.renewalsSoon} within 30 days</span>
+                                            <span className="text-muted-foreground">{t("Upcoming Renewals:")}</span>
+                                            <span className="font-black text-foreground">{t("{count} within 30 days", { count: metrics.renewalsSoon })}</span>
                                         </div>
                                     </div>
 
@@ -345,17 +347,17 @@ export function IrisDeepInsightsModal({
                                                 <Wrench className="size-4" />
                                             </div>
                                             <div>
-                                                <h4 className="text-sm font-black text-foreground">Facility & Maintenance</h4>
-                                                <p className="text-[10px] font-medium text-muted-foreground">Ticket resolution and property upkeep</p>
+                                                <h4 className="text-sm font-black text-foreground">{t("Facility & Maintenance")}</h4>
+                                                <p className="text-[10px] font-medium text-muted-foreground">{t("Ticket resolution and property upkeep")}</p>
                                             </div>
                                         </div>
                                         <p className="text-xs font-medium leading-relaxed text-muted-foreground">
                                             {metrics.numericPending === 0
-                                                ? `Zero pending maintenance issues recorded. Quick resolution prevents minor issues from escalating into costly repairs.`
-                                                : `There are ${metrics.pendingIssuesCount} pending maintenance items. Resolving these quickly directly boosts tenant retention and keeps turnover low.`}
+                                                ? t("Zero pending maintenance issues recorded. Quick resolution prevents minor issues from escalating into costly repairs.")
+                                                : t("There are {count} pending maintenance items. Resolving these quickly directly boosts tenant retention and keeps turnover low.", { count: metrics.pendingIssuesCount })}
                                         </p>
                                         <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs">
-                                            <span className="text-muted-foreground">Recent Maintenance Spend:</span>
+                                            <span className="text-muted-foreground">{t("Recent Maintenance Spend:")}</span>
                                             <span className="font-black text-foreground">{metrics.maintenanceCost}</span>
                                         </div>
                                     </div>
@@ -367,8 +369,8 @@ export function IrisDeepInsightsModal({
                                                 <ReceiptText className="size-4" />
                                             </div>
                                             <div>
-                                                <h4 className="text-sm font-black text-foreground">Key Observations</h4>
-                                                <p className="text-[10px] font-medium text-muted-foreground">What to keep doing and what to address</p>
+                                                <h4 className="text-sm font-black text-foreground">{t("Key Observations")}</h4>
+                                                <p className="text-[10px] font-medium text-muted-foreground">{t("What to keep doing and what to address")}</p>
                                             </div>
                                         </div>
                                         <div className="space-y-2 pt-1">
@@ -386,7 +388,7 @@ export function IrisDeepInsightsModal({
                                             )}
                                             {(!analysis?.goodThings || analysis.goodThings.length === 0) && (
                                                 <p className="text-xs text-muted-foreground">
-                                                    Data snapshot is synchronized. Refresh analytics to get up-to-the-minute evaluation.
+                                                    {t("Data snapshot is synchronized. Refresh analytics to get up-to-the-minute evaluation.")}
                                                 </p>
                                             )}
                                         </div>
@@ -398,14 +400,14 @@ export function IrisDeepInsightsModal({
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground/80">
-                                        Recommended Next Moves
+                                        {t("Recommended Next Moves")}
                                     </h3>
                                     <Link
                                         href="/landlord/dashboard"
                                         onClick={onClose}
                                         className="text-[10px] font-black uppercase tracking-wider text-primary hover:underline flex items-center gap-1"
                                     >
-                                        <span>Command Center</span>
+                                        <span>{t("Command Center")}</span>
                                         <ExternalLink className="size-3" />
                                     </Link>
                                 </div>
@@ -418,14 +420,14 @@ export function IrisDeepInsightsModal({
                                     >
                                         <div className="space-y-1">
                                             <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors">
-                                                Review Invoices & Dues
+                                                {t("Review Invoices & Dues")}
                                             </p>
                                             <p className="text-[10px] font-medium text-muted-foreground">
-                                                Check overdue payments, send reminders, or record incoming rent.
+                                                {t("Check overdue payments, send reminders, or record incoming rent.")}
                                             </p>
                                         </div>
                                         <div className="mt-4 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary">
-                                            <span>Open Invoices</span>
+                                            <span>{t("Open Invoices")}</span>
                                             <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
                                         </div>
                                     </Link>
@@ -437,14 +439,14 @@ export function IrisDeepInsightsModal({
                                     >
                                         <div className="space-y-1">
                                             <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors">
-                                                Manage Units & Listings
+                                                {t("Manage Units & Listings")}
                                             </p>
                                             <p className="text-[10px] font-medium text-muted-foreground">
-                                                Optimize occupancy, review vacancies, and adjust unit pricing.
+                                                {t("Optimize occupancy, review vacancies, and adjust unit pricing.")}
                                             </p>
                                         </div>
                                         <div className="mt-4 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary">
-                                            <span>Open Properties</span>
+                                            <span>{t("Open Properties")}</span>
                                             <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
                                         </div>
                                     </Link>
@@ -456,14 +458,14 @@ export function IrisDeepInsightsModal({
                                     >
                                         <div className="space-y-1">
                                             <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors">
-                                                Log Expenses & Repairs
+                                                {t("Log Expenses & Repairs")}
                                             </p>
                                             <p className="text-[10px] font-medium text-muted-foreground">
-                                                Track ongoing property maintenance costs and preventive upkeep.
+                                                {t("Track ongoing property maintenance costs and preventive upkeep.")}
                                             </p>
                                         </div>
                                         <div className="mt-4 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary">
-                                            <span>Open Expenses</span>
+                                            <span>{t("Open Expenses")}</span>
                                             <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
                                         </div>
                                     </Link>
@@ -474,7 +476,7 @@ export function IrisDeepInsightsModal({
                         {/* Footer */}
                         <div className="relative z-10 shrink-0 border-t border-white/10 px-6 sm:px-8 py-4 bg-card flex items-center justify-between">
                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                iReside Portfolio Intelligence
+                                {t("iReside Portfolio Intelligence")}
                             </span>
                             <div className="flex items-center gap-3">
                                 {onBackToSummary && (
@@ -483,7 +485,7 @@ export function IrisDeepInsightsModal({
                                         onClick={onBackToSummary}
                                         className="rounded-xl border border-white/10 px-4 py-2 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
                                     >
-                                        Overview
+                                        {t("Overview")}
                                     </button>
                                 )}
                                 <button
@@ -491,7 +493,7 @@ export function IrisDeepInsightsModal({
                                     onClick={onClose}
                                     className="rounded-xl bg-primary px-5 py-2 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
                                 >
-                                    Close
+                                    {t("Close")}
                                 </button>
                             </div>
                         </div>

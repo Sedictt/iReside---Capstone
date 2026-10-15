@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 type InquiryAction = "read" | "unread" | "archive" | "unarchive" | "delete";
 
@@ -20,7 +21,11 @@ export async function POST(
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
-    const body = (await request.json()) as ActionBody;
+    if (!isId(inquiryId)) {
+        return NextResponse.json({ error: "Inquiry not found." }, { status: 404 });
+    }
+
+    const body = (await request.json().catch(() => ({}))) as ActionBody;
 
     if (!isValidAction(body.action)) {
         return NextResponse.json({ error: "Invalid inquiry action." }, { status: 400 });

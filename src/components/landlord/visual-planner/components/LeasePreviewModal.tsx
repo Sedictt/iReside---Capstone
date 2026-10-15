@@ -7,6 +7,15 @@ import { Unit } from "../types";
 import { LeaseDocument } from "@/components/lease/LeaseDocument";
 import { LeaseData } from "@/types/lease";
 import { isPreseededPhone } from "@/lib/validation/brand-setup";
+import { normalizeTermType } from "@/lib/lease-term";
+import { useLanguageContext } from "@/context/LanguageContext";
+
+const UNIT_STATUS_LABELS: Record<Unit["status"], string> = {
+    occupied: "Occupied",
+    vacant: "Vacant",
+    maintenance: "Under Maintenance",
+    neardue: "Near Due",
+};
 
 interface LeasePreviewModalProps {
     isOpen: boolean;
@@ -27,6 +36,7 @@ export const LeasePreviewModal = ({
     unit,
     property,
 }: LeasePreviewModalProps) => {
+    const { t } = useLanguageContext();
     const [loading, setLoading] = useState(false);
     const [leaseData, setLeaseData] = useState<LeaseData | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -55,10 +65,14 @@ export const LeasePreviewModal = ({
                     if (matchedLease && isMounted) {
                         // Map API LeaseListItem / LeaseDetail to LeaseData for LeaseDocument
                         const leaseRent = Number(matchedLease.monthly_rent || matchedLease.unit?.rent_amount || unit.rentAmount || 15000);
+                        const matchedTermType = normalizeTermType(matchedLease.term_type ?? matchedLease.termType ?? matchedLease.lease_term ?? unit.leaseTermType);
+                        const matchedEndDate = matchedLease.end_date ?? unit.leaseEnd ?? null;
                         const formattedLease: LeaseData = {
                             id: matchedLease.id || `LSE-${targetUnitId.slice(0, 8).toUpperCase()}`,
                             start_date: matchedLease.start_date || unit.leaseStart || new Date().toISOString().split("T")[0],
-                            end_date: matchedLease.end_date || unit.leaseEnd || new Date(Date.now() + 365 * 86400000).toISOString().split("T")[0],
+                            // Open-ended leases have no end date; only a fixed term carries one.
+                            end_date: matchedTermType === "fixed" ? matchedEndDate : null,
+                            term_type: matchedTermType,
                             monthly_rent: leaseRent,
                             security_deposit: Number(matchedLease.security_deposit || leaseRent),
                             signed_at: matchedLease.signed_at || matchedLease.landlord_signed_at || null,
@@ -129,10 +143,13 @@ export const LeasePreviewModal = ({
 
             // Fallback for demo / preview / prototype units
             const rentVal = unit.rentAmount || 15000;
+            const fallbackTermType = normalizeTermType(unit.leaseTermType);
             const fallbackLease: LeaseData = {
                 id: `LSE-${targetUnitId.slice(0, 8).toUpperCase()}`,
                 start_date: unit.leaseStart || new Date().toISOString().split("T")[0],
-                end_date: unit.leaseEnd || new Date(Date.now() + 365 * 86400000).toISOString().split("T")[0],
+                // Preview as open-ended unless the unit snapshot carries a fixed term.
+                end_date: fallbackTermType === "fixed" ? unit.leaseEnd ?? null : null,
+                term_type: fallbackTermType,
                 monthly_rent: rentVal,
                 security_deposit: rentVal,
                 signed_at: new Date().toISOString(),
@@ -217,10 +234,10 @@ export const LeasePreviewModal = ({
                             </div>
                             <div>
                                 <h2 className="text-xl font-black text-foreground">
-                                    Lease Agreement
+                                    {t("Lease Agreement")}
                                 </h2>
                                 <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">
-                                    #{leaseData?.id || unit.id} • Unit {unit.name} • {unit.status.toUpperCase()}
+                                    {t("#{id} • Unit {name} • {status}", { id: leaseData?.id || unit.id, name: unit.name, status: t(UNIT_STATUS_LABELS[unit.status] ?? unit.status).toUpperCase() })}
                                 </p>
                             </div>
                         </div>
@@ -229,19 +246,19 @@ export const LeasePreviewModal = ({
                             <button
                                 onClick={handlePrint}
                                 className="hidden sm:flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl transition-colors bg-muted hover:bg-muted/80"
-                                title="Print Lease Agreement"
+                                title={t("Print Lease Agreement")}
                             >
                                 <Printer className="size-4" />
-                                <span>Print</span>
+                                <span>{t("Print")}</span>
                             </button>
 
                             <button
                                 onClick={handlePrint}
                                 className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all bg-primary text-white hover:bg-primary/90 shadow-md shadow-primary/20"
-                                title="Download / Export Document"
+                                title={t("Download / Export Document")}
                             >
                                 <Printer className="size-4 sm:hidden" />
-                                <span className="hidden sm:inline">Export PDF</span>
+                                <span className="hidden sm:inline">{t("Export PDF")}</span>
                             </button>
 
                             <div className="w-px h-6 bg-border mx-2" />
@@ -249,7 +266,7 @@ export const LeasePreviewModal = ({
                             <button
                                 onClick={onClose}
                                 className="size-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                                aria-label="Close modal"
+                                aria-label={t("Close modal")}
                             >
                                 <X className="size-5" />
                             </button>
@@ -262,7 +279,7 @@ export const LeasePreviewModal = ({
                             <div className="h-full flex flex-col items-center justify-center gap-3 text-muted-foreground py-20">
                                 <Loader2 className="size-8 animate-spin text-primary" />
                                 <p className="text-xs font-black uppercase tracking-widest">
-                                    Loading Lease Agreement...
+                                    {t("Loading Lease Agreement...")}
                                 </p>
                             </div>
                         ) : error ? (
@@ -280,13 +297,13 @@ export const LeasePreviewModal = ({
                     {/* Footer */}
                     <div className="p-4 flex items-center justify-between border-t border-border bg-card/90">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-[0.3em] font-black">
-                            End of Document • Securely stored and encrypted by iReside
+                            {t("End of Document • Securely stored and encrypted by iReside")}
                         </p>
                         <button
                             onClick={onClose}
                             className="px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-muted hover:bg-muted/80 text-foreground transition-all"
                         >
-                            Close Preview
+                            {t("Close Preview")}
                         </button>
                     </div>
                 </motion.div>

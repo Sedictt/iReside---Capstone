@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { triggerHaptic } from '@/lib/haptics'
 import { useNotifications } from '@/context/NotificationContext'
+import { useLanguageContext } from '@/context/LanguageContext'
 
 interface MobileHeaderProps {
     /** Page title displayed in the center */
@@ -34,6 +35,7 @@ export function MobileHeader({
     rightAction,
 }: MobileHeaderProps) {
     const router = useRouter()
+    const { t } = useLanguageContext()
     const { unreadCount = 0 } = useNotifications()
     const effectiveCount = notificationCount !== undefined ? notificationCount : unreadCount
 
@@ -56,7 +58,7 @@ export function MobileHeader({
                     <button
                         onClick={handleBack}
                         className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 active:bg-muted transition-all"
-                        aria-label="Go back"
+                        aria-label={t("Go back")}
                     >
                         <ChevronLeft size={22} strokeWidth={2} />
                     </button>
@@ -65,7 +67,7 @@ export function MobileHeader({
 
             {/* Center: page title */}
             <h1 className="text-[15px] font-semibold text-foreground tracking-tight truncate flex-1 text-center px-2 min-w-0">
-                {title}
+                {t(title)}
             </h1>
 
             {/* Right: notification bell or custom action */}
@@ -77,8 +79,8 @@ export function MobileHeader({
                         className="relative flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 transition-all"
                         aria-label={
                             effectiveCount > 0
-                                ? `${effectiveCount} unread notifications`
-                                : 'Notifications'
+                                ? t('{count} unread notifications', { count: effectiveCount })
+                                : t('Notifications')
                         }
                     >
                         <Bell size={20} strokeWidth={1.8} />

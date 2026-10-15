@@ -39,6 +39,10 @@ function authUnauthorized() {
   );
 }
 
+// Route params are validated as ids before any lookup.
+const REQ_ID = "11111111-1111-4111-8111-111111111111";
+const MISSING_ID = "22222222-2222-4222-8222-222222222222";
+
 function makeContext(id: string) {
   return { params: Promise.resolve({ id }) };
 }
@@ -59,7 +63,7 @@ describe("PUT /api/landlord/move-out/[id]/approve", () => {
   it("returns 401 when unauthenticated", async () => {
     mockRequireAuth.mockResolvedValue(authUnauthorized());
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/approve/route");
-    const res = await PUT(makeRequest(), makeContext("req-1"));
+    const res = await PUT(makeRequest(), makeContext(REQ_ID));
     expect(res.status).toBe(401);
   });
 
@@ -74,7 +78,7 @@ describe("PUT /api/landlord/move-out/[id]/approve", () => {
     mockFrom.mockReturnValue(selectChain);
 
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/approve/route");
-    const res = await PUT(makeRequest(), makeContext("nonexistent"));
+    const res = await PUT(makeRequest(), makeContext(MISSING_ID));
     expect(res.status).toBe(404);
     const json = await res.json();
     expect(json.error).toContain("not found");
@@ -94,7 +98,7 @@ describe("PUT /api/landlord/move-out/[id]/approve", () => {
     mockFrom.mockReturnValue(selectChain);
 
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/approve/route");
-    const res = await PUT(makeRequest(), makeContext("req-1"));
+    const res = await PUT(makeRequest(), makeContext(REQ_ID));
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toContain("Cannot approve");
@@ -134,7 +138,7 @@ describe("PUT /api/landlord/move-out/[id]/approve", () => {
       .mockReturnValueOnce(notifChain);
 
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/approve/route");
-    const res = await PUT(makeRequest({ inspection_date: "2099-11-01" }), makeContext("req-1"));
+    const res = await PUT(makeRequest({ inspection_date: "2099-11-01" }), makeContext(REQ_ID));
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.message).toContain("approved");
@@ -174,7 +178,7 @@ describe("PUT /api/landlord/move-out/[id]/approve", () => {
       .mockReturnValueOnce(notifChain);
 
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/approve/route");
-    await PUT(makeRequest(), makeContext("req-1"));
+    await PUT(makeRequest(), makeContext(REQ_ID));
     expect(mockFrom).toHaveBeenNthCalledWith(4, "notifications");
   });
 });
@@ -187,14 +191,14 @@ describe("PUT /api/landlord/move-out/[id]/deny", () => {
   it("returns 401 when unauthenticated", async () => {
     mockRequireAuth.mockResolvedValue(authUnauthorized());
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/deny/route");
-    const res = await PUT(makeRequest({ denial_reason: "Not allowed" }), makeContext("req-1"));
+    const res = await PUT(makeRequest({ denial_reason: "Not allowed" }), makeContext(REQ_ID));
     expect(res.status).toBe(401);
   });
 
   it("returns 400 when denial_reason is missing", async () => {
     mockRequireAuth.mockResolvedValue(authSuccess());
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/deny/route");
-    const res = await PUT(makeRequest({}), makeContext("req-1"));
+    const res = await PUT(makeRequest({}), makeContext(REQ_ID));
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toContain("Denial reason is required");
@@ -209,7 +213,7 @@ describe("PUT /api/landlord/move-out/[id]/deny", () => {
     };
     mockFrom.mockReturnValue(selectChain);
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/deny/route");
-    const res = await PUT(makeRequest({ denial_reason: "Too early" }), makeContext("nonexistent"));
+    const res = await PUT(makeRequest({ denial_reason: "Too early" }), makeContext(MISSING_ID));
     expect(res.status).toBe(404);
   });
 
@@ -225,7 +229,7 @@ describe("PUT /api/landlord/move-out/[id]/deny", () => {
     };
     mockFrom.mockReturnValue(selectChain);
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/deny/route");
-    const res = await PUT(makeRequest({ denial_reason: "Nope" }), makeContext("req-1"));
+    const res = await PUT(makeRequest({ denial_reason: "Nope" }), makeContext(REQ_ID));
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toContain("Cannot deny");
@@ -261,7 +265,7 @@ describe("PUT /api/landlord/move-out/[id]/deny", () => {
       .mockReturnValueOnce(notifChain);
 
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/deny/route");
-    const res = await PUT(makeRequest({ denial_reason: "Minimum stay not met" }), makeContext("req-1"));
+    const res = await PUT(makeRequest({ denial_reason: "Minimum stay not met" }), makeContext(REQ_ID));
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.message).toContain("denied");
@@ -297,7 +301,7 @@ describe("PUT /api/landlord/move-out/[id]/deny", () => {
       .mockReturnValueOnce(notifChain);
 
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/deny/route");
-    await PUT(makeRequest({ denial_reason: "Nope" }), makeContext("req-1"));
+    await PUT(makeRequest({ denial_reason: "Nope" }), makeContext(REQ_ID));
     expect(mockFrom).toHaveBeenNthCalledWith(3, "notifications");
   });
 });
@@ -315,7 +319,7 @@ describe("POST /api/landlord/move-out/[id]/inspection", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ inspection_date: "2099-11-01", inspection_notes: "Good condition" }),
     });
-    const res = await POST(req, makeContext("req-1"));
+    const res = await POST(req, makeContext(REQ_ID));
     expect(res.status).toBe(401);
   });
 
@@ -333,7 +337,7 @@ describe("POST /api/landlord/move-out/[id]/inspection", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ inspection_date: "2099-11-01" }),
     });
-    const res = await POST(req, makeContext("nonexistent"));
+    const res = await POST(req, makeContext(MISSING_ID));
     expect(res.status).toBe(404);
   });
 
@@ -354,7 +358,7 @@ describe("POST /api/landlord/move-out/[id]/inspection", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ inspection_date: "2099-11-01" }),
     });
-    const res = await POST(req, makeContext("req-1"));
+    const res = await POST(req, makeContext(REQ_ID));
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toContain("approved");
@@ -398,7 +402,7 @@ describe("POST /api/landlord/move-out/[id]/inspection", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ inspection_notes: "Good condition" }),
     });
-    const res = await POST(req, makeContext("req-1"));
+    const res = await POST(req, makeContext(REQ_ID));
     expect(res.status).toBe(200);
   });
 
@@ -440,7 +444,7 @@ describe("POST /api/landlord/move-out/[id]/inspection", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ inspection_date: "2099-11-01", inspection_notes: "Unit in good condition" }),
     });
-    const res = await POST(req, makeContext("req-1"));
+    const res = await POST(req, makeContext(REQ_ID));
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.message).toContain("Inspection recorded");
@@ -455,7 +459,7 @@ describe("GET /api/landlord/move-out/[id]/inspection (clearance check)", () => {
   it("returns 401 when unauthenticated", async () => {
     mockRequireAuth.mockResolvedValue(authUnauthorized());
     const { GET } = await import("@/app/api/landlord/move-out/[id]/inspection/route");
-    const res = await GET(new Request("http://localhost"), makeContext("req-1"));
+    const res = await GET(new Request("http://localhost"), makeContext(REQ_ID));
     expect(res.status).toBe(401);
   });
 
@@ -490,7 +494,7 @@ describe("GET /api/landlord/move-out/[id]/inspection (clearance check)", () => {
       .mockReturnValueOnce(readingsChain);
 
     const { GET } = await import("@/app/api/landlord/move-out/[id]/inspection/route");
-    const res = await GET(new Request("http://localhost"), makeContext("req-1"));
+    const res = await GET(new Request("http://localhost"), makeContext(REQ_ID));
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.rent_settled).toBe(false);
@@ -525,7 +529,7 @@ describe("GET /api/landlord/move-out/[id]/inspection (clearance check)", () => {
       .mockReturnValueOnce(readingsChain);
 
     const { GET } = await import("@/app/api/landlord/move-out/[id]/inspection/route");
-    const res = await GET(new Request("http://localhost"), makeContext("req-1"));
+    const res = await GET(new Request("http://localhost"), makeContext(REQ_ID));
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.rent_settled).toBe(true);
@@ -541,7 +545,7 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
   it("returns 401 when unauthenticated", async () => {
     mockRequireAuth.mockResolvedValue(authUnauthorized());
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/complete/route");
-    const res = await PUT(new Request("http://localhost", { method: "PUT" }), makeContext("req-1"));
+    const res = await PUT(new Request("http://localhost", { method: "PUT" }), makeContext(REQ_ID));
     expect(res.status).toBe(401);
   });
 
@@ -554,7 +558,7 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
     };
     mockFrom.mockReturnValue(selectChain);
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/complete/route");
-    const res = await PUT(new Request("http://localhost", { method: "PUT" }), makeContext("nonexistent"));
+    const res = await PUT(new Request("http://localhost", { method: "PUT" }), makeContext(MISSING_ID));
     expect(res.status).toBe(404);
   });
 
@@ -570,7 +574,7 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
     };
     mockFrom.mockReturnValue(selectChain);
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/complete/route");
-    const res = await PUT(new Request("http://localhost", { method: "PUT" }), makeContext("req-1"));
+    const res = await PUT(new Request("http://localhost", { method: "PUT" }), makeContext(REQ_ID));
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toContain("Inspection must be recorded");
@@ -588,7 +592,7 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
     };
     mockFrom.mockReturnValue(selectChain);
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/complete/route");
-    const res = await PUT(new Request("http://localhost", { method: "PUT" }), makeContext("req-1"));
+    const res = await PUT(new Request("http://localhost", { method: "PUT" }), makeContext(REQ_ID));
     expect(res.status).toBe(400);
   });
 
@@ -626,7 +630,7 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
       .mockReturnValueOnce(notifChain);    // notifications insert
 
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/complete/route");
-    const res = await PUT(new Request("http://localhost", { method: "PUT" }), makeContext("req-1"));
+    const res = await PUT(new Request("http://localhost", { method: "PUT" }), makeContext(REQ_ID));
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.message).toContain("completed successfully");
@@ -666,7 +670,7 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
       .mockReturnValueOnce(notifChain);
 
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/complete/route");
-    await PUT(new Request("http://localhost", { method: "PUT" }), makeContext("req-1"));
+    await PUT(new Request("http://localhost", { method: "PUT" }), makeContext(REQ_ID));
     expect(mockFrom).toHaveBeenNthCalledWith(5, "notifications");
   });
 });

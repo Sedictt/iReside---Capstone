@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { LeaseService, LeaseNotFoundError } from "@/lib/services/lease";
 
@@ -15,6 +16,9 @@ export async function GET(
   if (!("userId" in authContext)) return authContext as any;
   const { userId, supabase } = authContext;
   const { id: leaseId } = await context.params;
+  if (!isId(leaseId)) {
+    return NextResponse.json({ error: "Lease not found" }, { status: 404 });
+  }
 
   try {
     const leaseService = new LeaseService(supabase);

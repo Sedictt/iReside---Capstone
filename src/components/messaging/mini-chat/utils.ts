@@ -1,5 +1,6 @@
 import type { ConversationMessage, ConversationSummary } from "@/lib/messages/client";
 import { DEFAULT_AVATAR_URL } from "@/lib/constants";
+import { tr } from "@/hooks/useLanguage";
 import type { MiniChatContact, MiniChatMessage, MiniChatState } from "./types";
 
 export const MAX_OPEN_CHATS = 3;
@@ -40,11 +41,11 @@ export const formatTime = (iso: string) => {
 export const formatDayLabel = (iso: string, now: Date = new Date()) => {
     const date = new Date(iso);
     if (!isValidDate(date)) return "";
-    if (isSameDay(date, now)) return "Today";
+    if (isSameDay(date, now)) return tr("Today");
 
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
-    if (isSameDay(date, yesterday)) return "Yesterday";
+    if (isSameDay(date, yesterday)) return tr("Yesterday");
 
     return date.toLocaleDateString([], {
         month: "short",
@@ -61,14 +62,14 @@ export const formatRelativeTime = (iso: string | null, now: Date = new Date()) =
 
     const diffMs = now.getTime() - date.getTime();
     const minutes = Math.floor(diffMs / 60_000);
-    if (minutes < 1) return "Now";
+    if (minutes < 1) return tr("Now");
     if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
     if (hours < 24 && isSameDay(date, now)) return `${hours}h`;
 
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
-    if (isSameDay(date, yesterday)) return "Yesterday";
+    if (isSameDay(date, yesterday)) return tr("Yesterday");
 
     return date.toLocaleDateString([], { month: "short", day: "numeric" });
 };
@@ -81,17 +82,17 @@ export const formatFullTimestamp = (iso: string) => {
 };
 
 export const summarizeLastMessage = (lastMessage: ConversationSummary["lastMessage"], currentUserId?: string | null) => {
-    if (!lastMessage) return "No messages yet";
-    const prefix = currentUserId && lastMessage.senderId === currentUserId ? "You: " : "";
+    if (!lastMessage) return tr("No messages yet");
+    const isOwn = Boolean(currentUserId && lastMessage.senderId === currentUserId);
     switch (lastMessage.type) {
         case "image":
-            return `${prefix}Sent a photo`;
+            return isOwn ? tr("You: Sent a photo") : tr("Sent a photo");
         case "file":
-            return `${prefix}Sent a file`;
+            return isOwn ? tr("You: Sent a file") : tr("Sent a file");
         case "system":
-            return "System update";
+            return tr("System update");
         default:
-            return `${prefix}${lastMessage.content}`;
+            return isOwn ? `${tr("You:")} ${lastMessage.content}` : lastMessage.content;
     }
 };
 
@@ -106,14 +107,14 @@ export const mapConversationToContact = (
     return {
         id: conversation.id,
         participantUserId: other?.id ?? null,
-        name: other?.fullName ?? "Conversation",
+        name: other?.fullName ?? tr("Conversation"),
         role: other?.role ?? null,
         avatar: other?.avatarUrl || DEFAULT_AVATAR_URL,
         avatarBgColor: other?.avatarBgColor || null,
         lastMessage: summarizeLastMessage(conversation.lastMessage, currentUserId),
         lastMessageAt,
         time: formatRelativeTime(lastMessageAt, now),
-        unit: other?.unitName || (other?.role === "landlord" ? "Landlord" : other?.role === "tenant" ? "Tenant" : "Participant"),
+        unit: other?.unitName || (other?.role === "landlord" ? tr("Landlord") : other?.role === "tenant" ? tr("Tenant") : tr("Participant")),
         relationshipStatus: conversation.relationshipStatus,
         unreadCount: conversation.unreadCount,
         unread: conversation.unreadCount > 0,

@@ -43,7 +43,7 @@ export function DashboardBanner({
     onStartTour
 }: DashboardBannerProps) {
     const brand = useBrand();
-    const { t, isFilipino } = useLanguage();
+    const { t } = useLanguage();
     const getManilaTime = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
     const [time, setTime] = useState<Date>(() => getManilaTime());
     const [isQuestPanelOpen, setIsQuestPanelOpen] = useState(false);
@@ -93,15 +93,13 @@ export function DashboardBanner({
     
     const { profile, user, loading: authLoading } = useAuth();
     const rawName = profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "";
-    const firstName = rawName.split(" ")[0] || "Landlord";
+    const firstName = rawName.split(" ")[0] || t("Landlord");
     
-    // Replace 'Landlord' in the title if it exists, otherwise use title as is
-    const displayTitle = isFilipino
-        ? `Maligayang pagbabalik, ${firstName}`
-        : (title.includes("Landlord") ? title.replace("Landlord", firstName) : title);
-    const displaySubtitle = isFilipino
-        ? (simplifiedMode ? "Kumusta! Narito ang mabilisang lagay ng iyong mga paupahan." : "Ito ang lagay ng iyong mga paupahan ngayong araw.")
-        : (simplifiedMode ? "Hi! Here is a quick look at your houses today." : subtitle);
+    // Replace 'Landlord' in the title with the user's first name, then translate the template
+    const displayTitle = title.includes("Landlord")
+        ? t(title.replace("Landlord", "{name}"), { name: firstName })
+        : t(title);
+    const displaySubtitle = simplifiedMode ? t("Hi! Here is a quick look at your houses today.") : t(subtitle);
 
     useEffect(() => {
         const handleOpenQuestBoard = () => {
@@ -169,10 +167,10 @@ export function DashboardBanner({
                     type="button"
                     onClick={() => setIsCustomizerOpen(true)}
                     className="opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 px-3 py-1.5 rounded-xl bg-background/80 hover:bg-background border border-border/60 backdrop-blur-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
-                    title="Customize banner image"
+                    title={t("Customize banner image")}
                 >
                     <Camera className="size-3.5 text-primary" />
-                    <span>{isFilipino ? "I-customize ang Banner" : "Customize Banner"}</span>
+                    <span>{t("Customize Banner")}</span>
                 </button>
             </div>
 

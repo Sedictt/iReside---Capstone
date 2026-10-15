@@ -1,33 +1,29 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { m as motion, AnimatePresence } from "framer-motion";
+import * as Dialog from "@radix-ui/react-dialog";
 import {
-    ShieldCheck,
     Search,
     Download,
     RefreshCw,
-    Filter,
     CreditCard,
     Shield,
     SlidersHorizontal,
     Building2,
     Clock,
-    Laptop,
-    CheckCircle2,
-    AlertTriangle,
-    Info,
-    X,
-    FileText,
-    ExternalLink,
+    Check,
     ChevronRight,
     ChevronLeft,
-    Lock,
-    Eye
+    FileText,
+    Loader2,
+    type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { SettingsButton, SettingsCard, SettingsNotice, settingsInputClass } from "@/components/settings/settings-ui";
+import { describeAuditEvent } from "@/lib/audit/audit-display";
 
 export interface AuditLogItem {
     id: string;
@@ -55,7 +51,29 @@ interface AuditStats {
 
 const PAGE_SIZE = 8;
 
+const FILTERS = ["all", "billing", "security", "settings", "properties"] as const;
+
+// Plain-language names for each kind of activity (translated where shown).
+const CATEGORY_LABELS: Record<string, string> = {
+    all: "Everything",
+    billing: "Payments and bills",
+    security: "Sign-in and security",
+    settings: "Settings changes",
+    properties: "Properties and rooms",
+    maintenance: "Repairs",
+    general: "Other",
+};
+
+const CATEGORY_STYLES: Record<string, { icon: LucideIcon; tile: string }> = {
+    billing: { icon: CreditCard, tile: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200" },
+    security: { icon: Shield, tile: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200" },
+    settings: { icon: SlidersHorizontal, tile: "bg-primary/25 text-foreground dark:bg-primary/20" },
+    properties: { icon: Building2, tile: "bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-200" },
+};
+const DEFAULT_CATEGORY_STYLE = { icon: Clock, tile: "bg-muted text-foreground" };
+
 export function AuditLogsSettingsTab() {
+    const { t, locale } = useLanguageContext();
     const [logs, setLogs] = useState<AuditLogItem[]>([]);
     const [stats, setStats] = useState<AuditStats>({
         total: 0,
@@ -88,11 +106,11 @@ export function AuditLogsSettingsTab() {
             if (data.stats) setStats(data.stats);
         } catch (err: any) {
             console.error("Error loading audit logs:", err);
-            toast.error("Unable to load activity logs.");
+            toast.error(t("Unable to load activity logs."));
         } finally {
             setLoading(false);
         }
-    }, [selectedCategory, selectedSeverity, searchQuery]);
+    }, [selectedCategory, selectedSeverity, searchQuery, t]);
 
     useEffect(() => {
         fetchLogs();
@@ -131,343 +149,246 @@ export function AuditLogsSettingsTab() {
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(downloadUrl);
-            toast.success("Audit log CSV exported successfully!");
+            toast.success(t("Your activity list was downloaded."));
         } catch (err: any) {
             console.error("Export error:", err);
-            toast.error("Failed to export audit log.");
+            toast.error(t("We could not download your activity list. Please try again."));
         } finally {
             setIsExporting(false);
         }
     };
 
-    // Category Badge Details
-    const getCategoryDetails = (cat: string) => {
-        switch (cat) {
-            case "billing":
-                return {
-                    label: "Billing & Invoices",
-                    icon: CreditCard,
-                    badgeClass: "bg-primary/10 text-primary border-primary/20",
-                    dotClass: "bg-primary",
-                };
-            case "security":
-                return {
-                    label: "Security & Auth",
-                    icon: Shield,
-                    badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-                    dotClass: "bg-amber-500",
-                };
-            case "settings":
-                return {
-                    label: "Settings & Profile",
-                    icon: SlidersHorizontal,
-                    badgeClass: "bg-primary/10 text-primary border-primary/20",
-                    dotClass: "bg-primary",
-                };
-            case "properties":
-                return {
-                    label: "Properties & Units",
-                    icon: Building2,
-                    badgeClass: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
-                    dotClass: "bg-sky-500",
-                };
-            default:
-                return {
-                    label: "Activity",
-                    icon: Clock,
-                    badgeClass: "bg-muted text-muted-foreground border-border",
-                    dotClass: "bg-muted-foreground",
-                };
-        }
-    };
+    const categoryLabel = (category: string) => t(CATEGORY_LABELS[category] ?? CATEGORY_LABELS.general);
+    const isFiltered = selectedCategory !== "all" || searchQuery.trim().length > 0;
+    const pageStart = (currentPage - 1) * PAGE_SIZE + 1;
+    const pageEnd = Math.min(currentPage * PAGE_SIZE, logs.length);
+
+    const inspectedText = inspectingLog ? describeAuditEvent(inspectingLog, t) : null;
+    const inspectedRows = inspectingLog
+        ? [
+              { label: t("When"), value: new Date(inspectingLog.createdAt).toLocaleString(locale, { dateStyle: "long", timeStyle: "short" }) },
+              { label: t("Kind of activity"), value: categoryLabel(inspectingLog.category) },
+              ...(inspectingLog.device ? [{ label: t("Device"), value: inspectingLog.device }] : []),
+          ]
+        : [];
 
     return (
-        <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
-            {/* Header & Transparency Notice */}
-            <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <div className="flex items-center gap-2.5">
-                            <div className="size-10 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
-                                <ShieldCheck className="size-5" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
-                                    Activity & Audit Logs
-                                </h2>
-                                <p className="text-xs text-muted-foreground">
-                                    Tamper-proof chronological trail of account, billing, and security actions.
-                                </p>
-                            </div>
+        <>
+            <SettingsNotice tone="info" title={t("Your private details stay private")}>
+                {t("This list only shows what was done and when. Passwords, sign-in codes, private messages and bank details are never saved here.")}
+            </SettingsNotice>
+
+            <SettingsCard title={t("Find something")} description={t("Search, or pick what kind of activity to show.")}>
+                <div className="space-y-6">
+                    <div className="space-y-2">
+                        <label htmlFor="activity-search" className="block text-lg font-bold text-foreground">
+                            {t("Search")}
+                        </label>
+                        <p id="activity-search-help" className="text-base text-muted-foreground leading-snug">
+                            {t("Type a word, a tenant's name, or a bill number.")}
+                        </p>
+                        <div className="relative">
+                            <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" aria-hidden />
+                            <input
+                                id="activity-search"
+                                aria-describedby="activity-search-help"
+                                type="search"
+                                maxLength={60}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className={settingsInputClass(false, "pl-12")}
+                            />
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2.5">
-                        <button
-                            type="button"
-                            onClick={() => fetchLogs()}
-                            disabled={loading}
-                            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl neumorphic-extruded hover:text-primary text-xs font-bold text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                            <RefreshCw className={cn("size-3.5", loading && "animate-spin text-primary")} />
-                            <span>Refresh</span>
-                        </button>
+                    <fieldset className="space-y-3">
+                        <legend className="text-lg font-bold text-foreground">{t("Show")}</legend>
+                        <div className="flex flex-wrap gap-3">
+                            {FILTERS.map((cat) => {
+                                const selected = selectedCategory === cat;
+                                return (
+                                    <label
+                                        key={cat}
+                                        className={cn(
+                                            "inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl border-2 px-4 py-2 text-base font-bold transition-colors",
+                                            "has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary/50",
+                                            selected ? "border-foreground/70 bg-primary/20 text-foreground" : "border-foreground/20 bg-card text-foreground hover:border-foreground/45",
+                                        )}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="activity-filter"
+                                            value={cat}
+                                            checked={selected}
+                                            onChange={() => setSelectedCategory(cat)}
+                                            className="sr-only"
+                                        />
+                                        {selected && <Check className="size-5 shrink-0" strokeWidth={3} aria-hidden />}
+                                        {categoryLabel(cat)}
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </fieldset>
+                </div>
+            </SettingsCard>
 
-                        <button
-                            type="button"
+            <SettingsCard
+                title={t("What happened")}
+                description={t("Newest first.")}
+                headerExtra={
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                        <SettingsButton variant="secondary" icon={RefreshCw} onClick={() => fetchLogs()} disabled={loading}>
+                            {t("Check for new activity")}
+                        </SettingsButton>
+                        <SettingsButton
+                            variant="secondary"
+                            icon={Download}
                             onClick={handleExportCsv}
-                            disabled={isExporting || logs.length === 0}
-                            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl neumorphic-primary text-primary-foreground text-xs font-black transition-all shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
+                            loading={isExporting}
+                            disabled={logs.length === 0}
                         >
-                            <Download className="size-3.5" />
-                            <span>{isExporting ? "Exporting..." : "Export CSV"}</span>
-                        </button>
+                            {isExporting ? t("Downloading…") : t("Download a copy")}
+                        </SettingsButton>
                     </div>
-                </div>
-
-                {/* Ethical Privacy Guarantee Banner */}
-                <div className="flex items-start gap-3 p-4 rounded-2xl border border-primary/20 bg-primary/5 text-xs text-muted-foreground leading-relaxed">
-                    <Lock className="size-4 shrink-0 text-primary mt-0.5" />
-                    <div>
-                        <span className="font-bold text-foreground">Ethical Logging Standard (OWASP & GDPR Article 30): </span>
-                        <span>
-                            All events are append-only and strictly isolated to your workspace. Passwords, auth tokens, private chat texts, and financial secrets are never logged.
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Filter & Search Bar */}
-            <div className="space-y-3">
-                <div className="flex flex-col md:flex-row items-center gap-3">
-                    {/* Search Input */}
-                    <div className="relative w-full md:flex-1">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                        <input maxLength={60}
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search by action, resident, or invoice ID..."
-                            className="w-full pl-9 pr-4 py-2.5 text-xs sm:text-sm text-foreground bg-card/60 border border-border rounded-2xl focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground"
-                        />
-                    </div>
-
-                    {/* Category Tabs */}
-                    <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-2xl border border-border/40 overflow-x-auto w-full md:w-auto scrollbar-hide">
-                        {["all", "billing", "security", "settings", "properties"].map((cat) => {
-                            const isCatActive = selectedCategory === cat;
-                            return (
-                                <button
-                                    key={cat}
-                                    type="button"
-                                    onClick={() => setSelectedCategory(cat)}
-                                    className={cn(
-                                        "px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize transition-all whitespace-nowrap cursor-pointer",
-                                        isCatActive
-                                            ? "neumorphic-panel text-primary font-black shadow-sm border-primary/30 ring-1 ring-primary/20"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                                    )}
-                                >
-                                    {cat === "all" ? "All Logs" : cat}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-
-            {/* Logs Timeline List (Paginated & Clean) */}
-            <div className="space-y-2.5">
+                }
+            >
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-2 text-xs">
-                        <RefreshCw className="size-5 animate-spin text-primary" />
-                        Loading activity logs...
-                    </div>
+                    <p role="status" className="flex items-center gap-3 py-10 text-lg font-semibold text-foreground">
+                        <Loader2 className="size-6 shrink-0 motion-safe:animate-spin" aria-hidden />
+                        {t("Loading your activity…")}
+                    </p>
                 ) : logs.length === 0 ? (
-                    <div className="p-12 text-center border border-dashed border-border rounded-3xl space-y-2 text-muted-foreground">
-                        <ShieldCheck className="size-8 text-muted-foreground/40 mx-auto" />
-                        <p className="text-sm font-bold text-foreground">No activity logs found</p>
-                        <p className="text-xs">Actions you perform across the dashboard will appear here in real time.</p>
+                    <div className="rounded-2xl border-2 border-dashed border-foreground/20 p-8 text-center">
+                        <p className="text-lg font-bold text-foreground">{isFiltered ? t("Nothing matches your search") : t("Nothing here yet")}</p>
+                        <p className="mt-1 text-base text-muted-foreground">
+                            {isFiltered
+                                ? t("Try another word, or choose Everything above.")
+                                : t("Things you do in iReside, like changing settings or sending bills, will show up here.")}
+                        </p>
                     </div>
                 ) : (
-                    paginatedLogs.map((log) => {
-                        const catInfo = getCategoryDetails(log.category);
-                        const Icon = catInfo.icon;
-
-                        return (
-                            <div
-                                key={log.id}
-                                className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border/70 bg-card/60 hover:bg-card hover:border-primary/30 transition-all gap-3 shadow-sm hover:shadow-md"
-                            >
-                                <div className="flex items-start sm:items-center gap-3.5 min-w-0">
-                                    <div className={cn("size-10 rounded-2xl flex items-center justify-center shrink-0 border", catInfo.badgeClass)}>
-                                        <Icon className="size-4" />
-                                    </div>
-
-                                    <div className="min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <h4 className="text-xs sm:text-sm font-bold text-foreground truncate">
-                                                {log.title}
-                                            </h4>
-                                            <span className={cn("text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border", catInfo.badgeClass)}>
-                                                {log.category}
+                    <div className="space-y-6">
+                        <ul className="space-y-3">
+                            {paginatedLogs.map((log) => {
+                                const style = CATEGORY_STYLES[log.category] ?? DEFAULT_CATEGORY_STYLE;
+                                const Icon = style.icon;
+                                const shown = describeAuditEvent(log, t);
+                                return (
+                                    <li key={log.id} className="flex flex-col gap-4 rounded-2xl border-2 border-foreground/10 p-4 sm:flex-row sm:items-start">
+                                        <div className="flex min-w-0 flex-1 items-start gap-4">
+                                            <span aria-hidden className={cn("flex size-12 shrink-0 items-center justify-center rounded-2xl", style.tile)}>
+                                                <Icon className="size-6" />
                                             </span>
-                                            {log.severity === "warning" && (
-                                                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                                                    Warning
-                                                </span>
-                                            )}
+                                            <div className="min-w-0 flex-1 space-y-1">
+                                                <p className="text-lg font-bold text-foreground break-words">{shown.title}</p>
+                                                {shown.description && <p className="text-base text-muted-foreground leading-snug break-words">{shown.description}</p>}
+                                                <p className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-base text-foreground/80">
+                                                    <span className="inline-flex items-center gap-1.5">
+                                                        <Clock className="size-4 shrink-0" aria-hidden />
+                                                        <ClientOnlyDate date={log.createdAt} format={{ month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }} />
+                                                    </span>
+                                                    <span className="font-semibold">{categoryLabel(log.category)}</span>
+                                                    {log.severity !== "info" && (
+                                                        <span className="rounded-lg bg-amber-100 px-2 py-0.5 font-bold text-amber-900 dark:bg-amber-500/15 dark:text-amber-200">
+                                                            {t("Important")}
+                                                        </span>
+                                                    )}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                                            {log.description}
-                                        </p>
-                                    </div>
-                                </div>
+                                        <SettingsButton variant="secondary" icon={FileText} onClick={() => setInspectingLog(log)} className="shrink-0">
+                                            {t("See details")}
+                                        </SettingsButton>
+                                    </li>
+                                );
+                            })}
+                        </ul>
 
-                                <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
-                                    <div className="text-left sm:text-right">
-                                        <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-                                            <Clock className="size-3 text-muted-foreground/60" />
-                                            <ClientOnlyDate date={log.createdAt} format={{ month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }} />
-                                        </div>
-                                        <span className="text-[10px] text-muted-foreground/80 block font-mono">
-                                            {log.device || "Web Application"}
-                                        </span>
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setInspectingLog(log)}
-                                        className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
-                                        title="View Metadata"
-                                    >
-                                        <Eye className="size-3.5" />
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })
-                )}
-            </div>
-
-            {/* Pagination Controls Footer */}
-            {logs.length > PAGE_SIZE && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border/80 text-xs">
-                    <span className="text-muted-foreground font-medium">
-                        Showing <strong className="font-bold text-foreground">{(currentPage - 1) * PAGE_SIZE + 1}</strong> to <strong className="font-bold text-foreground">{Math.min(currentPage * PAGE_SIZE, logs.length)}</strong> of <strong className="font-bold text-foreground">{logs.length}</strong> activities
-                    </span>
-
-                    <div className="flex items-center gap-1.5">
-                        <button
-                            type="button"
-                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl neumorphic-extruded font-bold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                        >
-                            <ChevronLeft className="size-3.5" />
-                            <span>Previous</span>
-                        </button>
-
-                        <div className="flex items-center gap-1">
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                                <button
-                                    key={pageNum}
-                                    type="button"
-                                    onClick={() => setCurrentPage(pageNum)}
-                                    className={cn(
-                                        "size-7 rounded-xl font-bold transition-all text-xs flex items-center justify-center cursor-pointer",
-                                        currentPage === pageNum
-                                            ? "neumorphic-primary text-primary-foreground font-black shadow-sm shadow-primary/20"
-                                            : "neumorphic-extruded text-muted-foreground hover:text-foreground"
-                                    )}
-                                >
-                                    {pageNum}
-                                </button>
-                            ))}
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl neumorphic-extruded font-bold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                        >
-                            <span>Next</span>
-                            <ChevronRight className="size-3.5" />
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Metadata Inspector Modal */}
-            <AnimatePresence>
-                {inspectingLog && (
-                    <div className="fixed inset-0 z-[180] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                            className="w-full max-w-lg rounded-3xl border border-border bg-card p-6 shadow-2xl space-y-4"
-                        >
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="size-10 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
-                                        <FileText className="size-5" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-sm font-black text-foreground">Audit Event Details</h3>
-                                        <p className="text-xs text-muted-foreground font-mono">ID: {inspectingLog.id}</p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => setInspectingLog(null)}
-                                    className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
-                                >
-                                    <X className="size-4" />
-                                </button>
-                            </div>
-
-                            <div className="space-y-2 text-xs">
-                                <div className="flex justify-between py-1.5 border-b border-border/50">
-                                    <span className="text-muted-foreground">Action Code</span>
-                                    <span className="font-mono font-bold text-foreground">{inspectingLog.action}</span>
-                                </div>
-                                <div className="flex justify-between py-1.5 border-b border-border/50">
-                                    <span className="text-muted-foreground">Category</span>
-                                    <span className="font-bold text-primary uppercase tracking-wider">{inspectingLog.category}</span>
-                                </div>
-                                <div className="flex justify-between py-1.5 border-b border-border/50">
-                                    <span className="text-muted-foreground">Recorded At</span>
-                                    <span className="font-medium text-foreground">
-                                        {new Date(inspectingLog.createdAt).toLocaleString()}
+                        {logs.length > PAGE_SIZE && (
+                            <nav aria-label={t("Pages")} className="flex flex-col gap-4 border-t-2 border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
+                                <p className="text-base font-semibold text-foreground" aria-live="polite">
+                                    {t("Showing {start}–{end} of {total}", { start: pageStart, end: pageEnd, total: logs.length })}
+                                    <span className="ml-2 text-muted-foreground">
+                                        ({t("Page {page} of {pages}", { page: currentPage, pages: totalPages })})
                                     </span>
+                                </p>
+                                <div className="flex gap-3">
+                                    <SettingsButton
+                                        variant="secondary"
+                                        icon={ChevronLeft}
+                                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        className="flex-1 sm:flex-none"
+                                    >
+                                        {t("Previous page")}
+                                    </SettingsButton>
+                                    <SettingsButton
+                                        variant="secondary"
+                                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="flex-1 flex-row-reverse sm:flex-none"
+                                        icon={ChevronRight}
+                                    >
+                                        {t("Next page")}
+                                    </SettingsButton>
                                 </div>
-                                <div className="flex justify-between py-1.5 border-b border-border/50">
-                                    <span className="text-muted-foreground">Client / Device</span>
-                                    <span className="font-medium text-foreground">{inspectingLog.device || "Web Browser"}</span>
-                                </div>
-                            </div>
-
-                            {/* JSON Payload Inspector */}
-                            <div className="space-y-1.5">
-                                <label className="text-[11px] font-bold text-muted-foreground">
-                                    Sanitized Event Metadata
-                                </label>
-                                <pre className="p-3.5 rounded-2xl bg-muted/80 text-primary text-[11px] font-mono overflow-x-auto max-h-48 border border-border/40 custom-scrollbar-premium">
-                                    {JSON.stringify(inspectingLog.metadata, null, 2)}
-                                </pre>
-                            </div>
-
-                            <button
-                                onClick={() => setInspectingLog(null)}
-                                className="w-full py-3 rounded-xl neumorphic-extruded hover:text-primary text-xs font-bold text-foreground transition-all cursor-pointer"
-                            >
-                                Close
-                            </button>
-                        </motion.div>
+                            </nav>
+                        )}
                     </div>
                 )}
-            </AnimatePresence>
-        </div>
+            </SettingsCard>
+
+            <Dialog.Root open={inspectingLog !== null} onOpenChange={(open) => { if (!open) setInspectingLog(null); }}>
+                <Dialog.Portal>
+                    <Dialog.Overlay className="fixed inset-0 z-[200] bg-black/60" />
+                    <Dialog.Content className="fixed left-1/2 top-1/2 z-[201] max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border-2 border-foreground/15 bg-card p-6 shadow-2xl focus:outline-none sm:p-8">
+                        {inspectingLog && inspectedText && (
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <Dialog.Title className="text-2xl font-bold text-foreground break-words">{inspectedText.title}</Dialog.Title>
+                                    <Dialog.Description className="text-lg text-muted-foreground leading-relaxed break-words">
+                                        {inspectedText.description || t("Activity details")}
+                                    </Dialog.Description>
+                                </div>
+
+                                <dl className="divide-y-2 divide-border rounded-2xl border-2 border-foreground/10">
+                                    {inspectedRows.map((row) => (
+                                        <div key={row.label} className="flex flex-col gap-1 p-4 sm:flex-row sm:justify-between sm:gap-4">
+                                            <dt className="text-base text-muted-foreground">{row.label}</dt>
+                                            <dd className="text-base font-bold text-foreground sm:text-right break-words">{row.value}</dd>
+                                        </div>
+                                    ))}
+                                </dl>
+
+                                <details className="group rounded-2xl border-2 border-foreground/10">
+                                    <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 rounded-2xl px-4 py-3 text-base font-bold text-foreground hover:bg-muted focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50 [&::-webkit-details-marker]:hidden">
+                                        <ChevronRight className="size-5 shrink-0 transition-transform group-open:rotate-90" aria-hidden />
+                                        {t("Technical details (for support)")}
+                                    </summary>
+                                    <div className="space-y-3 border-t-2 border-border p-4 text-base">
+                                        <p className="text-foreground break-all">
+                                            <span className="text-muted-foreground">{t("Reference")}: </span>
+                                            <span className="font-mono">{inspectingLog.id}</span>
+                                        </p>
+                                        <p className="text-foreground break-all">
+                                            <span className="text-muted-foreground">{t("Action code")}: </span>
+                                            <span className="font-mono">{inspectingLog.action}</span>
+                                        </p>
+                                        <pre className="max-h-48 overflow-auto rounded-xl bg-muted p-3 font-mono text-sm text-foreground">
+                                            {JSON.stringify(inspectingLog.metadata, null, 2)}
+                                        </pre>
+                                    </div>
+                                </details>
+
+                                <SettingsButton variant="primary" size="lg" className="w-full" onClick={() => setInspectingLog(null)}>
+                                    {t("Close")}
+                                </SettingsButton>
+                            </div>
+                        )}
+                    </Dialog.Content>
+                </Dialog.Portal>
+            </Dialog.Root>
+        </>
     );
 }

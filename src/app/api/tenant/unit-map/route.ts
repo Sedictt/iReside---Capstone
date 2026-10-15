@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { requireUser } from "@/lib/supabase/auth";
+import { parseJsonBody } from "@/lib/validation/server";
+import { zOptionalText, zUuid } from "@/lib/validation/zod-fields";
+import { TEXT_LIMITS } from "@/lib/validation/rules";
+import { normalizeTermType } from "@/lib/lease-term";
+
+const transferRequestSchema = z.object({
+    requestedUnitId: zUuid("Requested unit"),
+    reason: zOptionalText("Reason", TEXT_LIMITS.reason),
+});
 
 type LeaseWithUnit = {
     id: string;
@@ -19,6 +29,7 @@ export async function GET() {
             unit_id,
             start_date,
             end_date,
+            term_type,
             monthly_rent,
             units (
                 id,
@@ -98,12 +109,15 @@ export async function GET() {
 
     // Enrich units with positions and active tenant lease details
     const rawLease = leaseWithUnit as any;
+    const leaseTerm = normalizeTermType(rawLease?.term_type);
     const unitsWithPositions = (units ?? []).map(unit => {
         const isCurrent = unit.id === unitInfo.id;
         return {
             ...unit,
             lease_start: isCurrent ? rawLease?.start_date : undefined,
-            lease_end: isCurrent ? rawLease?.end_date : undefined,
+            // null for open-ended leases until a move-out date is agreed.
+            lease_end: isCurrent ? (rawLease?.end_date ?? null) : undefined,
+            lease_term: isCurrent ? leaseTerm : undefined,
             rent_amount: isCurrent && rawLease?.monthly_rent ? Number(rawLease.monthly_rent) : unit.rent_amount,
             position: positionsByUnitId.get(unit.id) ?? null
         };
@@ -127,6 +141,7 @@ export async function GET() {
         leaseId: leaseWithUnit.id,
         leaseStart: rawLease?.start_date ?? null,
         leaseEnd: rawLease?.end_date ?? null,
+        leaseTerm,
         landlordId: leaseWithUnit.landlord_id,
         tenantId: user.id,
         currentUnitId: unitInfo.id,
@@ -146,19 +161,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     const { user, supabase } = await requireUser();
 
-    let payload: { requestedUnitId?: string; reason?: string };
-    try {
-        payload = await request.json();
-    } catch {
-        return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-    }
-
-    const requestedUnitId = payload.requestedUnitId?.trim();
-    const reason = payload.reason?.trim() || null;
-
-    if (!requestedUnitId) {
-        return NextResponse.json({ error: "requestedUnitId is required." }, { status: 400 });
-    }
+    const parsed = await parseJsonBody(request, transferRequestSchema);
+    if (!parsed.ok) return parsed.response;
+    const { requestedUnitId, reason } = parsed.data;
 
     const { data: leaseData, error: leaseError } = await supabase
         .from("leases")
@@ -244,6 +249,13 @@ export async function POST(request: NextRequest) {
         .single();
 
     if (createError) {
+        // uniq_pending_transfer_per_tenant_property: a concurrent double-submit lost the race.
+        if ((createError as { code?: string }).code === "23505") {
+            return NextResponse.json(
+                { error: "You already have a pending transfer request for this property." },
+                { status: 409 }
+            );
+        }
         if ((createError as { code?: string }).code === "42P01") {
             return NextResponse.json(
                 { error: "Unit transfer feature is not initialized. Please run the latest database migrations." },

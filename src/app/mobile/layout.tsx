@@ -7,6 +7,7 @@ import { BottomTabBar } from '@/components/mobile/layout/BottomTabBar'
 import { NotificationProvider } from '@/context/NotificationContext'
 import { PropertyProvider } from '@/context/PropertyContext'
 import { cn } from '@/lib/utils'
+import { useLanguageContext } from '@/context/LanguageContext'
 import '../../styles/mobile.css'
 
 /* ----------------------------------------------------------
@@ -17,6 +18,7 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
     const { profile, loading } = useAuth()
     const router = useRouter()
     const pathname = usePathname()
+    const { t } = useLanguageContext()
 
     // Ensure no outer window scrollbar appears on mobile portal
     useEffect(() => {
@@ -58,10 +60,10 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
                     <div
                         className="w-10 h-10 rounded-full border-2 border-muted border-t-primary animate-spin"
                         role="status"
-                        aria-label="Loading"
+                        aria-label={t('Loading')}
                     />
                     <span className="text-sm text-muted-foreground">
-                        {isTenantOnLandlordRoute || isLandlordOnTenantRoute ? 'Redirecting to your portal…' : 'Loading iReside…'}
+                        {isTenantOnLandlordRoute || isLandlordOnTenantRoute ? 'Redirecting to your portal…' : t('Loading iReside…')}
                     </span>
                 </div>
             </div>

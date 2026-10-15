@@ -3,15 +3,26 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import crypto from "crypto";
 import { MAX_FILE_SIZE } from "@/lib/constants";
+import { zEmail, zPersonName, zRequiredPhone, zRequiredText } from "@/lib/validation/zod-fields";
+import { escapeLikePattern } from "@/lib/validation/schemas/account.schema";
 
 const landlordRegistrationSchema = z.object({
-    fullName: z.string().min(2, "Full name is required"),
-    phone: z.string().min(10, "Valid phone number is required"),
-    email: z.string().email("Valid email is required"),
+    fullName: zPersonName("Full name"),
+    phone: zRequiredPhone(),
+    email: zEmail("Email"),
     emailVerified: z.boolean(),
-    propertyName: z.string().min(2, "Property name is required"),
-    propertyAddress: z.string().min(10, "Property address is required"),
+    propertyName: zRequiredText("Property name", 100, 2),
+    propertyAddress: zRequiredText("Property address", 250, 10),
 });
+
+// Identity / permit / ownership documents: images or PDF only.
+const DOCUMENT_EXTENSION_BY_TYPE: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "application/pdf": "pdf",
+};
 
 interface UploadedFile {
     name: string;
@@ -20,9 +31,9 @@ interface UploadedFile {
 }
 
 const fileSchema = z.object({
-    name: z.string(),
-    type: z.string(),
-    data: z.string(),
+    name: z.string().trim().min(1).max(255, "File name is too long"),
+    type: z.string().trim().toLowerCase().refine((type) => type in DOCUMENT_EXTENSION_BY_TYPE, "Documents must be a JPG, PNG, WebP or PDF file"),
+    data: z.string().min(1, "File is empty").regex(/^[A-Za-z0-9+/=\s]+$/, "File data is not valid base64"),
 }).optional().refine(file => {
     if (!file) return true;
     // Calculate approximate size from base64 (3/4 of length)
@@ -41,7 +52,20 @@ const landlordRegistrationWithFilesSchema = landlordRegistrationSchema.extend({
 // Next.js App Router handles body size limits via next.config.js or defaults. 
 // The 'config' export is deprecated in Route Handlers.
 
+// This unauthenticated endpoint backs the deprecated self-service landlord
+// signup (components/deprecated/LandlordSignup). It trusts a client-supplied
+// `emailVerified` flag and creates auth users for arbitrary addresses, so it
+// stays disabled unless the operator explicitly opts in.
+const isLegacyRegistrationEnabled = () => process.env.ENABLE_LEGACY_LANDLORD_REGISTRATION === "true";
+
 export async function POST(request: Request) {
+    if (!isLegacyRegistrationEnabled()) {
+        return NextResponse.json(
+            { error: "Self-service landlord registration is disabled. Please contact the operator to be onboarded." },
+            { status: 410 }
+        );
+    }
+
     try {
         const contentType = request.headers.get("content-type") || "";
         
@@ -73,7 +97,7 @@ export async function POST(request: Request) {
         const { data: existingApp } = await adminClient
             .from("landlord_applications")
             .select("id, status, email")
-            .ilike("email", parsed.email)
+            .ilike("email", escapeLikePattern(parsed.email))
             .maybeSingle();
 
         if (existingApp) {
@@ -97,16 +121,13 @@ export async function POST(request: Request) {
         const existingAuthUser = users.find(u => u.email?.toLowerCase() === parsed.email.toLowerCase());
 
         if (existingAuthUser) {
-            userId = existingAuthUser.id;
-            console.log(`[Register] Using existing auth user: ${userId}`);
-            
-            // Update role to landlord in metadata if not already
-            await adminClient.auth.admin.updateUserById(userId, {
-                user_metadata: { 
-                    ...existingAuthUser.user_metadata,
-                    role: 'landlord' 
-                }
-            });
+            // Never mutate an existing account from an unauthenticated request:
+            // flipping its role to landlord here let anyone escalate (or hijack)
+            // an account just by knowing its email address.
+            return NextResponse.json(
+                { error: "An account with this email already exists. Please log in or contact the operator." },
+                { status: 409 }
+            );
         } else {
             // Create auth user with unconfirmed email (will be confirmed later)
             const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
@@ -170,7 +191,7 @@ export async function POST(request: Request) {
             try {
                 console.log(`[Upload] Starting upload for ${folder} (${file.name}, ${file.type}, ${Math.round(file.data.length * 0.75 / 1024)}KB)`);
                 const buffer = Buffer.from(file.data, "base64");
-                const ext = file.type.split("/")[1] || "bin";
+                const ext = DOCUMENT_EXTENSION_BY_TYPE[file.type] ?? "bin";
                 const fileName = `${folder}/${crypto.randomUUID()}.${ext}`;
                 
                 const { data, error } = await adminClient.storage
@@ -254,13 +275,17 @@ export async function POST(request: Request) {
         
         if (error instanceof z.ZodError) {
             return NextResponse.json({ 
-                error: "Invalid form data", 
+                error: error.issues[0]?.message || "Invalid form data", 
                 details: error.issues 
             }, { status: 400 });
         }
 
+        if (error instanceof SyntaxError) {
+            return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 });
+        }
+
         return NextResponse.json({ 
-            error: error.message || "Failed to submit application" 
+            error: "Failed to submit application" 
         }, { status: 500 });
     }
 }

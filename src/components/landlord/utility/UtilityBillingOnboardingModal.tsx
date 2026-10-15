@@ -3,6 +3,7 @@
 import React from "react";
 import { Zap, Droplets, CheckCircle2, ArrowRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface UtilityBillingOnboardingModalProps {
     isOpen: boolean;
@@ -17,6 +18,7 @@ export function UtilityBillingOnboardingModal({
     onStartTour,
     propertyName,
 }: UtilityBillingOnboardingModalProps) {
+    const { t } = useLanguageContext();
     if (!isOpen) return null;
 
     return (
@@ -51,17 +53,21 @@ export function UtilityBillingOnboardingModal({
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">
-                            Step 3 of 5 • Onboarding
+                            {t("Step 3 of 5 • Onboarding")}
                         </span>
                         <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                            Water &amp; Electricity Bills
+                            {t("Water & Electricity Bills")}
                         </span>
                     </div>
                     <h1 id="utility-onboarding-modal-title" className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight">
-                        Set Up Water &amp; Electric Rates
+                        {t("Set Up Water & Electric Rates")}
                     </h1>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                        Enter your water and electric rates{propertyName ? <> for <span className="font-bold text-foreground">{propertyName}</span></> : ""} so monthly bills compute automatically. If utilities are already included in rent, you can set them to zero.
+                        {propertyName ? (() => {
+                            const [before, after = ""] = t("Enter your water and electric rates for {property} so monthly bills compute automatically.").split("{property}");
+                            return <>{before}<span className="font-bold text-foreground">{propertyName}</span>{after}</>;
+                        })() : t("Enter your water and electric rates so monthly bills compute automatically.")}{" "}
+                        {t("If utilities are already included in rent, you can set them to zero.")}
                     </p>
                 </div>
 
@@ -73,10 +79,10 @@ export function UtilityBillingOnboardingModal({
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-foreground">
-                                1. Electric &amp; Water Rates
+                                {t("1. Electric & Water Rates")}
                             </h3>
                             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                Set standard electricity (₱/kWh) and water (₱/m³) rates, or keep them zero if rent is all-inclusive.
+                                {t("Set standard electricity (₱/kWh) and water (₱/m³) rates, or keep them zero if rent is all-inclusive.")}
                             </p>
                         </div>
                     </div>
@@ -87,10 +93,10 @@ export function UtilityBillingOnboardingModal({
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-foreground">
-                                2. Starting Meter Numbers
+                                {t("2. Starting Meter Numbers")}
                             </h3>
                             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                Type in initial room meter readings. iReside calculates monthly usage automatically.
+                                {t("Type in initial room meter readings. iReside calculates monthly usage automatically.")}
                             </p>
                         </div>
                     </div>
@@ -101,10 +107,10 @@ export function UtilityBillingOnboardingModal({
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-foreground">
-                                3. Automatic Monthly Bills
+                                {t("3. Automatic Monthly Bills")}
                             </h3>
                             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                Send transparent monthly bills to tenants showing exact meter numbers and charges alongside room rent.
+                                {t("Send transparent monthly bills to tenants showing exact meter numbers and charges alongside room rent.")}
                             </p>
                         </div>
                     </div>
@@ -117,14 +123,15 @@ export function UtilityBillingOnboardingModal({
                         onClick={onClose}
                         className="flex-1 inline-flex items-center justify-center h-12 px-5 rounded-2xl border border-border/80 bg-background hover:bg-muted text-sm font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer active:scale-98"
                     >
-                        Maybe Later
+                        {t("Maybe Later")}
                     </button>
                     <button
                         type="button"
                         onClick={onStartTour}
                         className="group flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-2xl bg-primary text-primary-foreground text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-98"
                     >
-                        <span>Start Step-by-Step Setup</span>
+                        <span>{t("Start Step-by-Step Setup")}</span>
+
                         <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                     </button>
                 </div>

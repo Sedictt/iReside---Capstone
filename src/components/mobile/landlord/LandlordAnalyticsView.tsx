@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { jsPDF } from 'jspdf'
 import { cn } from '@/lib/utils'
+import { useLanguageContext } from '@/context/LanguageContext'
 import { IrisAIAgent } from '@/components/landlord/dashboard/IrisAIAgent'
 import { useAuth } from '@/hooks/useAuth'
 import { ChartSkeleton } from '@/components/landlord/dashboard/ChartSkeleton'
@@ -324,6 +325,7 @@ const COLOR_THEMES = {
 export function LandlordAnalyticsView() {
     const { profile } = useAuth()
     const { selectedPropertyId } = useProperty()
+    const { t, locale } = useLanguageContext()
 
     const [mounted, setMounted] = useState(false)
     const [selectedRange, setSelectedRange] = useState<RangeOption['id']>('30d')
@@ -469,7 +471,7 @@ export function LandlordAnalyticsView() {
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
         const datePart = now.toISOString().split('T')[0]
         downloadBlob(blob, `portfolio-analytics-${datePart}.csv`)
-        setToastMessage('CSV report downloaded successfully.')
+        setToastMessage(t('CSV report downloaded successfully.'))
     }
 
     const handleExportPdf = () => {
@@ -523,7 +525,7 @@ export function LandlordAnalyticsView() {
 
         const datePart = now.toISOString().split('T')[0]
         doc.save(`portfolio-analytics-${datePart}.pdf`)
-        setToastMessage('PDF report exported successfully.')
+        setToastMessage(t('PDF report exported successfully.'))
     }
 
     const handleRedownload = (item: ExportAuditItem) => {
@@ -555,7 +557,7 @@ export function LandlordAnalyticsView() {
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
             downloadBlob(blob, `report-${datePart}.csv`)
-            setToastMessage('CSV redownloaded from history.')
+            setToastMessage(t('CSV redownloaded from history.'))
         } else {
             const doc = new jsPDF({ unit: 'pt', format: 'a4' })
             const pageWidth = doc.internal.pageSize.getWidth()
@@ -599,7 +601,7 @@ export function LandlordAnalyticsView() {
             })
 
             doc.save(`report-${datePart}.pdf`)
-            setToastMessage('PDF redownloaded from history.')
+            setToastMessage(t('PDF redownloaded from history.'))
         }
     }
 
@@ -668,8 +670,8 @@ export function LandlordAnalyticsView() {
 
     useEffect(() => {
         if (!toastMessage) return
-        const t = setTimeout(() => setToastMessage(null), 2500)
-        return () => clearTimeout(t)
+        const timer = setTimeout(() => setToastMessage(null), 2500)
+        return () => clearTimeout(timer)
     }, [toastMessage])
 
     if (!mounted) return null
@@ -692,7 +694,7 @@ export function LandlordAnalyticsView() {
                     className="flex-1 h-12 neumorphic-panel rounded-2xl px-4 flex items-center justify-center gap-2 border border-border/20 text-foreground font-black text-xs uppercase tracking-wider active:scale-95 transition-all cursor-pointer shadow-xs"
                 >
                     <Download className="size-4 text-primary" />
-                    <span>Export Report</span>
+                    <span>{t('Export Report')}</span>
                 </button>
 
                 <button
@@ -707,7 +709,7 @@ export function LandlordAnalyticsView() {
                     )}
                 >
                     <Sparkles className="size-4 text-primary" />
-                    <span>{isIrisVisible ? 'Hide iRis' : 'Ask iRis'}</span>
+                    <span>{isIrisVisible ? t('Hide iRis') : t('Ask iRis')}</span>
                 </button>
             </div>
 
@@ -721,19 +723,19 @@ export function LandlordAnalyticsView() {
                     <div className="flex items-center gap-2">
                         <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                            Gross Revenue
+                            {t('Gross Revenue')}
                         </span>
                     </div>
 
                     {statsLoading ? (
                         <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-primary">
                             <RefreshCw className="size-3 animate-spin" />
-                            Syncing
+                            {t('Syncing')}
                         </div>
                     ) : (
                         <div className="flex items-center gap-1 neumorphic-inset-card px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-muted-foreground/80">
                             <CalendarIcon className="size-2.5 text-primary" />
-                            {selectedRange.toUpperCase()}
+                            {selectedRange === 'custom' ? t('Custom') : selectedRange.toUpperCase()}
                         </div>
                     )}
                 </div>
@@ -749,7 +751,7 @@ export function LandlordAnalyticsView() {
                             {grossRevenue.change}
                         </span>
                         <span className="text-[10px] text-muted-foreground font-semibold">
-                            collected in rent
+                            {t('collected in rent')}
                         </span>
                     </div>
                 </div>
@@ -788,10 +790,10 @@ export function LandlordAnalyticsView() {
                         </div>
                         <div>
                             <h2 className="text-xs font-black uppercase tracking-wider text-foreground">
-                                Financial Performance
+                                {t('Financial Performance')}
                             </h2>
                             <p className="text-[10px] text-muted-foreground">
-                                Revenue vs. Operational Costs
+                                {t('Revenue vs. Operational Costs')}
                             </p>
                         </div>
                     </div>
@@ -801,7 +803,7 @@ export function LandlordAnalyticsView() {
                         onClick={() => triggerHaptic('light')}
                         className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary hover:underline shrink-0"
                     >
-                        <span>Finance Hub</span>
+                        <span>{t('Finance Hub')}</span>
                         <ArrowUpRight className="size-3" />
                     </Link>
                 </div>
@@ -820,10 +822,10 @@ export function LandlordAnalyticsView() {
             <section className="space-y-2">
                 <div className="px-2 pt-1 flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">
-                        Portfolio Vitals & Metrics
+                        {t('Portfolio Vitals & Metrics')}
                     </span>
                     <span className="text-[10px] font-bold text-muted-foreground/60">
-                        Tap for details
+                        {t('Tap for details')}
                     </span>
                 </div>
 
@@ -851,7 +853,7 @@ export function LandlordAnalyticsView() {
                             </div>
                             <div className="flex flex-col min-w-0">
                                 <span className="text-xs font-black uppercase tracking-wider text-foreground">
-                                    Occupied Units
+                                    {t('Occupied Units')}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground">
                                     {occupiedUnits.change}
@@ -890,10 +892,10 @@ export function LandlordAnalyticsView() {
                             </div>
                             <div className="flex flex-col min-w-0">
                                 <span className="text-xs font-black uppercase tracking-wider text-foreground">
-                                    Revenue Efficiency
+                                    {t('Revenue Efficiency')}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground">
-                                    Realized revenue potential
+                                    {t('Realized revenue potential')}
                                 </span>
                             </div>
                         </div>
@@ -929,7 +931,7 @@ export function LandlordAnalyticsView() {
                             </div>
                             <div className="flex flex-col min-w-0">
                                 <span className="text-xs font-black uppercase tracking-wider text-red-500">
-                                    Unpaid Rent
+                                    {t('Unpaid Rent')}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground">
                                     {unpaidRent.change}
@@ -968,10 +970,10 @@ export function LandlordAnalyticsView() {
                             </div>
                             <div className="flex flex-col min-w-0">
                                 <span className="text-xs font-black uppercase tracking-wider text-foreground">
-                                    Operating Costs
+                                    {t('Operating Costs')}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground">
-                                    Maintenance & bills
+                                    {t('Maintenance & bills')}
                                 </span>
                             </div>
                         </div>
@@ -1007,10 +1009,10 @@ export function LandlordAnalyticsView() {
                             </div>
                             <div className="flex flex-col min-w-0">
                                 <span className="text-xs font-black uppercase tracking-wider text-teal-500">
-                                    Net Profit (NOI)
+                                    {t('Net Profit (NOI)')}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground">
-                                    Revenue minus expenses
+                                    {t('Revenue minus expenses')}
                                 </span>
                             </div>
                         </div>
@@ -1046,7 +1048,7 @@ export function LandlordAnalyticsView() {
                             </div>
                             <div className="flex flex-col min-w-0">
                                 <span className="text-xs font-black uppercase tracking-wider text-foreground">
-                                    Resolution Speed
+                                    {t('Resolution Speed')}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground">
                                     {resolutionSpeed.simplifiedChange}
@@ -1073,10 +1075,10 @@ export function LandlordAnalyticsView() {
                     <div className="flex flex-col min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                             <span className="text-xs font-black uppercase tracking-wider text-foreground">
-                                iRis Executive Briefing
+                                {t('iRis Executive Briefing')}
                             </span>
                             <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                                {operationalSnapshot.status}
+                                {t(operationalSnapshot.status)}
                             </span>
                         </div>
                         <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
@@ -1094,7 +1096,7 @@ export function LandlordAnalyticsView() {
                         }}
                         className="w-full neumorphic-extruded py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider text-primary flex items-center justify-center gap-1.5 active:scale-98 transition-all cursor-pointer"
                     >
-                        <span>Open Interactive AI Analysis</span>
+                        <span>{t('Open Interactive AI Analysis')}</span>
                         <ChevronRight className="size-3.5" />
                     </button>
                 </div>
@@ -1105,7 +1107,7 @@ export function LandlordAnalyticsView() {
                 <section className="space-y-2">
                     <div className="px-2 flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">
-                            Recent Downloads
+                            {t('Recent Downloads')}
                         </span>
                         <History className="size-3.5 text-muted-foreground/60" />
                     </div>
@@ -1121,10 +1123,10 @@ export function LandlordAnalyticsView() {
                                 <FileText className="size-3.5 text-primary" />
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-black uppercase text-foreground">
-                                        {item.format.toUpperCase()} Report
+                                        {t('{format} Report', { format: item.format.toUpperCase() })}
                                     </span>
                                     <span className="text-[8px] text-muted-foreground">
-                                        {new Date(item.generatedAt).toLocaleDateString(undefined, {
+                                        {new Date(item.generatedAt).toLocaleDateString(locale, {
                                             month: 'short',
                                             day: 'numeric',
                                         })}
@@ -1176,7 +1178,7 @@ export function LandlordAnalyticsView() {
                             <div className="flex items-start justify-between gap-3">
                                 <div className="space-y-1">
                                     <h3 className="text-sm font-black uppercase tracking-tight text-foreground">
-                                        {selectedVitalsDetail.title}
+                                        {t(selectedVitalsDetail.title)}
                                     </h3>
                                     <p className={cn("text-3xl font-black tracking-tight", COLOR_THEMES[selectedVitalsDetail.color]?.text || 'text-primary')}>
                                         {selectedVitalsDetail.value}
@@ -1193,13 +1195,14 @@ export function LandlordAnalyticsView() {
                                     type="button"
                                     onClick={() => setSelectedVitalsDetail(null)}
                                     className="size-8 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
+                                    aria-label={t('Close')}
                                 >
                                     <X className="size-4" />
                                 </button>
                             </div>
 
                             <p className="text-xs text-muted-foreground leading-relaxed pt-1">
-                                {selectedVitalsDetail.description}
+                                {t(selectedVitalsDetail.description)}
                             </p>
 
                             {selectedVitalsDetail.actionHref && (
@@ -1212,7 +1215,7 @@ export function LandlordAnalyticsView() {
                                             COLOR_THEMES[selectedVitalsDetail.color]?.btn || 'neumorphic-primary'
                                         )}
                                     >
-                                        <span>{selectedVitalsDetail.actionLabel || 'View Details'}</span>
+                                        <span>{t(selectedVitalsDetail.actionLabel || 'View Details')}</span>
                                         <ArrowUpRight className="size-3.5" />
                                     </Link>
                                 </div>
@@ -1246,16 +1249,17 @@ export function LandlordAnalyticsView() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <h3 className="text-base font-black uppercase tracking-tight text-foreground">
-                                        Export Analytics Report
+                                        {t('Export Analytics Report')}
                                     </h3>
                                     <p className="text-[10px] text-muted-foreground">
-                                        Generate downloadable audit
+                                        {t('Generate downloadable audit')}
                                     </p>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setIsExportModalOpen(false)}
                                     className="size-11 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
+                                    aria-label={t('Close')}
                                 >
                                     <X className="size-4" />
                                 </button>
@@ -1264,7 +1268,7 @@ export function LandlordAnalyticsView() {
                             {/* Period selector */}
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
-                                    1. Reporting Range
+                                    {t('1. Reporting Range')}
                                 </label>
                                 <div className="grid grid-cols-4 gap-1.5">
                                     {RANGE_OPTIONS.map((option) => (
@@ -1286,7 +1290,7 @@ export function LandlordAnalyticsView() {
 
                                 <div className="grid grid-cols-2 gap-2 pt-1">
                                     <div>
-                                        <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/60">From</span>
+                                        <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/60">{t("From")}</span>
                                         <input
                                             type="date"
                                             value={startDate}
@@ -1298,7 +1302,7 @@ export function LandlordAnalyticsView() {
                                         />
                                     </div>
                                     <div>
-                                        <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/60">To</span>
+                                        <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/60">{t("To")}</span>
                                         <input
                                             type="date"
                                             value={endDate}
@@ -1315,7 +1319,7 @@ export function LandlordAnalyticsView() {
                             {/* Format selector */}
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
-                                    2. Format
+                                    {t('2. Format')}
                                 </label>
                                 <div className="grid grid-cols-2 gap-3">
                                     <button
@@ -1332,7 +1336,7 @@ export function LandlordAnalyticsView() {
                                         )}
                                     >
                                         <FileText className="size-6" />
-                                        <span className="text-xs font-black uppercase tracking-wider">PDF Report</span>
+                                        <span className="text-xs font-black uppercase tracking-wider">{t("PDF Report")}</span>
                                     </button>
 
                                     <button
@@ -1349,7 +1353,7 @@ export function LandlordAnalyticsView() {
                                         )}
                                     >
                                         <Download className="size-6" />
-                                        <span className="text-xs font-black uppercase tracking-wider">CSV Data</span>
+                                        <span className="text-xs font-black uppercase tracking-wider">{t("CSV Data")}</span>
                                     </button>
                                 </div>
                             </div>
@@ -1364,7 +1368,7 @@ export function LandlordAnalyticsView() {
                                     }}
                                     className="w-full h-12 neumorphic-primary rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg active:scale-95 transition-all cursor-pointer flex items-center justify-center"
                                 >
-                                    Generate & Download
+                                    {t('Generate & Download')}
                                 </button>
                             </div>
                         </motion.div>

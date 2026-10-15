@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { LeaseService } from "@/lib/services/lease";
+import { parseSearchParams } from "@/lib/validation/server";
+import { landlordLeaseListQuerySchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 /**
  * GET /api/landlord/leases
@@ -13,6 +15,8 @@ export async function GET(request: Request) {
   if (!("userId" in authContext)) return authContext as any;
   const { userId, supabase } = authContext;
   const { searchParams } = new URL(request.url);
+  const query = parseSearchParams(searchParams, landlordLeaseListQuerySchema);
+  if (!query.ok) return query.response;
   const propertyId = searchParams.get("propertyId") ?? undefined;
   const status = searchParams.get("status") ?? undefined;
   const unitId = searchParams.get("unitId") ?? undefined;

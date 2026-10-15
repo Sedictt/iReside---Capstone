@@ -2,13 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { logUserActivity } from "@/lib/audit/audit-logger";
-import { z } from "zod";
-
-const verifyOtpSchema = z.object({
-  newEmail: z.string().trim().email("Please provide a valid email address."),
-  otp: z.string().trim().length(6, "Verification code must be exactly 6 digits."),
-  validateOnly: z.boolean().optional(),
-});
+import { describeAuditEvent } from "@/lib/audit/audit-display";
+import { parseJsonBody } from "@/lib/validation/server";
+import { setupVerifyOtpSchema } from "@/lib/validation/schemas/account.schema";
+import { evaluateOtpAttempt, persistOtpAttempt } from "@/lib/security/otp-verification";
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,20 +20,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let rawBody: unknown;
-    try {
-      rawBody = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
-    }
-
-    const validation = verifyOtpSchema.safeParse(rawBody);
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.issues[0]?.message || "Invalid input fields." },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJsonBody(request, setupVerifyOtpSchema);
+    if (!parsed.ok) return parsed.response;
+    const validation = parsed;
 
     const { newEmail, otp } = validation.data;
     const normalizedEmail = newEmail.toLowerCase();
@@ -64,19 +50,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check code match
-    if (securitySettings.otp_code !== otp) {
-      return NextResponse.json(
-        { error: "Incorrect verification code. Please check and try again." },
-        { status: 400 }
-      );
-    }
+    // Constant-time code check with a hard ceiling on failed guesses per code.
+    const attempt = evaluateOtpAttempt({
+      storedCode: securitySettings.otp_code,
+      storedExpiry: securitySettings.otp_expiry,
+      providedOtp: otp,
+    });
 
-    // Check expiration
-    if (!securitySettings.otp_expiry || new Date() > new Date(securitySettings.otp_expiry)) {
+    if (!attempt.ok) {
+      await persistOtpAttempt(adminClient as any, userId, attempt.nextStoredCode);
+      const message =
+        attempt.reason === "mismatch"
+          ? "Incorrect verification code. Please check and try again."
+          : attempt.reason === "expired"
+            ? "Verification code has expired. Please request a new code."
+            : attempt.reason === "locked"
+              ? "Too many failed attempts. Please request a new verification code."
+              : "No pending email verification code found. Please request a new code.";
       return NextResponse.json(
-        { error: "Verification code has expired. Please request a new code." },
-        { status: 400 }
+        { error: message, remainingAttempts: attempt.remainingAttempts },
+        { status: attempt.reason === "locked" ? 429 : 400 }
       );
     }
 
@@ -136,8 +129,7 @@ export async function POST(request: NextRequest) {
       userRole: "landlord",
       action: "email_updated",
       category: "security",
-      title: "Email Address Linked",
-      description: `Landlord successfully verified and linked new email address ${normalizedEmail} via OTP.`,
+      ...describeAuditEvent({ action: "email_updated" }),
       severity: "info",
     });
 
@@ -149,7 +141,7 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     console.error("[POST /api/setup/email/verify-otp] Error:", err);
     return NextResponse.json(
-      { error: err?.message || "Failed to verify code." },
+      { error: "Failed to verify code." },
       { status: 500 }
     );
   }

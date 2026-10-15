@@ -3,7 +3,14 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { ensureUserInConversation, getProfilePreviewMap, invalidateSummariesCache } from "@/lib/messages/engine";
 import { redactWithAiOrFallback } from "@/lib/messages/redaction-service";
-import type { Json, MessageType } from "@/types/database";
+import type { Json } from "@/types/database";
+import { parseJsonBody, parseSearchParams } from "@/lib/validation/server";
+import { zUuid } from "@/lib/validation/zod-fields";
+import {
+    messageMetadataError,
+    messageSendSchema,
+    messagesListQuerySchema,
+} from "@/lib/validation/schemas/operations.schema";
 
 const DEFAULT_FILES_BUCKET = "message-files";
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
@@ -72,11 +79,7 @@ async function resolveSignedUrlsBatch(
     return urlMap;
 }
 
-type MessageBody = {
-    content?: string;
-    type?: MessageType;
-    metadata?: Json | null;
-};
+const conversationNotFound = () => NextResponse.json({ error: "Conversation not found." }, { status: 404 });
 
 const isJsonObject = (value: Json | null | undefined): value is Record<string, Json> =>
     Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -90,19 +93,18 @@ export async function GET(
     const { userId } = authContext;
 
     const { conversationId } = await context.params;
+    if (!zUuid().safeParse(conversationId).success) return conversationNotFound();
+
+    const parsedQuery = parseSearchParams(new URL(request.url).searchParams, messagesListQuerySchema);
+    if (!parsedQuery.ok) return parsedQuery.response;
+    const { limit, before } = parsedQuery.data;
 
     try {
         const supabase = createServiceRoleSupabaseClient();
         const isMember = await ensureUserInConversation(supabase, conversationId, userId);
         if (!isMember) {
-            return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
+            return conversationNotFound();
         }
-
-
-        const url = new URL(request.url);
-        const limitParam = Number(url.searchParams.get("limit") ?? "20");
-        const limit = Number.isFinite(limitParam) ? Math.max(1, Math.min(100, Math.floor(limitParam))) : 20;
-        const before = url.searchParams.get("before");
 
         let query = supabase
             .from("messages")
@@ -237,26 +239,29 @@ export async function POST(
     const { userId } = authContext;
 
     const { conversationId } = await context.params;
+    if (!zUuid().safeParse(conversationId).success) return conversationNotFound();
 
-    const body = (await request.json()) as MessageBody;
-    const content = (body.content ?? "").trim();
-    const messageType = body.type ?? "text";
+    const parsed = await parseJsonBody(request, messageSendSchema);
+    if (!parsed.ok) return parsed.response;
+    const content = parsed.data.content;
+    const messageType = parsed.data.type;
+    const body = { metadata: (parsed.data.metadata ?? null) as Json | null };
 
     if (!content && (messageType === "text" || messageType === "system")) {
         return NextResponse.json({ error: "Message content is required for text messages." }, { status: 400 });
     }
 
-    if (!(["text", "system", "image", "file"] as MessageType[]).includes(messageType)) {
-        return NextResponse.json({ error: "Invalid message type." }, { status: 400 });
+    const metadataError = messageMetadataError(body.metadata, conversationId, userId);
+    if (metadataError) {
+        return NextResponse.json({ error: metadataError, fieldErrors: { metadata: metadataError } }, { status: 400 });
     }
 
     try {
         const supabase = createServiceRoleSupabaseClient();
         const isMember = await ensureUserInConversation(supabase, conversationId, userId);
         if (!isMember) {
-            return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
+            return conversationNotFound();
         }
-
 
         const baseMetadata = isJsonObject(body.metadata) ? { ...body.metadata } : {};
         let resolvedMetadata: Json | null = body.metadata ?? null;

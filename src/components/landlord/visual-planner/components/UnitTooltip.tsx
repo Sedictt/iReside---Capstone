@@ -2,6 +2,8 @@ import React from "react";
 import { m as motion } from "framer-motion";
 import Link from "next/link";
 import { Unit } from "../types";
+import { formatLeaseDate, formatTenureShort, leaseEndState } from "@/lib/lease-term";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface UnitTooltipProps {
     unit: Unit;
@@ -24,6 +26,7 @@ export const UnitTooltip = ({
     onOpenMaintenance,
     onOpenLease,
 }: UnitTooltipProps) => {
+    const { t, language } = useLanguageContext();
     // If unit is close to the top boundary of the blueprint, place below so it doesn't get clipped
     const isPlacedBottom = unit.y < 220;
     const invZoom = 1 / Math.max(zoom, 0.1);
@@ -32,12 +35,26 @@ export const UnitTooltip = ({
     const trimmedName = unit.name?.trim() || "";
     const unitDisplayName = trimmedName.toLowerCase().startsWith("unit")
         ? trimmedName
-        : `Unit ${trimmedName}`;
+        : t("Unit {name}", { name: trimmedName });
 
     const formattedRent = unit.rentAmount ? `₱${Number(unit.rentAmount).toLocaleString()}` : null;
-    const leaseEndDisplay = unit.leaseEnd
-        ? new Date(unit.leaseEnd).toLocaleDateString("en-US", { month: "short", year: "numeric" })
-        : null;
+    // Open-ended leases show tenure instead of an end date; dated terms keep the month/year.
+    const termState = leaseEndState({ term_type: unit.leaseTermType, end_date: unit.leaseEnd, start_date: unit.leaseStart });
+    const leaseTermDisplay = (() => {
+        if (!unit.leaseStart && !unit.leaseEnd) return null;
+        switch (termState.kind) {
+            case "open_ended": {
+                const tenure = formatTenureShort(unit.leaseStart, undefined, language);
+                return { label: t("Lease"), value: tenure ? t("Open-ended · {tenure}", { tenure }) : t("Open-ended") };
+            }
+            case "moving_out":
+                return { label: t("Moving Out"), value: formatLeaseDate(termState.endDate, { month: "short", day: "numeric" }, language) };
+            case "fixed":
+                return { label: t("Lease Ends"), value: formatLeaseDate(termState.endDate, { month: "short", year: "numeric" }, language) };
+            case "ended":
+                return { label: t("Lease Ended"), value: formatLeaseDate(termState.endDate, { month: "short", year: "numeric" }, language) };
+        }
+    })();
 
     return (
         <motion.div
@@ -68,11 +85,11 @@ export const UnitTooltip = ({
                                 {isOwnUnit && (
                                     <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-primary/20 text-primary border border-primary/30 text-[9px] font-black tracking-normal normal-case">
                                         <span className="material-icons-round text-[10px]">home</span>
-                                        Your Unit
+                                        {t("Your Unit")}
                                     </span>
                                 )}
                             </div>
-                            <p className="text-xs font-black text-white mt-0.5">{isOwnUnit ? "Home Operations" : "Quick Actions"}</p>
+                            <p className="text-xs font-black text-white mt-0.5">{isOwnUnit ? t("Home Operations") : t("Quick Actions")}</p>
                         </div>
                         <button
                             type="button"
@@ -81,7 +98,8 @@ export const UnitTooltip = ({
                                 onClose();
                             }}
                             className="flex size-6 items-center justify-center rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors ml-2"
-                            title="Close"
+                            title={t("Close")}
+                            aria-label={t("Close")}
                         >
                             <span className="material-icons-round text-sm">close</span>
                         </button>
@@ -92,13 +110,13 @@ export const UnitTooltip = ({
                             {/* Operational Summary Strip */}
                             <div className="mx-1 mb-1.5 p-2.5 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between gap-3">
                                 <div>
-                                    <p className="text-[9px] font-black uppercase tracking-wider text-white/40">Monthly Rent</p>
-                                    <p className="text-xs font-black text-white mt-0.5">{formattedRent ? `${formattedRent}/mo` : "Active Lease"}</p>
+                                    <p className="text-[9px] font-black uppercase tracking-wider text-white/40">{t("Monthly Rent")}</p>
+                                    <p className="text-xs font-black text-white mt-0.5">{formattedRent ? t("{amount}/mo", { amount: formattedRent }) : t("Active Lease")}</p>
                                 </div>
-                                {leaseEndDisplay && (
+                                {leaseTermDisplay && (
                                     <div className="text-right">
-                                        <p className="text-[9px] font-black uppercase tracking-wider text-white/40">Lease Ends</p>
-                                        <p className="text-xs font-black text-primary mt-0.5">{leaseEndDisplay}</p>
+                                        <p className="text-[9px] font-black uppercase tracking-wider text-white/40">{leaseTermDisplay.label}</p>
+                                        <p className="text-xs font-black text-primary mt-0.5">{leaseTermDisplay.value}</p>
                                     </div>
                                 )}
                             </div>
@@ -114,8 +132,8 @@ export const UnitTooltip = ({
                                 </div>
                                 <div className="flex-1 flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs font-black tracking-tight">Request Maintenance</p>
-                                        <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-0.5">Report repair issue</p>
+                                        <p className="text-xs font-black tracking-tight">{t("Request Maintenance")}</p>
+                                        <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-0.5">{t("Report repair issue")}</p>
                                     </div>
                                     <span className="material-icons-round text-sm text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all">chevron_right</span>
                                 </div>
@@ -135,8 +153,8 @@ export const UnitTooltip = ({
                                 </div>
                                 <div className="flex-1 flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs font-black tracking-tight">View Lease Agreement</p>
-                                        <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-0.5">Contract details & terms</p>
+                                        <p className="text-xs font-black tracking-tight">{t("View Lease Agreement")}</p>
+                                        <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-0.5">{t("Contract details & terms")}</p>
                                     </div>
                                     <span className="material-icons-round text-sm text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all">chevron_right</span>
                                 </div>
@@ -152,8 +170,8 @@ export const UnitTooltip = ({
                                 </div>
                                 <div className="flex-1 flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs font-black tracking-tight">Pay Rent & Billing</p>
-                                        <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-0.5">Invoices & receipts</p>
+                                        <p className="text-xs font-black tracking-tight">{t("Pay Rent & Billing")}</p>
+                                        <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-0.5">{t("Invoices & receipts")}</p>
                                     </div>
                                     <span className="material-icons-round text-sm text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all">chevron_right</span>
                                 </div>
@@ -175,8 +193,8 @@ export const UnitTooltip = ({
                                         <span className="material-icons-round text-lg">move_down</span>
                                     </div>
                                     <div>
-                                        <p className="text-xs font-black tracking-tight">Transfer Request</p>
-                                        <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-0.5">Move into this unit</p>
+                                        <p className="text-xs font-black tracking-tight">{t("Transfer Request")}</p>
+                                        <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-0.5">{t("Move into this unit")}</p>
                                     </div>
                                 </button>
                             )}
@@ -194,8 +212,8 @@ export const UnitTooltip = ({
                                     <span className="material-icons-round text-lg">report_problem</span>
                                 </div>
                                 <div>
-                                    <p className="text-xs font-black tracking-tight">Report / Complain</p>
-                                    <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-0.5">Report an issue</p>
+                                    <p className="text-xs font-black tracking-tight">{t("Report / Complain")}</p>
+                                    <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-0.5">{t("Report an issue")}</p>
                                 </div>
                             </button>
                         </>

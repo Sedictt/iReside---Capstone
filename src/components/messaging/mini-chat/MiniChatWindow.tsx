@@ -33,6 +33,7 @@ import { MiniChatComposer } from "./MiniChatComposer";
 import { MiniChatMessageList } from "./MiniChatMessageList";
 import type { MiniChatMenuAction, MiniChatRole, MiniChatState, OpenMiniChat } from "./types";
 import { DEFAULT_CHAT_STATE, WINDOW_WIDTH_PX } from "./utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 const WINDOW_HEIGHT_PX = 448;
 
@@ -75,6 +76,7 @@ export function MiniChatWindow({
     onOpenSharedFiles,
     onMenuAction,
 }: MiniChatWindowProps) {
+    const { t } = useLanguageContext();
     const chatState = state ?? DEFAULT_CHAT_STATE;
     const { openProfile } = useProfileCard();
     const shouldReduceMotion = useReducedMotion();
@@ -103,12 +105,12 @@ export function MiniChatWindow({
     }, [chat.id, isMenuOpen, onClose]);
 
     const statusLine = chatState.isOtherUserTyping
-        ? { label: "Typing…", tone: "text-primary", dot: "bg-primary animate-pulse" }
+        ? { label: t("Typing…"), tone: "text-primary", dot: "bg-primary animate-pulse" }
         : chatState.isOtherUserOnline
-            ? { label: "Online", tone: "text-emerald-600 dark:text-emerald-400", dot: "bg-emerald-500" }
+            ? { label: t("Online"), tone: "text-emerald-600 dark:text-emerald-400", dot: "bg-emerald-500" }
             : { label: chat.unit, tone: "text-muted-foreground", dot: "bg-muted-foreground/40" };
 
-    const headerLabel = chat.isMinimized ? `Expand chat with ${chat.name}` : `Collapse chat with ${chat.name}`;
+    const headerLabel = chat.isMinimized ? t("Expand chat with {name}", { name: chat.name }) : t("Collapse chat with {name}", { name: chat.name });
 
     return (
         <motion.section
@@ -119,7 +121,7 @@ export function MiniChatWindow({
             exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 420, damping: 32, mass: 0.8 }}
             role="region"
-            aria-label={`Chat with ${chat.name}`}
+            aria-label={t("Chat with {name}", { name: chat.name })}
             data-active={chat.isActive ? "true" : "false"}
             onMouseDownCapture={activate}
             onFocusCapture={activate}
@@ -162,7 +164,7 @@ export function MiniChatWindow({
                         {chat.pendingCount > 0 && (
                             <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-card">
                                 {chat.pendingCount > 9 ? "9+" : chat.pendingCount}
-                                <span className="sr-only"> unread messages</span>
+                                <span className="sr-only"> {t("unread messages")}</span>
                             </span>
                         )}
                     </span>
@@ -179,11 +181,11 @@ export function MiniChatWindow({
                 </button>
 
                 <div className="flex shrink-0 items-center gap-0.5 text-muted-foreground">
-                    <Tooltip content={chat.isMinimized ? "Expand" : "Minimize"} side="top">
+                    <Tooltip content={chat.isMinimized ? t("Expand") : t("Minimize")} side="top">
                         <button
                             type="button"
                             onClick={() => onToggleMinimize(chat.id)}
-                            aria-label={chat.isMinimized ? "Expand chat" : "Minimize chat"}
+                            aria-label={chat.isMinimized ? t("Expand chat") : t("Minimize chat")}
                             className="flex size-7 items-center justify-center rounded-lg transition-colors hover:bg-muted hover:text-foreground"
                         >
                             {chat.isMinimized ? <ChevronUp className="size-4" aria-hidden="true" /> : <ChevronDown className="size-4" aria-hidden="true" />}
@@ -197,11 +199,11 @@ export function MiniChatWindow({
                             if (!open) setPendingConfirm(null);
                         }}
                     >
-                        <Tooltip content="More options" side="top">
+                        <Tooltip content={t("More options")} side="top">
                             <DropdownMenuTrigger asChild>
                                 <button
                                     type="button"
-                                    aria-label="Conversation options"
+                                    aria-label={t("Conversation options")}
                                     className="flex size-7 items-center justify-center rounded-lg transition-colors hover:bg-muted hover:text-foreground data-[state=open]:bg-muted data-[state=open]:text-foreground"
                                 >
                                     {isBusy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <MoreHorizontal className="size-4" aria-hidden="true" />}
@@ -213,12 +215,12 @@ export function MiniChatWindow({
                             {pendingConfirm ? (
                                 <div className="px-2 py-1.5">
                                     <p className="text-xs font-semibold text-foreground">
-                                        {pendingConfirm === "block" ? `Block ${firstName}?` : "Archive this conversation?"}
+                                        {pendingConfirm === "block" ? t("Block {name}?", { name: firstName }) : t("Archive this conversation?")}
                                     </p>
                                     <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
                                         {pendingConfirm === "block"
-                                            ? "They will no longer be able to message you. You can undo this from the full messaging page."
-                                            : "It will be hidden from this list but kept on the full messaging page."}
+                                            ? t("They will no longer be able to message you. You can undo this from the full messaging page.")
+                                            : t("It will be hidden from this list but kept on the full messaging page.")}
                                     </p>
                                     <div className="mt-2 flex justify-end gap-1.5">
                                         <button
@@ -226,7 +228,7 @@ export function MiniChatWindow({
                                             onClick={() => setPendingConfirm(null)}
                                             className="rounded-lg px-2.5 py-1.5 font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                         >
-                                            Cancel
+                                            {t("Cancel")}
                                         </button>
                                         <button
                                             type="button"
@@ -241,7 +243,7 @@ export function MiniChatWindow({
                                                 pendingConfirm === "block" ? "bg-red-600 hover:bg-red-700" : "bg-foreground text-background hover:opacity-90"
                                             )}
                                         >
-                                            {pendingConfirm === "block" ? "Block" : "Archive"}
+                                            {pendingConfirm === "block" ? t("Block") : t("Archive")}
                                         </button>
                                     </div>
                                 </div>
@@ -255,14 +257,14 @@ export function MiniChatWindow({
                                             }
                                         }}
                                     >
-                                        <UserRound className="mr-2 size-3.5" aria-hidden="true" /> View profile
+                                        <UserRound className="mr-2 size-3.5" aria-hidden="true" /> {t("View profile")}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onSelect={() => onOpenSharedFiles(chat.id)}>
-                                        <FolderOpen className="mr-2 size-3.5" aria-hidden="true" /> Shared files
+                                        <FolderOpen className="mr-2 size-3.5" aria-hidden="true" /> {t("Shared files")}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem asChild>
                                         <Link href={`${messagesHref}?conversation=${chat.id}`}>
-                                            <ExternalLink className="mr-2 size-3.5" aria-hidden="true" /> Open in Messages
+                                            <ExternalLink className="mr-2 size-3.5" aria-hidden="true" /> {t("Open in Messages")}
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
@@ -273,10 +275,10 @@ export function MiniChatWindow({
                                             setPendingConfirm("archive");
                                         }}
                                     >
-                                        <Archive className="mr-2 size-3.5" aria-hidden="true" /> Archive conversation
+                                        <Archive className="mr-2 size-3.5" aria-hidden="true" /> {t("Archive conversation")}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem disabled={isBusy} onSelect={() => onMenuAction(chat, "report")}>
-                                        <Flag className="mr-2 size-3.5" aria-hidden="true" /> Report contact
+                                        <Flag className="mr-2 size-3.5" aria-hidden="true" /> {t("Report contact")}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         disabled={isBusy}
@@ -286,18 +288,18 @@ export function MiniChatWindow({
                                             setPendingConfirm("block");
                                         }}
                                     >
-                                        <ShieldBan className="mr-2 size-3.5" aria-hidden="true" /> Block contact
+                                        <ShieldBan className="mr-2 size-3.5" aria-hidden="true" /> {t("Block contact")}
                                     </DropdownMenuItem>
                                 </>
                             )}
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <Tooltip content="Close" side="top">
+                    <Tooltip content={t("Close")} side="top">
                         <button
                             type="button"
                             onClick={() => onClose(chat.id)}
-                            aria-label={`Close chat with ${chat.name}`}
+                            aria-label={t("Close chat with {name}", { name: chat.name })}
                             className="flex size-7 items-center justify-center rounded-lg transition-colors hover:bg-muted hover:text-foreground"
                         >
                             <X className="size-4" aria-hidden="true" />

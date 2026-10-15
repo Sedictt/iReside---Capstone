@@ -3,9 +3,17 @@
 import { useState, useEffect } from "react";
 import { X, Save, Plus, Trash2, Settings2, Info } from "lucide-react";
 import { toast } from "sonner";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { RENEWAL_LIMITS, renewalAdjustmentRule, renewalRuleTextRule } from "@/lib/validation/schemas/properties.schema";
+import { textRule } from "@/lib/validation/rules";
+import { tr } from "@/hooks/useLanguage";
 
 interface RenewalSettings {
- base_rent_adjustment: number;
+ /** Kept as typed (string) while editing so blanks/invalid input are flagged instead of becoming 0. */
+ base_rent_adjustment: number | string;
  adjustment_type: "percentage" | "fixed";
  new_rules: string[];
  landlord_memo: string;
@@ -20,6 +28,7 @@ interface RenewalSettingsModalProps {
 }
 
 export default function RenewalSettingsModal({ propertyId, propertyName, isOpen, onClose }: RenewalSettingsModalProps) {
+ const { t } = useLanguageContext();
  const [settings, setSettings] = useState<RenewalSettings>({
  base_rent_adjustment: 0,
  adjustment_type: "percentage",
@@ -30,6 +39,24 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
  const [newRule, setNewRule] = useState("");
+
+ const form = useFormValidation(
+ {
+ base_rent_adjustment: settings.base_rent_adjustment,
+ adjustment_type: settings.adjustment_type,
+ landlord_memo: settings.landlord_memo,
+ new_rules: settings.new_rules,
+ newRule,
+ },
+ {
+ base_rent_adjustment: (value, all) => renewalAdjustmentRule(value, all.adjustment_type),
+ landlord_memo: (value) => textRule(value, { label: t("Note"), max: RENEWAL_LIMITS.memoMax }),
+ new_rules: (value) =>
+ value.length > RENEWAL_LIMITS.maxRules ? t("You can add at most {max} rules.", { max: RENEWAL_LIMITS.maxRules }) : undefined,
+ // Only checked once something is typed; adding an empty rule is simply ignored.
+ newRule: (value, all) => (value.trim() ? renewalRuleTextRule(value, all.new_rules) : undefined),
+ }
+ );
 
  useEffect(() => {
  if (isOpen && propertyId && propertyId !== "all") {
@@ -43,16 +70,26 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
  const res = await fetch(`/api/landlord/properties/${propertyId}/renewal-settings`);
  if (res.ok) {
  const settingsResponse = await res.json();
- setSettings(settingsResponse);
+ setSettings({
+ base_rent_adjustment: settingsResponse?.base_rent_adjustment ?? 0,
+ adjustment_type: settingsResponse?.adjustment_type === "fixed" ? "fixed" : "percentage",
+ new_rules: Array.isArray(settingsResponse?.new_rules) ? settingsResponse.new_rules : [],
+ landlord_memo: settingsResponse?.landlord_memo ?? "",
+ is_enabled: settingsResponse?.is_enabled ?? true,
+ });
+ form.reset();
  }
  } catch (error) {
- toast.error("Failed to load settings");
+ toast.error(t("Failed to load settings"));
  } finally {
  setLoading(false);
  }
  };
 
  const handleSave = async () => {
+ if (saving) return;
+ // A rule typed but not yet added is ignored; only block on fields that are saved.
+ if (!form.validateFields(["base_rent_adjustment", "landlord_memo", "new_rules"])) return;
  setSaving(true);
  try {
  const res = await fetch(`/api/landlord/properties/${propertyId}/renewal-settings`, {
@@ -61,15 +98,22 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
  headers: { "Content-Type": "application/json" }
  });
  if (res.ok) {
- toast.success("Renewal policy updated", {
- description: "Tenants will see these terms before requesting a renewal."
+ toast.success(t("Renewal policy updated"), {
+ description: t("Tenants will see these terms before requesting a renewal.")
  });
  onClose();
  } else {
- toast.error("Failed to update settings");
+ const errorBody = await res.json().catch(() => ({}));
+ const fieldErrors: Record<string, string> = {};
+ for (const [key, message] of Object.entries((errorBody.fieldErrors ?? {}) as Record<string, string>)) {
+ const field = key.replace(/^settings\./, "").split(".")[0];
+ if (!fieldErrors[field]) fieldErrors[field] = message;
+ }
+ form.setServerErrors(fieldErrors);
+ toast.error(tr(errorBody.error || t("Failed to update settings")));
  }
  } catch (error) {
- toast.error("An error occurred while saving");
+ toast.error(t("An error occurred while saving"));
  } finally {
  setSaving(false);
  }
@@ -77,6 +121,11 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
 
  const addRule = () => {
  if (!newRule.trim()) return;
+ if (!form.validateFields(["newRule"])) return;
+ if (settings.new_rules.length >= RENEWAL_LIMITS.maxRules) {
+ toast.error(t("You can add at most {max} rules.", { max: RENEWAL_LIMITS.maxRules }));
+ return;
+ }
  setSettings(prev => ({ ...prev, new_rules: [...prev.new_rules, newRule.trim()] }));
  setNewRule("");
  };
@@ -96,13 +145,13 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
  <Settings2 className="size-6" />
  </div>
  <div>
- <h3 className="text-xl font-black text-foreground tracking-tight">Renewal Policy</h3>
+ <h3 className="text-xl font-black text-foreground tracking-tight">{t("Renewal Policy")}</h3>
  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">
- Configure terms for {propertyName}
+ {t("Configure terms for {name}", { name: propertyName })}
  </p>
  </div>
  </div>
- <button onClick={onClose} className="p-3 rounded-xl hover:neumorphic-inset transition-colors">
+ <button onClick={onClose} aria-label={t("Close")} className="p-3 rounded-xl hover:neumorphic-inset transition-colors">
  <X className="size-5" />
  </button>
  </div>
@@ -110,100 +159,122 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
  {loading ? (
  <div className="p-20 text-center">
  <div className="animate-spin size-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
- <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Syncing Configuration...</p>
+ <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t("Syncing Configuration...")}</p>
  </div>
  ) : (
  <div className="p-8 overflow-y-auto space-y-8">
  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex gap-4 items-start">
  <Info className="size-5 text-amber-600 shrink-0 mt-0.5" />
  <p className="text-xs text-amber-800 leading-relaxed">
- <strong>Transparency Rule:</strong> These settings will be shown to tenants 90 days before their lease ends. They must acknowledge these terms before submitting a renewal request.
+ <strong>{t("Transparency Rule:")}</strong> {t("These settings will be shown to tenants 90 days before their lease ends. They must acknowledge these terms before submitting a renewal request.")}
  </p>
  </div>
 
  <section className="space-y-4">
- <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-white/5 pb-2">Rent Adjustment</h4>
+ <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-white/5 pb-2">{t("Rent Adjustment")}</h4>
  <div className="grid grid-cols-2 gap-6">
  <div className="space-y-2">
- <label htmlFor="adjustment-type" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Adjustment Type</label>
+ <label htmlFor="adjustment-type" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Adjustment Type")}</label>
  <select 
  id="adjustment-type"
  value={settings.adjustment_type}
  onChange={(e) => setSettings(prev => ({ ...prev, adjustment_type: e.target.value as any }))}
  className="w-full p-4 rounded-2xl neumorphic-panel text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none"
  >
- <option value="percentage">Percentage (%)</option>
- <option value="fixed">Fixed Amount (PHP)</option>
+ <option value="percentage">{t("Percentage (%)")}</option>
+ <option value="fixed">{t("Fixed Amount (PHP)")}</option>
  </select>
  </div>
  <div className="space-y-2">
  <label htmlFor="rent-adjustment" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- {settings.adjustment_type === "percentage" ? "Increase (%)" : "Increase (PHP)"}
+ {settings.adjustment_type === "percentage" ? t("Increase (%)") : t("Increase (PHP)")}
  </label>
- <input min={-100} max={100} 
+ <input
+ {...form.fieldProps("base_rent_adjustment")}
+ min={0}
+ max={settings.adjustment_type === "percentage" ? RENEWAL_LIMITS.maxPercentage : undefined}
+ step="0.01"
+ inputMode="decimal"
  id="rent-adjustment"
  type="number"
  value={settings.base_rent_adjustment}
- onChange={(e) => setSettings(prev => ({ ...prev, base_rent_adjustment: parseFloat(e.target.value) || 0 }))}
- className="w-full p-4 rounded-2xl neumorphic-panel text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none"
+ onChange={(e) => setSettings(prev => ({ ...prev, base_rent_adjustment: e.target.value }))}
+ className={cn(
+ "w-full p-4 rounded-2xl neumorphic-panel text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none",
+ form.errorFor("base_rent_adjustment") && "ring-1 ring-rose-500/50"
+ )}
  />
+ <FieldError id={form.errorId("base_rent_adjustment")} message={form.errorFor("base_rent_adjustment")} />
  </div>
  </div>
  </section>
 
  <section className="space-y-4">
- <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-white/5 pb-2">Updated Rules & Clauses</h4>
+ <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-white/5 pb-2">{t("Updated Rules & Clauses")}</h4>
  <div className="space-y-3">
  {settings.new_rules.map((rule, idx) => (
  <div key={rule} className="flex items-center gap-3 neumorphic-inset p-3 rounded-xl /50">
  <div className="size-1.5 rounded-full bg-primary" />
  <span className="flex-1 text-sm font-medium">{rule}</span>
- <button onClick={() => removeRule(idx)} className="text-muted-foreground hover:text-red-500 transition-colors">
+ <button onClick={() => removeRule(idx)} aria-label={t("Remove rule")} className="text-muted-foreground hover:text-red-500 transition-colors">
  <Trash2 className="size-4" />
  </button>
  </div>
  ))}
  <div className="flex gap-2">
- <input maxLength={120} 
+ <input
+ {...form.fieldProps("newRule")}
+ maxLength={RENEWAL_LIMITS.ruleMax}
  type="text"
- placeholder="Add a new rule or term change..."
+ placeholder={t("Add a new rule or term change...")}
  value={newRule}
  onChange={(e) => setNewRule(e.target.value)}
  onKeyDown={(e) => e.key === 'Enter' && addRule()}
- className="flex-1 p-3 rounded-xl neumorphic-panel text-sm outline-none focus:ring-2 focus:ring-primary/20"
+ className={cn(
+ "flex-1 p-3 rounded-xl neumorphic-panel text-sm outline-none focus:ring-2 focus:ring-primary/20",
+ form.errorFor("newRule") && "ring-1 ring-rose-500/50"
+ )}
  />
- <button 
+ <button
  onClick={addRule}
+ aria-label={t("Add rule")}
  className="p-3 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all"
  >
  <Plus className="size-5" />
  </button>
  </div>
+ <FieldError id={form.errorId("newRule")} message={form.errorFor("newRule") ?? form.errorFor("new_rules")} />
  </div>
  </section>
 
  <section className="space-y-4">
- <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-white/5 pb-2">Landlord's Note to Residents</h4>
- <textarea maxLength={500} 
+ <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-white/5 pb-2">{t("Landlord's Note to Residents")}</h4>
+ <textarea
+ {...form.fieldProps("landlord_memo")}
+ maxLength={RENEWAL_LIMITS.memoMax}
  value={settings.landlord_memo}
  onChange={(e) => setSettings(prev => ({ ...prev, landlord_memo: e.target.value }))}
- placeholder="Explain the changes or provide extra context for renewals..."
- className="w-full p-4 rounded-2xl neumorphic-panel text-sm min-h-[120px] outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+ placeholder={t("Explain the changes or provide extra context for renewals...")}
+ className={cn(
+ "w-full p-4 rounded-2xl neumorphic-panel text-sm min-h-[120px] outline-none focus:ring-2 focus:ring-primary/20 resize-none",
+ form.errorFor("landlord_memo") && "ring-1 ring-rose-500/50"
+ )}
  />
+ <FieldError id={form.errorId("landlord_memo")} message={form.errorFor("landlord_memo")} />
  </section>
  </div>
  )}
 
  <div className="p-6 border-t border-border neumorphic-inset flex gap-4">
  <button onClick={onClose} className="flex-1 px-6 py-4 rounded-2xl text-muted-foreground hover:neumorphic-inset font-black uppercase tracking-widest text-xs transition-all">
- Cancel
+ {t("Cancel")}
  </button>
  <button 
  onClick={handleSave}
  disabled={saving || loading}
  className="flex-[2] px-6 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-primary/20 disabled:opacity-50"
  >
- {saving ? "Saving Policy..." : "Update Renewal Policy"}
+ {saving ? t("Saving Policy...") : t("Update Renewal Policy")}
  <Save className="size-4" />
  </button>
  </div>

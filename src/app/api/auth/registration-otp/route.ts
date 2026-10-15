@@ -1,23 +1,35 @@
+import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { sendRegistrationOTP } from "@/lib/email";
+import { parseJsonBody } from "@/lib/validation/server";
+import { registrationOtpSchema } from "@/lib/validation/schemas/account.schema";
+
+// Only backs the deprecated self-service landlord signup; without the opt-in it
+// would be an open relay that emails codes to any address on request.
+const isLegacyRegistrationEnabled = () => process.env.ENABLE_LEGACY_LANDLORD_REGISTRATION === "true";
 
 export async function POST(request: Request) {
-    try {
-        const { email } = await request.json();
+    if (!isLegacyRegistrationEnabled()) {
+        return NextResponse.json(
+            { error: "Self-service landlord registration is disabled." },
+            { status: 410 }
+        );
+    }
 
-        if (!email) {
-            return NextResponse.json({ error: "Email is required" }, { status: 400 });
-        }
+    try {
+        const parsed = await parseJsonBody(request, registrationOtpSchema);
+        if (!parsed.ok) return parsed.response;
+        const { email } = parsed.data;
 
         // Generate a 6-digit OTP
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otp = crypto.randomInt(100000, 1000000).toString();
 
         // Send the email
         await sendRegistrationOTP({ to: email, otp });
 
-        // For demo/prototype purposes, we return the OTP in the response
-        // In a production app, you would store this in Redis/Database with an expiry
-        return NextResponse.json({ success: true, otp });
+        // Never return the code to the caller: anyone could "verify" any address.
+        // (This legacy endpoint only backs the deprecated landlord signup.)
+        return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Error sending registration OTP:", error);
         return NextResponse.json({ error: "Failed to send verification code" }, { status: 500 });

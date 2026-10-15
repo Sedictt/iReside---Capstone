@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface ChecklistItem {
   id: string;
@@ -24,6 +25,7 @@ const DEFAULT_CHECKLIST: ChecklistItem[] = [
 ];
 
 export function MoveOutChecklist({ requestId, initialData }: MoveOutChecklistProps) {
+  const { t } = useLanguageContext();
   const [items, setItems] = useState<ChecklistItem[]>(() => {
     if (initialData && Array.isArray(initialData.items)) {
       return initialData.items;
@@ -48,7 +50,7 @@ export function MoveOutChecklist({ requestId, initialData }: MoveOutChecklistPro
 
       if (!res.ok) throw new Error("Failed to save checklist");
     } catch (err) {
-      toast.error("Failed to sync checklist");
+      toast.error(t("Failed to sync checklist"));
       // Revert if failed? Or just let it be
     } finally {
       setSaving(false);
@@ -59,11 +61,11 @@ export function MoveOutChecklist({ requestId, initialData }: MoveOutChecklistPro
     <div className="pt-6 border-t border-border space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Pre-Departure Checklist</h4>
+          <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">{t("Pre-Departure Checklist")}</h4>
           {saving && <Loader2 className="size-3 animate-spin text-primary/40" />}
         </div>
         <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-lg">
-          {items.filter(i => i.completed).length}/{items.length} Done
+          {t("{done}/{total} Done", { done: items.filter(i => i.completed).length, total: items.length })}
         </span>
       </div>
       <div className="grid gap-3">
@@ -84,7 +86,7 @@ export function MoveOutChecklist({ requestId, initialData }: MoveOutChecklistPro
               {item.completed && <Check className="size-3" />}
             </div>
             <span className={cn("text-xs font-black", item.completed && "line-through opacity-70")}>
-              {item.label}
+              {t(item.label)}
             </span>
           </button>
         ))}

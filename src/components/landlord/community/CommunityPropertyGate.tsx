@@ -5,15 +5,17 @@ import Link from "next/link";
 import { m as motion } from "framer-motion";
 import { ArrowRight, Building2, Home, MapPin, Megaphone, Sparkles } from "lucide-react";
 import { useProperty } from "@/context/PropertyContext";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export function CommunityPropertyGate() {
     const { properties, setSelectedPropertyId, loading } = useProperty();
+    const { t } = useLanguageContext();
 
     if (loading && properties.length === 0) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-surface-0 via-background to-emerald-100/40 px-6 text-foreground dark:from-[#06070b] dark:via-[#0d1118] dark:to-[#08221a]">
                 <div className="rounded-3xl border border-border/60 bg-card/80 px-8 py-6 text-center shadow-xl backdrop-blur">
-                    <p className="text-sm font-medium text-muted-foreground">Loading your properties...</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t("Loading your properties...")}</p>
                 </div>
             </div>
         );
@@ -25,17 +27,17 @@ export function CommunityPropertyGate() {
                 <div className="w-full max-w-xl rounded-3xl border border-border/60 bg-card/85 p-8 shadow-2xl backdrop-blur">
                     <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-black uppercase tracking-wider text-muted-foreground">
                         <Building2 className="size-3.5" />
-                        Community Hub
+                        {t("Community Hub")}
                     </div>
-                    <h1 className="text-3xl font-display text-foreground">Set up a property first</h1>
+                    <h1 className="text-3xl font-display text-foreground">{t("Set up a property first")}</h1>
                     <p className="mt-3 text-sm text-muted-foreground">
-                        Community Hub opens per property so residents only see posts from their own community.
+                        {t("Community Hub opens per property so residents only see posts from their own community.")}
                     </p>
                     <Link
                         href="/landlord/properties"
                         className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-black text-primary-foreground transition hover:brightness-110"
                     >
-                        Go to Properties
+                        {t("Go to Properties")}
                         <ArrowRight className="size-4" />
                     </Link>
                 </div>
@@ -60,13 +62,13 @@ export function CommunityPropertyGate() {
                 >
                     <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-4 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-muted-foreground backdrop-blur">
                         <Sparkles className="size-3.5 text-emerald-500" />
-                        Choose a Property
+                        {t("Choose a Property")}
                     </div>
                     <h1 className="text-4xl font-display leading-tight text-foreground md:text-6xl">
-                        Pick the community you want to manage
+                        {t("Pick the community you want to manage")}
                     </h1>
                     <p className="mt-4 max-w-2xl text-base text-muted-foreground md:text-lg">
-                        To protect privacy, Community Hub opens one property at a time. Select any property below to continue.
+                        {t("To protect privacy, Community Hub opens one property at a time. Select any property below to continue.")}
                     </p>
                 </motion.div>
 
@@ -102,7 +104,7 @@ export function CommunityPropertyGate() {
                                     <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-card/20 to-transparent dark:from-[#0b1117]/95" />
                                     <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-black/25 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-white backdrop-blur">
                                         <Megaphone className="size-3.5" />
-                                        Community
+                                        {t("Community")}
                                     </div>
                                 </div>
 
@@ -111,26 +113,26 @@ export function CommunityPropertyGate() {
                                         <h2 className="line-clamp-1 text-xl font-display text-foreground">{property.name}</h2>
                                         <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                                             <MapPin className="size-3.5" />
-                                            <span className="line-clamp-1">{property.address || "Address unavailable"}</span>
+                                            <span className="line-clamp-1">{property.address || t("Address unavailable")}</span>
                                         </p>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2">
                                         <div className="rounded-xl border border-border/60 bg-background/60 px-3 py-2">
-                                            <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">Units</p>
+                                            <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">{t("Units")}</p>
                                             <p className="mt-1 flex items-center gap-1 text-sm font-black text-foreground">
                                                 <Home className="size-3.5 text-emerald-500" />
                                                 {unitCount}
                                             </p>
                                         </div>
                                         <div className="rounded-xl border border-border/60 bg-background/60 px-3 py-2">
-                                            <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">Occupied</p>
+                                            <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">{t("Occupied")}</p>
                                             <p className="mt-1 text-sm font-black text-foreground">{occupiedUnits}</p>
                                         </div>
                                     </div>
 
                                     <div className="inline-flex items-center gap-2 text-sm font-black text-primary transition-transform duration-300 group-hover:translate-x-1">
-                                        Open this property
+                                        {t("Open this property")}
                                         <ArrowRight className="size-4" />
                                     </div>
                                 </div>

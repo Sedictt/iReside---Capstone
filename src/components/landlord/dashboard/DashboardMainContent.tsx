@@ -29,7 +29,7 @@ export function DashboardMainContent({
     onCreateInvite,
     onOpenFlyer
 }: DashboardMainContentProps) {
-    const { t, isFilipino } = useLanguage();
+    const { t, locale } = useLanguage();
     const applicationsCtaClassName = "group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4.5 sm:px-5 py-2.5 w-auto active:scale-95 transition-all shadow-xs cursor-pointer";
     const collectPaymentCtaClassName = "group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-background hover:bg-emerald-500/10 text-foreground hover:text-emerald-600 dark:hover:text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 font-bold px-4.5 sm:px-5 py-2.5 w-auto active:scale-95 transition-all shadow-xs shrink-0 cursor-pointer";
 
@@ -44,7 +44,7 @@ export function DashboardMainContent({
                         <div className="absolute inset-0 size-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]" />
                     </div>
                     <span className="text-[9px] font-black uppercase tracking-[0.15em] text-foreground/80">
-                        {time.toLocaleDateString(isFilipino ? 'fil-PH' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                        {time.toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })}
                     </span>
                 </div>
 
@@ -92,13 +92,13 @@ export function DashboardMainContent({
                         <button 
                             onClick={onCollectPayment}
                             className={collectPaymentCtaClassName}
-                            title="Record Cash or In-Person Rent Payment"
+                            title={t("Record Cash or In-Person Rent Payment")}
                         >
                             <Banknote className="size-3.5 text-emerald-500 font-black relative z-10" />
                             <span className="text-xs font-black uppercase tracking-wider relative z-10">{t("Record Payment")}</span>
                         </button>
                     ) : (
-                        <Link href="/landlord/invoices" className={collectPaymentCtaClassName} title="Record Cash or In-Person Rent Payment">
+                        <Link href="/landlord/invoices" className={collectPaymentCtaClassName} title={t("Record Cash or In-Person Rent Payment")}>
                             <Banknote className="size-3.5 text-emerald-500 font-black relative z-10" />
                             <span className="text-xs font-black uppercase tracking-wider relative z-10">{t("Record Payment")}</span>
                         </Link>
@@ -108,7 +108,7 @@ export function DashboardMainContent({
                         {onCreateInvite && (
                             <button
                                 onClick={onCreateInvite}
-                                title="Create Invite link"
+                                title={t("Create Invite link")}
                                 className="flex h-10 w-10 items-center justify-center rounded-xl bg-background hover:bg-muted text-primary border border-border/70 hover:border-border shadow-2xs active:scale-95 transition-all shrink-0 cursor-pointer"
                             >
                                 <QrCode className="size-4" />
@@ -117,7 +117,7 @@ export function DashboardMainContent({
                         {onOpenFlyer ? (
                             <button
                                 onClick={onOpenFlyer}
-                                title="Lobby QR Code Flyer Poster"
+                                title={t("Lobby QR Code Flyer Poster")}
                                 className="flex h-10 w-10 items-center justify-center rounded-xl bg-background hover:bg-muted text-foreground hover:text-primary border border-border/70 hover:border-border shadow-2xs active:scale-95 transition-all shrink-0 cursor-pointer"
                             >
                                 <Printer className="size-4" />
@@ -125,7 +125,7 @@ export function DashboardMainContent({
                         ) : (
                             <Link
                                 href="/landlord/flyer"
-                                title="Lobby QR Code Flyer Poster"
+                                title={t("Lobby QR Code Flyer Poster")}
                                 className="flex h-10 w-10 items-center justify-center rounded-xl bg-background hover:bg-muted text-foreground hover:text-primary border border-border/70 hover:border-border shadow-2xs active:scale-95 transition-all shrink-0 cursor-pointer"
                             >
                                 <Printer className="size-4" />
@@ -133,21 +133,21 @@ export function DashboardMainContent({
                         )}
                         <Link 
                             href="/landlord/maintenance" 
-                            title="Maintenance Queue"
+                            title={t("Maintenance Queue")}
                             className="flex h-10 w-10 items-center justify-center rounded-xl bg-background hover:bg-muted text-amber-500 border border-border/70 hover:border-border shadow-2xs active:scale-95 transition-all shrink-0 cursor-pointer"
                         >
                             <Wrench className="size-4" />
                         </Link>
                         <Link 
                             href="/landlord/unit-map" 
-                            title="Unit Map"
+                            title={t("Unit Map")}
                             className="flex h-10 w-10 items-center justify-center rounded-xl bg-background hover:bg-muted text-rose-500 border border-border/70 hover:border-border shadow-2xs active:scale-95 transition-all shrink-0 cursor-pointer"
                         >
                             <Map className="size-4" />
                         </Link>
                         <Link 
                             href="/landlord/docs" 
-                            title="Help & User Manual"
+                            title={t("Help & User Manual")}
                             className="flex h-10 w-10 items-center justify-center rounded-xl bg-background hover:bg-muted text-foreground hover:text-primary border border-border/70 hover:border-border shadow-2xs active:scale-95 transition-all shrink-0 cursor-pointer"
                         >
                             <HelpCircle className="size-4 text-indigo-400" />
@@ -165,9 +165,9 @@ export function DashboardMainContent({
                         <div className="absolute inset-0 size-1 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]" />
                     </div>
                     <span className="text-[8px] font-black uppercase tracking-[0.12em] text-foreground/80">
-                        {time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        {time.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' })}
                         {" • "}
-                        {time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                        {time.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit', hour12: true })}
                     </span>
                 </div>
 
@@ -202,7 +202,7 @@ export function DashboardMainContent({
                             className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 min-w-[100px] font-bold shadow-xs active:scale-95 transition-all"
                         >
                             <UserPlus className="size-3.5 font-black" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">{isFilipino ? "Aplikasyon" : "New App"}</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">{t("New App")}</span>
                         </button>
                     ) : (
                         <Link 
@@ -210,7 +210,7 @@ export function DashboardMainContent({
                             className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 min-w-[100px] font-bold shadow-xs active:scale-95 transition-all"
                         >
                             <UserPlus className="size-3.5 font-black" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">{isFilipino ? "Aplikasyon" : "New App"}</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">{t("New App")}</span>
                         </Link>
                     )}
 
@@ -218,19 +218,19 @@ export function DashboardMainContent({
                         <button 
                             onClick={onCollectPayment}
                             className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-background hover:bg-emerald-500/10 border border-emerald-500/30 text-foreground hover:text-emerald-600 dark:hover:text-emerald-400 py-2.5 min-w-[100px] font-bold shadow-xs active:scale-95 transition-all"
-                            title="Record Cash or In-Person Rent Payment"
+                            title={t("Record Cash or In-Person Rent Payment")}
                         >
                             <Banknote className="size-3.5 font-black text-emerald-500" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">{isFilipino ? "Magbayad" : "Record"}</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">{t("Record")}</span>
                         </button>
                     ) : (
                         <Link 
                             href="/landlord/invoices"
                             className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-background hover:bg-emerald-500/10 border border-emerald-500/30 text-foreground hover:text-emerald-600 dark:hover:text-emerald-400 py-2.5 min-w-[100px] font-bold shadow-xs active:scale-95 transition-all"
-                            title="Record Cash or In-Person Rent Payment"
+                            title={t("Record Cash or In-Person Rent Payment")}
                         >
                             <Banknote className="size-3.5 font-black text-emerald-500" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">{isFilipino ? "Magbayad" : "Record"}</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">{t("Record")}</span>
                         </Link>
                     )}
 
@@ -238,7 +238,7 @@ export function DashboardMainContent({
                         {onCreateInvite && (
                             <button
                                 onClick={onCreateInvite}
-                                title="Create Invite link"
+                                title={t("Create Invite link")}
                                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-background hover:bg-muted text-primary border border-border/70 shadow-2xs active:scale-95"
                             >
                                 <QrCode className="size-4" />
@@ -247,7 +247,7 @@ export function DashboardMainContent({
                         {onOpenFlyer ? (
                             <button
                                 onClick={onOpenFlyer}
-                                title="Print Lobby Poster"
+                                title={t("Print Lobby Poster")}
                                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-background hover:bg-muted border border-border/70 shadow-2xs active:scale-95 text-foreground hover:text-primary"
                             >
                                 <Printer className="size-4" />
@@ -255,7 +255,7 @@ export function DashboardMainContent({
                         ) : (
                             <Link
                                 href="/landlord/flyer"
-                                title="Print Lobby Poster"
+                                title={t("Print Lobby Poster")}
                                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-background hover:bg-muted border border-border/70 shadow-2xs active:scale-95 text-foreground hover:text-primary"
                             >
                                 <Printer className="size-4" />
@@ -263,21 +263,21 @@ export function DashboardMainContent({
                         )}
                         <Link 
                             href="/landlord/maintenance" 
-                            title="Maintenance Queue"
+                            title={t("Maintenance Queue")}
                             className="flex h-9 w-9 items-center justify-center rounded-xl bg-background hover:bg-muted text-amber-500 border border-border/70 shadow-2xs active:scale-95"
                         >
                             <Wrench className="size-4" />
                         </Link>
                         <Link 
                             href="/landlord/unit-map" 
-                            title="Unit Map"
+                            title={t("Unit Map")}
                             className="flex h-9 w-9 items-center justify-center rounded-xl bg-background hover:bg-muted text-rose-500 border border-border/70 shadow-2xs active:scale-95"
                         >
                             <Map className="size-4" />
                         </Link>
                         <Link 
                             href="/landlord/docs" 
-                            title="Help & User Manual"
+                            title={t("Help & User Manual")}
                             className="flex h-9 w-9 items-center justify-center rounded-xl bg-background hover:bg-muted border border-border/70 shadow-2xs active:scale-95 text-foreground hover:text-primary"
                         >
                             <HelpCircle className="size-4 text-indigo-400" />

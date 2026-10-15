@@ -31,7 +31,18 @@ import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropertySelector';
 import { triggerHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 import { toast } from 'sonner';
+import { tr } from '@/hooks/useLanguage';
+
+const APPLICATION_STATUS_LABELS: Record<string, string> = {
+    pending: 'Pending',
+    reviewing: 'Reviewing',
+    payment_pending: 'Payment Pending',
+    approved: 'Approved',
+    rejected: 'Declined',
+    withdrawn: 'Withdrawn',
+};
 
 interface ApplicantData {
     name: string;
@@ -65,6 +76,7 @@ interface ApplicationItem {
 export function LandlordApplicationsView() {
     const router = useRouter();
     const { selectedPropertyId } = useProperty();
+    const { t, locale } = useLanguageContext();
 
     const [applications, setApplications] = useState<ApplicationItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -91,7 +103,7 @@ export function LandlordApplicationsView() {
             setApplications(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Error fetching landlord applications:', err);
-            toast.error('Failed to load rental applications');
+            toast.error(tr('Failed to load rental applications'));
         } finally {
             setLoading(false);
         }
@@ -107,9 +119,9 @@ export function LandlordApplicationsView() {
     };
 
     const formatDate = (dateStr?: string | null) => {
-        if (!dateStr) return 'N/A';
+        if (!dateStr) return t('N/A');
         const d = new Date(dateStr);
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return d.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     // Calculate metrics
@@ -161,16 +173,16 @@ export function LandlordApplicationsView() {
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
-                throw new Error(data.error || 'Failed to approve application');
+                throw new Error(data.error || t('Failed to approve application'));
             }
 
-            toast.success(`Application for ${selectedApp.applicant.name} approved!`);
+            toast.success(t('Application for {name} approved!', { name: selectedApp.applicant.name }));
             setSelectedApp(null);
             setDecisionMode(null);
             fetchApplications();
         } catch (err: any) {
             console.error('Approve error:', err);
-            toast.error(err.message || 'Action failed');
+            toast.error(tr(err.message || t('Action failed')));
         } finally {
             setSubmittingAction(false);
         }
@@ -194,17 +206,17 @@ export function LandlordApplicationsView() {
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
-                throw new Error(data.error || 'Failed to decline application');
+                throw new Error(data.error || t('Failed to decline application'));
             }
 
-            toast.success('Application declined.');
+            toast.success(t('Application declined.'));
             setSelectedApp(null);
             setDecisionMode(null);
             setRejectionReason('');
             fetchApplications();
         } catch (err: any) {
             console.error('Reject error:', err);
-            toast.error(err.message || 'Action failed');
+            toast.error(tr(err.message || t('Action failed')));
         } finally {
             setSubmittingAction(false);
         }
@@ -222,7 +234,7 @@ export function LandlordApplicationsView() {
                             fetchApplications();
                         }}
                         className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-card text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-2xs"
-                        aria-label="Refresh applications"
+                        aria-label={t("Refresh applications")}
                     >
                         <RefreshCw className={cn("size-4", loading && "animate-spin text-primary")} />
                     </button>
@@ -242,7 +254,7 @@ export function LandlordApplicationsView() {
                                 : "bg-card border-slate-200 dark:border-white/10"
                         )}
                     >
-                        <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Pending</span>
+                        <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">{t("Pending")}</span>
                         <div className="flex items-center justify-between">
                             <span className="text-lg font-black text-foreground mt-0.5">{metrics.pendingCount}</span>
                             {metrics.pendingCount > 0 && (
@@ -258,7 +270,7 @@ export function LandlordApplicationsView() {
                         }}
                         className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col justify-between cursor-pointer active:scale-97 transition-all"
                     >
-                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Approved</span>
+                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{t("Approved")}</span>
                         <span className="text-lg font-black text-foreground mt-0.5">{metrics.approvedCount}</span>
                     </div>
 
@@ -269,7 +281,7 @@ export function LandlordApplicationsView() {
                         }}
                         className="p-2.5 rounded-2xl bg-red-500/10 border border-red-500/20 flex flex-col justify-between cursor-pointer active:scale-97 transition-all"
                     >
-                        <span className="text-[9px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Declined</span>
+                        <span className="text-[9px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">{t("Declined")}</span>
                         <span className="text-lg font-black text-foreground mt-0.5">{metrics.rejectedCount}</span>
                     </div>
 
@@ -280,7 +292,7 @@ export function LandlordApplicationsView() {
                         }}
                         className="p-2.5 rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col justify-between cursor-pointer active:scale-97 transition-all"
                     >
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Total</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("Total")}</span>
                         <span className="text-lg font-black text-foreground mt-0.5">{metrics.total}</span>
                     </div>
                 </div>
@@ -292,7 +304,7 @@ export function LandlordApplicationsView() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search applicant, unit, or occupation..."
+                        placeholder={t("Search applicant, unit, or occupation...")}
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
                     />
                     {searchQuery && (
@@ -319,7 +331,7 @@ export function LandlordApplicationsView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Pending
+                        {t('Pending')}
                         {metrics.pendingCount > 0 && (
                             <span className="ml-1 px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[9px] font-black">
                                 {metrics.pendingCount}
@@ -338,7 +350,7 @@ export function LandlordApplicationsView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Approved
+                        {t('Approved')}
                     </button>
                     <button
                         onClick={() => {
@@ -352,7 +364,7 @@ export function LandlordApplicationsView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Declined
+                        {t('Declined')}
                     </button>
                     <button
                         onClick={() => {
@@ -366,7 +378,7 @@ export function LandlordApplicationsView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        All ({applications.length})
+                        {t('All ({count})', { count: applications.length })}
                     </button>
                 </div>
 
@@ -375,9 +387,9 @@ export function LandlordApplicationsView() {
                     {filteredApps.length === 0 ? (
                         <div className="p-8 text-center rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col items-center gap-2.5">
                             <FileCheck className="size-10 text-muted-foreground/40 stroke-1" />
-                            <h4 className="text-sm font-bold text-foreground">No Applications</h4>
+                            <h4 className="text-sm font-bold text-foreground">{t("No Applications")}</h4>
                             <p className="text-xs text-muted-foreground max-w-xs">
-                                {searchQuery ? 'No applicants match your search filter.' : 'No applications found in this tab.'}
+                                {searchQuery ? t('No applicants match your search filter.') : t('No applications found in this tab.')}
                             </p>
                         </div>
                     ) : (
@@ -422,11 +434,11 @@ export function LandlordApplicationsView() {
 
                                             <div className="min-w-0 flex-1">
                                                 <h3 className="text-sm font-black text-foreground truncate">
-                                                    {app.applicant?.name || 'Prospective Tenant'}
+                                                    {app.applicant?.name || t('Prospective Tenant')}
                                                 </h3>
                                                 <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5 truncate">
                                                     <span className="font-bold text-foreground">
-                                                        Unit {app.unitNumber}
+                                                        {t('Unit {unit}', { unit: app.unitNumber })}
                                                     </span>
                                                     <span>•</span>
                                                     <span className="truncate">{app.propertyName}</span>
@@ -442,27 +454,27 @@ export function LandlordApplicationsView() {
                                                 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                                                 : "bg-red-500/15 text-red-600 dark:text-red-400"
                                         )}>
-                                            {app.status}
+                                            {t(APPLICATION_STATUS_LABELS[app.status] ?? app.status)}
                                         </span>
                                     </div>
 
                                     {/* Snapshot Metrics */}
                                     <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-xs">
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">Occupation</span>
+                                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">{t("Occupation")}</span>
                                             <span className="font-semibold text-foreground truncate max-w-[110px] block">
-                                                {app.applicant?.occupation || 'Not stated'}
+                                                {app.applicant?.occupation || t('Not stated')}
                                             </span>
                                         </div>
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">Income</span>
+                                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">{t("Income")}</span>
                                             <span className="font-bold text-foreground">
                                                 {formatCurrency(app.applicant?.monthlyIncome)}
                                                 {incomeRatio ? <span className="text-[10px] text-emerald-600 ml-1">({incomeRatio}x)</span> : null}
                                             </span>
                                         </div>
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">Submitted</span>
+                                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">{t("Submitted")}</span>
                                             <span className="font-semibold text-muted-foreground">
                                                 {formatDate(app.submittedDate)}
                                             </span>
@@ -478,7 +490,7 @@ export function LandlordApplicationsView() {
                                             }}
                                             className="text-xs font-bold text-primary flex items-center gap-1 active:scale-95 transition-all"
                                         >
-                                            Review Dossier
+                                            {t('Review Dossier')}
                                             <ChevronRight className="size-3.5" />
                                         </button>
 
@@ -493,7 +505,7 @@ export function LandlordApplicationsView() {
                                                     className="py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center gap-1 active:scale-95 transition-all shadow-xs"
                                                 >
                                                     <Check className="size-3" />
-                                                    Approve
+                                                    {t('Approve')}
                                                 </button>
                                             )}
 
@@ -502,7 +514,7 @@ export function LandlordApplicationsView() {
                                                     href={`tel:${app.applicant.phone}`}
                                                     onClick={() => triggerHaptic('light')}
                                                     className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-                                                    aria-label="Call applicant"
+                                                    aria-label={t("Call applicant")}
                                                 >
                                                     <Phone className="size-3.5" />
                                                 </a>
@@ -512,7 +524,7 @@ export function LandlordApplicationsView() {
                                                     href={`mailto:${app.applicant.email}`}
                                                     onClick={() => triggerHaptic('light')}
                                                     className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-                                                    aria-label="Email applicant"
+                                                    aria-label={t("Email applicant")}
                                                 >
                                                     <Mail className="size-3.5" />
                                                 </a>
@@ -545,7 +557,7 @@ export function LandlordApplicationsView() {
                                             {selectedApp.applicant?.name}
                                         </h3>
                                         <p className="text-xs text-muted-foreground">
-                                            Unit {selectedApp.unitNumber} • {selectedApp.propertyName}
+                                            {t('Unit {unit}', { unit: selectedApp.unitNumber })} • {selectedApp.propertyName}
                                         </p>
                                     </div>
                                 </div>
@@ -555,6 +567,7 @@ export function LandlordApplicationsView() {
                                         setDecisionMode(null);
                                     }}
                                     className="p-1.5 rounded-full text-muted-foreground hover:text-foreground"
+                                    aria-label={t('Close')}
                                 >
                                     <X className="size-5" />
                                 </button>
@@ -569,7 +582,7 @@ export function LandlordApplicationsView() {
                                         className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 flex items-center justify-center gap-2 text-xs font-bold text-foreground active:scale-98 transition-all"
                                     >
                                         <Phone className="size-4 text-emerald-500" />
-                                        Call ({selectedApp.applicant.phone})
+                                        {t('Call ({phone})', { phone: selectedApp.applicant.phone })}
                                     </a>
                                 )}
                                 {selectedApp.applicant?.email && (
@@ -579,7 +592,7 @@ export function LandlordApplicationsView() {
                                         className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 flex items-center justify-center gap-2 text-xs font-bold text-foreground active:scale-98 transition-all"
                                     >
                                         <Mail className="size-4 text-blue-500" />
-                                        Send Email
+                                        {t('Send Email')}
                                     </a>
                                 )}
                             </div>
@@ -587,37 +600,37 @@ export function LandlordApplicationsView() {
                             {/* Financial & Tenancy Request */}
                             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 space-y-2 text-xs">
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                                    Application Profile
+                                    {t('Application Profile')}
                                 </span>
                                 <div className="flex justify-between items-center py-1 border-b border-slate-200/40 dark:border-white/5">
-                                    <span className="text-muted-foreground">Occupation:</span>
+                                    <span className="text-muted-foreground">{t("Occupation:")}</span>
                                     <span className="font-semibold text-foreground">
-                                        {selectedApp.applicant?.occupation || 'Not stated'}
+                                        {selectedApp.applicant?.occupation || t('Not stated')}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center py-1 border-b border-slate-200/40 dark:border-white/5">
-                                    <span className="text-muted-foreground">Monthly Income:</span>
+                                    <span className="text-muted-foreground">{t("Monthly Income:")}</span>
                                     <span className="font-black text-emerald-600 dark:text-emerald-400">
                                         {formatCurrency(selectedApp.applicant?.monthlyIncome)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center py-1 border-b border-slate-200/40 dark:border-white/5">
-                                    <span className="text-muted-foreground">Target Monthly Rent:</span>
+                                    <span className="text-muted-foreground">{t("Target Monthly Rent:")}</span>
                                     <span className="font-black text-foreground">
                                         {formatCurrency(selectedApp.monthlyRent)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center py-1 border-b border-slate-200/40 dark:border-white/5">
-                                    <span className="text-muted-foreground">Requested Move-in:</span>
+                                    <span className="text-muted-foreground">{t("Requested Move-in:")}</span>
                                     <span className="font-semibold text-foreground">
                                         {formatDate(selectedApp.requestedMoveIn)}
                                     </span>
                                 </div>
                                 {selectedApp.emergencyContact?.name && (
                                     <div className="flex justify-between items-center py-1">
-                                        <span className="text-muted-foreground">Emergency Contact:</span>
+                                        <span className="text-muted-foreground">{t("Emergency Contact:")}</span>
                                         <span className="font-semibold text-foreground">
-                                            {selectedApp.emergencyContact.name} ({selectedApp.emergencyContact.phone || 'N/A'})
+                                            {selectedApp.emergencyContact.name} ({selectedApp.emergencyContact.phone || t('N/A')})
                                         </span>
                                     </div>
                                 )}
@@ -627,13 +640,13 @@ export function LandlordApplicationsView() {
                             {decisionMode === 'reject' && (
                                 <div className="space-y-1.5 animate-in fade-in duration-150">
                                     <label className="text-xs font-bold text-muted-foreground">
-                                        Reason for Declining (Sent to Applicant)
+                                        {t('Reason for Declining (Sent to Applicant)')}
                                     </label>
                                     <textarea
                                         value={rejectionReason}
                                         onChange={(e) => setRejectionReason(e.target.value)}
                                         rows={3}
-                                        placeholder="e.g., Unit is currently under exclusive hold, or income requirements not met."
+                                        placeholder={t("e.g., Unit is currently under exclusive hold, or income requirements not met.")}
                                         className="w-full p-3 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                                     />
                                 </div>
@@ -649,14 +662,14 @@ export function LandlordApplicationsView() {
                                                 onClick={() => setDecisionMode(null)}
                                                 className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-muted-foreground hover:text-foreground active:scale-98 transition-all"
                                             >
-                                                Back
+                                                {t('Back')}
                                             </button>
                                             <button
                                                 disabled={submittingAction}
                                                 onClick={handleReject}
                                                 className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold active:scale-98 transition-all flex items-center justify-center gap-1.5 shadow-xs"
                                             >
-                                                {submittingAction ? <RefreshCw className="size-4 animate-spin" /> : 'Confirm Decline'}
+                                                {submittingAction ? <RefreshCw className="size-4 animate-spin" /> : t('Confirm Decline')}
                                             </button>
                                         </>
                                     ) : decisionMode === 'approve' ? (
@@ -666,14 +679,14 @@ export function LandlordApplicationsView() {
                                                 onClick={() => setDecisionMode(null)}
                                                 className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-muted-foreground hover:text-foreground active:scale-98 transition-all"
                                             >
-                                                Back
+                                                {t('Back')}
                                             </button>
                                             <button
                                                 disabled={submittingAction}
                                                 onClick={handleQuickApprove}
                                                 className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold active:scale-98 transition-all flex items-center justify-center gap-1.5 shadow-xs"
                                             >
-                                                {submittingAction ? <RefreshCw className="size-4 animate-spin" /> : 'Confirm Approval'}
+                                                {submittingAction ? <RefreshCw className="size-4 animate-spin" /> : t('Confirm Approval')}
                                             </button>
                                         </>
                                     ) : (
@@ -686,7 +699,7 @@ export function LandlordApplicationsView() {
                                                 className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-98 transition-all shadow-xs"
                                             >
                                                 <Check className="size-4" />
-                                                Quick Approve
+                                                {t('Quick Approve')}
                                             </button>
                                             <button
                                                 onClick={() => {
@@ -695,7 +708,7 @@ export function LandlordApplicationsView() {
                                                 }}
                                                 className="py-3 px-4 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold active:scale-98 transition-all"
                                             >
-                                                Decline
+                                                {t('Decline')}
                                             </button>
                                         </>
                                     )}

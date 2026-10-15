@@ -46,6 +46,7 @@ import { useBrand } from "@/context/BrandContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface LobbyFlyerModalProps {
   isOpen: boolean;
@@ -139,6 +140,7 @@ function getContrastColor(hexColor: string): { text: string; muted: string; bord
 export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
   const { selectedProperty } = useProperty();
   const brand = useBrand();
+  const { t } = useLanguageContext();
   const posterRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -149,43 +151,43 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
   const [address, setAddress] = useState(
     selectedProperty?.address || "456 Gen. T. de Leon Road, Paso de Blas, Valenzuela City"
   );
-  const [portalSubheading, setPortalSubheading] = useState("Resident Portal");
+  const [portalSubheading, setPortalSubheading] = useState(() => t("Resident Portal"));
 
   // 2. Banner Texts
-  const [bannerHeading, setBannerHeading] = useState("ACCESS MADE EASY");
-  const [tagline, setTagline] = useState(
-    "Resident portal for cash payments, utility tracking, and maintenance."
+  const [bannerHeading, setBannerHeading] = useState(() => t("ACCESS MADE EASY"));
+  const [tagline, setTagline] = useState(() =>
+    t("Resident portal for cash payments, utility tracking, and maintenance.")
   );
 
   // 3. Android APK Card Texts
-  const [apkCardTitle, setApkCardTitle] = useState("DOWNLOAD MOBILE APP");
-  const [apkCardBadge, setApkCardBadge] = useState("FOR APP INSTALLATION");
-  const [apkCardSubtitle, setApkCardSubtitle] = useState("Install the app on your Android device.");
+  const [apkCardTitle, setApkCardTitle] = useState(() => t("DOWNLOAD MOBILE APP"));
+  const [apkCardBadge, setApkCardBadge] = useState(() => t("FOR APP INSTALLATION"));
+  const [apkCardSubtitle, setApkCardSubtitle] = useState(() => t("Install the app on your Android device."));
 
   // 4. Web Portal Card Texts
-  const [webCardTitle, setWebCardTitle] = useState("REGISTER / ACCESS PORTAL");
-  const [webCardBadge, setWebCardBadge] = useState("FOR PORTAL ACCESS");
-  const [webCardSubtitle, setWebCardSubtitle] = useState("Open in your browser to register or access the portal.");
+  const [webCardTitle, setWebCardTitle] = useState(() => t("REGISTER / ACCESS PORTAL"));
+  const [webCardBadge, setWebCardBadge] = useState(() => t("FOR PORTAL ACCESS"));
+  const [webCardSubtitle, setWebCardSubtitle] = useState(() => t("Open in your browser to register or access the portal."));
 
   // 5. 3-Step Guide Texts
-  const [stepsHeading, setStepsHeading] = useState("Get Started in 3 Easy Steps");
-  const [step1Title, setStep1Title] = useState("Scan QR");
-  const [step1Desc, setStep1Desc] = useState("Open with camera or browser");
-  const [step2Title, setStep2Title] = useState("Create Account");
-  const [step2Desc, setStep2Desc] = useState("Sign up & connect to your unit");
-  const [step3Title, setStep3Title] = useState("Pay & Request");
-  const [step3Desc, setStep3Desc] = useState("Quick pay & submit maintenance tickets");
+  const [stepsHeading, setStepsHeading] = useState(() => t("Get Started in 3 Easy Steps"));
+  const [step1Title, setStep1Title] = useState(() => t("Scan QR"));
+  const [step1Desc, setStep1Desc] = useState(() => t("Open with camera or browser"));
+  const [step2Title, setStep2Title] = useState(() => t("Create Account"));
+  const [step2Desc, setStep2Desc] = useState(() => t("Sign up & connect to your unit"));
+  const [step3Title, setStep3Title] = useState(() => t("Pay & Request"));
+  const [step3Desc, setStep3Desc] = useState(() => t("Quick pay & submit maintenance tickets"));
 
   // 6. Wi-Fi & Office Info Texts
-  const [wifiHeader, setWifiHeader] = useState("LOBBY WI-FI");
+  const [wifiHeader, setWifiHeader] = useState(() => t("LOBBY WI-FI"));
   const [wifiSsid, setWifiSsid] = useState("SkylineLofts_Resident");
   const [wifiPassword, setWifiPassword] = useState("Pass: Skyline2025");
-  const [officeHeader, setOfficeHeader] = useState("PROPERTY OFFICE");
+  const [officeHeader, setOfficeHeader] = useState(() => t("PROPERTY OFFICE"));
   const [contactPhone, setContactPhone] = useState("0927-090-1234");
-  const [officeHours, setOfficeHours] = useState("Daily: 8:00 AM – 7:00 PM");
+  const [officeHours, setOfficeHours] = useState(() => t("Daily: 8:00 AM – 7:00 PM"));
 
   // 7. Footer Stamp Texts
-  const [footerBadge, setFooterBadge] = useState("Official Resident Notice");
+  const [footerBadge, setFooterBadge] = useState(() => t("Official Resident Notice"));
 
   // Direct Edit Mode Toggle
   const [isDirectEditMode, setIsDirectEditMode] = useState(true);
@@ -300,13 +302,13 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
     const handleOnline = () => {
       setIsOnline(true);
       setSaveStatus("saving");
-      toast.success("Online: Syncing your design with the cloud...");
+      toast.success(t("Online: Syncing your design with the cloud..."));
       handleSaveTemplate(true);
     };
     const handleOffline = () => {
       setIsOnline(false);
       setSaveStatus("offline");
-      toast.warning("You are offline. Design changes are saved locally to this device.");
+      toast.warning(t("You are offline. Design changes are saved locally to this device."));
     };
 
     window.addEventListener("online", handleOnline);
@@ -538,7 +540,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
       if (!navigator.onLine) {
         setSaveStatus("offline");
         if (!isAutoSync) {
-          toast.warning("Saved locally. Will sync to the cloud when connection returns.");
+          toast.warning(t("Saved locally. Will sync to the cloud when connection returns."));
         }
         return;
       }
@@ -561,11 +563,11 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
       setHasSavedTemplate(true);
       setTimeout(() => setHasSavedTemplate(false), 3000);
       if (!isAutoSync) {
-        toast.success("Design saved! Synced across all your devices.");
+        toast.success(t("Design saved! Synced across all your devices."));
       }
     } catch (err) {
       console.error("Error saving flyer template:", err);
-      if (!isAutoSync) toast.success("Saved to local browser cache.");
+      if (!isAutoSync) toast.success(t("Saved to local browser cache."));
     } finally {
       setIsSavingTemplate(false);
     }
@@ -574,13 +576,13 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
   const handleDownloadPoster = async () => {
     const posterNode = posterRef.current || document.getElementById("lobby-poster-canvas");
     if (!posterNode) {
-      toast.error("Poster canvas not found");
+      toast.error(t("Poster canvas not found"));
       return;
     }
 
     try {
       setIsExportingPoster(true);
-      toast.loading("Capturing high-resolution poster...", { id: "poster-export" });
+      toast.loading(t("Capturing high-resolution poster..."), { id: "poster-export" });
 
       // Blur active elements to remove edit focus rings
       if (document.activeElement instanceof HTMLElement) {
@@ -612,10 +614,10 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      toast.success("High-res poster saved!", { id: "poster-export" });
+      toast.success(t("High-res poster saved!"), { id: "poster-export" });
     } catch (err) {
       console.error("Error exporting poster with modern-screenshot:", err);
-      toast.error("Failed to export poster. Please try again.", { id: "poster-export" });
+      toast.error(t("Failed to export poster. Please try again."), { id: "poster-export" });
     } finally {
       setIsExportingPoster(false);
     }
@@ -624,7 +626,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = handleMediaSelection(e, {
       preset: "image",
-      notify: (msg, desc) => toast.error(msg, { description: desc }),
+      notify: (msg, desc) => toast.error(t(msg), { description: desc ? t(desc) : desc }),
     });
     if (!file) return;
 
@@ -635,7 +637,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
       setBgPreset("custom_photo");
       setCardColor("#ffffff");
       setActiveFloatingTool("background");
-      toast.success("Building photo applied!");
+      toast.success(t("Building photo applied!"));
     };
     reader.readAsDataURL(file);
 
@@ -658,7 +660,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
 
   const handleDownloadQrImage = async (url: string, filename: string) => {
     try {
-      toast.loading("Downloading high-res QR code...", { id: "qr-dl" });
+      toast.loading(t("Downloading high-res QR code..."), { id: "qr-dl" });
       const response = await fetch(url);
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
@@ -669,39 +671,39 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
       a.click();
       window.URL.revokeObjectURL(blobUrl);
       document.body.removeChild(a);
-      toast.success(`${filename} saved!`, { id: "qr-dl" });
+      toast.success(t("{name} saved!", { name: filename }), { id: "qr-dl" });
     } catch {
       window.open(url, "_blank");
-      toast.success("Opened QR code in new tab.", { id: "qr-dl" });
+      toast.success(t("Opened QR code in new tab."), { id: "qr-dl" });
     }
   };
 
   const handleResetDefaults = () => {
     setPropertyName(selectedProperty?.name || "Skyline Lofts");
     setAddress(selectedProperty?.address || "456 Gen. T. de Leon Road, Paso de Blas, Valenzuela City");
-    setPortalSubheading("Resident Portal");
-    setBannerHeading("ACCESS MADE EASY");
-    setTagline("Resident portal for cash payments, utility tracking, and maintenance.");
-    setApkCardTitle("DOWNLOAD MOBILE APP");
-    setApkCardBadge("FOR APP INSTALLATION");
-    setApkCardSubtitle("Install the app on your Android device.");
-    setWebCardTitle("REGISTER / ACCESS PORTAL");
-    setWebCardBadge("FOR PORTAL ACCESS");
-    setWebCardSubtitle("Open in your browser to register or access the portal.");
-    setStepsHeading("Get Started in 3 Easy Steps");
-    setStep1Title("Scan QR");
-    setStep1Desc("Open with camera or browser");
-    setStep2Title("Create Account");
-    setStep2Desc("Sign up & connect to your unit");
-    setStep3Title("Pay & Request");
-    setStep3Desc("Quick pay & submit maintenance tickets");
-    setWifiHeader("LOBBY WI-FI");
+    setPortalSubheading(t("Resident Portal"));
+    setBannerHeading(t("ACCESS MADE EASY"));
+    setTagline(t("Resident portal for cash payments, utility tracking, and maintenance."));
+    setApkCardTitle(t("DOWNLOAD MOBILE APP"));
+    setApkCardBadge(t("FOR APP INSTALLATION"));
+    setApkCardSubtitle(t("Install the app on your Android device."));
+    setWebCardTitle(t("REGISTER / ACCESS PORTAL"));
+    setWebCardBadge(t("FOR PORTAL ACCESS"));
+    setWebCardSubtitle(t("Open in your browser to register or access the portal."));
+    setStepsHeading(t("Get Started in 3 Easy Steps"));
+    setStep1Title(t("Scan QR"));
+    setStep1Desc(t("Open with camera or browser"));
+    setStep2Title(t("Create Account"));
+    setStep2Desc(t("Sign up & connect to your unit"));
+    setStep3Title(t("Pay & Request"));
+    setStep3Desc(t("Quick pay & submit maintenance tickets"));
+    setWifiHeader(t("LOBBY WI-FI"));
     setWifiSsid("SkylineLofts_Resident");
     setWifiPassword("Pass: Skyline2025");
-    setOfficeHeader("PROPERTY OFFICE");
+    setOfficeHeader(t("PROPERTY OFFICE"));
     setContactPhone("0927-090-1234");
-    setOfficeHours("Daily: 8:00 AM – 7:00 PM");
-    setFooterBadge("Official Resident Notice");
+    setOfficeHours(t("Daily: 8:00 AM – 7:00 PM"));
+    setFooterBadge(t("Official Resident Notice"));
     setBrandColor("#8b5cf6");
     setBgPreset("solid_white");
     setCardColor("#ffffff");
@@ -718,7 +720,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
     setShowWifi(true);
     setShowOffice(true);
     setActiveFloatingTool(null);
-    toast.success("Poster reset to defaults");
+    toast.success(t("Poster reset to defaults"));
   };
 
   if (!isOpen) return null;
@@ -812,25 +814,25 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 {activeFloatingTool === "colors" && (
                   <>
                     <Palette className="size-3.5 text-primary" />
-                    <span>Colors & Opacity</span>
+                    <span>{t("Colors & Opacity")}</span>
                   </>
                 )}
                 {activeFloatingTool === "background" && (
                   <>
                     <ImageIcon className="size-3.5 text-primary" />
-                    <span>Canvas & Photos</span>
+                    <span>{t("Canvas & Photos")}</span>
                   </>
                 )}
                 {activeFloatingTool === "typography" && (
                   <>
                     <CaseSensitive className="size-3.5 text-primary" />
-                    <span>Typography</span>
+                    <span>{t("Typography")}</span>
                   </>
                 )}
                 {activeFloatingTool === "sections" && (
                   <>
                     <Layers className="size-3.5 text-primary" />
-                    <span>Sections</span>
+                    <span>{t("Sections")}</span>
                   </>
                 )}
               </div>
@@ -840,6 +842,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 type="button"
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => setActiveFloatingTool(null)}
+                aria-label={t("Close")}
                 className="size-6 rounded-lg neumorphic-inset flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95"
               >
                 <X className="size-3" />
@@ -853,7 +856,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
             >
               <button
                 type="button"
-                title="Colors & Card Opacity"
+                title={t("Colors & Card Opacity")}
                 onClick={() => setActiveFloatingTool("colors")}
                 className={cn(
                   "flex-1 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1",
@@ -861,11 +864,11 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 )}
               >
                 <Palette className="size-3" />
-                <span className="hidden sm:inline">Colors</span>
+                <span className="hidden sm:inline">{t("Colors")}</span>
               </button>
               <button
                 type="button"
-                title="Canvas Background & Photos"
+                title={t("Canvas Background & Photos")}
                 onClick={() => setActiveFloatingTool("background")}
                 className={cn(
                   "flex-1 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1",
@@ -873,11 +876,11 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 )}
               >
                 <ImageIcon className="size-3" />
-                <span className="hidden sm:inline">Canvas</span>
+                <span className="hidden sm:inline">{t("Canvas")}</span>
               </button>
               <button
                 type="button"
-                title="Typography & Letter Spacing"
+                title={t("Typography & Letter Spacing")}
                 onClick={() => setActiveFloatingTool("typography")}
                 className={cn(
                   "flex-1 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1",
@@ -885,11 +888,11 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 )}
               >
                 <CaseSensitive className="size-3" />
-                <span className="hidden sm:inline">Type</span>
+                <span className="hidden sm:inline">{t("Type")}</span>
               </button>
               <button
                 type="button"
-                title="Visible Sections"
+                title={t("Visible Sections")}
                 onClick={() => setActiveFloatingTool("sections")}
                 className={cn(
                   "flex-1 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1",
@@ -897,7 +900,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 )}
               >
                 <Layers className="size-3" />
-                <span className="hidden sm:inline">Sections</span>
+                <span className="hidden sm:inline">{t("Sections")}</span>
               </button>
             </div>
 
@@ -919,7 +922,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       activeColorTab === "card" ? "bg-primary text-white shadow-xs" : "text-muted-foreground"
                     )}
                   >
-                    Card Fill
+                    {t("Card Fill")}
                   </button>
                   <button
                     type="button"
@@ -929,7 +932,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       activeColorTab === "brand" ? "bg-primary text-white shadow-xs" : "text-muted-foreground"
                     )}
                   >
-                    Brand Accent
+                    {t("Brand Accent")}
                   </button>
                 </div>
 
@@ -984,7 +987,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Sliders className="size-2.5" />
-                        <span>Card Opacity</span>
+                        <span>{t("Card Opacity")}</span>
                       </span>
                       <span className="font-mono font-bold text-foreground w-9 text-right tabular-nums inline-block shrink-0">
                         {cardOpacity}%
@@ -1010,7 +1013,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     <button
                       key={p.hex}
                       type="button"
-                      title={"label" in p ? p.label : p.name}
+                      title={t("label" in p ? p.label : p.name)}
                       onClick={() => {
                         if (activeColorTab === "card") setCardColor(p.hex);
                         else setBrandColor(p.hex);
@@ -1040,7 +1043,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 {/* Preset Textures */}
                 <div onPointerDown={(e) => e.stopPropagation()} className="space-y-1.5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                    Canvas Texture
+                    {t("Canvas Texture")}
                   </span>
                   <div className="grid grid-cols-3 gap-1">
                     {BG_PRESETS.map((b) => (
@@ -1059,7 +1062,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         )}
                       >
                         <b.icon className="size-3.5" />
-                        <span className="truncate">{b.label}</span>
+                        <span className="truncate">{t(b.label)}</span>
                       </button>
                     ))}
                   </div>
@@ -1072,7 +1075,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                      Custom Photo
+                      {t("Custom Photo")}
                     </span>
                     {customBgImage && (
                       <button
@@ -1084,7 +1087,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         className="text-[9px] font-bold text-red-400 hover:text-red-500 flex items-center gap-1"
                       >
                         <Trash2 className="size-2.5" />
-                        <span>Remove</span>
+                        <span>{t("Remove")}</span>
                       </button>
                     )}
                   </div>
@@ -1100,7 +1103,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     )}
                   >
                     <Upload className="size-3.5" />
-                    <span>{customBgImage ? "Replace Background Photo" : "Upload Building Photo"}</span>
+                    <span>{customBgImage ? t("Replace Background Photo") : t("Upload Building Photo")}</span>
                   </button>
 
                   {/* Photo Filter Sliders */}
@@ -1109,7 +1112,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       {/* Brightness */}
                       <div className="flex flex-col gap-1 neumorphic-inset rounded-xl p-2">
                         <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-muted-foreground">
-                          <span>Brightness</span>
+                          <span>{t("Brightness")}</span>
                           <span className="font-mono font-bold text-foreground w-9 text-right tabular-nums inline-block shrink-0">
                             {photoBrightness}%
                           </span>
@@ -1127,7 +1130,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       {/* Saturation */}
                       <div className="flex flex-col gap-1 neumorphic-inset rounded-xl p-2">
                         <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-muted-foreground">
-                          <span>Saturation</span>
+                          <span>{t("Saturation")}</span>
                           <span className="font-mono font-bold text-foreground w-9 text-right tabular-nums inline-block shrink-0">
                             {photoSaturation}%
                           </span>
@@ -1145,7 +1148,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       {/* Photo Opacity */}
                       <div className="flex flex-col gap-1 neumorphic-inset rounded-xl p-2">
                         <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-muted-foreground">
-                          <span>Photo Opacity</span>
+                          <span>{t("Photo Opacity")}</span>
                           <span className="font-mono font-bold text-foreground w-9 text-right tabular-nums inline-block shrink-0">
                             {photoOpacity}%
                           </span>
@@ -1173,7 +1176,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 {/* Font Pairing */}
                 <div onPointerDown={(e) => e.stopPropagation()} className="space-y-1.5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                    Font Pairing
+                    {t("Font Pairing")}
                   </span>
                   <div className="grid grid-cols-2 gap-1.5">
                     {FONT_FAMILIES.map((f) => (
@@ -1189,7 +1192,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         )}
                         style={{ fontFamily: f.css }}
                       >
-                        {f.label}
+                        {t(f.label)}
                       </button>
                     ))}
                   </div>
@@ -1201,7 +1204,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   className="space-y-1.5 pt-2 border-t border-border/30"
                 >
                   <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                    Title Case
+                    {t("Title Case")}
                   </span>
                   <div className="grid grid-cols-2 gap-1 neumorphic-inset rounded-xl p-0.5">
                     <button
@@ -1214,7 +1217,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           : "text-muted-foreground"
                       )}
                     >
-                      UPPERCASE
+                      {t("UPPERCASE")}
                     </button>
                     <button
                       type="button"
@@ -1226,7 +1229,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           : "text-muted-foreground"
                       )}
                     >
-                      Title Case
+                      {t("Title Case")}
                     </button>
                   </div>
                 </div>
@@ -1237,7 +1240,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   className="space-y-1.5 pt-2 border-t border-border/30"
                 >
                   <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                    Letter Spacing
+                    {t("Letter Spacing")}
                   </span>
                   <div className="grid grid-cols-3 gap-1 neumorphic-inset rounded-xl p-0.5">
                     {[
@@ -1256,7 +1259,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                             : "text-muted-foreground"
                         )}
                       >
-                        {s.label}
+                        {t(s.label)}
                       </button>
                     ))}
                   </div>
@@ -1270,7 +1273,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
             {activeFloatingTool === "sections" && (
               <div className="flex flex-col gap-2">
                 <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                  Toggle Visibility
+                  {t("Toggle Visibility")}
                 </span>
                 <div onPointerDown={(e) => e.stopPropagation()} className="space-y-1.5">
                   <button
@@ -1285,7 +1288,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   >
                     <div className="flex items-center gap-2">
                       <Megaphone className="size-3.5" />
-                      <span>Welcome Notice</span>
+                      <span>{t("Welcome Notice")}</span>
                     </div>
                     {showBanner && <Check className="size-3 stroke-[3]" />}
                   </button>
@@ -1302,7 +1305,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   >
                     <div className="flex items-center gap-2">
                       <ListOrdered className="size-3.5" />
-                      <span>3-Step Guide</span>
+                      <span>{t("3-Step Guide")}</span>
                     </div>
                     {showSteps && <Check className="size-3 stroke-[3]" />}
                   </button>
@@ -1319,7 +1322,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   >
                     <div className="flex items-center gap-2">
                       <Wifi className="size-3.5" />
-                      <span>Wi-Fi Details</span>
+                      <span>{t("Wi-Fi Details")}</span>
                     </div>
                     {showWifi && <Check className="size-3 stroke-[3]" />}
                   </button>
@@ -1336,7 +1339,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   >
                     <div className="flex items-center gap-2">
                       <Phone className="size-3.5" />
-                      <span>Office Details</span>
+                      <span>{t("Office Details")}</span>
                     </div>
                     {showOffice && <Check className="size-3 stroke-[3]" />}
                   </button>
@@ -1366,7 +1369,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold tracking-tight text-foreground">
-                  Lobby Poster Studio
+                  {t("Lobby Poster Studio")}
                 </span>
                 {propertyName && (
                   <span className="text-[10px] font-medium text-muted-foreground px-2 py-0.5 rounded-md bg-muted/40 hidden md:inline truncate max-w-[130px]">
@@ -1387,7 +1390,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <span>Preview</span>
+                  <span>{t("Preview")}</span>
                 </button>
                 <button
                   type="button"
@@ -1400,7 +1403,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   )}
                 >
                   <Edit3 className="size-3" />
-                  <span>Edit</span>
+                  <span>{t("Edit")}</span>
                 </button>
               </div>
 
@@ -1408,7 +1411,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
               <div className="flex items-center p-0.5 rounded-lg bg-muted/40 border border-border/40 ml-1.5 gap-0.5">
                 <button
                   type="button"
-                  title="Colors & Branding"
+                  title={t("Colors & Branding")}
                   onClick={() =>
                     setActiveFloatingTool(activeFloatingTool === "colors" ? null : "colors")
                   }
@@ -1423,7 +1426,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 </button>
                 <button
                   type="button"
-                  title="Title Panel Background Photo"
+                  title={t("Title Panel Background Photo")}
                   onClick={() =>
                     setActiveFloatingTool(activeFloatingTool === "background" ? null : "background")
                   }
@@ -1438,7 +1441,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 </button>
                 <button
                   type="button"
-                  title="Typography & Fonts"
+                  title={t("Typography & Fonts")}
                   onClick={() =>
                     setActiveFloatingTool(activeFloatingTool === "typography" ? null : "typography")
                   }
@@ -1453,7 +1456,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 </button>
                 <button
                   type="button"
-                  title="Sections Visibility"
+                  title={t("Sections Visibility")}
                   onClick={() =>
                     setActiveFloatingTool(activeFloatingTool === "sections" ? null : "sections")
                   }
@@ -1476,12 +1479,12 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 {saveStatus === "saving" ? (
                   <>
                     <span className="size-1.5 rounded-full bg-amber-400 animate-ping" />
-                    <span className="text-[10px] font-medium">Saving...</span>
+                    <span className="text-[10px] font-medium">{t("Saving...")}</span>
                   </>
                 ) : (
                   <>
                     <span className="size-1.5 rounded-full bg-emerald-500" />
-                    <span className="text-[10px] font-medium text-muted-foreground">Synced</span>
+                    <span className="text-[10px] font-medium text-muted-foreground">{t("Synced")}</span>
                   </>
                 )}
               </div>
@@ -1490,7 +1493,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
               <button
                 type="button"
                 onClick={handleResetDefaults}
-                title="Reset to defaults"
+                title={t("Reset to defaults")}
                 className="size-8 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground active:scale-95 transition-all flex items-center justify-center"
               >
                 <RotateCcw className="size-3.5" />
@@ -1507,14 +1510,14 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30 font-bold"
                     : "border-border/60 hover:bg-muted/40 text-foreground"
                 )}
-                title="Save this design as a cloud template"
+                title={t("Save this design as a cloud template")}
               >
                 {hasSavedTemplate ? (
                   <Check className="size-3.5 text-emerald-500 stroke-[2.5]" />
                 ) : (
                   <Cloud className="size-3.5 text-muted-foreground" />
                 )}
-                <span>{hasSavedTemplate ? "Saved" : isSavingTemplate ? "Saving..." : "Save Template"}</span>
+                <span>{hasSavedTemplate ? t("Saved") : isSavingTemplate ? t("Saving...") : t("Save Template")}</span>
               </button>
 
               {/* Download Poster Button */}
@@ -1526,7 +1529,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 style={{ backgroundColor: brandColor }}
               >
                 <Download className="size-3.5" />
-                <span>Download</span>
+                <span>{t("Download")}</span>
               </button>
 
               {/* Close Button */}
@@ -1534,7 +1537,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 type="button"
                 onClick={onClose}
                 className="size-8 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground active:scale-95 transition-all flex items-center justify-center ml-0.5"
-                aria-label="Close"
+                aria-label={t("Close")}
               >
                 <X className="size-4" />
               </button>
@@ -1558,10 +1561,10 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   </div>
                   <div className="flex flex-col text-left">
                     <span className="text-[11px] font-black uppercase tracking-wider leading-tight">
-                      You are Offline
+                      {t("You are Offline")}
                     </span>
                     <span className="text-[10px] font-semibold text-amber-950/90 leading-tight">
-                      Changes are safe on this device and will auto-sync once reconnected.
+                      {t("Changes are safe on this device and will auto-sync once reconnected.")}
                     </span>
                   </div>
                 </motion.div>
@@ -1631,17 +1634,17 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       className="h-6 px-2 rounded-md bg-black/60 hover:bg-black/80 text-white flex items-center gap-1 backdrop-blur-md shadow-xs text-[9px] font-bold"
-                      title="Upload building photo for title panel"
+                      title={t("Upload building photo for title panel")}
                     >
                       <Upload className="size-2.5" />
-                      <span>{customBgImage ? "Replace" : "Photo"}</span>
+                      <span>{customBgImage ? t("Replace") : t("Photo")}</span>
                     </button>
                     {customBgImage && (
                       <button
                         type="button"
                         onClick={() => setCustomBgImage(null)}
                         className="size-6 rounded-md bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-md shadow-xs"
-                        title="Remove title panel photo"
+                        title={t("Remove title panel photo")}
                       >
                         <Trash2 className="size-2.5" />
                       </button>
@@ -1753,7 +1756,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       color: cardContrast.text,
                     }}
                   >
-                    OR
+                    {t("OR")}
                   </div>
 
                   {/* Left: Mobile App Card */}
@@ -1826,7 +1829,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       <img
                         src={apkQrUrl}
                         crossOrigin="anonymous"
-                        alt="Android APK QR Code"
+                        alt={t("Android APK QR Code")}
                         className="size-full object-contain"
                       />
                       <button
@@ -1837,11 +1840,11 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                             `${propertyName.replace(/\s+/g, "_")}_Android_APK_QR.png`
                           )
                         }
-                        title="Download high-res PNG (1000px)"
+                        title={t("Download high-res PNG (1000px)")}
                         className="absolute inset-0 bg-black/75 rounded-xl text-white text-[9px] font-bold flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs print:hidden z-20"
                       >
                         <Download className="size-4 text-emerald-400" />
-                        <span>Save PNG</span>
+                        <span>{t("Save PNG")}</span>
                       </button>
                     </div>
 
@@ -1852,10 +1855,10 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     >
                       <div className="flex items-center justify-center gap-1 text-[8.5px] font-black uppercase tracking-wider">
                         <Download className="size-2.5" />
-                        <span>SCAN TO DOWNLOAD</span>
+                        <span>{t("SCAN TO DOWNLOAD")}</span>
                       </div>
                       <span className="text-[7px] font-bold opacity-90 tracking-wider">
-                        ANDROID (APK)
+                        {t("ANDROID (APK)")}
                       </span>
                     </div>
                   </div>
@@ -1923,7 +1926,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       <img
                         src={portalQrUrl}
                         crossOrigin="anonymous"
-                        alt="Web Resident Portal QR Code"
+                        alt={t("Web Resident Portal QR Code")}
                         className="size-full object-contain"
                       />
                       <button
@@ -1934,11 +1937,11 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                             `${propertyName.replace(/\s+/g, "_")}_Web_Portal_QR.png`
                           )
                         }
-                        title="Download high-res PNG (1000px)"
+                        title={t("Download high-res PNG (1000px)")}
                         className="absolute inset-0 bg-black/75 rounded-xl text-white text-[9px] font-bold flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs print:hidden z-20"
                       >
                         <Download className="size-4 text-emerald-400" />
-                        <span>Save PNG</span>
+                        <span>{t("Save PNG")}</span>
                       </button>
                     </div>
 
@@ -1946,10 +1949,10 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     <div className="w-full mt-2 py-2 px-1.5 bg-emerald-700 text-white rounded-lg shadow-xs text-center flex flex-col items-center justify-center leading-tight">
                       <div className="flex items-center justify-center gap-1 text-[8.5px] font-black uppercase tracking-wider">
                         <Globe className="size-2.5" />
-                        <span>SCAN TO REGISTER</span>
+                        <span>{t("SCAN TO REGISTER")}</span>
                       </div>
                       <span className="text-[7px] font-bold opacity-90 tracking-wider">
-                        INSTANT WEB ACCESS
+                        {t("INSTANT WEB ACCESS")}
                       </span>
                     </div>
                   </div>

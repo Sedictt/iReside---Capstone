@@ -22,13 +22,21 @@ import {
     ShieldCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 import { formatPhpCurrency } from "@/lib/billing/utils";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { dateRule, moneyRule, parseNumericInput, textRule } from "@/lib/validation/rules";
+import { BILLING_LIMITS, INVOICE_TOTAL_MESSAGE, billingMonthRule, roundCentavos } from "@/lib/validation/schemas/billing.schema";
 
 interface ActiveLease {
     id: string;
     monthly_rent: number;
     start_date: string;
-    end_date: string;
+    /** Null for open-ended (month-to-month) leases. */
+    end_date: string | null;
+    term_type?: string | null;
     unit?: {
         id: string;
         name: string;
@@ -54,13 +62,14 @@ function getTenantDisplayName(lease: ActiveLease): string {
     const parts = [lease.tenant?.first_name, lease.tenant?.last_name].filter(Boolean);
     if (parts.length > 0) return parts.join(" ");
     if (lease.tenant?.email) return lease.tenant.email;
-    return "Active Tenant";
+    return tr("Active Tenant");
 }
 
 interface InvoiceItemDraft {
     id: string;
     label: string;
-    amount: number | "";
+    /** Raw input text; validated (never coerced) before submit. */
+    amount: number | string;
     category: "rent" | "water" | "electricity" | "maintenance" | "other";
     removable?: boolean;
 }
@@ -80,6 +89,7 @@ export function IssueInvoiceModal({
     defaultUnitId,
     propertyId
 }: IssueInvoiceModalProps) {
+    const { t } = useLanguageContext();
     const [leases, setLeases] = useState<ActiveLease[]>([]);
     const [loadingLeases, setLoadingLeases] = useState(true);
     const [selectedLeaseId, setSelectedLeaseId] = useState<string>("");
@@ -146,7 +156,7 @@ export function IssueInvoiceModal({
                     setSelectedLeaseId(data[0].id);
                 }
             } catch {
-                if (isMounted) setErrorMsg("Failed to load active leases.");
+                if (isMounted) setErrorMsg(t("Failed to load active leases."));
             } finally {
                 if (isMounted) setLoadingLeases(false);
             }
@@ -197,10 +207,48 @@ export function IssueInvoiceModal({
         ]);
     }, [selectedLease]);
 
-    // Total computation
+    // Total computation (display only; the server recomputes the total from the items)
     const totalAmount = useMemo(() => {
-        return items.reduce((acc, it) => acc + (Number(it.amount) || 0), 0);
+        return roundCentavos(items.reduce((acc, it) => {
+            const amount = parseNumericInput(it.amount);
+            return acc + (amount !== null && Number.isFinite(amount) && amount > 0 ? amount : 0);
+        }, 0));
     }, [items]);
+
+    // An item is billed when it has an amount; utility rows may be left blank to skip them.
+    const isBilledItem = (it: InvoiceItemDraft) => {
+        const amount = parseNumericInput(it.amount);
+        return amount !== null && !(Number.isFinite(amount) && amount === 0);
+    };
+
+    const formValues = useMemo(() => {
+        const values: Record<string, unknown> = { lease: selectedLeaseId, billingMonth, dueDate, notes, total: totalAmount };
+        for (const it of items) {
+            values[`label:${it.id}`] = it.label;
+            values[`amount:${it.id}`] = it.amount;
+        }
+        return values;
+    }, [selectedLeaseId, billingMonth, dueDate, notes, totalAmount, items]);
+
+    const formRules = useMemo(() => {
+        const rules: Record<string, (value: unknown) => string | undefined> = {
+            lease: (value) => (value ? undefined : t("Please select a tenant with an active lease.")),
+            billingMonth: (value) => billingMonthRule(value, { required: true }),
+            dueDate: (value) => dateRule(value, { label: "Due date" }),
+        };
+        // Insertion order = focus order on submit.
+        for (const it of items) {
+            rules[`label:${it.id}`] = (value) =>
+                isBilledItem(it) ? textRule(value, { label: "Item description", required: true, max: BILLING_LIMITS.itemLabel }) : undefined;
+            rules[`amount:${it.id}`] = (value) => moneyRule(value, { label: "Item amount", required: false });
+        }
+        rules.notes = (value) => textRule(value, { label: "Notes", max: BILLING_LIMITS.invoiceNotes });
+        rules.total = (value) => (Number(value) > 0 ? undefined : INVOICE_TOTAL_MESSAGE);
+        return rules;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [items]);
+
+    const form = useFormValidation(formValues, formRules);
 
     const handleAddItem = () => {
         const newId = `item-custom-${Date.now()}`;
@@ -225,8 +273,8 @@ export function IssueInvoiceModal({
             prev.map((it) => {
                 if (it.id !== id) return it;
                 if (field === "amount") {
-                    const parsed = value === "" ? "" : Math.max(0, parseFloat(value) || 0);
-                    return { ...it, amount: parsed };
+                    // Keep what was typed; invalid amounts are flagged inline instead of silently clamped.
+                    return { ...it, amount: value };
                 }
                 return { ...it, [field]: value };
             })
@@ -235,21 +283,27 @@ export function IssueInvoiceModal({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSubmitting) return;
         if (!selectedLease) {
-            setErrorMsg("Please select a tenant with an active lease.");
+            setErrorMsg(t("Please select a tenant with an active lease."));
+            return;
+        }
+
+        if (!form.validateAll()) {
+            setErrorMsg(tr(form.errors.total ?? t("Please fix the highlighted fields.")));
             return;
         }
 
         const validItems = items
-            .filter((it) => it.label.trim() && Number(it.amount) > 0)
+            .filter((it) => isBilledItem(it))
             .map((it) => ({
                 label: it.label.trim(),
-                amount: Number(it.amount),
+                amount: parseNumericInput(it.amount) as number,
                 category: it.category,
             }));
 
         if (validItems.length === 0) {
-            setErrorMsg("Please provide at least one charge item with an amount greater than 0.");
+            setErrorMsg(t("Please provide at least one charge item with an amount greater than 0."));
             return;
         }
 
@@ -271,14 +325,15 @@ export function IssueInvoiceModal({
 
             if (!response.ok) {
                 const data = await response.json().catch(() => null);
-                throw new Error(data?.error || "Failed to issue invoice.");
+                form.setServerErrors(data?.fieldErrors);
+                throw new Error(data?.error || t("Failed to issue invoice."));
             }
 
             if (onIssued) onIssued();
             onClose();
         } catch (err: any) {
             console.error(err);
-            setErrorMsg(err.message || "An unexpected error occurred while issuing invoice.");
+            setErrorMsg(tr(err.message || t("An unexpected error occurred while issuing invoice.")));
         } finally {
             setIsSubmitting(false);
         }
@@ -310,9 +365,9 @@ export function IssueInvoiceModal({
                                 <ReceiptText className="size-6" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-black text-foreground">Issue Invoice</h2>
+                                <h2 className="text-xl font-black text-foreground">{t("Issue Invoice")}</h2>
                                 <p className="text-xs font-medium text-muted-foreground mt-0.5">
-                                    Send an itemized monthly bill for rent and utilities directly to a tenant.
+                                    {t("Send an itemized monthly bill for rent and utilities directly to a tenant.")}
                                 </p>
                             </div>
                         </div>
@@ -320,7 +375,7 @@ export function IssueInvoiceModal({
                             type="button"
                             onClick={onClose}
                             className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                            aria-label="Close modal"
+                            aria-label={t("Close modal")}
                         >
                             <X className="size-5" />
                         </button>
@@ -340,17 +395,17 @@ export function IssueInvoiceModal({
                     <div className="space-y-2">
                         <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                             <User className="size-3.5 text-primary" />
-                            Select Recipient Tenant & Unit
+                            {t("Select Recipient Tenant & Unit")}
                         </label>
 
                         {loadingLeases ? (
                             <div className="flex items-center justify-center py-4 rounded-2xl border border-border/60 bg-muted/20 text-xs text-muted-foreground">
                                 <Loader2 className="size-4 animate-spin mr-2" />
-                                Loading active leases...
+                                {t("Loading active leases...")}
                             </div>
                         ) : leases.length === 0 ? (
                             <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-700 dark:text-amber-300">
-                                No active tenant leases found. An active lease is required to issue monthly invoices.
+                                {t("No active tenant leases found. An active lease is required to issue monthly invoices.")}
                             </div>
                         ) : (
                             <div className="space-y-2">
@@ -361,7 +416,7 @@ export function IssueInvoiceModal({
                                 >
                                     {leases.map((lease) => (
                                         <option key={lease.id} value={lease.id}>
-                                            {getTenantDisplayName(lease)} • {lease.unit?.name || "Unit"} ({lease.unit?.property?.name || "Property"}) — {formatPhpCurrency(lease.monthly_rent)}/mo
+                                            {getTenantDisplayName(lease)} • {lease.unit?.name || t("Unit")} ({lease.unit?.property?.name || t("Property")}) — {formatPhpCurrency(lease.monthly_rent)}{t("/mo")}
                                         </option>
                                     ))}
                                 </select>
@@ -371,10 +426,10 @@ export function IssueInvoiceModal({
                                         <div className="flex items-center gap-2">
                                             <Building2 className="size-3.5 text-primary" />
                                             <span className="font-bold text-foreground">{selectedLease.unit?.property?.name}</span>
-                                            <span className="text-muted-foreground">• Unit {selectedLease.unit?.name}</span>
+                                            <span className="text-muted-foreground">• {t("Unit {unit}", { unit: selectedLease.unit?.name ?? "" })}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-muted-foreground">
-                                            <span>Base Rent:</span>
+                                            <span>{t("Base Rent:")}</span>
                                             <span className="font-black text-foreground">{formatPhpCurrency(selectedLease.monthly_rent)}</span>
                                         </div>
                                     </div>
@@ -388,27 +443,31 @@ export function IssueInvoiceModal({
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                 <Calendar className="size-3.5 text-primary" />
-                                Billing Month
+                                {t("Billing Month")}
                             </label>
                             <input min="2000-01" max="2099-12"
+                                {...form.fieldProps("billingMonth")}
                                 type="month"
                                 value={billingMonth}
                                 onChange={(e) => setBillingMonth(e.target.value)}
-                                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-xs font-bold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                className={cn("w-full rounded-xl border border-border bg-background px-4 py-2.5 text-xs font-bold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20", form.errorFor("billingMonth") && fieldErrorClass)}
                             />
+                            <FieldError id={form.errorId("billingMonth")} message={form.errorFor("billingMonth")} />
                         </div>
 
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                 <Calendar className="size-3.5 text-primary" />
-                                Due Date
+                                {t("Due Date")}
                             </label>
                             <input min="2000-01-01" max="2099-12-31"
+                                {...form.fieldProps("dueDate")}
                                 type="date"
                                 value={dueDate}
                                 onChange={(e) => setDueDate(e.target.value)}
-                                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-xs font-bold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                className={cn("w-full rounded-xl border border-border bg-background px-4 py-2.5 text-xs font-bold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20", form.errorFor("dueDate") && fieldErrorClass)}
                             />
+                            <FieldError id={form.errorId("dueDate")} message={form.errorFor("dueDate")} />
                         </div>
                     </div>
 
@@ -417,7 +476,7 @@ export function IssueInvoiceModal({
                         <div className="flex items-center justify-between">
                             <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                 <DollarSign className="size-3.5 text-primary" />
-                                Review Rent & Utility Dues
+                                {t("Review Rent & Utility Dues")}
                             </label>
                             <button
                                 type="button"
@@ -425,15 +484,21 @@ export function IssueInvoiceModal({
                                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-border bg-muted/40 hover:bg-muted text-[11px] font-bold text-foreground transition-all cursor-pointer"
                             >
                                 <Plus className="size-3" />
-                                Add Line Item
+                                {t("Add Line Item")}
                             </button>
                         </div>
 
                         <div className="space-y-2.5">
-                            {items.map((item) => (
+                            {items.map((item) => {
+                                const labelError = form.errorFor(`label:${item.id}`);
+                                const amountError = form.errorFor(`amount:${item.id}`);
+                                return (
+                                <div key={item.id}>
                                 <div
-                                    key={item.id}
-                                    className="flex items-center gap-2 rounded-2xl border border-border/70 bg-background/80 p-3 transition-all focus-within:border-primary/50"
+                                    className={cn(
+                                        "flex items-center gap-2 rounded-2xl border border-border/70 bg-background/80 p-3 transition-all focus-within:border-primary/50",
+                                        (labelError || amountError) && "border-rose-500/60"
+                                    )}
                                 >
                                     <div className="flex size-8 items-center justify-center rounded-xl bg-muted shrink-0 text-muted-foreground">
                                         {item.category === "rent" ? (
@@ -449,25 +514,30 @@ export function IssueInvoiceModal({
 
                                     <div className="flex-1 min-w-0">
                                         <input maxLength={60}
+                                            {...form.fieldProps(`label:${item.id}`)}
+                                            aria-label={t("Charge description")}
                                             type="text"
                                             value={item.label}
                                             disabled={!item.removable}
                                             onChange={(e) => handleUpdateItem(item.id, "label", e.target.value)}
                                             className="w-full bg-transparent text-xs font-bold text-foreground outline-none placeholder:text-muted-foreground disabled:opacity-80"
-                                            placeholder="Charge Description"
+                                            placeholder={t("Charge Description")}
                                         />
                                     </div>
 
                                     <div className="relative w-32 shrink-0">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">₱</span>
                                         <input max={9999999.99}
+                                            {...form.fieldProps(`amount:${item.id}`)}
+                                            aria-label={t("Charge amount")}
                                             type="number"
-                                            step="any"
+                                            inputMode="decimal"
+                                            step="0.01"
                                             min="0"
                                             value={item.amount}
                                             onChange={(e) => handleUpdateItem(item.id, "amount", e.target.value)}
                                             placeholder="0.00"
-                                            className="w-full rounded-xl border border-border bg-card py-1.5 pl-7 pr-3 text-right text-xs font-bold font-mono text-foreground outline-none focus:border-primary"
+                                            className={cn("w-full rounded-xl border border-border bg-card py-1.5 pl-7 pr-3 text-right text-xs font-bold font-mono text-foreground outline-none focus:border-primary", amountError && fieldErrorClass)}
                                         />
                                     </div>
 
@@ -476,46 +546,51 @@ export function IssueInvoiceModal({
                                             type="button"
                                             onClick={() => handleRemoveItem(item.id)}
                                             className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
-                                            title="Remove item"
+                                            title={t("Remove item")}
                                         >
                                             <Trash2 className="size-3.5" />
                                         </button>
                                     )}
                                 </div>
-                            ))}
+                                <FieldError id={form.errorId(`label:${item.id}`)} message={labelError} className="px-3" />
+                                <FieldError id={form.errorId(`amount:${item.id}`)} message={amountError} className="px-3" />
+                                </div>
+                                );
+                            })}
                         </div>
                     </div>
 
                     {/* Total Summary Card */}
                     <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="space-y-0.5">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Total Bill Amount</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Total Bill Amount")}</span>
                             <div className="flex items-center gap-2">
                                 <span className="text-2xl font-black text-foreground tracking-tight">
                                     {formatPhpCurrency(totalAmount)}
                                 </span>
                                 <span className="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider">
-                                    Pending
+                                    {t("Pending")}
                                 </span>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:text-right">
                             <ShieldCheck className="size-4 text-emerald-500 shrink-0" />
-                            <span>Direct delivery to tenant phone portal</span>
+                            <span>{t("Direct delivery to tenant phone portal")}</span>
                         </div>
                     </div>
 
                     {/* Optional Note */}
                     <div className="space-y-1.5">
                         <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
-                            Notes / Memo for Tenant (Optional)
+                            {t("Notes / Memo for Tenant (Optional)")}
                         </label>
                         <textarea maxLength={250}
+                            {...form.fieldProps("notes")}
                             rows={2}
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
-                            placeholder="e.g. Regular monthly rent and recorded utility consumption."
+                            placeholder={t("e.g. Regular monthly rent and recorded utility consumption.")}
                             className="w-full rounded-xl border border-border bg-background p-3 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
                         />
                     </div>
@@ -529,24 +604,25 @@ export function IssueInvoiceModal({
                         disabled={isSubmitting}
                         className="rounded-xl border border-border bg-card px-5 py-2.5 text-xs font-bold text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
-                        Cancel
+                        {t("Cancel")}
                     </button>
 
                     <button
                         type="button"
                         onClick={handleSubmit}
-                        disabled={isSubmitting || !selectedLease || totalAmount <= 0}
+                        disabled={isSubmitting || !selectedLease}
                         className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                         {isSubmitting ? (
                             <>
                                 <Loader2 className="size-3.5 animate-spin" />
-                                <span>Generating...</span>
+                                <span>{t("Generating...")}</span>
                             </>
                         ) : (
                             <>
                                 <Send className="size-3.5" />
-                                <span>Issue Invoice</span>
+                                <span>{t("Issue Invoice")}</span>
+
                             </>
                         )}
                     </button>

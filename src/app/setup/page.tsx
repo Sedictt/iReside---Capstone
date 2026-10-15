@@ -45,6 +45,7 @@ import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation/med
 import { WizardShell } from "@/components/setup/WizardShell";
 import { WizardStepper, StepItem } from "@/components/setup/WizardStepper";
 import { setupDictionary } from "@/lib/i18n/setup-translations";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 // Curated accessible brand palette presets
 interface PalettePreset {
@@ -121,6 +122,7 @@ const SETUP_STORAGE_KEY = "ireside_setup_inputs_draft";
 
 function WizardContent() {
   const router = useRouter();
+  const { t } = useLanguageContext();
   const searchParams = useSearchParams();
   const isReconfigure =
     searchParams.get("reconfigure") === "true" || searchParams.get("troubleshoot") === "true";
@@ -179,8 +181,8 @@ function WizardContent() {
 
     const handlePopState = () => {
       trapHistory();
-      toast.warning("Setup Required", {
-        description: setupDictionary.wizardHeader.lockNotice,
+      toast.warning(t("Setup Required"), {
+        description: t(setupDictionary.wizardHeader.lockNotice),
         id: "setup-lock-popstate",
       });
     };
@@ -195,7 +197,7 @@ function WizardContent() {
       window.removeEventListener("popstate", handlePopState);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [isSystemLocked]);
+  }, [isSystemLocked, t]);
 
   // Initial setup check
   const hasCheckedSetupRef = useRef(false);
@@ -224,8 +226,8 @@ function WizardContent() {
       if (typeof document !== "undefined") {
         document.cookie = "ireside_setup_completed=true; path=/; max-age=31536000; SameSite=Lax";
       }
-      toast.info("Setup already finalized", {
-        description: "Your property portal is already operational. You can update your brand in Settings.",
+      toast.info(t("Setup already finalized"), {
+        description: t("Your property portal is already operational. You can update your brand in Settings."),
       });
       if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
         window.location.href = "/landlord/dashboard";
@@ -407,8 +409,8 @@ function WizardContent() {
     const file = handleMediaSelection(e, {
       preset: "branding_logo",
       notify: (msg, desc) => {
-        toast.error(msg, { description: desc });
-        setFieldError("logoUrl", `${msg}: ${desc}`);
+        toast.error(t(msg), { description: desc ? t(desc) : desc });
+        setFieldError("logoUrl", `${t(msg)}: ${desc ? t(desc) : ""}`);
       },
     });
     if (!file) return;
@@ -418,7 +420,7 @@ function WizardContent() {
     reader.onload = (event) => {
       const result = event.target?.result as string;
       setLogoUrl(result);
-      toast.success("Property logo uploaded successfully.");
+      toast.success(t("Property logo uploaded successfully."));
     };
     reader.readAsDataURL(file);
   };
@@ -427,7 +429,7 @@ function WizardContent() {
     setLogoUrl(null);
     setFieldError("logoUrl", undefined);
     if (fileInputRef.current) fileInputRef.current.value = "";
-    toast.info("Logo reset to default wordmark.");
+    toast.info(t("Logo reset to default wordmark."));
   };
 
   // Escape key closes confirmation modal
@@ -499,7 +501,7 @@ function WizardContent() {
         propertyName: true,
         tagline: true,
       }));
-      toast.error(Object.values(s1.errors)[0] || "Please enter a valid property name.");
+      toast.error(t(Object.values(s1.errors)[0] || "Please enter a valid property name."));
       goToStep(1);
       return;
     }
@@ -507,7 +509,7 @@ function WizardContent() {
     if (!s2.isValid) {
       setShowConfirmationModal(false);
       setFieldErrors((prev) => ({ ...prev, ...s2.errors }));
-      toast.error(Object.values(s2.errors)[0] || "Please select a valid theme palette.");
+      toast.error(t(Object.values(s2.errors)[0] || "Please select a valid theme palette."));
       goToStep(2);
       return;
     }
@@ -588,8 +590,8 @@ function WizardContent() {
 
       setShowConfirmationModal(false);
       setIsLaunched(true);
-      toast.success("Property Portal Initialized", {
-        description: `Branded as ${propertyName}. Opening your dashboard...`,
+      toast.success(t("Property Portal Initialized"), {
+        description: t("Branded as {name}. Opening your dashboard...", { name: propertyName }),
       });
 
       const navigateToDashboard = () => {
@@ -602,8 +604,8 @@ function WizardContent() {
 
       setTimeout(navigateToDashboard, 700);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      toast.error("Failed to save setup: " + message);
+      const message = err instanceof Error ? t(err.message) : t("Unknown error");
+      toast.error(t("Failed to save setup: {message}", { message }));
     } finally {
       setIsLaunching(false);
     }
@@ -613,9 +615,9 @@ function WizardContent() {
 
   // Time estimate text
   const timeEstimates: Record<number, string> = {
-    1: "About 1 minute left",
-    2: "About 1 minute left",
-    3: "Almost done!",
+    1: t("About 1 minute left"),
+    2: t("About 1 minute left"),
+    3: t("Almost done!"),
   };
 
   return (
@@ -624,8 +626,8 @@ function WizardContent() {
       onToggleMode={handleModeToggle}
       isSystemLocked={isSystemLocked}
       onLockedLogoClick={() => {
-        toast.warning("Setup Required", {
-          description: setupDictionary.wizardHeader.lockNotice,
+        toast.warning(t("Setup Required"), {
+          description: t(setupDictionary.wizardHeader.lockNotice),
           id: "setup-lock-logo",
         });
       }}
@@ -637,7 +639,7 @@ function WizardContent() {
         ref={fileInputRef}
         onChange={handleLogoUpload}
         accept={MEDIA_ACCEPT_STRINGS.branding_logo}
-        aria-label="Upload property logo"
+        aria-label={t("Upload property logo")}
         className="hidden"
       />
 
@@ -646,7 +648,7 @@ function WizardContent() {
         <WizardStepper
           currentStep={currentStep}
           totalSteps={3}
-          steps={WIZARD_STEPS}
+          steps={WIZARD_STEPS.map((step) => ({ ...step, label: t(step.label) }))}
           maxStepReached={maxStepReached}
           onStepClick={(id) => goToStep(id)}
           timeEstimate={timeEstimates[currentStep]}
@@ -665,13 +667,13 @@ function WizardContent() {
 
             <div className="space-y-3">
               <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs uppercase tracking-wider">
-                {setupDictionary.celebration.badge}
+                {t(setupDictionary.celebration.badge)}
               </span>
               <h1 className="text-2xl sm:text-4xl font-extrabold text-foreground tracking-tight">
-                {setupDictionary.celebration.title}
+                {t(setupDictionary.celebration.title)}
               </h1>
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-                Branded as <span className="font-bold text-foreground">{propertyName}</span>. {setupDictionary.celebration.message}
+                {t("Branded as")} <span className="font-bold text-foreground">{propertyName}</span>. {t(setupDictionary.celebration.message)}
               </p>
             </div>
 
@@ -687,7 +689,7 @@ function WizardContent() {
                 }}
                 className="w-full min-h-[56px] px-8 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 shadow-lg cursor-pointer active:scale-95 text-white bg-emerald-600 hover:bg-emerald-700"
               >
-                <span>{setupDictionary.celebration.cta}</span>
+                <span>{t(setupDictionary.celebration.cta)}</span>
                 <ArrowRight className="size-6 stroke-[3]" />
               </button>
             </div>
@@ -707,10 +709,10 @@ function WizardContent() {
               {/* Step Header */}
               <div className="space-y-1 sm:space-y-1.5">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-                  {setupDictionary.step1PropertyName.title}
+                  {t(setupDictionary.step1PropertyName.title)}
                 </h1>
                 <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-                  {setupDictionary.step1PropertyName.instruction}
+                  {t(setupDictionary.step1PropertyName.instruction)}
                 </p>
               </div>
 
@@ -723,7 +725,7 @@ function WizardContent() {
                       htmlFor="property-name-input"
                       className="text-base sm:text-lg font-bold text-foreground cursor-pointer flex items-center gap-1.5"
                     >
-                      <span>{setupDictionary.step1PropertyName.label}</span>
+                      <span>{t(setupDictionary.step1PropertyName.label)}</span>
                       <span className="text-rose-600 font-bold" aria-hidden="true">*</span>
                     </label>
                     <span className="text-xs sm:text-sm font-mono text-muted-foreground">
@@ -739,7 +741,7 @@ function WizardContent() {
                     maxLength={80}
                     value={propertyName}
                     autoComplete="organization"
-                    placeholder={setupDictionary.step1PropertyName.placeholder}
+                    placeholder={t(setupDictionary.step1PropertyName.placeholder)}
                     aria-required="true"
                     aria-invalid={!!(touchedFields.propertyName && fieldErrors.propertyName)}
                     aria-describedby={
@@ -785,11 +787,11 @@ function WizardContent() {
                       className="text-sm font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-2 pt-0.5"
                     >
                       <AlertCircle className="size-4 shrink-0" />
-                      <span>{fieldErrors.propertyName}</span>
+                      <span>{t(fieldErrors.propertyName)}</span>
                     </p>
                   ) : (
                     <p id="property-name-helper" className="text-xs sm:text-sm text-muted-foreground pt-0.5">
-                      {setupDictionary.step1PropertyName.helper}
+                      {t(setupDictionary.step1PropertyName.helper)}
                     </p>
                   )}
                 </div>
@@ -801,9 +803,9 @@ function WizardContent() {
                       htmlFor="tagline-input"
                       className="text-base font-bold text-foreground cursor-pointer flex items-center gap-1.5"
                     >
-                      <span>{setupDictionary.step3Tagline.label}</span>
+                      <span>{t(setupDictionary.step3Tagline.label)}</span>
                       <span className="text-muted-foreground font-normal text-xs sm:text-sm">
-                        ({setupDictionary.common.optional})
+                        {t(setupDictionary.common.optional)}
                       </span>
                     </label>
                     <span className="text-xs sm:text-sm font-mono text-muted-foreground">
@@ -816,7 +818,7 @@ function WizardContent() {
                     type="text"
                     maxLength={120}
                     value={tagline}
-                    placeholder={setupDictionary.step3Tagline.placeholder}
+                    placeholder={t(setupDictionary.step3Tagline.placeholder)}
                     aria-invalid={!!(touchedFields.tagline && fieldErrors.tagline)}
                     aria-describedby={
                       touchedFields.tagline && fieldErrors.tagline
@@ -855,11 +857,11 @@ function WizardContent() {
                       className="text-sm font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-2 pt-0.5"
                     >
                       <AlertCircle className="size-4 shrink-0" />
-                      <span>{fieldErrors.tagline}</span>
+                      <span>{t(fieldErrors.tagline)}</span>
                     </p>
                   ) : (
                     <p id="tagline-helper" className="text-xs sm:text-sm text-muted-foreground pt-0.5">
-                      {setupDictionary.step3Tagline.helper}
+                      {t(setupDictionary.step3Tagline.helper)}
                     </p>
                   )}
                 </div>
@@ -872,7 +874,7 @@ function WizardContent() {
                   onClick={handleContinueFromStep1}
                   className="w-full min-h-[54px] rounded-2xl bg-primary text-primary-foreground font-black text-lg transition-all hover:bg-primary/95 active:scale-[0.99] flex items-center justify-center gap-3 shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
-                  <span>{setupDictionary.common.continue}</span>
+                  <span>{t(setupDictionary.common.continue)}</span>
                   <ArrowRight className="size-6 stroke-[3]" />
                 </button>
               </div>
@@ -889,15 +891,15 @@ function WizardContent() {
             >
               <div className="space-y-1 sm:space-y-1.5">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-                  {setupDictionary.step2ThemeColor.title}
+                  {t(setupDictionary.step2ThemeColor.title)}
                 </h1>
                 <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-                  {setupDictionary.step2ThemeColor.instruction}
+                  {t(setupDictionary.step2ThemeColor.instruction)}
                 </p>
               </div>
 
               {/* 2-Column Responsive Preset Grid (Compact, no tall scrolling) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3" role="radiogroup" aria-label="Theme Color Styles">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3" role="radiogroup" aria-label={t("Theme Color Styles")}>
                 {PALETTE_PRESETS.map((preset) => {
                   const isSelected =
                     primaryColor.toLowerCase() === preset.primary.toLowerCase();
@@ -929,10 +931,10 @@ function WizardContent() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm sm:text-base font-bold text-foreground truncate">
-                            {preset.name}
+                            {t(preset.name)}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">
-                            {preset.description}
+                            {t(preset.description)}
                           </p>
                         </div>
                       </div>
@@ -965,17 +967,17 @@ function WizardContent() {
                     </div>
                     <div>
                       <h2 className="text-sm sm:text-base font-bold text-foreground">
-                        {setupDictionary.step2ThemeColor.customColor?.title || "Pick Your Own Color"}
+                        {t(setupDictionary.step2ThemeColor.customColor?.title || "Pick Your Own Color")}
                       </h2>
                       <p className="text-xs text-muted-foreground">
-                        {setupDictionary.step2ThemeColor.customColor?.description || "Tap the color circle or type your HEX code"}
+                        {t(setupDictionary.step2ThemeColor.customColor?.description || "Tap the color circle or type your HEX code")}
                       </p>
                     </div>
                   </div>
 
                   {isCustomSelected && (
                     <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
-                      Custom Color Active
+                      {t("Custom Color Active")}
                     </span>
                   )}
                 </div>
@@ -988,7 +990,7 @@ function WizardContent() {
                       htmlFor="custom-primary-color-input"
                       className="size-8 sm:size-9 rounded-lg border-2 border-border shadow-xs cursor-pointer relative shrink-0 overflow-hidden flex items-center justify-center"
                       style={{ backgroundColor: primaryColor }}
-                      title="Tap to open color wheel"
+                      title={t("Tap to open color wheel")}
                     >
                       <input
                         id="custom-primary-color-input"
@@ -996,12 +998,12 @@ function WizardContent() {
                         value={primaryColor.startsWith("#") && primaryColor.length === 7 ? primaryColor : "#7c3aed"}
                         onChange={(e) => handleCustomPrimaryChange(e.target.value)}
                         className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                        aria-label="Pick custom primary color"
+                        aria-label={t("Pick custom primary color")}
                       />
                     </label>
                     <div className="space-y-0.5">
                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-                        Main Color
+                        {t(setupDictionary.step2ThemeColor.customColor.primaryLabel)}
                       </span>
                       <input
                         type="text"
@@ -1010,7 +1012,7 @@ function WizardContent() {
                         onChange={(e) => handleCustomPrimaryChange(e.target.value)}
                         className="w-20 font-mono text-xs font-bold bg-background text-foreground px-1.5 py-0.5 rounded border border-border focus:outline-none focus:ring-2 focus:ring-primary uppercase"
                         placeholder="#7C3AED"
-                        aria-label="Custom primary hex code"
+                        aria-label={t("Custom primary hex code")}
                       />
                     </div>
                   </div>
@@ -1021,7 +1023,7 @@ function WizardContent() {
                       htmlFor="custom-secondary-color-input"
                       className="size-8 sm:size-9 rounded-lg border-2 border-border shadow-xs cursor-pointer relative shrink-0 overflow-hidden flex items-center justify-center"
                       style={{ backgroundColor: secondaryColor }}
-                      title="Tap to open accent color wheel"
+                      title={t("Tap to open accent color wheel")}
                     >
                       <input
                         id="custom-secondary-color-input"
@@ -1029,12 +1031,12 @@ function WizardContent() {
                         value={secondaryColor.startsWith("#") && secondaryColor.length === 7 ? secondaryColor : "#f43f5e"}
                         onChange={(e) => handleCustomSecondaryChange(e.target.value)}
                         className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                        aria-label="Pick custom accent color"
+                        aria-label={t("Pick custom accent color")}
                       />
                     </label>
                     <div className="space-y-0.5">
                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-                        Accent Color
+                        {t(setupDictionary.step2ThemeColor.customColor.secondaryLabel)}
                       </span>
                       <input
                         type="text"
@@ -1043,7 +1045,7 @@ function WizardContent() {
                         onChange={(e) => handleCustomSecondaryChange(e.target.value)}
                         className="w-20 font-mono text-xs font-bold bg-background text-foreground px-1.5 py-0.5 rounded border border-border focus:outline-none focus:ring-2 focus:ring-primary uppercase"
                         placeholder="#F43F5E"
-                        aria-label="Custom accent hex code"
+                        aria-label={t("Custom accent hex code")}
                       />
                     </div>
                   </div>
@@ -1055,8 +1057,8 @@ function WizardContent() {
                         key={hex}
                         type="button"
                         onClick={() => handleCustomPrimaryChange(hex)}
-                        title={`Select ${hex}`}
-                        aria-label={`Select color ${hex}`}
+                        title={t("Select {hex}", { hex })}
+                        aria-label={t("Select color {hex}", { hex })}
                         className={cn(
                           "size-6 sm:size-7 rounded-full border-2 transition-transform hover:scale-110 active:scale-95 cursor-pointer shadow-xs",
                           primaryColor.toLowerCase() === hex.toLowerCase()
@@ -1077,7 +1079,7 @@ function WizardContent() {
                   onClick={handleContinueFromStep2}
                   className="w-full min-h-[54px] rounded-2xl bg-primary text-primary-foreground font-black text-lg transition-all hover:bg-primary/95 active:scale-[0.99] flex items-center justify-center gap-3 shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
-                  <span>{setupDictionary.common.continue}</span>
+                  <span>{t(setupDictionary.common.continue)}</span>
                   <ArrowRight className="size-6 stroke-[3]" />
                 </button>
 
@@ -1088,7 +1090,7 @@ function WizardContent() {
                     className="min-h-[44px] px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2 cursor-pointer"
                   >
                     <ArrowLeft className="size-4" />
-                    <span>{setupDictionary.common.back}</span>
+                    <span>{t(setupDictionary.common.back)}</span>
                   </button>
                 </div>
               </div>
@@ -1105,10 +1107,10 @@ function WizardContent() {
             >
               <div className="space-y-1 sm:space-y-1.5">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-                  {setupDictionary.step4Logo.title}
+                  {t(setupDictionary.step4Logo.title)}
                 </h1>
                 <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-                  {setupDictionary.step4Logo.instruction}
+                  {t(setupDictionary.step4Logo.instruction)}
                 </p>
               </div>
 
@@ -1118,13 +1120,13 @@ function WizardContent() {
                   {logoUrl ? (
                     <img
                       src={logoUrl}
-                      alt="Uploaded Property Logo"
+                      alt={t("Uploaded Property Logo")}
                       className="size-20 rounded-2xl object-cover border-2 border-border shadow-md bg-background shrink-0"
                     />
                   ) : (
                     <div className="size-20 rounded-2xl border-2 border-dashed border-border/80 bg-muted/30 flex flex-col items-center justify-center text-muted-foreground shrink-0 shadow-inner">
                       <ImageIcon className="size-7 stroke-[1.5] mb-1" />
-                      <span className="text-[10px] font-bold">No Image</span>
+                      <span className="text-[10px] font-bold">{t("No Image")}</span>
                     </div>
                   )}
 
@@ -1132,11 +1134,11 @@ function WizardContent() {
                     <div>
                       <p className="text-base sm:text-lg font-bold text-foreground">
                         {logoUrl
-                          ? setupDictionary.step4Logo.currentLogo
-                          : setupDictionary.step4Logo.defaultLogoActive}
+                          ? t(setupDictionary.step4Logo.currentLogo)
+                          : t(setupDictionary.step4Logo.defaultLogoActive)}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {setupDictionary.step4Logo.fileLimits}
+                        {t(setupDictionary.step4Logo.fileLimits)}
                       </p>
                     </div>
 
@@ -1149,8 +1151,8 @@ function WizardContent() {
                         <Upload className="size-4" />
                         <span>
                           {logoUrl
-                            ? setupDictionary.step4Logo.changeButton
-                            : setupDictionary.step4Logo.uploadButton}
+                            ? t(setupDictionary.step4Logo.changeButton)
+                            : t(setupDictionary.step4Logo.uploadButton)}
                         </span>
                       </button>
 
@@ -1161,7 +1163,7 @@ function WizardContent() {
                           className="min-h-[42px] px-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold text-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
                         >
                           <Trash2 className="size-4" />
-                          <span>{setupDictionary.step4Logo.removeButton}</span>
+                          <span>{t(setupDictionary.step4Logo.removeButton)}</span>
                         </button>
                       )}
                     </div>
@@ -1176,7 +1178,7 @@ function WizardContent() {
                   onClick={handleContinueFromStep3}
                   className="w-full min-h-[54px] rounded-2xl bg-primary text-primary-foreground font-black text-lg transition-all hover:bg-primary/95 active:scale-[0.99] flex items-center justify-center gap-3 shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
-                  <span>{setupDictionary.step4Logo.reviewAction}</span>
+                  <span>{t(setupDictionary.step4Logo.reviewAction)}</span>
                   <ArrowRight className="size-6 stroke-[3]" />
                 </button>
 
@@ -1187,7 +1189,7 @@ function WizardContent() {
                     className="min-h-[44px] px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2 cursor-pointer"
                   >
                     <ArrowLeft className="size-4" />
-                    <span>{setupDictionary.common.back}</span>
+                    <span>{t(setupDictionary.common.back)}</span>
                   </button>
                 </div>
               </div>
@@ -1222,17 +1224,17 @@ function WizardContent() {
               <div className="flex items-start justify-between gap-3 border-b border-border/60 pb-3">
                 <div className="space-y-0.5">
                   <h2 id="review-modal-title" className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
-                    {setupDictionary.step6Review.title}
+                    {t(setupDictionary.step6Review.title)}
                   </h2>
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    {setupDictionary.step6Review.instruction}
+                    {t(setupDictionary.step6Review.instruction)}
                   </p>
                 </div>
                 <button
                   type="button"
                   disabled={isLaunching}
                   onClick={() => setShowConfirmationModal(false)}
-                  aria-label="Close review modal"
+                  aria-label={t("Close review modal")}
                   className="size-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/80 flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50 shrink-0"
                 >
                   <X className="size-5" />
@@ -1245,10 +1247,10 @@ function WizardContent() {
                 <div className="p-3 sm:p-3.5 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <span className="text-xs font-bold text-muted-foreground block">
-                      {setupDictionary.step6Review.fields.propertyName}
+                      {t(setupDictionary.step6Review.fields.propertyName)}
                     </span>
                     <span className="text-sm sm:text-base font-extrabold text-foreground truncate block">
-                      {propertyName || "Not specified"}
+                      {propertyName || t("Not specified")}
                     </span>
                   </div>
                   <button
@@ -1259,10 +1261,10 @@ function WizardContent() {
                       goToStep(1);
                     }}
                     className="min-h-[36px] px-3 rounded-lg hover:bg-muted text-primary font-bold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
-                    aria-label={`Edit ${setupDictionary.step6Review.fields.propertyName}`}
+                    aria-label={t("Edit {field}", { field: t(setupDictionary.step6Review.fields.propertyName) })}
                   >
                     <Edit2 className="size-3.5" />
-                    <span>{setupDictionary.common.edit}</span>
+                    <span>{t(setupDictionary.common.edit)}</span>
                   </button>
                 </div>
 
@@ -1270,7 +1272,7 @@ function WizardContent() {
                 <div className="p-3 sm:p-3.5 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <span className="text-xs font-bold text-muted-foreground block">
-                      {setupDictionary.step6Review.fields.themeColor}
+                      {t(setupDictionary.step6Review.fields.themeColor)}
                     </span>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span
@@ -1280,7 +1282,7 @@ function WizardContent() {
                       <span className="text-sm sm:text-base font-bold text-foreground truncate">
                         {PALETTE_PRESETS.find(
                           (p) => p.primary.toLowerCase() === primaryColor.toLowerCase()
-                        )?.name || primaryColor}
+                        )?.name ? t(PALETTE_PRESETS.find((p) => p.primary.toLowerCase() === primaryColor.toLowerCase())!.name) : primaryColor}
                       </span>
                     </div>
                   </div>
@@ -1292,10 +1294,10 @@ function WizardContent() {
                       goToStep(2);
                     }}
                     className="min-h-[36px] px-3 rounded-lg hover:bg-muted text-primary font-bold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
-                    aria-label={`Edit ${setupDictionary.step6Review.fields.themeColor}`}
+                    aria-label={t("Edit {field}", { field: t(setupDictionary.step6Review.fields.themeColor) })}
                   >
                     <Edit2 className="size-3.5" />
-                    <span>{setupDictionary.common.edit}</span>
+                    <span>{t(setupDictionary.common.edit)}</span>
                   </button>
                 </div>
 
@@ -1303,10 +1305,10 @@ function WizardContent() {
                 <div className="p-3 sm:p-3.5 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <span className="text-xs font-bold text-muted-foreground block">
-                      {setupDictionary.step6Review.fields.tagline}
+                      {t(setupDictionary.step6Review.fields.tagline)}
                     </span>
                     <span className="text-sm sm:text-base font-medium text-foreground truncate block">
-                      {tagline || setupDictionary.step6Review.fields.taglineEmpty}
+                      {tagline || t(setupDictionary.step6Review.fields.taglineEmpty)}
                     </span>
                   </div>
                   <button
@@ -1317,10 +1319,10 @@ function WizardContent() {
                       goToStep(1);
                     }}
                     className="min-h-[36px] px-3 rounded-lg hover:bg-muted text-primary font-bold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
-                    aria-label={`Edit ${setupDictionary.step6Review.fields.tagline}`}
+                    aria-label={t("Edit {field}", { field: t(setupDictionary.step6Review.fields.tagline) })}
                   >
                     <Edit2 className="size-3.5" />
-                    <span>{setupDictionary.common.edit}</span>
+                    <span>{t(setupDictionary.common.edit)}</span>
                   </button>
                 </div>
 
@@ -1328,13 +1330,13 @@ function WizardContent() {
                 <div className="p-3 sm:p-3.5 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <span className="text-xs font-bold text-muted-foreground block">
-                      {setupDictionary.step6Review.fields.logo}
+                      {t(setupDictionary.step6Review.fields.logo)}
                     </span>
                     <div className="flex items-center gap-2 mt-0.5">
                       {logoUrl ? (
                         <img
                           src={logoUrl}
-                          alt="Logo thumbnail"
+                          alt={t("Logo thumbnail")}
                           className="size-6 rounded-md object-cover border border-border shrink-0"
                         />
                       ) : (
@@ -1344,8 +1346,8 @@ function WizardContent() {
                       )}
                       <span className="text-sm sm:text-base font-medium text-foreground truncate">
                         {logoUrl
-                          ? setupDictionary.step6Review.fields.logoCustom
-                          : setupDictionary.step6Review.fields.logoDefault}
+                          ? t(setupDictionary.step6Review.fields.logoCustom)
+                          : t(setupDictionary.step6Review.fields.logoDefault)}
                       </span>
                     </div>
                   </div>
@@ -1357,10 +1359,10 @@ function WizardContent() {
                       goToStep(3);
                     }}
                     className="min-h-[36px] px-3 rounded-lg hover:bg-muted text-primary font-bold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
-                    aria-label={`Edit ${setupDictionary.step6Review.fields.logo}`}
+                    aria-label={t("Edit {field}", { field: t(setupDictionary.step6Review.fields.logo) })}
                   >
                     <Edit2 className="size-3.5" />
-                    <span>{setupDictionary.common.edit}</span>
+                    <span>{t(setupDictionary.common.edit)}</span>
                   </button>
                 </div>
               </div>
@@ -1386,11 +1388,11 @@ function WizardContent() {
                   {isLaunching ? (
                     <>
                       <RefreshCw className="size-5 animate-spin" />
-                      <span>{setupDictionary.step6Review.submitting}</span>
+                      <span>{t(setupDictionary.step6Review.submitting)}</span>
                     </>
                   ) : (
                     <>
-                      <span>{setupDictionary.step6Review.submitButton}</span>
+                      <span>{t(setupDictionary.step6Review.submitButton)}</span>
                       <ArrowRight className="size-5 sm:size-6 stroke-[3]" />
                     </>
                   )}
@@ -1402,7 +1404,7 @@ function WizardContent() {
                   onClick={() => setShowConfirmationModal(false)}
                   className="w-full min-h-[44px] rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50"
                 >
-                  {setupDictionary.step6Review.closeModal || "Go Back & Edit"}
+                  {t(setupDictionary.step6Review.closeModal || "Go Back & Edit")}
                 </button>
               </div>
             </motion.div>

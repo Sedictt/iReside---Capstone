@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import { Zap, ArrowRight, CheckCircle2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface BillingSetupPromptModalProps {
     isOpen: boolean;
@@ -19,6 +20,7 @@ export function BillingSetupPromptModal({
     onMaybeLater,
     propertyName,
 }: BillingSetupPromptModalProps) {
+    const { t } = useLanguageContext();
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape" && isOpen) {
@@ -58,7 +60,7 @@ export function BillingSetupPromptModal({
                 <button
                     type="button"
                     onClick={onMaybeLater}
-                    aria-label="Close dialog"
+                    aria-label={t("Close dialog")}
                     className="absolute top-5 right-5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                     <X className="size-4" />
@@ -71,7 +73,7 @@ export function BillingSetupPromptModal({
                             <Zap className="size-6" />
                         </div>
                         <span className="inline-flex items-center text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/25">
-                            Step 3 of 5 • Onboarding
+                            {t("Step {step} of {total} • Onboarding", { step: 3, total: 5 })}
                         </span>
                     </div>
 
@@ -81,10 +83,12 @@ export function BillingSetupPromptModal({
                             id="billing-setup-modal-title"
                             className="text-xl sm:text-2xl font-bold tracking-tight text-foreground leading-tight"
                         >
-                            Set Up Water &amp; Electric Rates
+                            {t("Set Up Water & Electric Rates")}
                         </h2>
                         <p id="billing-setup-modal-desc" className="text-sm text-muted-foreground leading-relaxed">
-                            Your unit map{propertyName ? <> for <span className="font-semibold text-foreground">{propertyName}</span></> : ""} is ready! Now let&apos;s set up your electricity and water rates to prepare for automated monthly billing.
+                            {propertyName
+                                ? t("Your unit map for {property} is ready! Now let's set up your electricity and water rates to prepare for automated monthly billing.", { property: propertyName })
+                                : t("Your unit map is ready! Now let's set up your electricity and water rates to prepare for automated monthly billing.")}
                         </p>
                     </div>
 
@@ -92,15 +96,15 @@ export function BillingSetupPromptModal({
                     <div className="rounded-2xl border border-border/70 bg-muted/30 dark:bg-muted/10 p-4 sm:p-5 space-y-3">
                         <div className="flex items-center gap-3 text-sm font-medium text-foreground">
                             <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                            <span>Set standard electricity (₱/kWh) and water (₱/m³) rates</span>
+                            <span>{t("Set standard electricity (₱/kWh) and water (₱/m³) rates")}</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm font-medium text-foreground">
                             <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                            <span>Record room meter numbers with automatic monthly calculation</span>
+                            <span>{t("Record room meter numbers with automatic monthly calculation")}</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm font-medium text-foreground">
                             <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                            <span>Send clear monthly rent bills combining rent and utilities</span>
+                            <span>{t("Send clear monthly rent bills combining rent and utilities")}</span>
                         </div>
                     </div>
 
@@ -111,14 +115,14 @@ export function BillingSetupPromptModal({
                             onClick={onMaybeLater}
                             className="flex-1 inline-flex items-center justify-center h-12 px-5 rounded-2xl border border-border/80 bg-background hover:bg-muted text-sm font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer active:scale-98"
                         >
-                            Maybe Later
+                            {t("Maybe Later")}
                         </button>
                         <button
                             type="button"
                             onClick={onConfigureNow}
                             className="group flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-2xl bg-primary text-primary-foreground text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-98"
                         >
-                            <span>Set Up Rates Now</span>
+                            <span>{t("Set Up Rates Now")}</span>
                             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                         </button>
                     </div>

@@ -16,6 +16,7 @@ export function buildLease(overrides: Partial<LeaseRow> = {}): LeaseRow {
     status: "active",
     start_date: "2026-01-01",
     end_date: "2026-12-31",
+    term_type: "fixed",
     monthly_rent: 15000,
     security_deposit: 30000,
     terms: { paymentDueDay: 5, lateFeePercent: 3 },

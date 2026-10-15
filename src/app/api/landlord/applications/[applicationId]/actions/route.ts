@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
-import type { ApplicationStatus, PaymentMethod, Json } from "@/types/database";
+import type { ApplicationStatus, PaymentMethod, Json, LeaseTermType } from "@/types/database";
+import { normalizeTermType } from "@/lib/lease-term";
 import { makeInvoiceNumber, makeReceiptNumber } from "@/lib/billing/utils";
+import { generateTemporaryPassword } from "@/lib/security/passwords";
 
 import { 
     sendTenantCredentials, 
@@ -19,6 +21,9 @@ import {
     logApplicationPaymentAudit,
     type PaymentPendingConfig,
 } from "@/lib/application-payment-pending";
+import { parseJsonBody } from "@/lib/validation/server";
+import { getAppBaseUrl, buildAuthCallbackUrl } from "@/lib/app-url";
+import { applicationActionSchema, isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import {
     buildInviteUrl,
     generateInviteToken,
@@ -30,7 +35,8 @@ type ActionBody = {
     rejection_reason?: string;
     lease_data?: {
         start_date: string;
-        end_date: string;
+        term_type?: LeaseTermType;
+        end_date?: string | null;
         monthly_rent: number;
         security_deposit: number;
         terms: Record<string, any>;
@@ -67,12 +73,15 @@ const isAllowedStatus = (value: unknown): value is ApplicationStatus =>
     typeof value === "string" && ALLOWED_STATUSES.includes(value as ApplicationStatus);
 
 /** Generate a random temporary password */
+/** Temporary password from a CSPRNG (see lib/security/passwords). */
 function generateTempPassword(): string {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
-    return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    return generateTemporaryPassword(12);
 }
 
-/** Create lease record with calculated end_date and lease agreement terms */
+/**
+ * Create the lease record. Open-ended (default) leases have no end date; a
+ * fixed term carries the end date chosen by the landlord.
+ */
 async function createLeaseRecord(
     supabase: any,
     data: {
@@ -80,6 +89,8 @@ async function createLeaseRecord(
         tenant_id: string;
         landlord_id: string;
         start_date: string;
+        term_type?: LeaseTermType | null;
+        end_date?: string | null;
         monthly_rent: number;
         security_deposit: number;
         landlord_signature: string;
@@ -89,10 +100,11 @@ async function createLeaseRecord(
         terms: Record<string, any>;
     }
 ) {
-    // Calculate end_date as start_date + 12 months
-    const startDate = new Date(data.start_date);
-    const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + 12);
+    const termType = normalizeTermType(data.term_type);
+    const endDate = termType === "fixed" && data.end_date ? data.end_date : null;
+    if (termType === "fixed" && !endDate) {
+        throw new Error("Lease creation failed: a fixed-term lease requires an end date.");
+    }
 
     const { data: lease, error } = await supabase
         .from("leases")
@@ -102,7 +114,8 @@ async function createLeaseRecord(
             landlord_id: data.landlord_id,
             status: "pending_signature",
             start_date: data.start_date,
-            end_date: endDate.toISOString().split('T')[0],
+            term_type: termType,
+            end_date: endDate,
             monthly_rent: data.monthly_rent,
             security_deposit: data.security_deposit,
             terms: data.terms as Json,
@@ -472,12 +485,14 @@ export async function POST(
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
-    let body: ActionBody = {};
-    try {
-        body = (await request.json()) as ActionBody;
-    } catch {
-        body = {};
+    if (!isId(applicationId)) {
+        return NextResponse.json({ error: "Application not found." }, { status: 404 });
     }
+
+    const parsed = await parseJsonBody(request, applicationActionSchema);
+    if (!parsed.ok) return parsed.response;
+    // Schema output is structurally compatible; cast to the legacy shape the handler mutates below.
+    const body = parsed.data as unknown as ActionBody;
 
     if (!isAllowedStatus(body.status)) {
         return NextResponse.json({ error: "Invalid application status." }, { status: 400 });
@@ -522,13 +537,19 @@ export async function POST(
         return NextResponse.json({ error: "Application has been withdrawn." }, { status: 409 });
     }
 
+    // Approval creates the tenant account, lease and payment records; repeating it
+    // (double click, stale tab) or rolling it back from here would leave orphaned records.
+    if (application.status === "approved") {
+        return NextResponse.json({ error: "Application is already approved." }, { status: 409 });
+    }
+
     const reviewedAt = new Date().toISOString();
     const updatePayload: Record<string, unknown> = {
         status: body.status,
         reviewed_at: reviewedAt,
     };
     if (body.status === "rejected" && body.rejection_reason) {
-        updatePayload.rejection_reason = body.rejection_reason;
+        updatePayload.rejection_reason = body.rejection_reason.trim();
     }
 
     let paymentPortalUrl: string | null = null;
@@ -559,7 +580,10 @@ export async function POST(
             created_at: now.toISOString(),
             lease_data: {
                 start_date: body.lease_data?.start_date || new Date().toISOString().split("T")[0],
-                end_date: body.lease_data?.end_date || new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString().split("T")[0],
+                term_type: body.lease_data ? normalizeTermType(body.lease_data.term_type) : "open_ended",
+                end_date: body.lease_data && normalizeTermType(body.lease_data.term_type) === "fixed"
+                    ? body.lease_data.end_date ?? null
+                    : null,
                 monthly_rent: Number(body.lease_data?.monthly_rent || advanceAmount),
                 security_deposit: Number(body.lease_data?.security_deposit || securityAmount),
                 terms: body.lease_data?.terms || {},
@@ -646,8 +670,7 @@ export async function POST(
             },
         });
 
-        const reqUrl = new URL(request.url);
-        paymentPortalUrl = buildPortalUrl(reqUrl.origin, token);
+        paymentPortalUrl = buildPortalUrl(getAppBaseUrl(new URL(request.url).origin), token);
 
         if (applicantEmail) {
             try {
@@ -682,7 +705,7 @@ export async function POST(
         // If rejected, dispatch notification email with decline reason and resubmission invite link
         if (body.status === "rejected" && application.applicant_email) {
             try {
-                const reqUrl = new URL(request.url);
+                const appOrigin = getAppBaseUrl(new URL(request.url).origin);
                 let resubmitUrl: string | null = null;
 
                 const propertyId = (application as any).unit?.property?.id;
@@ -700,7 +723,7 @@ export async function POST(
                         .maybeSingle() as any;
 
                     if (inviteRow?.public_token) {
-                        resubmitUrl = buildInviteUrl(reqUrl.origin, inviteRow.public_token);
+                        resubmitUrl = buildInviteUrl(appOrigin, inviteRow.public_token);
                     } else {
                         // Create a fresh active invite so the applicant always has a direct application link to reapply
                         const token = generateInviteToken();
@@ -720,13 +743,13 @@ export async function POST(
                             status: "active",
                         });
                         if (!inviteErr) {
-                            resubmitUrl = buildInviteUrl(reqUrl.origin, token);
+                            resubmitUrl = buildInviteUrl(appOrigin, token);
                         }
                     }
                 }
 
                 if (!resubmitUrl) {
-                    resubmitUrl = `${reqUrl.origin}/`;
+                    resubmitUrl = `${appOrigin}/`;
                 }
 
                 const propertyName = (application as any).unit?.property?.name || "Property";
@@ -787,10 +810,11 @@ export async function POST(
             } else {
                 const unitRent = Number((application as any).unit?.rent_amount || 0);
                 const startDate = application.move_in_date || new Date().toISOString().split("T")[0];
-                const endDate = new Date(new Date(startDate).getTime() + 365 * 24 * 3600 * 1000).toISOString().split("T")[0];
+                // No lease terms were chosen: default to an open-ended tenancy.
                 body.lease_data = {
                     start_date: startDate,
-                    end_date: endDate,
+                    term_type: "open_ended",
+                    end_date: null,
                     monthly_rent: unitRent,
                     security_deposit: unitRent,
                     terms: {},
@@ -915,6 +939,8 @@ export async function POST(
                     tenant_id: tenantId,
                     landlord_id: userId,
                     start_date: body.lease_data.start_date,
+                    term_type: body.lease_data.term_type,
+                    end_date: body.lease_data.end_date ?? null,
                     monthly_rent: body.lease_data.monthly_rent,
                     security_deposit: body.lease_data.security_deposit,
                     landlord_signature: body.lease_data.landlord_signature,
@@ -997,6 +1023,7 @@ export async function POST(
                     const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
                         type: "recovery",
                         email: tenantEmail,
+                        options: { redirectTo: buildAuthCallbackUrl("/auth/reset-password") },
                     });
                     if (linkError) {
                         console.error("[actions] generateLink error:", linkError);

@@ -28,6 +28,7 @@ import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type Iris
 import type { IrisCardData } from "@/lib/services/iris";
 import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
 import { isPreseededPhone, isPreseededEmail } from "@/lib/validation/brand-setup";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 const EMPTY_ARRAY = Object.freeze([]) as unknown as any[];
 
@@ -78,6 +79,35 @@ const buildWelcomeMessage = (firstName?: string | null) => {
     return `Welcome back${nameSegment}! 👋 How can I help you settle in or manage your apartment today?`;
 };
 
+// Stored/cached in English (history + "welcome back" detection rely on it); translated only at render.
+const WELCOME_WITH_NAME = "Welcome back, {name}! 👋 How can I help you settle in or manage your apartment today?";
+const WELCOME_NO_NAME = "Welcome back! 👋 How can I help you settle in or manage your apartment today?";
+const IRIS_CONNECTION_ERROR = "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
+
+// Chip label is shown translated; the prompt sent to iRis falls back to the English label when no translation exists.
+const QUICK_FEATURES = [
+    { label: "WiFi Password", promptKey: "iris.quick_prompt.wifi" },
+    { label: "Landlord Contact", promptKey: "iris.quick_prompt.landlord" },
+    { label: "Rent Status", promptKey: "iris.quick_prompt.rent" },
+    { label: "Amenity Hours", promptKey: "iris.quick_prompt.amenities" },
+    { label: "Maintenance", promptKey: "iris.quick_prompt.maintenance" },
+];
+
+const RENT_STATUS_LABELS: Record<string, string> = {
+    pending: "Pending",
+    processing: "Processing",
+    completed: "Completed",
+    failed: "Failed",
+    refunded: "Refunded",
+    draft: "Draft",
+    pending_signature: "Pending Signature",
+    pending_tenant_signature: "Pending Tenant Signature",
+    pending_landlord_signature: "Pending Landlord Signature",
+    active: "Active",
+    expired: "Expired",
+    terminated: "Terminated",
+};
+
 export function ChatWidget({
     isOpen,
     onClose,
@@ -89,6 +119,7 @@ export function ChatWidget({
 }) {
     const INITIAL_CHAT_SKELETON_COUNT = 6;
     const { profile, user } = useAuth();
+    const { t, locale } = useLanguageContext();
 
     const firstName = getFirstName(profile?.full_name ?? user?.user_metadata?.full_name ?? user?.email ?? null);
 
@@ -279,13 +310,22 @@ export function ChatWidget({
             const errorMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "iris",
-                content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
+                content: IRIS_CONNECTION_ERROR,
                 timestamp: new Date(),
             };
             dispatchChatInit({ type: "SET_MESSAGES", payload: [...chatInitState.messages, errorMsg] });
         } finally {
             setIsTyping(false);
         }
+    };
+
+    const displayContent = (msg: Message) => {
+        if (msg.role !== "iris") return msg.content;
+        if (msg.content === IRIS_CONNECTION_ERROR) return t(IRIS_CONNECTION_ERROR);
+        if (msg.content === buildWelcomeMessage(firstName)) {
+            return firstName ? t(WELCOME_WITH_NAME, { name: firstName }) : t(WELCOME_NO_NAME);
+        }
+        return msg.content;
     };
 
     return (
@@ -323,7 +363,7 @@ export function ChatWidget({
                                 <h3 className="font-black text-base tracking-tight">iRis Assistant</h3>
                                 <div className="flex items-center gap-1.5">
                                     <span className="size-1.5 rounded-full bg-white/60 animate-pulse"></span>
-                                    <p className="text-[10px] text-white/80 uppercase tracking-widest font-black">Ask iRis</p>
+                                    <p className="text-[10px] text-white/80 uppercase tracking-widest font-black">{t("Ask iRis")}</p>
                                 </div>
                             </div>
                         </div>
@@ -331,12 +371,14 @@ export function ChatWidget({
                             <Link
                                 href="/tenant/messages"
                                 className="p-2 hover:bg-white/10 rounded-xl transition-all hover:scale-110"
-                                title="Open full chat"
+                                title={t("Open full chat")}
+                                aria-label={t("Open full chat")}
                             >
                                 <Maximize2 className="size-4" />
                             </Link>
                             <button
                                 onClick={onClose}
+                                aria-label={t("Close")}
                                 className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90"
                             >
                                 <X className="size-5" />
@@ -404,12 +446,12 @@ export function ChatWidget({
                                                     ? "bg-primary text-primary-foreground rounded-br-none shadow-primary/20"
                                                     : "bg-card text-foreground rounded-bl-none border border-border"
                                             )}>
-                                                <ChatMessageMarkdown content={msg.content} isUser={msg.role === "user"} />
+                                                <ChatMessageMarkdown content={displayContent(msg)} isUser={msg.role === "user"} />
                                                 <span className={cn(
                                                     "text-[9px] mt-1 block opacity-50 font-medium",
                                                     msg.role === "user" ? "text-right" : ""
                                                 )}>
-                                                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    {msg.timestamp.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             </div>
 
@@ -418,7 +460,7 @@ export function ChatWidget({
                                                 <div className="w-full bg-card border border-border rounded-xl overflow-hidden shadow-sm mt-1">
                                                     <div className="p-3 border-b border-border flex justify-between items-center">
                                                         <div className="min-w-0 pr-2">
-                                                            <p className="text-[9px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Network Name</p>
+                                                            <p className="text-[9px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">{t("Network Name")}</p>
                                                             <p className="text-primary font-mono font-medium text-xs truncate">
                                                                 {msg.card?.type === "wifi" ? msg.card.ssid : "TheLofts_Guest"}
                                                             </p>
@@ -427,14 +469,14 @@ export function ChatWidget({
                                                             type="button"
                                                             onClick={() => copyToClipboard(msg.card?.type === "wifi" ? msg.card.ssid : "TheLofts_Guest", `w-ssid-${msg.id}`)}
                                                             className="p-1.5 text-muted-foreground hover:text-primary transition rounded-md hover:bg-primary/10"
-                                                            title="Copy SSID"
+                                                            title={t("Copy SSID")}
                                                         >
                                                             {copiedKey === `w-ssid-${msg.id}` ? <Check className="size-3.5 text-emerald-500" /> : <Wifi className="size-3.5" />}
                                                         </button>
                                                     </div>
                                                     <div className="p-3 flex justify-between items-center hover:bg-muted/40 transition-colors">
                                                         <div className="min-w-0 pr-2">
-                                                            <p className="text-[9px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Password</p>
+                                                            <p className="text-[9px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">{t("Password")}</p>
                                                             <p className="text-primary font-mono font-medium text-xs truncate">
                                                                 {msg.card?.type === "wifi" ? msg.card.password : "WelcomeHome2024"}
                                                             </p>
@@ -443,7 +485,7 @@ export function ChatWidget({
                                                             type="button"
                                                             onClick={() => copyToClipboard(msg.card?.type === "wifi" ? msg.card.password : "WelcomeHome2024", `w-pass-${msg.id}`)}
                                                             className="p-1.5 text-muted-foreground hover:text-primary transition rounded-md hover:bg-primary/10"
-                                                            title="Copy Password"
+                                                            title={t("Copy Password")}
                                                         >
                                                             {copiedKey === `w-pass-${msg.id}` ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
                                                         </button>
@@ -459,7 +501,7 @@ export function ChatWidget({
                                                             <Building2 className="size-3.5" />
                                                         </div>
                                                         <div className="min-w-0 flex-1">
-                                                            <p className="text-[9px] uppercase font-black text-muted-foreground tracking-wider">Landlord / Management</p>
+                                                            <p className="text-[9px] uppercase font-black text-muted-foreground tracking-wider">{t("Landlord / Management")}</p>
                                                             <p className="font-bold text-xs text-foreground truncate">{msg.card.name}</p>
                                                             {msg.card.businessName && <p className="text-[10px] text-muted-foreground truncate">{msg.card.businessName}</p>}
                                                         </div>
@@ -475,6 +517,7 @@ export function ChatWidget({
                                                                 </div>
                                                                 <button
                                                                     type="button"
+                                                                    title={t("Copy Phone")}
                                                                     onClick={() => copyToClipboard(msg.card?.type === "landlord" && msg.card.phone ? msg.card.phone : "", `w-phone-${msg.id}`)}
                                                                     className="p-1 text-muted-foreground hover:text-primary transition rounded hover:bg-primary/10"
                                                                 >
@@ -492,6 +535,7 @@ export function ChatWidget({
                                                                 </div>
                                                                 <button
                                                                     type="button"
+                                                                    title={t("Copy Email")}
                                                                     onClick={() => copyToClipboard(msg.card?.type === "landlord" && msg.card.email ? msg.card.email : "", `w-email-${msg.id}`)}
                                                                     className="p-1 text-muted-foreground hover:text-primary transition rounded hover:bg-primary/10"
                                                                 >
@@ -501,7 +545,7 @@ export function ChatWidget({
                                                         )}
                                                         {(!msg.card.phone || isPreseededPhone(msg.card.phone)) && (!msg.card.email || isPreseededEmail(msg.card.email)) && (
                                                             <div className="p-2.5 text-muted-foreground text-[10px] italic">
-                                                                Direct contact details are not published yet. Please send a message via the Inquiries tab.
+                                                                {t("Direct contact details are not published yet. Please send a message via the Inquiries tab.")}
                                                             </div>
                                                         )}
                                                     </div>
@@ -514,20 +558,20 @@ export function ChatWidget({
                                                     <div className="flex items-center justify-between mb-2">
                                                         <div className="flex items-center gap-1.5 font-bold text-foreground">
                                                             <CreditCard className="size-3.5 text-primary" />
-                                                            <span>Rent Status</span>
+                                                            <span>{t("Rent Status")}</span>
                                                         </div>
                                                         <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                                                            {msg.card.status}
+                                                            {RENT_STATUS_LABELS[msg.card.status] ? t(RENT_STATUS_LABELS[msg.card.status]) : msg.card.status}
                                                         </span>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-2">
                                                         <div>
-                                                            <span className="text-[9px] uppercase font-black text-muted-foreground block">Monthly Rent</span>
+                                                            <span className="text-[9px] uppercase font-black text-muted-foreground block">{t("Monthly Rent")}</span>
                                                             <span className="font-bold text-xs text-foreground">₱{msg.card.monthlyRent.toLocaleString()}</span>
                                                         </div>
                                                         {msg.card.dueDate && (
                                                             <div>
-                                                                <span className="text-[9px] uppercase font-black text-muted-foreground block">Schedule</span>
+                                                                <span className="text-[9px] uppercase font-black text-muted-foreground block">{t("Schedule")}</span>
                                                                 <span className="text-[10px] text-foreground font-medium">{msg.card.dueDate}</span>
                                                             </div>
                                                         )}
@@ -561,16 +605,16 @@ export function ChatWidget({
 
                     {/* Quick Features */}
                     <div className="px-5 py-3 flex gap-2 overflow-x-auto no-scrollbar border-t border-border bg-card/80 backdrop-blur-sm">
-                        {["WiFi Password", "Landlord Contact", "Rent Status", "Amenity Hours", "Maintenance"].map((feature) => (
+                        {QUICK_FEATURES.map((feature) => (
                             <button
-                                key={feature}
+                                key={feature.label}
                                 type="button"
                                 className="whitespace-nowrap px-4 py-1.5 rounded-full text-[11px] font-black bg-background text-muted-foreground border border-border hover:border-primary hover:text-primary transition-all active:scale-95"
                                 onClick={() => {
-                                    handleSend(feature);
+                                    handleSend(t(feature.promptKey, undefined, feature.label));
                                 }}
                             >
-                                {feature}
+                                {t(feature.label)}
                             </button>
                         ))}
                     </div>
@@ -585,7 +629,8 @@ export function ChatWidget({
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                                    placeholder="Type a message…"
+                                    placeholder={t("Type a message…")}
+                                    aria-label={t("Message iRis")}
                                     disabled={isChatInitializing}
                                     className="relative w-full bg-background/80 border border-transparent focus:border-primary/20 rounded-full px-5 py-3 text-sm text-foreground focus:ring-0 outline-none placeholder:text-muted-foreground transition-all backdrop-blur-sm"
                                 />
@@ -593,6 +638,7 @@ export function ChatWidget({
                             <button
                                 onClick={() => handleSend()}
                                 disabled={!input.trim() || isChatInitializing}
+                                aria-label={t("Send message")}
                                 className="size-11 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_5px_15px_rgba(109,152,56,0.3)] transition-all hover:scale-110 active:scale-90 disabled:opacity-50 disabled:scale-100"
                             >
                                 <ArrowUp className="size-5" />
@@ -601,7 +647,7 @@ export function ChatWidget({
                         <div className="flex items-center justify-center gap-1.5 text-center mt-2.5">
                             <AlertCircle className="size-3 text-muted-foreground/70 shrink-0" />
                             <p className="text-[10px] text-muted-foreground font-medium">
-                                iRis can make mistakes. Verify important info.
+                                {t("iRis can make mistakes. Verify important info.")}
                             </p>
                         </div>
                     </div>

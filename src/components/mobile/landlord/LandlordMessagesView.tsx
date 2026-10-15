@@ -56,6 +56,7 @@ import {
 import { createAnnouncementPost, getCurrentCommunityPosts } from '@/lib/community/actions';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 import { createClient as createSupabaseClient } from '@/lib/supabase/client';
 import { MessageList } from '@/components/landlord/messages/MessageList';
 import { RoleBadge, type BadgeRole } from '@/components/profile/RoleBadge';
@@ -71,6 +72,7 @@ import { PaymentHistoryModal } from '@/components/messaging/PaymentHistoryModal'
 import { InvoiceModal } from '@/components/landlord/invoices/InvoiceModal';
 import { AttachInvoiceModal } from '@/components/landlord/messages/AttachInvoiceModal';
 import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropertySelector';
+import { tr } from '@/hooks/useLanguage';
 
 const QUICK_ACTIONS: QuickAction[] = [
     {
@@ -107,6 +109,12 @@ const QUICK_ACTIONS: QuickAction[] = [
     },
 ];
 
+const ROLE_LABELS: Record<string, string> = {
+    tenant: 'Tenant',
+    landlord: 'Landlord',
+    admin: 'Admin',
+};
+
 function formatFileSize(bytes: number) {
     if (!bytes || bytes === 0) return '0 B';
     const k = 1024;
@@ -118,6 +126,7 @@ function formatFileSize(bytes: number) {
 export function LandlordMessagesView() {
     const { profile } = useAuth();
     const { properties, selectedPropertyId } = useProperty();
+    const { t, locale } = useLanguageContext();
     
     // View state: 'chats' | 'broadcasts'
     const [viewMode, setViewMode] = useState<'chats' | 'broadcasts'>('chats');
@@ -222,7 +231,7 @@ export function LandlordMessagesView() {
                         created_at: p.created_at,
                         is_pinned: Boolean(p.is_pinned),
                         property_id: p.property_id,
-                        propertyName: matchedProp?.name || (p.property_id ? 'Assigned Property' : 'All Properties'),
+                        propertyName: matchedProp?.name || undefined,
                     };
                 });
             setBroadcastsList(formatted);
@@ -266,7 +275,7 @@ export function LandlordMessagesView() {
             const { data, error } = await searchMessageUsers(q, 8);
             if (cancelled) return;
             setUserSearchResults(data || []);
-            setUserSearchError(error);
+            setUserSearchError(error ? tr(error) : error);
             setIsSearchingUsers(false);
         }, 300);
         return () => {
@@ -413,12 +422,12 @@ export function LandlordMessagesView() {
 
         let formattedContent = message.content;
         if (message.type === "system") {
-            if (systemType === "awaiting_in_person") formattedContent = "A face-to-face cash payment has been initiated. The landlord can now verify and confirm the receipt of funds using the interface below.";
-            else if (systemType === "reminder_sent") formattedContent = "A payment reminder has been sent for this invoice. You can settle it quickly using the button below.";
-            else if (systemType === "in_person_intent_expired") formattedContent = "The face-to-face payment request has expired. The invoice status has been reverted to pending.";
+            if (systemType === "awaiting_in_person") formattedContent = t("A face-to-face cash payment has been initiated. The landlord can now verify and confirm the receipt of funds using the interface below.");
+            else if (systemType === "reminder_sent") formattedContent = t("A payment reminder has been sent for this invoice. You can settle it quickly using the button below.");
+            else if (systemType === "in_person_intent_expired") formattedContent = t("The face-to-face payment request has expired. The invoice status has been reverted to pending.");
             else if (systemType === "landlord_review") {
-                if (workflowStatus === "rejected") formattedContent = `The payment request has been rejected. Reason: ${typeof metadata?.rejectionReason === "string" ? metadata.rejectionReason : "No reason provided."}`;
-                else if (workflowStatus === "confirmed" || workflowStatus === "receipted") formattedContent = "The payment has been confirmed.";
+                if (workflowStatus === "rejected") formattedContent = t("The payment request has been rejected. Reason: {reason}", { reason: typeof metadata?.rejectionReason === "string" ? metadata.rejectionReason : t("No reason provided.") });
+                else if (workflowStatus === "confirmed" || workflowStatus === "receipted") formattedContent = t("The payment has been confirmed.");
             }
         }
 
@@ -428,7 +437,7 @@ export function LandlordMessagesView() {
             messageType: message.type as "text" | "system" | "image" | "file",
             content: formattedContent,
             redactedContent,
-            timestamp: new Date(message.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+            timestamp: new Date(message.createdAt).toLocaleString(locale, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
             createdAt: message.createdAt,
             isRedacted,
             isConfirmedDisclosed,
@@ -475,7 +484,7 @@ export function LandlordMessagesView() {
             isAlbum: Boolean(message.isAlbum ?? metadata?.isAlbum),
             rejectionReason: typeof metadata?.rejectionReason === "string" ? metadata.rejectionReason : undefined,
         };
-    }, [profile?.id]);
+    }, [profile?.id, t, locale]);
 
     const uiMessages: UiMessage[] = useMemo(() => {
         return messages.map(mapMessageToUi);
@@ -488,11 +497,11 @@ export function LandlordMessagesView() {
         return {
             id: activeChat.id,
             participantUserId: other?.id ?? null,
-            name: other?.fullName ?? "Tenant",
+            name: other?.fullName ?? t("Tenant"),
             role: (other?.role as BadgeRole) ?? "tenant",
-            unit: (other as any)?.unit || (other?.role === "tenant" ? "Resident" : "Participant"),
+            unit: (other as any)?.unit || (other?.role === "tenant" ? t("Resident") : t("Participant")),
             unread: activeChat.unreadCount,
-            lastContact: activeChat.lastMessage ? new Date(activeChat.lastMessage.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "No messages yet",
+            lastContact: activeChat.lastMessage ? new Date(activeChat.lastMessage.createdAt).toLocaleString(locale, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : t("No messages yet"),
             avatarUrl: other?.avatarUrl || null,
             initials: (other?.fullName ?? "T").split(" ").filter(Boolean).slice(0, 2).map(part => part[0]?.toUpperCase()).join(""),
             avatarBgColor: other?.avatarBgColor || null,
@@ -502,7 +511,7 @@ export function LandlordMessagesView() {
             isBlocked: activeChat.isBlocked ?? false,
             isOnline: false,
         };
-    }, [activeChat]);
+    }, [activeChat, t, locale]);
 
     // Shared Files list
     const sharedFiles: SharedFileItem[] = useMemo(() => {
@@ -516,11 +525,11 @@ export function LandlordMessagesView() {
                 files.push({
                     id: msg.id,
                     url: msg.fileUrl,
-                    name: msg.fileName || "Unnamed file",
+                    name: msg.fileName || t("Unnamed file"),
                     size: msg.fileSize || 0,
                     mimeType: msg.fileMimeType || "application/octet-stream",
                     createdAt: msg.createdAt || msg.timestamp,
-                    timestampLabel: new Date(msg.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                    timestampLabel: new Date(msg.timestamp).toLocaleDateString(locale, { month: 'short', day: 'numeric' }),
                     isMedia: Boolean(isMedia)
                 });
             }
@@ -534,11 +543,11 @@ export function LandlordMessagesView() {
                         files.push({
                             id: att.id,
                             url: att.fileUrl,
-                            name: att.fileName || "Unnamed file",
+                            name: att.fileName || t("Unnamed file"),
                             size: att.fileSize || 0,
                             mimeType: att.fileMimeType || "application/octet-stream",
                             createdAt: att.createdAt || att.timestamp,
-                            timestampLabel: new Date(att.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                            timestampLabel: new Date(att.timestamp).toLocaleDateString(locale, { month: 'short', day: 'numeric' }),
                             isMedia: Boolean(isMedia)
                         });
                     }
@@ -556,7 +565,7 @@ export function LandlordMessagesView() {
                 return acc;
             }, [] as SharedFileItem[])
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }, [uiMessages, fileFilter]);
+    }, [uiMessages, fileFilter, t, locale]);
 
     // Handle File Download
     const handleDownloadFile = (url: string, name: string) => {
@@ -666,7 +675,7 @@ export function LandlordMessagesView() {
             }, 1200);
         } catch (err: any) {
             console.error('Broadcast failed:', err);
-            alert(err?.message || 'Failed to post announcement.');
+            alert(tr(err?.message || t('Failed to post announcement.')));
         } finally {
             setSubmittingBroadcast(false);
         }
@@ -716,7 +725,7 @@ export function LandlordMessagesView() {
                                 setShowAttachInvoiceModal(false);
                             }}
                             className="size-11 rounded-full hover:bg-surface-2 text-medium hover:text-high active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0"
-                            aria-label="Back to messages"
+                            aria-label={t("Back to messages")}
                         >
                             <ArrowLeft className="size-5" />
                         </button>
@@ -745,9 +754,9 @@ export function LandlordMessagesView() {
                                     <RoleBadge role={activeContact?.role || 'tenant'} />
                                 </div>
                                 <div className="flex items-center gap-1.5 text-[11px] text-medium">
-                                    <span className="truncate">{activeContact?.unit || 'Resident'}</span>
+                                    <span className="truncate">{activeContact?.unit || t('Resident')}</span>
                                     <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" />
-                                    <span className="text-emerald-500 font-medium shrink-0 text-[10px]">Connected</span>
+                                    <span className="text-emerald-500 font-medium shrink-0 text-[10px]">{t("Connected")}</span>
                                 </div>
                             </div>
                         </div>
@@ -767,8 +776,8 @@ export function LandlordMessagesView() {
                                     ? "neumorphic-primary text-white shadow-sm" 
                                     : "text-medium hover:text-high hover:bg-surface-2"
                             )}
-                            title="Shared Files"
-                            aria-label="Shared Files"
+                            title={t("Shared Files")}
+                            aria-label={t("Shared Files")}
                         >
                             <Folder className="size-5" />
                         </button>
@@ -785,8 +794,8 @@ export function LandlordMessagesView() {
                                     ? "neumorphic-primary text-white shadow-sm" 
                                     : "text-medium hover:text-high hover:bg-surface-2"
                             )}
-                            title="Conversation Info"
-                            aria-label="Conversation Info"
+                            title={t("Conversation Info")}
+                            aria-label={t("Conversation Info")}
                         >
                             <MoreVertical className="size-5" />
                         </button>
@@ -833,7 +842,7 @@ export function LandlordMessagesView() {
                                 <button
                                     onClick={() => removeAttachment(att.id)}
                                     className="absolute top-1 right-1 size-5 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black/90 cursor-pointer"
-                                    aria-label="Remove attachment"
+                                    aria-label={t("Remove attachment")}
                                 >
                                     <X className="size-3" />
                                 </button>
@@ -863,8 +872,8 @@ export function LandlordMessagesView() {
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
                             className="size-11 rounded-full text-medium hover:text-high hover:bg-surface-2 active:scale-95 transition-all flex items-center justify-center shrink-0 cursor-pointer"
-                            title="Attach File"
-                            aria-label="Attach File"
+                            title={t("Attach File")}
+                            aria-label={t("Attach File")}
                         >
                             <Paperclip className="size-5" />
                         </button>
@@ -874,8 +883,8 @@ export function LandlordMessagesView() {
                             type="button"
                             onClick={() => setShowAttachInvoiceModal(true)}
                             className="size-11 rounded-full text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 transition-all flex items-center justify-center shrink-0 cursor-pointer"
-                            title="Attach Invoice"
-                            aria-label="Attach Invoice"
+                            title={t("Attach Invoice")}
+                            aria-label={t("Attach Invoice")}
                         >
                             <Receipt className="size-5" />
                         </button>
@@ -883,7 +892,7 @@ export function LandlordMessagesView() {
                         {/* Message Input */}
                         <input
                             type="text"
-                            placeholder="Message..."
+                            placeholder={t("Message...")}
                             value={messageInput}
                             onChange={(e) => setMessageInput(e.target.value)}
                             onKeyDown={(e) => {
@@ -900,7 +909,7 @@ export function LandlordMessagesView() {
                             type="submit"
                             disabled={(!messageInput.trim() && pendingAttachments.length === 0) || sendingMessage}
                             className="size-11 rounded-full bg-primary text-white flex items-center justify-center disabled:opacity-40 active:scale-95 transition-all shadow-md shrink-0 cursor-pointer"
-                            aria-label="Send message"
+                            aria-label={t("Send message")}
                         >
                             <Send className="size-5" />
                         </button>
@@ -924,10 +933,11 @@ export function LandlordMessagesView() {
 
                             {/* Header */}
                             <div className="flex items-center justify-between pb-3 border-b border-divider">
-                                <h3 className="text-xs font-black uppercase tracking-wider text-disabled">Contact Hub</h3>
+                                <h3 className="text-xs font-black uppercase tracking-wider text-disabled">{t("Contact Hub")}</h3>
                                 <button
                                     onClick={() => setShowInfoSidebar(false)}
                                     className="size-11 rounded-full flex items-center justify-center text-medium hover:text-high hover:bg-surface-2 cursor-pointer"
+                                    aria-label={t('Close')}
                                 >
                                     <X className="size-5" />
                                 </button>
@@ -950,13 +960,13 @@ export function LandlordMessagesView() {
                                 <h4 className="text-base font-black text-high">{activeContact?.name}</h4>
                                 <div className="flex items-center gap-1.5 mt-1">
                                     <RoleBadge role={activeContact?.role || 'tenant'} />
-                                    <span className="text-xs font-medium text-medium">({activeContact?.unit || 'Resident'})</span>
+                                    <span className="text-xs font-medium text-medium">({activeContact?.unit || t('Resident')})</span>
                                 </div>
                             </div>
 
                             {/* Quick Action Buttons (48px+ Touch Targets with Distinct Color Harmony) */}
                             <div className="space-y-2">
-                                <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Quick Actions</h5>
+                                <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">{t("Quick Actions")}</h5>
                                 <div className="grid grid-cols-2 gap-2.5">
                                     {QUICK_ACTIONS.map((action) => (
                                         <button
@@ -972,8 +982,8 @@ export function LandlordMessagesView() {
                                                 <action.icon className={cn("size-5", action.iconClassName)} />
                                             </div>
                                             <div className="flex flex-col min-w-0">
-                                                <span className="text-xs font-black uppercase tracking-wider text-high truncate">{action.labelTop}</span>
-                                                <span className="text-[11px] font-medium text-medium truncate">{action.labelBottom}</span>
+                                                <span className="text-xs font-black uppercase tracking-wider text-high truncate">{t(`mobileLandlord.quickAction.${action.key}.top`, undefined, action.labelTop)}</span>
+                                                <span className="text-[11px] font-medium text-medium truncate">{t(`mobileLandlord.quickAction.${action.key}.bottom`, undefined, action.labelBottom)}</span>
                                             </div>
                                         </button>
                                     ))}
@@ -983,8 +993,8 @@ export function LandlordMessagesView() {
                             {/* Payment History Section */}
                             <div className="space-y-2.5">
                                 <div className="flex items-center justify-between">
-                                    <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Payment History</h5>
-                                    <span className="text-xs font-black text-primary">Total: ₱{paymentHistoryTotal.toLocaleString()}</span>
+                                    <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">{t("Payment History")}</h5>
+                                    <span className="text-xs font-black text-primary">{t('Total: ₱{amount}', { amount: paymentHistoryTotal.toLocaleString() })}</span>
                                 </div>
 
                                 <div className="space-y-2">
@@ -992,7 +1002,7 @@ export function LandlordMessagesView() {
                                         <div className="h-16 w-full animate-pulse rounded-2xl bg-surface-2" />
                                     ) : paymentHistory.length === 0 ? (
                                         <p className="text-xs text-disabled text-center py-4 border border-dashed border-divider rounded-2xl italic">
-                                            No payments recorded yet
+                                            {t('No payments recorded yet')}
                                         </p>
                                     ) : (
                                         <>
@@ -1011,7 +1021,7 @@ export function LandlordMessagesView() {
                                                         </div>
                                                         <div className="flex flex-col min-w-0">
                                                             <span className="text-xs font-black text-high truncate max-w-[140px]">
-                                                                {payment.typeLabel || 'Payment'}
+                                                                {payment.typeLabel ? t(payment.typeLabel) : t('Payment')}
                                                             </span>
                                                             <span className="text-[10px] font-medium text-disabled">
                                                                 {payment.dateLabel}
@@ -1032,7 +1042,7 @@ export function LandlordMessagesView() {
                                                 }}
                                                 className="w-full flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl neumorphic-inset-card text-xs font-black uppercase tracking-wider text-primary hover:bg-surface-3 transition-all active:scale-95 cursor-pointer"
                                             >
-                                                <span>View Full Payment Ledger</span>
+                                                <span>{t('View Full Payment Ledger')}</span>
                                                 <ArrowUpRight className="size-3.5" />
                                             </button>
                                         </>
@@ -1042,7 +1052,7 @@ export function LandlordMessagesView() {
 
                             {/* Actions Section */}
                             <div className="pt-1 space-y-2 pb-2">
-                                <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Privacy & Actions</h5>
+                                <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">{t("Privacy & Actions")}</h5>
                                 <button 
                                     onClick={() => {
                                         setShowInfoSidebar(false);
@@ -1050,7 +1060,7 @@ export function LandlordMessagesView() {
                                     }} 
                                     className="w-full flex items-center justify-between h-12 px-4 rounded-2xl neumorphic-inset-card transition-all text-left cursor-pointer"
                                 >
-                                    <span className="text-xs font-bold text-high">Archive Conversation</span>
+                                    <span className="text-xs font-bold text-high">{t("Archive Conversation")}</span>
                                     <ChevronRight className="size-4 text-disabled" />
                                 </button>
                                 <button 
@@ -1060,7 +1070,7 @@ export function LandlordMessagesView() {
                                     }} 
                                     className="w-full flex items-center justify-between h-12 px-4 rounded-2xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 transition-all text-left cursor-pointer"
                                 >
-                                    <span className="text-xs font-bold text-red-500">Block Contact</span>
+                                    <span className="text-xs font-bold text-red-500">{t("Block Contact")}</span>
                                     <AlertTriangle className="size-4 text-red-500/50" />
                                 </button>
                             </div>
@@ -1088,11 +1098,12 @@ export function LandlordMessagesView() {
                                     <div className="p-2 rounded-xl bg-primary/10 text-primary">
                                         <Folder className="size-4" />
                                     </div>
-                                    <h3 className="text-xs font-black uppercase tracking-wider text-high">Shared Files</h3>
+                                    <h3 className="text-xs font-black uppercase tracking-wider text-high">{t("Shared Files")}</h3>
                                 </div>
                                 <button
                                     onClick={() => setShowFilesSidebar(false)}
                                     className="size-11 rounded-full flex items-center justify-center text-medium hover:text-high hover:bg-surface-2 cursor-pointer"
+                                    aria-label={t('Close')}
                                 >
                                     <X className="size-5" />
                                 </button>
@@ -1109,7 +1120,7 @@ export function LandlordMessagesView() {
                                             : "text-medium hover:text-high"
                                     )}
                                 >
-                                    Media
+                                    {t('Media')}
                                 </button>
                                 <button
                                     onClick={() => setFileFilter('files')}
@@ -1120,7 +1131,7 @@ export function LandlordMessagesView() {
                                             : "text-medium hover:text-high"
                                     )}
                                 >
-                                    Documents
+                                    {t('Documents')}
                                 </button>
                             </div>
 
@@ -1160,8 +1171,8 @@ export function LandlordMessagesView() {
                                                 <button
                                                     onClick={() => handleDownloadFile(file.url, file.name)}
                                                     className="size-11 rounded-xl flex items-center justify-center text-medium hover:text-high hover:bg-surface-2 active:scale-95 transition-all cursor-pointer shrink-0"
-                                                    title="Download File"
-                                                    aria-label="Download File"
+                                                    title={t("Download File")}
+                                                    aria-label={t("Download File")}
                                                 >
                                                     <Download className="size-4" />
                                                 </button>
@@ -1173,9 +1184,9 @@ export function LandlordMessagesView() {
                                         <div className="p-3 rounded-full bg-surface-2 mb-3">
                                             <Folder className="size-6 text-disabled" />
                                         </div>
-                                        <p className="text-xs font-bold text-high">No files shared yet</p>
+                                        <p className="text-xs font-bold text-high">{t("No files shared yet")}</p>
                                         <p className="text-[10px] text-disabled mt-0.5">
-                                            Shared documents and media from this conversation will appear here.
+                                            {t('Shared documents and media from this conversation will appear here.')}
                                         </p>
                                     </div>
                                 )}
@@ -1246,13 +1257,14 @@ export function LandlordMessagesView() {
                         <button 
                             onClick={(e) => { e.stopPropagation(); setPreviewImages([]); }} 
                             className="absolute top-5 right-5 size-11 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/40 cursor-pointer"
+                            aria-label={t('Close')}
                         >
                             <X className="size-6" />
                         </button>
                         <div className="relative max-w-full max-h-[80vh] aspect-auto">
                             <Image
                                 src={previewImages[previewImageIndex]?.url || ''}
-                                alt="Full preview"
+                                alt={t("Full preview")}
                                 width={800}
                                 height={800}
                                 className="max-h-[80vh] w-auto object-contain rounded-xl"
@@ -1272,19 +1284,19 @@ export function LandlordMessagesView() {
                             className="w-full max-w-sm rounded-3xl border border-divider bg-surface-1 p-6 shadow-2xl cursor-default"
                         >
                             <h3 className="text-base font-black text-high mb-2">
-                                {pendingConfirmAction === 'block' ? 'Block Contact?' : 'Archive Conversation?'}
+                                {pendingConfirmAction === 'block' ? t('Block Contact?') : t('Archive Conversation?')}
                             </h3>
                             <p className="text-xs text-medium leading-relaxed mb-6">
                                 {pendingConfirmAction === 'block' 
-                                    ? 'This user will not be able to message you.' 
-                                    : 'This conversation will be archived.'}
+                                    ? t('This user will not be able to message you.')
+                                    : t('This conversation will be archived.')}
                             </p>
                             <div className="flex justify-end gap-2.5">
                                 <button 
                                     onClick={() => setPendingConfirmAction(null)}
                                     className="h-11 px-4 rounded-xl text-xs font-bold text-medium hover:bg-surface-2 cursor-pointer"
                                 >
-                                    Cancel
+                                    {t('Cancel')}
                                 </button>
                                 <button
                                     onClick={async () => {
@@ -1301,7 +1313,7 @@ export function LandlordMessagesView() {
                                     }}
                                     className="h-11 px-5 rounded-xl text-xs font-black text-white bg-primary shadow-sm active:scale-95 cursor-pointer"
                                 >
-                                    Confirm
+                                    {t('Confirm')}
                                 </button>
                             </div>
                         </div>
@@ -1331,7 +1343,7 @@ export function LandlordMessagesView() {
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60 pointer-events-none" />
                             <input
                                 type="text"
-                                placeholder={viewMode === 'chats' ? "Search conversations or directory..." : "Search announcements..."}
+                                placeholder={viewMode === 'chats' ? t("Search conversations or directory...") : t("Search announcements...")}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full h-12 pl-11 pr-11 text-xs font-medium text-foreground bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-white/10 rounded-2xl placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
@@ -1340,7 +1352,7 @@ export function LandlordMessagesView() {
                                 <button
                                     onClick={() => setSearchQuery('')}
                                     className="absolute right-1.5 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
-                                    aria-label="Clear search"
+                                    aria-label={t("Clear search")}
                                 >
                                     <X className="size-4" />
                                 </button>
@@ -1362,7 +1374,7 @@ export function LandlordMessagesView() {
                                 )}
                             >
                                 <MessageCircle className="size-4" />
-                                <span>Direct Chats</span>
+                                <span>{t('Direct Chats')}</span>
                                 {totalUnreadCount > 0 && (
                                     <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-white/20 text-white">
                                         {totalUnreadCount}
@@ -1380,7 +1392,7 @@ export function LandlordMessagesView() {
                                 )}
                             >
                                 <Megaphone className="size-4" />
-                                <span>Announcements</span>
+                                <span>{t('Announcements')}</span>
                             </button>
                         </div>
                     </div>
@@ -1395,9 +1407,9 @@ export function LandlordMessagesView() {
                                 <div className="flex items-center justify-between px-1">
                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5">
                                         <UserPlus className="size-3" />
-                                        <span>Property Directory Matches</span>
+                                        <span>{t('Property Directory Matches')}</span>
                                     </h4>
-                                    <span className="text-[10px] text-muted-foreground">{userSearchResults.length} found</span>
+                                    <span className="text-[10px] text-muted-foreground">{t('{count} found', { count: userSearchResults.length })}</span>
                                 </div>
                                 <div className="flex flex-col gap-1.5">
                                     {userSearchResults.map((user) => (
@@ -1421,12 +1433,13 @@ export function LandlordMessagesView() {
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
                                                     <span className="text-xs font-bold text-foreground truncate">{user.fullName}</span>
-                                                    <span className="text-[10px] text-muted-foreground capitalize">{user.role}</span>
+                                                    <span className="text-[10px] text-muted-foreground capitalize">{t(ROLE_LABELS[user.role] ?? user.role)}</span>
                                                 </div>
                                             </div>
                                             <button
                                                 type="button"
                                                 className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center active:scale-95 shrink-0"
+                                                aria-label={t('Start chat')}
                                             >
                                                 <MessageCircle className="size-4" />
                                             </button>
@@ -1439,10 +1452,10 @@ export function LandlordMessagesView() {
                         {/* Recent Conversations List */}
                         <div className="flex items-center justify-between px-1 pt-1">
                             <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                                Active Conversations
+                                {t('Active Conversations')}
                             </h3>
                             <span className="text-[11px] font-medium text-muted-foreground">
-                                {filteredConversations.length} {filteredConversations.length === 1 ? 'chat' : 'chats'}
+                                {filteredConversations.length === 1 ? t('{count} chat', { count: filteredConversations.length }) : t('{count} chats', { count: filteredConversations.length })}
                             </span>
                         </div>
 
@@ -1457,28 +1470,28 @@ export function LandlordMessagesView() {
                                 <div className="neumorphic-inset-card flex size-14 items-center justify-center rounded-2xl text-muted-foreground/50 mb-3">
                                     <MessageCircle className="size-7" />
                                 </div>
-                                <h4 className="text-sm font-black uppercase tracking-wider text-foreground">No conversations found</h4>
+                                <h4 className="text-sm font-black uppercase tracking-wider text-foreground">{t("No conversations found")}</h4>
                                 <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
-                                    {searchQuery ? 'No active conversations match your query.' : 'Connect and chat directly with your residents.'}
+                                    {searchQuery ? t('No active conversations match your query.') : t('Connect and chat directly with your residents.')}
                                 </p>
                                 <button
                                     type="button"
                                     onClick={() => setIsNewChatModalOpen(true)}
                                     className="mt-4 h-11 px-5 rounded-full neumorphic-primary text-white text-xs font-black uppercase tracking-wider active:scale-95 transition-all cursor-pointer"
                                 >
-                                    Start New Chat
+                                    {t('Start New Chat')}
                                 </button>
                             </div>
                         ) : (
                             <div className="flex flex-col gap-2.5">
                                 {filteredConversations.map((conv) => {
                                     const other = conv.otherParticipants?.[0];
-                                    const name = other?.fullName || 'Resident';
+                                    const name = other?.fullName || t('Resident');
                                     const initials = name.split(' ').map((n) => n[0]).slice(0, 2).join('');
-                                    const lastMsg = conv.lastMessage?.content || 'No messages yet';
+                                    const lastMsg = conv.lastMessage?.content || t('No messages yet');
                                     const hasUnread = (conv.unreadCount || 0) > 0;
                                     const timeLabel = conv.lastMessage?.createdAt 
-                                        ? new Date(conv.lastMessage.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })
+                                        ? new Date(conv.lastMessage.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric' })
                                         : '';
 
                                     return (
@@ -1544,10 +1557,10 @@ export function LandlordMessagesView() {
                     <div className="flex flex-col gap-3 px-4">
                         <div className="flex items-center justify-between px-1 pt-1">
                             <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                                Property Announcements
+                                {t('Property Announcements')}
                             </h3>
                             <span className="text-[11px] font-medium text-muted-foreground">
-                                Visible to residents
+                                {t('Visible to residents')}
                             </span>
                         </div>
 
@@ -1562,16 +1575,16 @@ export function LandlordMessagesView() {
                                 <div className="neumorphic-inset-card flex size-14 items-center justify-center rounded-2xl text-muted-foreground/50 mb-3">
                                     <Megaphone className="size-7" />
                                 </div>
-                                <h4 className="text-sm font-black uppercase tracking-wider text-foreground">No announcements found</h4>
+                                <h4 className="text-sm font-black uppercase tracking-wider text-foreground">{t("No announcements found")}</h4>
                                 <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
-                                    {searchQuery ? 'No announcements match your search query.' : 'Broadcast urgent notices and updates to your residents.'}
+                                    {searchQuery ? t('No announcements match your search query.') : t('Broadcast urgent notices and updates to your residents.')}
                                 </p>
                                 <button
                                     type="button"
                                     onClick={() => setIsBroadcastModalOpen(true)}
                                     className="mt-4 h-11 px-5 rounded-full neumorphic-primary text-white text-xs font-black uppercase tracking-wider active:scale-95 transition-all cursor-pointer"
                                 >
-                                    Broadcast Notice
+                                    {t('Broadcast Notice')}
                                 </button>
                             </div>
                         ) : (
@@ -1592,12 +1605,12 @@ export function LandlordMessagesView() {
                                                 <div className="flex items-center gap-1.5 mt-0.5">
                                                     <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full">
                                                         <Building2 className="size-3 shrink-0" />
-                                                        <span>{ann.propertyName}</span>
+                                                        <span>{ann.propertyName || (ann.property_id ? t('Assigned Property') : t('All Properties'))}</span>
                                                     </span>
                                                 </div>
                                             </div>
                                             <span className="text-[10px] font-semibold text-muted-foreground shrink-0">
-                                                {ann.created_at ? new Date(ann.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                                                {ann.created_at ? new Date(ann.created_at).toLocaleDateString(locale, { month: 'short', day: 'numeric' }) : ''}
                                             </span>
                                         </div>
                                         <div className="neumorphic-inset-card p-3.5 rounded-2xl">
@@ -1621,7 +1634,7 @@ export function LandlordMessagesView() {
                             className="pointer-events-auto h-12 px-5 rounded-full neumorphic-primary text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-xl active:scale-95 transition-all hover:brightness-105 cursor-pointer"
                         >
                             <UserPlus className="size-4" />
-                            <span>New Chat</span>
+                            <span>{t('New Chat')}</span>
                         </button>
                     ) : (
                         <button
@@ -1630,7 +1643,7 @@ export function LandlordMessagesView() {
                             className="pointer-events-auto h-12 px-5 rounded-full neumorphic-primary text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-xl active:scale-95 transition-all hover:brightness-105 cursor-pointer"
                         >
                             <Megaphone className="size-4" />
-                            <span>Broadcast</span>
+                            <span>{t('Broadcast')}</span>
                         </button>
                     )}
                 </div>
@@ -1653,12 +1666,13 @@ export function LandlordMessagesView() {
                                         <UserPlus className="size-4" />
                                     </div>
                                     <h3 className="text-sm font-black uppercase tracking-wider text-foreground">
-                                        Start Conversation
+                                        {t('Start Conversation')}
                                     </h3>
                                 </div>
                                 <button
                                     onClick={() => setIsNewChatModalOpen(false)}
                                     className="size-11 rounded-full flex items-center justify-center text-medium hover:text-high hover:bg-surface-2 cursor-pointer"
+                                    aria-label={t('Close')}
                                 >
                                     <X className="size-5" />
                                 </button>
@@ -1669,7 +1683,7 @@ export function LandlordMessagesView() {
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60 pointer-events-none" />
                                 <input
                                     type="text"
-                                    placeholder="Search residents by name or role..."
+                                    placeholder={t("Search residents by name or role...")}
                                     value={newChatSearchQuery}
                                     onChange={(e) => setNewChatSearchQuery(e.target.value)}
                                     className="w-full h-12 pl-11 pr-11 text-xs font-medium text-foreground bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-white/10 rounded-2xl placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
@@ -1678,6 +1692,7 @@ export function LandlordMessagesView() {
                                     <button
                                         onClick={() => setNewChatSearchQuery('')}
                                         className="absolute right-1.5 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
+                                        aria-label={t('Clear search')}
                                     >
                                         <X className="size-4" />
                                     </button>
@@ -1693,8 +1708,8 @@ export function LandlordMessagesView() {
                                 ) : newChatResults.length === 0 ? (
                                     <p className="text-xs text-muted-foreground text-center py-8">
                                         {newChatSearchQuery.trim().length >= 2 
-                                            ? 'No matching users found in directory.' 
-                                            : 'Type at least 2 characters to search across properties.'}
+                                            ? t('No matching users found in directory.')
+                                            : t('Type at least 2 characters to search across properties.')}
                                     </p>
                                 ) : (
                                     newChatResults.map((user) => (
@@ -1718,14 +1733,14 @@ export function LandlordMessagesView() {
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
                                                     <span className="text-sm font-bold text-foreground truncate">{user.fullName}</span>
-                                                    <span className="text-xs text-muted-foreground capitalize">{user.role}</span>
+                                                    <span className="text-xs text-muted-foreground capitalize">{t(ROLE_LABELS[user.role] ?? user.role)}</span>
                                                 </div>
                                             </div>
                                             <button
                                                 type="button"
                                                 className="h-10 px-4 rounded-xl bg-primary text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs active:scale-95 shrink-0"
                                             >
-                                                <span>Chat</span>
+                                                <span>{t('Chat')}</span>
                                                 <MessageCircle className="size-3.5" />
                                             </button>
                                         </div>
@@ -1746,13 +1761,14 @@ export function LandlordMessagesView() {
                                         <Megaphone className="size-4" />
                                     </div>
                                     <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                                        Broadcast Notice
+                                        {t('Broadcast Notice')}
                                     </h3>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setIsBroadcastModalOpen(false)}
                                     className="size-11 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                    aria-label={t('Close')}
                                 >
                                     <X className="size-4" />
                                 </button>
@@ -1763,21 +1779,21 @@ export function LandlordMessagesView() {
                                     <div className="size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center text-emerald-500 mb-1">
                                         <CheckCheck className="size-6" />
                                     </div>
-                                    <h4 className="text-sm font-black uppercase tracking-tight text-foreground">Announcement Broadcasted!</h4>
-                                    <p className="text-[11px] text-muted-foreground">All tenants in the target property will receive this notice.</p>
+                                    <h4 className="text-sm font-black uppercase tracking-tight text-foreground">{t("Announcement Broadcasted!")}</h4>
+                                    <p className="text-[11px] text-muted-foreground">{t("All tenants in the target property will receive this notice.")}</p>
                                 </div>
                             ) : (
                                 <form onSubmit={handlePublishBroadcast} className="flex flex-col gap-3">
                                     <div>
                                         <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">
-                                            Target Property
+                                            {t('Target Property')}
                                         </label>
                                         <select
                                             value={broadcastPropertyId}
                                             onChange={(e) => setBroadcastPropertyId(e.target.value)}
                                             className="w-full h-11 px-3.5 text-xs text-foreground bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none"
                                         >
-                                            <option value="all">All Properties</option>
+                                            <option value="all">{t("All Properties")}</option>
                                             {properties.map((prop) => (
                                                 <option key={prop.id} value={prop.id}>
                                                     {prop.name}
@@ -1788,11 +1804,11 @@ export function LandlordMessagesView() {
 
                                     <div>
                                         <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">
-                                            Announcement Title
+                                            {t('Announcement Title')}
                                         </label>
                                         <input
                                             type="text"
-                                            placeholder="e.g., Scheduled Water Interruption"
+                                            placeholder={t("e.g., Scheduled Water Interruption")}
                                             value={broadcastTitle}
                                             onChange={(e) => setBroadcastTitle(e.target.value)}
                                             className="w-full h-11 px-3.5 text-xs text-foreground bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none"
@@ -1802,11 +1818,11 @@ export function LandlordMessagesView() {
 
                                     <div>
                                         <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">
-                                            Notice Content
+                                            {t('Notice Content')}
                                         </label>
                                         <textarea
                                             rows={4}
-                                            placeholder="Provide details about the announcement..."
+                                            placeholder={t("Provide details about the announcement...")}
                                             value={broadcastContent}
                                             onChange={(e) => setBroadcastContent(e.target.value)}
                                             className="w-full p-3.5 text-xs text-foreground bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none resize-none leading-relaxed"
@@ -1820,14 +1836,14 @@ export function LandlordMessagesView() {
                                             onClick={() => setIsBroadcastModalOpen(false)}
                                             className="flex-1 h-11 rounded-xl text-xs font-bold text-muted-foreground hover:bg-muted active:scale-95 transition-all cursor-pointer"
                                         >
-                                            Cancel
+                                            {t('Cancel')}
                                         </button>
                                         <button
                                             type="submit"
                                             disabled={submittingBroadcast || !broadcastTitle.trim() || !broadcastContent.trim()}
                                             className="flex-1 h-11 rounded-xl neumorphic-primary text-white text-xs font-black uppercase tracking-wider active:scale-95 transition-all disabled:opacity-50 cursor-pointer shadow-sm"
                                         >
-                                            {submittingBroadcast ? 'Publishing...' : 'Publish'}
+                                            {submittingBroadcast ? t('Publishing...') : t('Publish')}
                                         </button>
                                     </div>
                                 </form>

@@ -5,17 +5,19 @@ import { useRouter } from 'next/navigation';
 import { Edit3, Check, X, Loader2, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export default function EditableBio({
     initialBio,
     isOwner = true,
-    placeholder = "Tell others about yourself...",
+    placeholder,
 }: {
     initialBio: string;
     isOwner?: boolean;
     placeholder?: string;
 }) {
     const router = useRouter();
+    const { t } = useLanguageContext();
     const [isEditing, setIsEditing] = useState(false);
     const [bio, setBio] = useState(initialBio);
     const [tempBio, setTempBio] = useState(initialBio);
@@ -40,14 +42,14 @@ export default function EditableBio({
             setBio(cleanBio);
             setTempBio(cleanBio);
             setIsEditing(false);
-            toast.success("Bio updated successfully");
+            toast.success(t("Bio updated successfully"));
             window.dispatchEvent(new CustomEvent("profile-updated", {
                 detail: { bio: cleanBio, hasBio: Boolean(cleanBio.length > 0) }
             }));
             router.refresh();
         } catch (e) {
             console.error("Failed to save bio:", e);
-            toast.error("Failed to update bio. Please try again.");
+            toast.error(t("Failed to update bio. Please try again."));
         } finally {
             setSaving(false);
         }
@@ -61,7 +63,7 @@ export default function EditableBio({
                     onChange={(e) => setTempBio(e.target.value)}
                     className="w-full bg-background border border-border rounded-[1.5rem] p-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors resize-none neumorphic-inset"
                     rows={4}
-                    placeholder={placeholder}
+                    placeholder={placeholder ?? t("Tell others about yourself...")}
                 />
                 <div className="flex items-center gap-3 mt-3">
                     <button
@@ -70,7 +72,7 @@ export default function EditableBio({
                         className="flex items-center gap-2 neumorphic-primary px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition disabled:opacity-50"
                     >
                         {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-                        Save Bio
+                        {t("Save Bio")}
                     </button>
                     <button
                         onClick={() => {
@@ -81,7 +83,7 @@ export default function EditableBio({
                         className="flex items-center gap-2 neumorphic-extruded text-muted-foreground hover:text-foreground px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition"
                     >
                         <X size={14} />
-                        Cancel
+                        {t("Cancel")}
                     </button>
                 </div>
             </div>
@@ -96,14 +98,14 @@ export default function EditableBio({
                 type="button"
                 onClick={() => setIsEditing(true)}
                 className="mt-2 flex items-center gap-3 text-[10px] font-black text-red-500 dark:text-red-400 hover:text-foreground transition-all uppercase tracking-widest border border-dashed border-red-500/30 bg-red-500/5 hover:bg-red-500/10 rounded-2xl px-6 py-4 w-full justify-center relative cursor-pointer group shadow-sm"
-                title="Add your bio (Required for profile setup)"
+                title={t("Add your bio (Required for profile setup)")}
             >
                 <span className="relative flex size-2 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
                     <span className="relative inline-flex rounded-full size-2 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)]" />
                 </span>
                 <Plus size={16} className="group-hover:rotate-90 transition-transform" />
-                <span>Introduce yourself (Add Bio — Required)</span>
+                <span>{t("Introduce yourself (Add Bio — Required)")}</span>
             </button>
         );
     }
@@ -117,7 +119,7 @@ export default function EditableBio({
                 <button
                     onClick={() => setIsEditing(true)}
                     className="absolute -top-1 -right-1 p-2 rounded-full neumorphic-extruded text-muted-foreground hover:text-foreground transition-all opacity-0 group-hover:opacity-100"
-                    aria-label="Edit Bio"
+                    aria-label={t("Edit Bio")}
                 >
                     <Edit3 size={14} />
                 </button>

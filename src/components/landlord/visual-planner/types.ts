@@ -19,7 +19,10 @@ export interface Unit {
     flipX?: boolean;
     flipY?: boolean;
     leaseStart?: string;
-    leaseEnd?: string;
+    /** Null/undefined for open-ended leases (or an agreed move-out date once scheduled). */
+    leaseEnd?: string | null;
+    /** "open_ended" (default) or "fixed". */
+    leaseTermType?: string | null;
     maintenanceDate?: string;
     maintenanceTitle?: string;
     maintenanceDescription?: string;
@@ -51,7 +54,10 @@ export interface DbUnit {
     tenant_avatar_url?: string;
     tenant_avatar_bg_color?: string;
     lease_start?: string;
-    lease_end?: string;
+    lease_end?: string | null;
+    lease_term_type?: string | null;
+    lease_term?: string | null;
+    term_type?: string | null;
     maintenance_title?: string;
     maintenance_description?: string;
     maintenance_created_at?: string;

@@ -3,6 +3,7 @@
 import { m as motion, AnimatePresence } from "framer-motion";
 import { Loader2, X, SlidersHorizontal, Plus, Minus, Equal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { floorDisplayName } from "./WizardUnits";
 import type { DbUnit, FloorConfig } from "./WizardUnits";
 
@@ -28,6 +29,7 @@ export function BulkOrganizerPanel({
     isSaving,
     onClose,
 }: BulkOrganizerPanelProps) {
+    const { t } = useLanguageContext();
     const totalAssigned = Object.values(floorDistribution).reduce((a, b) => a + b, 0);
     const remaining = totalUnits - totalAssigned;
 
@@ -75,8 +77,8 @@ export function BulkOrganizerPanel({
                                     <SlidersHorizontal className="size-5" />
                                 </div>
                                 <div>
-                                    <h3 className="text-base font-bold text-foreground">Rooms Per Floor</h3>
-                                    <p className="text-xs text-muted-foreground">Set how many rooms are on each floor</p>
+                                    <h3 className="text-base font-bold text-foreground">{t("Rooms Per Floor")}</h3>
+                                    <p className="text-xs text-muted-foreground">{t("Set how many rooms are on each floor")}</p>
                                 </div>
                             </div>
 
@@ -84,8 +86,8 @@ export function BulkOrganizerPanel({
                                 type="button"
                                 onClick={onClose}
                                 className="flex size-8 items-center justify-center rounded-xl bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
-                                title="Close panel"
-                                aria-label="Close rooms per floor panel"
+                                title={t("Close panel")}
+                                aria-label={t("Close rooms per floor panel")}
                             >
                                 <X className="size-4" />
                             </button>
@@ -94,7 +96,7 @@ export function BulkOrganizerPanel({
                         {/* Balance pill & Split Evenly shortcut */}
                         <div className="mt-4 flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border/70">
                             <div className="flex flex-col">
-                                <span className="text-[11px] font-semibold text-muted-foreground">Unassigned rooms:</span>
+                                <span className="text-[11px] font-semibold text-muted-foreground">{t("Unassigned rooms:")}</span>
                                 <span className={cn(
                                     "text-xs font-bold",
                                     remaining === 0
@@ -103,7 +105,7 @@ export function BulkOrganizerPanel({
                                             ? "text-rose-500"
                                             : "text-primary"
                                 )}>
-                                    {remaining === 0 ? "All rooms assigned!" : `${remaining} left to place`}
+                                    {remaining === 0 ? t("All rooms assigned!") : t("{count} left to place", { count: remaining })}
                                 </span>
                             </div>
 
@@ -114,7 +116,7 @@ export function BulkOrganizerPanel({
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-xs font-bold text-foreground transition-all cursor-pointer shadow-2xs"
                                 >
                                     <Equal className="size-3 text-primary" />
-                                    <span>Split Evenly</span>
+                                    <span>{t("Split Evenly")}</span>
                                 </button>
                             )}
                         </div>
@@ -139,8 +141,8 @@ export function BulkOrganizerPanel({
                                                 onClick={() => handleStepChange(fc.floor_number, -1)}
                                                 disabled={currentVal <= 0}
                                                 className="size-8 rounded-lg border border-border/80 bg-card flex items-center justify-center text-foreground font-bold hover:bg-muted active:scale-95 disabled:opacity-30 cursor-pointer shadow-2xs transition-all"
-                                                title="Decrease rooms"
-                                                aria-label={`Decrease rooms for ${floorDisplayName(fc)}`}
+                                                title={t("Decrease rooms")}
+                                                aria-label={t("Decrease rooms for {floor}", { floor: floorDisplayName(fc) })}
                                             >
                                                 <Minus className="size-3.5" />
                                             </button>
@@ -154,8 +156,8 @@ export function BulkOrganizerPanel({
                                                 onClick={() => handleStepChange(fc.floor_number, 1)}
                                                 disabled={remaining <= 0}
                                                 className="size-8 rounded-lg border border-border/80 bg-card flex items-center justify-center text-foreground font-bold hover:bg-muted active:scale-95 disabled:opacity-30 cursor-pointer shadow-2xs transition-all"
-                                                title="Increase rooms"
-                                                aria-label={`Increase rooms for ${floorDisplayName(fc)}`}
+                                                title={t("Increase rooms")}
+                                                aria-label={t("Increase rooms for {floor}", { floor: floorDisplayName(fc) })}
                                             >
                                                 <Plus className="size-3.5" />
                                             </button>
@@ -183,7 +185,7 @@ export function BulkOrganizerPanel({
                                             className="flex-1 h-2 bg-muted rounded-full appearance-none cursor-pointer accent-primary"
                                         />
                                         <span className="text-xs font-semibold text-muted-foreground w-12 text-right">
-                                            {currentVal} {currentVal === 1 ? "room" : "rooms"}
+                                            {t(currentVal === 1 ? "{count} room" : "{count} rooms", { count: currentVal })}
                                         </span>
                                     </div>
                                 </div>
@@ -194,12 +196,12 @@ export function BulkOrganizerPanel({
                     {/* Bottom CTA */}
                     <div className="pt-6 border-t border-border mt-auto space-y-3">
                         <div className="flex items-center justify-between text-xs font-bold text-muted-foreground px-1">
-                            <span>Total Assigned</span>
+                            <span>{t("Total Assigned")}</span>
                             <span className={cn(
                                 "font-black",
                                 totalAssigned === totalUnits ? "text-emerald-500" : "text-amber-500"
                             )}>
-                                {totalAssigned} of {totalUnits} Rooms
+                                {t("{assigned} of {total} Rooms", { assigned: totalAssigned, total: totalUnits })}
                             </span>
                         </div>
 
@@ -209,7 +211,7 @@ export function BulkOrganizerPanel({
                             disabled={isSaving || totalAssigned !== totalUnits}
                             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:brightness-105 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm cursor-pointer"
                         >
-                            {isSaving ? <Loader2 className="size-4 animate-spin" /> : "Save Rooms Per Floor"}
+                            {isSaving ? <Loader2 className="size-4 animate-spin" /> : t("Save Rooms Per Floor")}
                         </button>
                     </div>
                 </div>

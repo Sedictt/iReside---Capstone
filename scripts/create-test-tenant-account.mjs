@@ -220,6 +220,7 @@ async function provisionTenantAccount() {
     status: 'active',
     start_date: leaseStartDate,
     end_date: leaseEndDate,
+    term_type: 'fixed', // dated term so the renewal flow can be exercised; real tenants default to open_ended
     monthly_rent: monthlyRent,
     security_deposit: monthlyRent,
     terms: {

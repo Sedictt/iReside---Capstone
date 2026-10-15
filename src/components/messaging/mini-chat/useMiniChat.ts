@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import { playSound } from "@/hooks/useSound";
+import { tr } from "@/hooks/useLanguage";
 import {
     createOrGetDirectConversation,
     fetchConversationMessages,
@@ -183,7 +184,7 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
         const request = (async () => {
             if (showLoader) setIsLoadingConversations(true);
             const { data, error } = await fetchConversations();
-            setConversationsError(error);
+            setConversationsError(error ? tr(error) : error);
             const mapped = data.map((conversation) => {
                 const contact = mapConversationToContact(conversation, userId);
                 // The server-side summary cache can lag a read receipt by a few seconds;
@@ -418,7 +419,7 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
             messageLoadedAtRef.current[conversationId] = Date.now();
             void refreshConversations();
         } catch (error) {
-            const message = error instanceof Error ? error.message : "Failed to send message.";
+            const message = error instanceof Error ? error.message : tr("Failed to send message.");
             patchChatState(conversationId, (prev) => ({
                 isSending: false,
                 error: message,
@@ -523,12 +524,12 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
             messageLoadedAtRef.current[conversationId] = Date.now();
             void refreshConversations();
         } catch (error) {
-            const message = error instanceof Error ? error.message : "Failed to upload file.";
+            const message = error instanceof Error ? error.message : tr("Failed to upload file.");
             patchChatState(conversationId, (prev) => ({
                 error: message,
                 messages: prev.messages.filter((entry) => entry.id !== localId),
             }));
-            toast.error("Upload failed", { description: message });
+            toast.error(tr("Upload failed"), { description: message });
         } finally {
             if (previewUrl) {
                 // Give the confirmed image a moment to swap in before the blob URL is released.
@@ -760,9 +761,9 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
                 const { data, error } = await searchMessageUsers(trimmed, 8);
                 if (cancelled) return;
                 setSearchResults(data);
-                setSearchError(error);
+                setSearchError(error ? tr(error) : error);
             } catch {
-                if (!cancelled) setSearchError("Failed to search directory.");
+                if (!cancelled) setSearchError(tr("Failed to search directory."));
             } finally {
                 if (!cancelled) setIsSearching(false);
             }
@@ -826,10 +827,10 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
                 role: target.role as BadgeRole,
                 avatar: target.avatarUrl || "",
                 avatarBgColor: target.avatarBgColor,
-                lastMessage: "No messages yet",
+                lastMessage: tr("No messages yet"),
                 lastMessageAt: null,
                 time: "",
-                unit: target.role === "landlord" ? "Landlord" : "Tenant",
+                unit: target.role === "landlord" ? tr("Landlord") : tr("Tenant"),
                 relationshipStatus: "stranger",
                 unreadCount: 0,
                 unread: false,
@@ -840,7 +841,7 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
             clearSearch();
         } catch (error) {
             console.error("Failed to start conversation:", error);
-            toast.error("Could not start a conversation with this user.");
+            toast.error(tr("Could not start a conversation with this user."));
         } finally {
             setStartingChatUserId(null);
         }
@@ -852,7 +853,7 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
 
     const submitMenuAction = useCallback(async (chat: OpenMiniChat, action: MiniChatMenuAction) => {
         if (!chat.participantUserId) {
-            toast.error("This contact cannot be identified for that action.");
+            toast.error(tr("This contact cannot be identified for that action."));
             return;
         }
 
@@ -874,21 +875,21 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
             });
             const payload = (await response.json().catch(() => null)) as { error?: string } | null;
             if (!response.ok) {
-                throw new Error(payload?.error ?? "The action could not be completed.");
+                throw new Error(payload?.error ?? tr("The action could not be completed."));
             }
 
             if (action === "report") {
-                toast.success("Report submitted", { description: "Our team will review this conversation." });
+                toast.success(tr("Report submitted"), { description: tr("Our team will review this conversation.") });
             } else {
                 closeChat(chat.id);
                 await refreshConversations();
-                toast.success(action === "archive" ? "Conversation archived" : `${chat.name} has been blocked`, {
-                    description: "You can manage this from the full messaging page.",
+                toast.success(action === "archive" ? tr("Conversation archived") : tr("{name} has been blocked", { name: chat.name }), {
+                    description: tr("You can manage this from the full messaging page."),
                 });
             }
         } catch (error) {
-            const message = error instanceof Error ? error.message : "The action could not be completed.";
-            toast.error(message);
+            const message = error instanceof Error ? error.message : tr("The action could not be completed.");
+            toast.error(tr(message));
         } finally {
             setMenuActionId(null);
         }

@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { buildConversationSummaries, findDirectConversation } from "@/lib/messages/engine";
-
-type CreateConversationBody = {
-    participantIds?: string[];
-};
+import { parseJsonBody } from "@/lib/validation/server";
+import { conversationCreateSchema } from "@/lib/validation/schemas/operations.schema";
 
 export async function GET(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
@@ -22,8 +20,7 @@ export async function GET(request: Request) {
             stack: error instanceof Error ? error.stack : undefined,
             userId,
         });
-        const message = error instanceof Error ? error.message : "Failed to fetch conversations.";
-        return NextResponse.json({ error: message }, { status: 500 });
+        return NextResponse.json({ error: "Failed to fetch conversations." }, { status: 500 });
     }
 }
 
@@ -32,11 +29,11 @@ export async function POST(request: Request) {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId } = authContext;
 
-    const body = (await request.json()) as CreateConversationBody;
-    const participantIds = Array.isArray(body.participantIds) ? body.participantIds : [];
+    const parsed = await parseJsonBody(request, conversationCreateSchema);
+    if (!parsed.ok) return parsed.response;
 
     const cleanedParticipantIds = Array.from(
-        new Set(participantIds.map((id) => id?.trim()).filter((id): id is string => Boolean(id) && id !== userId))
+        new Set(parsed.data.participantIds.filter((id) => Boolean(id) && id !== userId))
     );
 
     if (cleanedParticipantIds.length === 0) {
@@ -45,6 +42,20 @@ export async function POST(request: Request) {
 
     try {
         const supabase = createServiceRoleSupabaseClient();
+
+        // Every participant must be an existing account.
+        const { data: existingProfiles, error: profilesError } = await supabase
+            .from("profiles")
+            .select("id")
+            .in("id", cleanedParticipantIds);
+
+        if (profilesError) {
+            return NextResponse.json({ error: "Failed to create conversation." }, { status: 500 });
+        }
+
+        if ((existingProfiles ?? []).length !== cleanedParticipantIds.length) {
+            return NextResponse.json({ error: "One or more participants could not be found." }, { status: 404 });
+        }
 
         if (cleanedParticipantIds.length === 1) {
             const existingConversationId = await findDirectConversation(supabase, userId, cleanedParticipantIds[0]);
@@ -93,8 +104,7 @@ export async function POST(request: Request) {
             stack: error instanceof Error ? error.stack : undefined,
             userId,
         });
-        const message = error instanceof Error ? error.message : "Failed to create conversation.";
-        return NextResponse.json({ error: message }, { status: 500 });
+        return NextResponse.json({ error: "Failed to create conversation." }, { status: 500 });
     }
 }
 

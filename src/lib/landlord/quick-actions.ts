@@ -107,7 +107,7 @@ export const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = [
         icon: RefreshCw,
         href: "/landlord/tenants?tab=renewals",
         color: "text-indigo-500",
-        description: "See expiring lease contracts and send simple renewal agreements.",
+        description: "See lease contracts, pending renewals, and upcoming move-outs.",
     },
     {
         id: "financial-metrics",

@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { buildInviteQrUrl } from "@/lib/tenant-intake-invites";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface VacantUnitItem {
     id: string;
@@ -67,6 +68,7 @@ export function VacantUnitsModal({
     units,
     onStartWalkIn,
 }: VacantUnitsModalProps) {
+    const { t } = useLanguageContext();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedPropertyFilter, setSelectedPropertyFilter] = useState<string>("all");
     const [sortBy, setSortBy] = useState<"name" | "price_asc" | "price_desc">("name");
@@ -143,10 +145,10 @@ export function VacantUnitsModal({
 
             await navigator.clipboard.writeText(url);
             setCopiedUnitId(unit.id);
-            toast.success(`Direct application link for ${unit.name} copied!`);
+            toast.success(t("Direct application link for {unit} copied!", { unit: unit.name }));
             setTimeout(() => setCopiedUnitId(null), 2000);
         } catch {
-            toast.error("Failed to copy link");
+            toast.error(t("Failed to copy link"));
         } finally {
             setLoadingTokenUnitId(null);
         }
@@ -190,14 +192,16 @@ export function VacantUnitsModal({
                         <div>
                             <div className="flex items-center gap-2.5">
                                 <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight text-balance">
-                                    Vacant Units Directory
+                                    {t("Vacant Units Directory")}
                                 </h2>
                                 <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-black tabular-nums">
-                                    {units.length} {units.length === 1 ? "Unit" : "Units"} Available
+                                    {units.length === 1
+                                        ? t("{count} Unit Available", { count: units.length })
+                                        : t("{count} Units Available", { count: units.length })}
                                 </span>
                             </div>
                             <p className="text-xs text-muted-foreground mt-0.5 max-w-prose text-pretty">
-                                Select a vacant unit to start an instant walk-in application, preview unit details, or share a direct link.
+                                {t("Select a vacant unit to start an instant walk-in application, preview unit details, or share a direct link.")}
                             </p>
                         </div>
                     </div>
@@ -205,8 +209,8 @@ export function VacantUnitsModal({
                     <button
                         onClick={onClose}
                         className="size-11 min-h-[44px] min-w-[44px] rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-                        title="Close Directory"
-                        aria-label="Close Vacant Units Directory"
+                        title={t("Close Directory")}
+                        aria-label={t("Close Vacant Units Directory")}
                     >
                         <X className="size-5" />
                     </button>
@@ -226,7 +230,7 @@ export function VacantUnitsModal({
                                     : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            All Properties ({units.length})
+                            {t("All Properties ({count})", { count: units.length })}
                         </button>
                         {properties.map((p) => {
                             const count = units.filter((u) => u.property_id === p.id).length;
@@ -256,7 +260,8 @@ export function VacantUnitsModal({
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search by unit name or location..."
+                                placeholder={t("Search by unit name or location...")}
+                                aria-label={t("Search by unit name or location...")}
                                 className="w-full pl-9 pr-4 py-2.5 text-xs sm:text-sm text-foreground bg-input/40 border border-border/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground"
                             />
                         </div>
@@ -264,11 +269,12 @@ export function VacantUnitsModal({
                         <select
                             value={sortBy}
                             onChange={(e: any) => setSortBy(e.target.value)}
+                            aria-label={t("Sort units")}
                             className="px-3.5 py-2.5 text-xs font-bold text-foreground bg-card border border-border/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer w-full sm:w-auto neumorphic-inset-card"
                         >
-                            <option value="name">Sort by Unit Name</option>
-                            <option value="price_asc">Price: Low to High</option>
-                            <option value="price_desc">Price: High to Low</option>
+                            <option value="name">{t("Sort by Unit Name")}</option>
+                            <option value="price_asc">{t("Price: Low to High")}</option>
+                            <option value="price_desc">{t("Price: High to Low")}</option>
                         </select>
                     </div>
                 </div>
@@ -281,12 +287,12 @@ export function VacantUnitsModal({
                                 <Building2 className="size-7" />
                             </div>
                             <h3 className="text-base font-black text-foreground">
-                                {units.length === 0 ? "100% Occupancy Reached!" : "No units match your search"}
+                                {units.length === 0 ? t("100% Occupancy Reached!") : t("No units match your search")}
                             </h3>
                             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                                 {units.length === 0
-                                    ? "All rental units across your portfolio currently have active tenants."
-                                    : "Try adjusting your search query or selecting a different property filter."}
+                                    ? t("All rental units across your portfolio currently have active tenants.")
+                                    : t("Try adjusting your search query or selecting a different property filter.")}
                             </p>
                         </div>
                     ) : (
@@ -303,7 +309,7 @@ export function VacantUnitsModal({
                                     <div 
                                         onClick={() => setPreviewUnit(unit)}
                                         className="flex items-center gap-4 min-w-[220px] cursor-pointer"
-                                        title="Click to view full unit preview"
+                                        title={t("Click to view full unit preview")}
                                     >
                                         <div className="size-12 rounded-full neumorphic-inset-card text-primary font-black text-sm flex items-center justify-center shrink-0 border border-primary/20 group-hover:scale-105 transition-transform">
                                             {badge}
@@ -315,7 +321,7 @@ export function VacantUnitsModal({
                                                     {unit.name}
                                                 </h3>
                                                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase tracking-wider">
-                                                    Ready for Move-In
+                                                    {t("Ready for Move-In")}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
@@ -327,18 +333,18 @@ export function VacantUnitsModal({
 
                                     {/* Middle: Occupancy Type */}
                                     <div className="hidden md:block text-xs font-semibold text-muted-foreground text-center min-w-[160px]">
-                                        Single Occupant / Family
+                                        {t("Single Occupant / Family")}
                                     </div>
 
                                     {/* Middle: Status */}
                                     <div className="hidden md:block text-xs font-semibold text-muted-foreground text-center min-w-[120px]">
-                                        Active Listing
+                                        {t("Active Listing")}
                                     </div>
 
                                     {/* Monthly Rent (Right aligned per numerical data invariants) */}
                                     <div className="text-left lg:text-right min-w-[120px]">
                                          <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">
-                                             Monthly Rent
+                                             {t("Monthly Rent")}
                                          </span>
                                          <span className="text-lg font-black text-foreground tabular-nums">
                                              ₱{unit.rent_amount.toLocaleString()}
@@ -351,8 +357,8 @@ export function VacantUnitsModal({
                                              type="button"
                                              onClick={() => setPreviewUnit(unit)}
                                              className="size-11 min-h-[44px] min-w-[44px] rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-                                             title="Quick Preview Unit"
-                                             aria-label={`Quick Preview ${unit.name}`}
+                                             title={t("Quick Preview Unit")}
+                                             aria-label={t("Quick Preview {unit}", { unit: unit.name })}
                                          >
                                              <Eye className="size-4" />
                                          </button>
@@ -366,15 +372,15 @@ export function VacantUnitsModal({
                                              className="flex-1 sm:flex-none px-5 py-2.5 min-h-[44px] rounded-2xl neumorphic-primary text-primary-foreground text-xs font-black transition-all shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                                          >
                                              <UserPlus className="size-3.5 font-black" />
-                                             <span>Start Walk-In</span>
+                                             <span>{t("Start Walk-In")}</span>
                                          </button>
 
                                          <button
                                              type="button"
                                              onClick={() => handleOpenQr(unit)}
                                              className="size-11 min-h-[44px] min-w-[44px] rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-                                             title="View QR Code for Applicant's Phone"
-                                             aria-label={`View QR Code for ${unit.name}`}
+                                             title={t("View QR Code for Applicant's Phone")}
+                                             aria-label={t("View QR Code for {unit}", { unit: unit.name })}
                                          >
                                              <QrCode className="size-4" />
                                          </button>
@@ -384,8 +390,8 @@ export function VacantUnitsModal({
                                              onClick={() => handleCopyLink(unit)}
                                              disabled={isCopyingThis}
                                              className="size-11 min-h-[44px] min-w-[44px] rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer disabled:opacity-50"
-                                             title="Copy Direct Application Link"
-                                             aria-label={`Copy Direct Application Link for ${unit.name}`}
+                                             title={t("Copy Direct Application Link")}
+                                             aria-label={t("Copy Direct Application Link for {unit}", { unit: unit.name })}
                                          >
                                              {isCopyingThis ? (
                                                  <Loader2 className="size-4 animate-spin text-primary" />
@@ -406,13 +412,13 @@ export function VacantUnitsModal({
                 <div className="flex items-center justify-between px-6 sm:px-8 py-3.5 border-t border-border/60 bg-muted/20 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                         <Info className="size-3.5 text-primary" />
-                        Click <strong>Quick Preview (Eye)</strong> to inspect unit photos and details, or <strong>Start Walk-In Application</strong> to onboard immediately.
+                        {t("Click Quick Preview (Eye) to inspect unit photos and details, or Start Walk-In Application to onboard immediately.")}
                     </span>
                     <button
                         onClick={onClose}
                         className="font-bold text-foreground hover:text-primary transition-colors cursor-pointer"
                     >
-                        Close Directory
+                        {t("Close Directory")}
                     </button>
                 </div>
             </motion.div>
@@ -431,6 +437,7 @@ export function VacantUnitsModal({
                             {/* Close Button */}
                             <button
                                 onClick={() => setPreviewUnit(null)}
+                                aria-label={t("Close")}
                                 className="absolute top-5 right-5 z-20 size-9 rounded-2xl bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-md"
                             >
                                 <X className="size-4" />
@@ -450,7 +457,7 @@ export function VacantUnitsModal({
                                 <div className="absolute bottom-4 left-6 right-6 flex items-end justify-between gap-4">
                                     <div>
                                         <span className="px-2.5 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider mb-1.5 inline-block shadow-md">
-                                            Ready for Move-In
+                                            {t("Ready for Move-In")}
                                         </span>
                                         <h3 className="text-2xl sm:text-3xl font-black text-foreground">
                                             {previewUnit.name}
@@ -466,7 +473,7 @@ export function VacantUnitsModal({
 
                                     <div className="text-right shrink-0 bg-card px-3.5 py-2 rounded-2xl border border-border/60 shadow-md">
                                         <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">
-                                            Monthly Rent
+                                            {t("Monthly Rent")}
                                         </span>
                                         <span className="text-xl font-black text-primary">
                                             ₱{previewUnit.rent_amount.toLocaleString()}
@@ -481,25 +488,25 @@ export function VacantUnitsModal({
                                     <div className="p-3.5 rounded-2xl neumorphic-inset-card border border-border/40 space-y-1">
                                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                             <Building2 className="size-3.5 text-primary" />
-                                            <span>Occupancy</span>
+                                            <span>{t("Occupancy")}</span>
                                         </div>
-                                        <p className="text-sm font-black text-foreground">Single / Family</p>
+                                        <p className="text-sm font-black text-foreground">{t("Single / Family")}</p>
                                     </div>
 
                                     <div className="p-3.5 rounded-2xl neumorphic-inset-card border border-border/40 space-y-1">
                                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                             <DoorOpen className="size-3.5 text-emerald-500" />
-                                            <span>Listing Status</span>
+                                            <span>{t("Listing Status")}</span>
                                         </div>
-                                        <p className="text-sm font-black text-foreground">Active Listing</p>
+                                        <p className="text-sm font-black text-foreground">{t("Active Listing")}</p>
                                     </div>
 
                                     <div className="p-3.5 rounded-2xl neumorphic-inset-card border border-border/40 space-y-1 col-span-2 sm:col-span-1">
                                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                             <Banknote className="size-3.5 text-amber-500" />
-                                            <span>Security Deposit</span>
+                                            <span>{t("Security Deposit")}</span>
                                         </div>
-                                        <p className="text-sm font-black text-foreground">Standard 1-Mo</p>
+                                        <p className="text-sm font-black text-foreground">{t("Standard 1-Mo")}</p>
                                     </div>
                                 </div>
 
@@ -516,7 +523,7 @@ export function VacantUnitsModal({
                                         className="w-full py-3.5 px-6 rounded-2xl neumorphic-primary text-primary-foreground text-sm font-black transition-all shadow-md shadow-primary/20 hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                                     >
                                         <UserPlus className="size-4" />
-                                        <span>Start Walk-In Application for {previewUnit.name}</span>
+                                        <span>{t("Start Walk-In Application for {unit}", { unit: previewUnit.name })}</span>
                                     </button>
 
                                     <div className="grid grid-cols-2 gap-3">
@@ -530,7 +537,7 @@ export function VacantUnitsModal({
                                             className="py-2.5 px-4 rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                                         >
                                             <QrCode className="size-3.5" />
-                                            <span>Show QR Code</span>
+                                            <span>{t("Show QR Code")}</span>
                                         </button>
 
                                         <button
@@ -541,12 +548,12 @@ export function VacantUnitsModal({
                                             {copiedUnitId === previewUnit.id ? (
                                                 <>
                                                     <Check className="size-3.5 text-emerald-500" />
-                                                    <span>Link Copied!</span>
+                                                    <span>{t("Link Copied!")}</span>
                                                 </>
                                             ) : (
                                                 <>
                                                     <Copy className="size-3.5" />
-                                                    <span>Copy Direct Link</span>
+                                                    <span>{t("Copy Direct Link")}</span>
                                                 </>
                                             )}
                                         </button>
@@ -570,9 +577,10 @@ export function VacantUnitsModal({
                             className="w-full max-w-sm rounded-3xl border border-border bg-card text-card-foreground p-6 shadow-2xl space-y-4 text-center will-change-transform"
                         >
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-black uppercase tracking-wider text-primary">Scan to Apply</span>
+                                <span className="text-xs font-black uppercase tracking-wider text-primary">{t("Scan to Apply")}</span>
                                 <button
                                     onClick={() => setActiveQrUnit(null)}
+                                    aria-label={t("Close")}
                                     className="size-7 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-foreground"
                                 >
                                     <X className="size-3.5" />
@@ -581,13 +589,13 @@ export function VacantUnitsModal({
 
                             <div className="space-y-1">
                                 <h3 className="text-base font-black text-foreground">{activeQrUnit.name}</h3>
-                                <p className="text-xs text-muted-foreground">{activeQrUnit.property_name} • ₱{activeQrUnit.rent_amount.toLocaleString()}/mo</p>
+                                <p className="text-xs text-muted-foreground">{activeQrUnit.property_name} • ₱{activeQrUnit.rent_amount.toLocaleString()}{t("/mo")}</p>
                             </div>
 
                             <div className="p-4 bg-white rounded-2xl shadow-inner border border-border/80 mx-auto w-fit">
                                 <Image
                                     src={buildInviteQrUrl(getUnitDirectUrl(activeQrUnit.id))}
-                                    alt="Apply QR code"
+                                    alt={t("Apply QR code")}
                                     width={180}
                                     height={180}
                                     className="rounded-xl"
@@ -595,7 +603,7 @@ export function VacantUnitsModal({
                             </div>
 
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                                Let the walk-in applicant scan this QR code with their phone camera to open the application directly on their device.
+                                {t("Let the walk-in applicant scan this QR code with their phone camera to open the application directly on their device.")}
                             </p>
 
                             <button
@@ -603,7 +611,7 @@ export function VacantUnitsModal({
                                 className="w-full py-3 rounded-2xl neumorphic-primary text-primary-foreground text-xs font-black transition-all shadow-md shadow-primary/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                             >
                                 <Copy className="size-3.5" />
-                                <span>Copy Link Instead</span>
+                                <span>{t("Copy Link Instead")}</span>
                             </button>
                         </motion.div>
                     </div>

@@ -26,6 +26,15 @@ import { applyBrandCssVariables, getContrastTextColor, getMonogramInitials } fro
 import { ThemeToggle } from "@/components/theme-toggle";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { cn } from "@/lib/utils";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { textRule } from "@/lib/validation/rules";
+import { BILLING_LIMITS } from "@/lib/validation/schemas/billing.schema";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
+
+type Translate = (keyOrPhrase: string, params?: Record<string, string | number>) => string;
 
 type PaymentRequestItem = {
     id: string;
@@ -75,11 +84,11 @@ const peso = new Intl.NumberFormat("en-PH", {
     maximumFractionDigits: 2,
 });
 
-function formatDateTime(value: string | null) {
-    if (!value) return "Not set";
+function formatDateTime(value: string | null | undefined, t: Translate, locale: string) {
+    if (!value) return t("Not set");
     const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return "Not set";
-    return parsed.toLocaleString("en-PH", {
+    if (Number.isNaN(parsed.getTime())) return t("Not set");
+    return parsed.toLocaleString(locale, {
         month: "short",
         day: "numeric",
         year: "numeric",
@@ -88,11 +97,11 @@ function formatDateTime(value: string | null) {
     });
 }
 
-function formatDate(value: string | null) {
-    if (!value) return "Before move-in";
+function formatDate(value: string | null, t: Translate, locale: string) {
+    if (!value) return t("Before move-in");
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return value;
-    return parsed.toLocaleDateString("en-PH", {
+    return parsed.toLocaleDateString(locale, {
         month: "short",
         day: "numeric",
         year: "numeric",
@@ -100,6 +109,7 @@ function formatDate(value: string | null) {
 }
 
 export function ProspectPaymentPortalClient({ token }: { token: string }) {
+    const { t, locale } = useLanguageContext();
     const [payload, setPayload] = useState<PortalPayload | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -133,7 +143,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                 const response = await fetch(`/api/application-payments/${token}`);
                 const data = (await response.json()) as PortalPayload & { error?: string };
                 if (!response.ok || !data.application) {
-                    throw new Error(data.error ?? "Payment portal is unavailable.");
+                    throw new Error(data.error ?? t("Payment portal is unavailable."));
                 }
                 if (ignore) return;
                 setPayload(data);
@@ -156,7 +166,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                 }
             } catch (loadError) {
                 if (ignore) return;
-                setError(loadError instanceof Error ? loadError.message : "Payment portal is unavailable.");
+                setError(loadError instanceof Error ? tr(loadError.message) : t("Payment portal is unavailable."));
             } finally {
                 if (!ignore) setLoading(false);
             }
@@ -195,7 +205,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
             maxSizeBytes: 10 * 1024 * 1024,
             notify: (message, description) => {
                 setError(`${message}: ${description}`);
-                toast.error(message, { description });
+                toast.error(tr(message), { description });
             },
         });
         if (!validFile) {
@@ -271,6 +281,16 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
         return true;
     }, [method, hasProof, hasReference]);
 
+    const portalValues = useMemo(() => ({ method, referenceNumber, note, hasProof }), [method, referenceNumber, note, hasProof]);
+    const portalForm = useFormValidation(portalValues, {
+        referenceNumber: (value, all) => {
+            if (all.method === "gcash" && !String(value ?? "").trim()) return t("Reference number is required for GCash submissions.");
+            return textRule(value, { label: "Reference number", max: BILLING_LIMITS.reference });
+        },
+        hasProof: (value, all) => (all.method === "gcash" && !value ? t("Upload your GCash receipt to continue.") : undefined),
+        note: (value) => textRule(value, { label: "Note", max: BILLING_LIMITS.applicationNote }),
+    });
+
     const brandPrimary = payload?.branding?.primaryColor || "#c4b0ff";
     const contrastColor = getContrastTextColor(brandPrimary);
 
@@ -292,11 +312,16 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
         const raw = payload?.application?.unitName?.trim() || "";
         if (!raw) return "";
         const stripped = raw.replace(/^(unit\s*)+/i, "").trim();
-        return stripped ? `Unit ${stripped}` : raw;
-    }, [payload]);
+        return stripped ? t("Unit {unit}", { unit: stripped }) : raw;
+    }, [payload, t]);
 
     const executeSubmit = async () => {
         if (!payload) return;
+        if (isSubmitting) return; // double-click guard
+        if (!portalForm.validateAll()) {
+            setShowConfirmModal(false);
+            return;
+        }
         setIsSubmitting(true);
         setError(null);
         setSuccessMessage(null);
@@ -316,7 +341,8 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                 body: formData,
             });
 
-            const result = (await response.json()) as {
+            const result = (await response.json().catch(() => ({}))) as {
+                fieldErrors?: Record<string, string>;
                 error?: string;
                 transactionReference?: string;
                 requests?: PaymentRequestItem[];
@@ -324,7 +350,8 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
             };
 
             if (!response.ok) {
-                throw new Error(result.error || "Failed to submit payment proof.");
+                portalForm.setServerErrors(result.fieldErrors);
+                throw new Error(result.error || t("Failed to submit payment proof."));
             }
 
             const updatedRequests = result.requests ?? (result.request ? [result.request] : []);
@@ -341,9 +368,9 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
             });
 
             setShowConfirmModal(false);
-            setSuccessMessage("Payment proof submitted successfully! Your landlord has been notified for review.");
+            setSuccessMessage(t("Payment proof submitted successfully! Your landlord has been notified for review."));
         } catch (submitErr) {
-            setError(submitErr instanceof Error ? submitErr.message : "Failed to submit payment proof.");
+            setError(submitErr instanceof Error ? tr(submitErr.message) : t("Failed to submit payment proof."));
             setShowConfirmModal(false);
         } finally {
             setIsSubmitting(false);
@@ -355,7 +382,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
             <div className="min-h-screen bg-zinc-50 dark:bg-[#090b10] text-zinc-900 dark:text-white flex flex-col items-center justify-center p-6 transition-colors">
                 <Loader2 className="size-10 animate-spin text-zinc-400" />
                 <p className="mt-4 text-xs font-semibold uppercase tracking-widest text-zinc-500">
-                    Loading Secure Payment Portal...
+                    {t("Loading Secure Payment Portal...")}
                 </p>
             </div>
         );
@@ -368,12 +395,12 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                     <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-500">
                         <ShieldAlert className="size-6" />
                     </div>
-                    <h1 className="mt-4 text-xl font-bold tracking-tight">Payment Portal Unavailable</h1>
+                    <h1 className="mt-4 text-xl font-bold tracking-tight">{t("Payment Portal Unavailable")}</h1>
                     <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                        {error || "This payment link is invalid, expired, or has already been fulfilled."}
+                        {error || t("This payment link is invalid, expired, or has already been fulfilled.")}
                     </p>
                     <p className="mt-4 text-xs text-zinc-400 dark:text-zinc-600">
-                        Please reach out directly to the property manager or landlord to receive an updated link.
+                        {t("Please reach out directly to the property manager or landlord to receive an updated link.")}
                     </p>
                 </div>
             </div>
@@ -424,7 +451,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                     <div className="flex items-center gap-2.5">
                         <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-zinc-200 dark:border-white/10 bg-zinc-100/80 dark:bg-zinc-900/80 px-3 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-300">
                             <Clock className="size-3 text-amber-500 dark:text-amber-400" />
-                            <span>Due {formatDateTime(payload.application.deadline)}</span>
+                            <span>{t("Due {date}", { date: formatDateTime(payload.application.deadline, t, locale) })}</span>
                         </span>
 
                         {/* Theme Toggle (Light / Dark) */}
@@ -432,7 +459,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
                         <div
                             className="flex size-9 items-center justify-center rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-100/80 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 shadow-sm"
-                            title="Protected Checkout"
+                            title={t("Protected Checkout")}
                         >
                             <ShieldCheck className="size-4 text-emerald-500" />
                         </div>
@@ -444,7 +471,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                 {/* Deadline reminder banner on mobile */}
                 <div className="sm:hidden mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200 flex items-center gap-2">
                     <Clock className="size-4 shrink-0 text-amber-500" />
-                    <span>Payment window ends on {formatDateTime(payload.application.deadline)}</span>
+                    <span>{t("Payment window ends on {date}", { date: formatDateTime(payload.application.deadline, t, locale) })}</span>
                 </div>
 
                 {/* Notifications & Error Banners */}
@@ -454,7 +481,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                             <AlertCircle className="size-4 shrink-0 text-red-500" />
                             <p className="text-xs font-medium text-red-900 dark:text-red-200 truncate">{error}</p>
                         </div>
-                        <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 dark:hover:text-red-300 shrink-0">
+                        <button onClick={() => setError(null)} aria-label={t("Dismiss")} className="text-red-500 hover:text-red-700 dark:hover:text-red-300 shrink-0">
                             <X className="size-4" />
                         </button>
                     </div>
@@ -466,7 +493,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                             <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
                             <p className="text-xs font-medium text-emerald-900 dark:text-emerald-200 truncate">{successMessage}</p>
                         </div>
-                        <button onClick={() => setSuccessMessage(null)} className="text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-300 shrink-0">
+                        <button onClick={() => setSuccessMessage(null)} aria-label={t("Dismiss")} className="text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-300 shrink-0">
                             <X className="size-4" />
                         </button>
                     </div>
@@ -477,12 +504,12 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                     <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-900 dark:text-amber-200">
                         <div className="flex items-center gap-2 font-bold text-amber-900 dark:text-amber-100 mb-1">
                             <AlertCircle className="size-4 text-amber-500" />
-                            <span>Action Required: Landlord Requested Re-submission</span>
+                            <span>{t("Action Required: Landlord Requested Re-submission")}</span>
                         </div>
                         <div className="space-y-1 pl-6">
                             {rejectionNotes.map((item, idx) => (
                                 <p key={idx}>
-                                    <strong className="text-amber-950 dark:text-amber-100">{item.label}:</strong> {item.note}
+                                    <strong className="text-amber-950 dark:text-amber-100">{t(item.label)}:</strong> {item.note}
                                 </p>
                             ))}
                         </div>
@@ -498,10 +525,12 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                             <div>
                                 <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-3 gap-2">
                                     <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
-                                        Required Items
+                                        {t("Required Items")}
                                     </h2>
                                     <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 whitespace-nowrap">
-                                        {payload.requests.length} {payload.requests.length === 1 ? "Requirement" : "Requirements"}
+                                        {payload.requests.length === 1
+                                            ? t("{count} Requirement", { count: payload.requests.length })
+                                            : t("{count} Requirements", { count: payload.requests.length })}
                                     </span>
                                 </div>
 
@@ -514,8 +543,8 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                         return (
                                             <div key={item.id} className="py-3.5 sm:py-4 flex items-center justify-between gap-3">
                                                 <div className="flex items-center gap-2 min-w-0">
-                                                    <span className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white truncate">{item.label}</span>
-                                                    <span className="text-xs text-zinc-400 dark:text-zinc-500 shrink-0 font-medium">({formatDate(item.dueAt)})</span>
+                                                    <span className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white truncate">{t(item.label)}</span>
+                                                    <span className="text-xs text-zinc-400 dark:text-zinc-500 shrink-0 font-medium">({formatDate(item.dueAt, t, locale)})</span>
                                                 </div>
                                                 <div className="flex items-center gap-2.5 shrink-0">
                                                     <span className="text-sm sm:text-base font-black text-zinc-900 dark:text-white">
@@ -532,13 +561,15 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                                 : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-white/5"
                                                         }`}
                                                     >
-                                                        {isItemCompleted
-                                                            ? "Confirmed"
-                                                            : isItemProcessing
-                                                            ? "Review"
-                                                            : isItemRejected
-                                                            ? "Revision"
-                                                            : "Pending"}
+                                                        {t(
+                                                            isItemCompleted
+                                                                ? "Confirmed"
+                                                                : isItemProcessing
+                                                                ? "Review"
+                                                                : isItemRejected
+                                                                ? "Revision"
+                                                                : "Pending"
+                                                        )}
                                                     </span>
                                                 </div>
                                             </div>
@@ -550,7 +581,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                             {/* Total Due Callout */}
                             <div className="mt-4 rounded-2xl border border-zinc-200/80 dark:border-white/10 bg-zinc-50/80 dark:bg-zinc-950/60 p-4 sm:p-5 flex items-center justify-between">
                                 <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                                    Total Amount Due
+                                    {t("Total Amount Due")}
                                 </span>
                                 <span className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white" style={{ color: brandPrimary }}>
                                     {peso.format(totalAmount)}
@@ -567,11 +598,11 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                             G
                                         </div>
                                         <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 whitespace-nowrap truncate">
-                                            GCash Destination
+                                            {t("GCash Destination")}
                                         </span>
                                     </div>
                                     <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold uppercase text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-500/20 whitespace-nowrap shrink-0">
-                                        Verified
+                                        {t("Verified")}
                                     </span>
                                 </div>
 
@@ -581,23 +612,23 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                         <div
                                             onClick={() => setShowQrModal(true)}
                                             className="group relative size-28 sm:size-32 shrink-0 overflow-hidden rounded-2xl bg-white p-2 border border-zinc-200 dark:border-white/10 shadow-md cursor-pointer transition hover:scale-105 active:scale-95"
-                                            title="Click to zoom QR code"
+                                            title={t("Click to zoom QR code")}
                                         >
                                             <img
                                                 src={qrCodeUrl}
-                                                alt="GCash QR Code"
+                                                alt={t("GCash QR Code")}
                                                 className="size-full object-contain"
                                             />
                                             <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition rounded-2xl">
                                                 <span className="rounded-lg bg-black/80 px-2 py-1 text-[10px] font-bold text-white flex items-center gap-1.5 shadow-lg">
-                                                    <QrCode className="size-3" /> Zoom
+                                                    <QrCode className="size-3" /> {t("Zoom")}
                                                 </span>
                                             </div>
                                         </div>
                                     ) : (
                                         <div className="size-28 sm:size-32 shrink-0 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex flex-col items-center justify-center text-zinc-400">
                                             <QrCode className="size-7" />
-                                            <span className="text-[10px] mt-1.5 font-bold">No QR</span>
+                                            <span className="text-[10px] mt-1.5 font-bold">{t("No QR")}</span>
                                         </div>
                                     )}
 
@@ -605,26 +636,26 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                     <div className="flex-1 min-w-0 space-y-3">
                                         <div className="border-b border-blue-500/10 dark:border-white/5 pb-2">
                                             <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-                                                Account Name
+                                                {t("Account Name")}
                                             </span>
                                             <p className="mt-0.5 font-bold text-zinc-900 dark:text-white text-sm sm:text-base truncate">
-                                                {payload.destination.accountName || "Official Landlord"}
+                                                {payload.destination.accountName || t("Official Landlord")}
                                             </p>
                                         </div>
                                         <div>
                                             <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-                                                GCash Mobile Number
+                                                {t("GCash Mobile Number")}
                                             </span>
                                             <div className="mt-0.5 flex items-center gap-2">
                                                 <span className="font-mono font-bold text-zinc-900 dark:text-white text-sm sm:text-base tracking-wider">
-                                                    {payload.destination.accountNumber || "Not provided"}
+                                                    {payload.destination.accountNumber || t("Not provided")}
                                                 </span>
                                                 {payload.destination.accountNumber && (
                                                     <button
                                                         type="button"
                                                         onClick={handleCopyNumber}
                                                         className="flex size-7 items-center justify-center rounded-lg bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 hover:bg-blue-500/20 transition shrink-0"
-                                                        title="Copy number"
+                                                        title={t("Copy number")}
                                                     >
                                                         {copiedNumber ? (
                                                             <Check className="size-3.5 text-emerald-500" />
@@ -641,7 +672,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 {/* Subtle helper note */}
                                 <div className="pt-2.5 border-t border-zinc-200/50 dark:border-white/5 flex items-center gap-1.5 text-[11px] text-zinc-400 dark:text-zinc-500">
                                     <ShieldCheck className="size-3.5 text-emerald-500 shrink-0" />
-                                    <span>Verified destination for move-in requirements</span>
+                                    <span>{t("Verified destination for move-in requirements")}</span>
                                 </div>
                             </section>
                         )}
@@ -655,21 +686,21 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
                                     <CheckCircle2 className="size-9" />
                                 </div>
-                                <h2 className="mt-4 text-xl font-bold text-zinc-900 dark:text-white">All Payments Confirmed!</h2>
+                                <h2 className="mt-4 text-xl font-bold text-zinc-900 dark:text-white">{t("All Payments Confirmed!")}</h2>
                                 <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300 max-w-md mx-auto leading-relaxed">
-                                    Your advance rent and security deposit have been verified and confirmed by your landlord.
+                                    {t("Your advance rent and security deposit have been verified and confirmed by your landlord.")}
                                 </p>
                                 <div className="mt-6 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-5 text-left max-w-md mx-auto text-sm text-zinc-600 dark:text-zinc-400 space-y-2.5">
                                     {systemTxnRef && (
                                         <div className="flex justify-between items-center pb-2.5 border-b border-zinc-200/70 dark:border-white/5">
-                                            <span className="text-zinc-500 dark:text-zinc-400 font-medium">Transaction Ref</span>
+                                            <span className="text-zinc-500 dark:text-zinc-400 font-medium">{t("Transaction Ref")}</span>
                                             <div className="flex items-center gap-1.5">
                                                 <span className="font-mono font-bold text-zinc-900 dark:text-white text-xs">{systemTxnRef}</span>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleCopyTxn(systemTxnRef)}
                                                     className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition"
-                                                    title="Copy Transaction Reference"
+                                                    title={t("Copy Transaction Reference")}
                                                 >
                                                     {copiedTxn ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
                                                 </button>
@@ -677,15 +708,15 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                         </div>
                                     )}
                                     <div className="flex justify-between">
-                                        <span className="text-zinc-500 dark:text-zinc-400">Property</span>
+                                        <span className="text-zinc-500 dark:text-zinc-400">{t("Property")}</span>
                                         <span className="font-bold text-zinc-900 dark:text-zinc-200">{payload.application.propertyName}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-zinc-500 dark:text-zinc-400">Unit</span>
+                                        <span className="text-zinc-500 dark:text-zinc-400">{t("Unit")}</span>
                                         <span className="font-bold text-zinc-900 dark:text-zinc-200">{displayUnit}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-zinc-500 dark:text-zinc-400">Total Confirmed</span>
+                                        <span className="text-zinc-500 dark:text-zinc-400">{t("Total Confirmed")}</span>
                                         <span className="font-bold text-emerald-600 dark:text-emerald-400">{peso.format(totalAmount)}</span>
                                     </div>
                                 </div>
@@ -701,9 +732,9 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                             <Clock className="size-6" />
                                         </div>
                                         <div>
-                                            <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white">Payment Under Review</h2>
+                                            <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white">{t("Payment Under Review")}</h2>
                                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                                Proof of payment is awaiting landlord verification.
+                                                {t("Proof of payment is awaiting landlord verification.")}
                                             </p>
                                         </div>
                                     </div>
@@ -713,7 +744,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                         <div className="mt-4 rounded-2xl border border-blue-500/30 bg-blue-500/10 dark:bg-blue-500/10 p-3.5 flex items-center justify-between gap-3">
                                             <div className="min-w-0">
                                                 <span className="block text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                                                    System Reference No. (Immutable)
+                                                    {t("System Reference No. (Immutable)")}
                                                 </span>
                                                 <span className="font-mono font-black text-sm sm:text-base text-blue-950 dark:text-blue-100 tracking-wide select-all truncate block">
                                                     {systemTxnRef}
@@ -723,17 +754,17 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                 type="button"
                                                 onClick={() => handleCopyTxn(systemTxnRef)}
                                                 className="flex items-center gap-1.5 rounded-xl border border-blue-500/20 bg-white/80 dark:bg-zinc-800/80 px-3 py-1.5 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-white dark:hover:bg-zinc-800 transition shrink-0 shadow-sm"
-                                                title="Copy System Reference"
+                                                title={t("Copy System Reference")}
                                             >
                                                 {copiedTxn ? (
                                                     <>
                                                         <Check className="size-3.5 text-emerald-500" />
-                                                        <span>Copied</span>
+                                                        <span>{t("Copied")}</span>
                                                     </>
                                                 ) : (
                                                     <>
                                                         <Copy className="size-3.5" />
-                                                        <span>Copy</span>
+                                                        <span>{t("Copy")}</span>
                                                     </>
                                                 )}
                                             </button>
@@ -742,35 +773,35 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
                                     <div className="mt-4 space-y-3 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-4 sm:p-5 text-xs sm:text-sm">
                                         <div className="flex justify-between">
-                                            <span className="text-zinc-500 dark:text-zinc-400">Status</span>
-                                            <span className="font-bold text-blue-600 dark:text-blue-400">Under Landlord Review</span>
+                                            <span className="text-zinc-500 dark:text-zinc-400">{t("Status")}</span>
+                                            <span className="font-bold text-blue-600 dark:text-blue-400">{t("Under Landlord Review")}</span>
                                         </div>
                                         {systemTxnRef && (
                                             <div className="flex justify-between items-center">
-                                                <span className="text-zinc-500 dark:text-zinc-400">System Ref No.</span>
+                                                <span className="text-zinc-500 dark:text-zinc-400">{t("System Ref No.")}</span>
                                                 <span className="font-mono font-bold text-zinc-900 dark:text-white">{systemTxnRef}</span>
                                             </div>
                                         )}
                                         {referenceNumber && (
                                             <div className="flex justify-between">
-                                                <span className="text-zinc-500 dark:text-zinc-400">GCash Ref No.</span>
+                                                <span className="text-zinc-500 dark:text-zinc-400">{t("GCash Ref No.")}</span>
                                                 <span className="font-mono font-bold text-zinc-900 dark:text-white">{referenceNumber}</span>
                                             </div>
                                         )}
                                         <div className="flex justify-between">
-                                            <span className="text-zinc-500 dark:text-zinc-400">Payment Method</span>
+                                            <span className="text-zinc-500 dark:text-zinc-400">{t("Payment Method")}</span>
                                             <span className="font-semibold text-zinc-900 dark:text-white capitalize">
-                                                {payload.requests[0]?.method === "gcash" ? "GCash (E-Wallet)" : "Cash (In Person)"}
+                                                {payload.requests[0]?.method === "gcash" ? t("GCash (E-Wallet)") : t("Cash (In Person)")}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-zinc-500 dark:text-zinc-400">Total Submitted</span>
+                                            <span className="text-zinc-500 dark:text-zinc-400">{t("Total Submitted")}</span>
                                             <span className="font-bold text-zinc-900 dark:text-white">{peso.format(totalAmount)}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-zinc-500 dark:text-zinc-400">Submitted At</span>
+                                            <span className="text-zinc-500 dark:text-zinc-400">{t("Submitted At")}</span>
                                             <span className="text-zinc-700 dark:text-zinc-300">
-                                                {formatDateTime(payload.requests[0]?.submittedAt)}
+                                                {formatDateTime(payload.requests[0]?.submittedAt, t, locale)}
                                             </span>
                                         </div>
                                     </div>
@@ -779,14 +810,14 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                         <div className="mt-4 flex items-center justify-between rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-900 px-4 py-3">
                                             <div className="flex items-center gap-2.5">
                                                 <FileCheck className="size-4 text-blue-600 dark:text-blue-400" />
-                                                <span className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 font-medium">Payment receipt attached</span>
+                                                <span className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 font-medium">{t("Payment receipt attached")}</span>
                                             </div>
                                             <button
                                                 type="button"
                                                 onClick={() => setShowProofModal(existingProofUrl)}
                                                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline transition"
                                             >
-                                                <span>View Receipt</span>
+                                                <span>{t("View Receipt")}</span>
                                                 <ExternalLink className="size-3.5" />
                                             </button>
                                         </div>
@@ -796,7 +827,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 {/* Immutable Lock Notice - replaces Update Submission */}
                                 <div className="mt-5 flex items-center gap-2.5 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-3.5 text-xs text-zinc-600 dark:text-zinc-400">
                                     <ShieldCheck className="size-4 text-emerald-500 shrink-0" />
-                                    <span>Payment submission is locked and permanently recorded. Your landlord has been notified to verify your proof.</span>
+                                    <span>{t("Payment submission is locked and permanently recorded. Your landlord has been notified to verify your proof.")}</span>
                                 </div>
                             </section>
                         )}
@@ -807,8 +838,8 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 <div>
                                     <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-3">
                                         <div>
-                                            <h2 className="text-base sm:text-lg font-black text-zinc-900 dark:text-white">Payment Submission</h2>
-                                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Submit transfer details for all move-in requirements</p>
+                                            <h2 className="text-base sm:text-lg font-black text-zinc-900 dark:text-white">{t("Payment Submission")}</h2>
+                                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{t("Submit transfer details for all move-in requirements")}</p>
                                         </div>
                                     </div>
 
@@ -827,7 +858,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                 <span className="flex size-4 items-center justify-center rounded-full bg-white text-[9px] font-black text-blue-600">
                                                     G
                                                 </span>
-                                                <span>GCash (E-Wallet)</span>
+                                                <span>{t("GCash (E-Wallet)")}</span>
                                             </button>
 
                                             <button
@@ -840,41 +871,45 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                 }`}
                                             >
                                                 <CreditCard className="size-4" />
-                                                <span>Cash (In Person)</span>
+                                                <span>{t("Cash (In Person)")}</span>
                                             </button>
                                         </div>
 
                                         {/* Reference Number Field */}
                                         <div>
                                             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                                                {method === "gcash" ? "13-Digit GCash Reference Number *" : "Reference Number (Optional)"}
+                                                {method === "gcash" ? t("13-Digit GCash Reference Number *") : t("Reference Number (Optional)")}
                                             </label>
                                             <div className="relative">
                                                 <input maxLength={60}
+                                                    {...portalForm.fieldProps("referenceNumber")}
                                                     type="text"
                                                     value={referenceNumber}
                                                     onChange={(e) => setReferenceNumber(e.target.value)}
-                                                    placeholder={method === "gcash" ? "e.g. 1002 9384 1029 1" : "Optional cash memo or receipt number"}
-                                                    className="w-full rounded-2xl border border-zinc-300 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition"
+                                                    placeholder={method === "gcash" ? t("e.g. 1002 9384 1029 1") : t("Optional cash memo or receipt number")}
+                                                    className={cn("w-full rounded-2xl border border-zinc-300 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition", portalForm.errorFor("referenceNumber") && fieldErrorClass)}
                                                 />
                                                 {referenceNumber.trim().length > 0 && (
                                                     <Check className="absolute right-3.5 top-3.5 size-4 text-emerald-500" />
                                                 )}
                                             </div>
+                                            <FieldError id={portalForm.errorId("referenceNumber")} message={portalForm.errorFor("referenceNumber")} />
                                         </div>
 
                                         {/* File Upload Dropzone */}
                                         <div>
                                             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                                                Proof of Payment Receipt {method === "gcash" ? "*" : "(Optional)"}
+                                                {method === "gcash" ? t("Proof of Payment Receipt *") : t("Proof of Payment Receipt (Optional)")}
                                             </label>
 
                                             <input
                                                 ref={fileInputRef}
+                                                {...portalForm.fieldProps("hasProof")}
                                                 type="file"
+                                                aria-label={t("Proof of payment receipt")}
                                                 accept={MEDIA_ACCEPT_STRINGS.document_and_image}
                                                 onChange={(e) => handleFileSelected(e.target.files?.[0] ?? null)}
-                                                className="hidden"
+                                                className="sr-only"
                                             />
 
                                             {!proofFile && !existingProofUrl ? (
@@ -901,10 +936,10 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                     </div>
                                                     <div>
                                                         <p className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200">
-                                                            Click to browse or drag &amp; drop receipt
+                                                            {t("Click to browse or drag & drop receipt")}
                                                         </p>
                                                         <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">
-                                                            PNG, JPG, WebP, or PDF up to 10MB
+                                                            {t("PNG, JPG, WebP, or PDF up to 10MB")}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -915,7 +950,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                         {proofPreviewUrl ? (
                                                             <img
                                                                 src={proofPreviewUrl}
-                                                                alt="Proof preview"
+                                                                alt={t("Proof preview")}
                                                                 className="size-11 rounded-xl object-cover border border-zinc-200 dark:border-white/10 shrink-0 cursor-pointer shadow-sm"
                                                                 onClick={() => setShowProofModal(proofPreviewUrl)}
                                                             />
@@ -926,11 +961,11 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                         )}
                                                         <div className="min-w-0">
                                                             <p className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white truncate">
-                                                                {proofFile ? proofFile.name : "Current Attached Proof"}
+                                                                {proofFile ? proofFile.name : t("Current Attached Proof")}
                                                             </p>
                                                             <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium mt-0.5">
                                                                 <CheckCircle2 className="size-3" />
-                                                                <span>{proofFile ? `${(proofFile.size / 1024).toFixed(0)} KB ready` : "Uploaded"}</span>
+                                                                <span>{proofFile ? t("{size} KB ready", { size: (proofFile.size / 1024).toFixed(0) }) : t("Uploaded")}</span>
                                                             </p>
                                                         </div>
                                                     </div>
@@ -941,7 +976,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                             onClick={() => fileInputRef.current?.click()}
                                                             className="rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 transition shadow-sm"
                                                         >
-                                                            Replace
+                                                            {t("Replace")}
                                                         </button>
                                                         <button
                                                             type="button"
@@ -950,7 +985,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                                 if (fileInputRef.current) fileInputRef.current.value = "";
                                                             }}
                                                             className="flex size-7 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-500 hover:text-red-500 transition"
-                                                            title="Remove file"
+                                                            title={t("Remove file")}
                                                         >
                                                             <X className="size-3.5" />
                                                         </button>
@@ -959,19 +994,22 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                             )}
                                         </div>
 
+                                        <FieldError id={portalForm.errorId("hasProof")} message={portalForm.errorFor("hasProof")} />
+
                                         {/* Optional Transfer Note */}
                                         <div>
                                             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                                                Transfer Note (Optional)
+                                                {t("Transfer Note (Optional)")}
                                             </label>
                                             <input maxLength={250}
+                                                {...portalForm.fieldProps("note")}
                                                 type="text"
                                                 value={note}
                                                 onChange={(e) => setNote(e.target.value)}
                                                 placeholder={
                                                     method === "cash"
-                                                        ? "e.g. Will pay upon key turnover on Saturday"
-                                                        : "Any message or context for the landlord"
+                                                        ? t("e.g. Will pay upon key turnover on Saturday")
+                                                        : t("Any message or context for the landlord")
                                                 }
                                                 className="w-full rounded-2xl border border-zinc-300 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 px-4 py-3 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition"
                                             />
@@ -983,8 +1021,10 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 <div className="pt-4">
                                     <button
                                         type="button"
-                                        disabled={!canSubmit || isSubmitting}
-                                        onClick={() => setShowConfirmModal(true)}
+                                        disabled={isSubmitting}
+                                        onClick={() => {
+                                            if (portalForm.validateAll()) setShowConfirmModal(true);
+                                        }}
                                         className="w-full relative flex items-center justify-center gap-2 rounded-2xl py-3.5 sm:py-4 px-5 font-bold text-xs sm:text-sm tracking-wide transition shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 hover:scale-[1.01] active:scale-[0.99]"
                                         style={{
                                             backgroundColor: brandPrimary,
@@ -994,12 +1034,12 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                         {isSubmitting ? (
                                             <>
                                                 <Loader2 className="size-4 animate-spin" />
-                                                <span>Submitting Payment Proof...</span>
+                                                <span>{t("Submitting Payment Proof...")}</span>
                                             </>
                                         ) : (
                                             <>
                                                 <CheckCircle2 className="size-4" />
-                                                <span>Submit Payment Proof ({peso.format(totalAmount)})</span>
+                                                <span>{t("Submit Payment Proof ({amount})", { amount: peso.format(totalAmount) })}</span>
                                                 <ArrowRight className="size-4 opacity-70" />
                                             </>
                                         )}
@@ -1008,7 +1048,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                     {/* Status guidance note under button */}
                                     {!canSubmit && method === "gcash" && (
                                         <p className="mt-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
-                                            Please upload your GCash receipt and enter the reference number to proceed.
+                                            {t("Please upload your GCash receipt and enter the reference number to proceed.")}
                                         </p>
                                     )}
                                 </div>
@@ -1023,9 +1063,10 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-150">
                     <div className="max-w-md w-full rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 p-6 shadow-2xl">
                         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/10 pb-3">
-                            <h3 className="text-base font-bold text-zinc-900 dark:text-white">Confirm Payment Submission</h3>
+                            <h3 className="text-base font-bold text-zinc-900 dark:text-white">{t("Confirm Payment Submission")}</h3>
                             <button
                                 onClick={() => setShowConfirmModal(false)}
+                                aria-label={t("Close")}
                                 className="text-zinc-400 hover:text-zinc-600 dark:hover:text-white"
                             >
                                 <X className="size-4" />
@@ -1033,34 +1074,34 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                         </div>
 
                         <p className="mt-3 text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                            Please verify your submission details. Once submitted, an immutable system reference number will be generated and your payment proof will be locked for landlord review.
+                            {t("Please verify your submission details. Once submitted, an immutable system reference number will be generated and your payment proof will be locked for landlord review.")}
                         </p>
 
                         <div className="mt-4 space-y-2 rounded-2xl border border-zinc-200 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/70 p-4 text-xs">
                             <div className="flex justify-between">
-                                <span className="text-zinc-500 dark:text-zinc-400">Property &amp; Unit</span>
+                                <span className="text-zinc-500 dark:text-zinc-400">{t("Property & Unit")}</span>
                                 <span className="font-bold text-zinc-900 dark:text-white">
                                     {payload.application.propertyName} ({displayUnit})
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-zinc-500 dark:text-zinc-400">Total Amount</span>
+                                <span className="text-zinc-500 dark:text-zinc-400">{t("Total Amount")}</span>
                                 <span className="font-bold text-emerald-600 dark:text-emerald-400">{peso.format(totalAmount)}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-zinc-500 dark:text-zinc-400">Payment Method</span>
-                                <span className="font-bold text-zinc-900 dark:text-white capitalize">{method}</span>
+                                <span className="text-zinc-500 dark:text-zinc-400">{t("Payment Method")}</span>
+                                <span className="font-bold text-zinc-900 dark:text-white capitalize">{method === "cash" ? t("Cash") : method}</span>
                             </div>
                             {referenceNumber && (
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-500 dark:text-zinc-400">Reference Number</span>
+                                    <span className="text-zinc-500 dark:text-zinc-400">{t("Reference Number")}</span>
                                     <span className="font-mono font-bold text-zinc-900 dark:text-white">{referenceNumber}</span>
                                 </div>
                             )}
                             <div className="flex justify-between">
-                                <span className="text-zinc-500 dark:text-zinc-400">Attached Proof</span>
+                                <span className="text-zinc-500 dark:text-zinc-400">{t("Attached Proof")}</span>
                                 <span className="text-zinc-700 dark:text-zinc-200 font-medium truncate max-w-[200px]">
-                                    {proofFile?.name || "Attached receipt"}
+                                    {proofFile?.name || t("Attached receipt")}
                                 </span>
                             </div>
                         </div>
@@ -1072,7 +1113,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 onClick={() => setShowConfirmModal(false)}
                                 className="rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
                             >
-                                Review Again
+                                {t("Review Again")}
                             </button>
                             <button
                                 type="button"
@@ -1085,7 +1126,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 }}
                             >
                                 {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
-                                <span>Confirm &amp; Submit</span>
+                                <span>{t("Confirm & Submit")}</span>
                             </button>
                         </div>
                     </div>
@@ -1097,9 +1138,10 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
                     <div className="max-w-sm w-full rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 p-6 shadow-2xl text-center">
                         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/10 pb-3">
-                            <h3 className="text-sm font-bold text-zinc-900 dark:text-white">GCash Official QR Code</h3>
+                            <h3 className="text-sm font-bold text-zinc-900 dark:text-white">{t("GCash Official QR Code")}</h3>
                             <button
                                 onClick={() => setShowQrModal(false)}
+                                aria-label={t("Close")}
                                 className="text-zinc-400 hover:text-zinc-600 dark:hover:text-white"
                             >
                                 <X className="size-4" />
@@ -1109,13 +1151,13 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                         <div className="mt-4 rounded-2xl bg-white p-4 inline-block shadow-md border border-zinc-200/80">
                             <img
                                 src={qrCodeUrl}
-                                alt="GCash QR Code"
+                                alt={t("GCash QR Code")}
                                 className="size-60 object-contain"
                             />
                         </div>
 
                         <div className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
-                            <p className="font-bold text-zinc-900 dark:text-white">{payload.destination?.accountName || "Landlord GCash"}</p>
+                            <p className="font-bold text-zinc-900 dark:text-white">{payload.destination?.accountName || t("Landlord GCash")}</p>
                             <p className="font-mono mt-0.5">{payload.destination?.accountNumber}</p>
                         </div>
 
@@ -1127,14 +1169,14 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 rel="noreferrer"
                                 className="flex-1 rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800 py-2.5 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
                             >
-                                Open Full Size
+                                {t("Open Full Size")}
                             </a>
                             <button
                                 type="button"
                                 onClick={() => setShowQrModal(false)}
                                 className="flex-1 rounded-xl bg-blue-600 py-2.5 text-xs font-bold text-white hover:bg-blue-500 transition shadow-md"
                             >
-                                Done
+                                {t("Done")}
                             </button>
                         </div>
                     </div>
@@ -1146,9 +1188,10 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
                     <div className="max-w-lg w-full rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 p-5 shadow-2xl">
                         <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-white/10">
-                            <span className="text-xs font-bold text-zinc-900 dark:text-white">Submitted Payment Receipt</span>
+                            <span className="text-xs font-bold text-zinc-900 dark:text-white">{t("Submitted Payment Receipt")}</span>
                             <button
                                 onClick={() => setShowProofModal(null)}
+                                aria-label={t("Close")}
                                 className="text-zinc-400 hover:text-zinc-600 dark:hover:text-white"
                             >
                                 <X className="size-4" />
@@ -1157,7 +1200,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                         <div className="mt-3 max-h-[70vh] overflow-auto rounded-2xl bg-zinc-100 dark:bg-black/40 flex items-center justify-center p-2">
                             <img
                                 src={showProofModal}
-                                alt="Payment proof"
+                                alt={t("Payment proof")}
                                 className="max-h-[65vh] w-auto rounded-xl object-contain shadow-sm"
                             />
                         </div>
@@ -1167,7 +1210,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 onClick={() => setShowProofModal(null)}
                                 className="rounded-xl bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
                             >
-                                Close
+                                {t("Close")}
                             </button>
                         </div>
                     </div>

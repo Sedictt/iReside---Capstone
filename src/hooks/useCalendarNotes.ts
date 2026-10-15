@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type { CalendarNoteRecord } from "@/app/api/landlord/calendar/notes/route";
+import { calendarNoteSchema } from "@/lib/validation/schemas/operations.schema";
 
 const STORAGE_PREFIX = "ireside_calendar_notes_";
 
@@ -109,21 +110,17 @@ export function useCalendarNotes({ landlordId, userId, apiEndpoint }: UseCalenda
     // Add or update a note
     const addNote = useCallback(
         async (date: string, title: string, description?: string): Promise<{ success: boolean; note?: CalendarNoteRecord; error?: string }> => {
-            const trimmedTitle = title.trim();
-            const trimmedDate = date.trim();
-
-            if (!trimmedDate) {
-                return { success: false, error: "Date is required." };
-            }
-            if (!trimmedTitle) {
-                return { success: false, error: "Title is required." };
+            // Same schema as the notes API, so a note is never kept locally that the server would reject.
+            const checked = calendarNoteSchema.safeParse({ date, title, description: description ?? "" });
+            if (!checked.success) {
+                return { success: false, error: checked.error.issues[0]?.message ?? "Invalid note." };
             }
 
             const newNote: CalendarNoteRecord = {
                 id: `note-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-                date: trimmedDate,
-                title: trimmedTitle,
-                description: description?.trim() || "",
+                date: checked.data.date,
+                title: checked.data.title,
+                description: checked.data.description,
                 created_at: new Date().toISOString(),
             };
 

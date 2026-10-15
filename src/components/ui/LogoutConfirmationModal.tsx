@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { LogOut, X, Loader2 } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface LogoutConfirmationModalProps {
     isOpen: boolean;
@@ -21,6 +22,7 @@ export function LogoutConfirmationModal({
     title = "Confirm Sign Out",
     description = "Are you sure you want to log out of iReside? You will need to sign back in with your credentials to access your account."
 }: LogoutConfirmationModalProps) {
+    const { t } = useLanguageContext();
     const [mounted, setMounted] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -103,7 +105,7 @@ export function LogoutConfirmationModal({
                             }}
                             disabled={isLoggingOut}
                             className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-colors neumorphic-extruded disabled:opacity-40"
-                            aria-label="Close dialog"
+                            aria-label={t("Close dialog")}
                         >
                             <X className="size-4" />
                         </button>
@@ -115,11 +117,11 @@ export function LogoutConfirmationModal({
                             </div>
 
                             <h3 id="logout-dialog-title" className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                                {title}
+                                {t(title)}
                             </h3>
 
                             <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
-                                {description}
+                                {t(description)}
                             </p>
 
                             {/* Action Buttons */}
@@ -130,7 +132,7 @@ export function LogoutConfirmationModal({
                                     disabled={isLoggingOut}
                                     className="flex-1 rounded-xl px-5 py-3 text-sm font-bold text-muted-foreground hover:text-foreground neumorphic-extruded transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                                 >
-                                    Stay Logged In
+                                    {t("Stay Logged In")}
                                 </button>
                                 <button
                                     type="button"
@@ -141,12 +143,12 @@ export function LogoutConfirmationModal({
                                     {isLoggingOut ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            <span>Logging out...</span>
+                                            <span>{t("Logging out...")}</span>
                                         </>
                                     ) : (
                                         <>
                                             <LogOut className="size-4" />
-                                            <span>Yes, Log Out</span>
+                                            <span>{t("Yes, Log Out")}</span>
                                         </>
                                     )}
                                 </button>

@@ -161,7 +161,7 @@ export function SortableActionCard({
             {...listeners}
             role="button"
             tabIndex={0}
-            aria-label={`Reorder ${label}`}
+            aria-label={t("Reorder {label}", { label })}
         >
             {/* Top Row: Discreet drag indicator & hide action */}
             <div className={cn(
@@ -171,7 +171,7 @@ export function SortableActionCard({
                 <GripVertical className={compact ? "size-3" : "size-4"} />
             </div>
 
-            <Tooltip content={`Hide "${label}"`}>
+            <Tooltip content={t("Hide \"{label}\"", { label })}>
                 <button
                     type="button"
                     onClick={(e) => {
@@ -185,7 +185,7 @@ export function SortableActionCard({
                         "bg-muted/70 hover:bg-destructive/15 text-muted-foreground hover:text-destructive",
                         "border border-border/50 hover:border-destructive/30 shadow-2xs cursor-pointer"
                     )}
-                    aria-label={`Hide ${label}`}
+                    aria-label={t("Hide {label}", { label })}
                 >
                     <EyeOff className={compact ? "size-3" : "size-3.5"} />
                 </button>

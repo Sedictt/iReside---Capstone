@@ -6,6 +6,7 @@ import { MoveOutRequestDetails } from "@/components/landlord/move-out/MoveOutReq
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
 import { MoveOutStatusBadge } from "@/components/landlord/move-out/MoveOutStatusBadge";
 import { MoveOutStatus } from "@/types/database";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 const MOCK_REQUESTS = [
   {
@@ -125,6 +126,7 @@ const MOCK_REQUESTS = [
 ];
 
 export default function MoveOutPreviewPage() {
+  const { t } = useLanguageContext();
   const [view, setView] = useState<"landlord" | "tenant">("landlord");
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
@@ -133,7 +135,7 @@ export default function MoveOutPreviewPage() {
       <div className="mx-auto max-w-7xl">
         {/* Toggle View */}
         <div className="mb-12 flex items-center justify-between">
-          <h1 className="text-4xl font-black text-foreground">Move-Out Workflow Preview</h1>
+          <h1 className="text-4xl font-black text-foreground">{t("Move-Out Workflow Preview")}</h1>
           <div className="flex rounded-2xl bg-muted p-1">
             <button
               onClick={() => { setView("landlord"); setSelectedRequest(null); }}
@@ -141,7 +143,7 @@ export default function MoveOutPreviewPage() {
                 view === "landlord" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Landlord View
+              {t("Landlord View")}
             </button>
             <button
               onClick={() => { setView("tenant"); setSelectedRequest(null); }}
@@ -149,7 +151,7 @@ export default function MoveOutPreviewPage() {
                 view === "tenant" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Tenant View
+              {t("Tenant View")}
             </button>
           </div>
         </div>
@@ -159,8 +161,8 @@ export default function MoveOutPreviewPage() {
             {!selectedRequest ? (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-black text-foreground">1. Request List</h2>
-                  <span className="text-xs font-medium text-muted-foreground italic">(Mock Data)</span>
+                  <h2 className="text-2xl font-black text-foreground">{t("1. Request List")}</h2>
+                  <span className="text-xs font-medium text-muted-foreground italic">{t("(Mock Data)")}</span>
                 </div>
                 <div className="grid gap-4">
                   {MOCK_REQUESTS.map((req) => (
@@ -180,7 +182,7 @@ export default function MoveOutPreviewPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Requested Date</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Requested Date")}</p>
                         <p className="text-sm font-black text-foreground">{req.requested_date}</p>
                       </div>
                     </div>
@@ -190,12 +192,12 @@ export default function MoveOutPreviewPage() {
             ) : (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-black text-foreground">2. Request Details</h2>
+                  <h2 className="text-2xl font-black text-foreground">{t("2. Request Details")}</h2>
                   <button
                     onClick={() => setSelectedRequest(null)}
                     className="text-xs font-black uppercase tracking-widest text-primary hover:underline"
                   >
-                    Back to List
+                    {t("Back to List")}
                   </button>
                 </div>
                 <MoveOutRequestDetails
@@ -209,14 +211,14 @@ export default function MoveOutPreviewPage() {
         ) : (
           <div className="space-y-16">
             <div className="space-y-8">
-              <h2 className="text-2xl font-black text-foreground">1. Submission Flow</h2>
+              <h2 className="text-2xl font-black text-foreground">{t("1. Submission Flow")}</h2>
               <div className="grid gap-8 lg:grid-cols-2">
                 <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Hub Variant (No Request)</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Hub Variant (No Request)")}</h3>
                   <MoveOutRequest variant="hub" />
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Quick Action Trigger</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Quick Action Trigger")}</h3>
                   <div className="flex h-full items-center justify-center rounded-[2.5rem] border border-dashed border-border bg-muted/20">
                     <MoveOutRequest variant="quickAction" />
                   </div>
@@ -225,34 +227,34 @@ export default function MoveOutPreviewPage() {
             </div>
 
             <div className="space-y-8">
-              <h2 className="text-2xl font-black text-foreground">2. Active Request States</h2>
+              <h2 className="text-2xl font-black text-foreground">{t("2. Active Request States")}</h2>
               <div className="grid gap-8 lg:grid-cols-3">
                 <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-amber-500">Pending Review</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-amber-500">{t("Pending Review")}</h3>
                   <MoveOutRequest variant="sidebar" initialRequest={{
                     ...MOCK_REQUESTS[0],
                     checklist_data: null,
                   }} />
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-500">Approved (Checklist Active)</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-500">{t("Approved (Checklist Active)")}</h3>
                   <MoveOutRequest variant="sidebar" initialRequest={{
                     ...MOCK_REQUESTS[1],
                     checklist_data: { items: [{ id: "keys", label: "Return keys", completed: false }] },
                   }} />
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Completed</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-500">{t("Completed")}</h3>
                   <MoveOutRequest variant="sidebar" initialRequest={MOCK_REQUESTS[2]} />
                 </div>
               </div>
             </div>
 
             <div className="space-y-8">
-              <h2 className="text-2xl font-black text-foreground">3. Edge Cases</h2>
+              <h2 className="text-2xl font-black text-foreground">{t("3. Edge Cases")}</h2>
               <div className="grid gap-8 lg:grid-cols-3">
                 <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-red-500">Denied</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-red-500">{t("Denied")}</h3>
                   <MoveOutRequest variant="sidebar" initialRequest={{
                     ...MOCK_REQUESTS[0],
                     status: "denied",
@@ -261,7 +263,7 @@ export default function MoveOutPreviewPage() {
                   }} />
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Inspection Done</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-500">{t("Inspection Done")}</h3>
                   <MoveOutRequest variant="sidebar" initialRequest={{
                     ...MOCK_REQUESTS[1],
                     inspection_date: "2026-05-18T10:00:00Z",

@@ -5,13 +5,15 @@ import { Home, Mail, MessageSquare, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { leaseDateRangeLabel } from "@/lib/lease-term";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface LeaseInfo {
     id: string;
     status: string;
     startDate: string;
-    endDate: string;
+    endDate: string | null;
+    termType?: string | null;
     monthlyRent: number;
     securityDeposit: number;
     unitName: string | null;
@@ -30,6 +32,7 @@ interface TenantDashboardHeaderProps {
 }
 
 export function TenantDashboardHeader({ lease }: TenantDashboardHeaderProps) {
+    const { t, language } = useLanguageContext();
     if (!lease) return null;
 
     return (
@@ -42,7 +45,7 @@ export function TenantDashboardHeader({ lease }: TenantDashboardHeaderProps) {
                         </div>
                         <div>
                             <h1 className="text-2xl font-black text-foreground">
-                                {lease.unitName || "Your Unit"}
+                                {lease.unitName || t("Your Unit")}
                             </h1>
                             <p className="text-sm text-muted-foreground">
                                 {lease.propertyName}
@@ -52,23 +55,23 @@ export function TenantDashboardHeader({ lease }: TenantDashboardHeaderProps) {
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-card/50 rounded-2xl p-4 border border-border">
-                            <p className="text-xs font-medium text-muted-foreground mb-1">Monthly Rent</p>
+                            <p className="text-xs font-medium text-muted-foreground mb-1">{t("Monthly Rent")}</p>
                             <p className="text-xl font-black text-foreground">
                                 ₱{lease.monthlyRent.toLocaleString()}
                             </p>
                         </div>
                         
                         <div className="bg-card/50 rounded-2xl p-4 border border-border">
-                            <p className="text-xs font-medium text-muted-foreground mb-1">Lease Period</p>
+                            <p className="text-xs font-medium text-muted-foreground mb-1">{t("Lease Period")}</p>
                             <p className="text-sm font-medium text-foreground">
-                                <ClientOnlyDate date={lease.startDate} /> - <ClientOnlyDate date={lease.endDate} />
+                                {leaseDateRangeLabel({ start_date: lease.startDate, end_date: lease.endDate, term_type: lease.termType }, language)}
                             </p>
                         </div>
                         
                         <div className="bg-card/50 rounded-2xl p-4 border border-border">
-                            <p className="text-xs font-medium text-muted-foreground mb-1">Status</p>
+                            <p className="text-xs font-medium text-muted-foreground mb-1">{t("Status")}</p>
                             <p className="text-sm font-medium capitalize text-primary">
-                                {lease.status}
+                                {t(lease.status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()))}
                             </p>
                         </div>
                     </div>
@@ -77,17 +80,19 @@ export function TenantDashboardHeader({ lease }: TenantDashboardHeaderProps) {
                 <div className="flex items-center gap-2 ml-6">
                     <Link
                         href={`mailto:${lease.landlordEmail}`}
+                        aria-label={t("Email landlord")}
                         className="flex size-10 items-center justify-center rounded-xl bg-card border border-border hover:bg-muted transition-colors"
                     >
                         <Mail className="size-4 text-muted-foreground" />
                     </Link>
                     <Link
                         href="/tenant/messages"
+                        aria-label={t("Message landlord")}
                         className="flex size-10 items-center justify-center rounded-xl bg-card border border-border hover:bg-muted transition-colors"
                     >
                         <MessageSquare className="size-4 text-muted-foreground" />
                     </Link>
-                    <button className="flex size-10 items-center justify-center rounded-xl bg-card border border-border hover:bg-muted transition-colors">
+                    <button aria-label={t("More options")} className="flex size-10 items-center justify-center rounded-xl bg-card border border-border hover:bg-muted transition-colors">
                         <MoreHorizontal className="size-4 text-muted-foreground" />
                     </button>
                 </div>

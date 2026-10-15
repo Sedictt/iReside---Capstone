@@ -10,6 +10,7 @@
 "use server";
 
 import * as nodemailer from "nodemailer";
+import { getAppBaseUrl } from "@/lib/app-url";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -61,6 +62,32 @@ function getTransporter() {
 }
 
 // ---------------------------------------------------------------------------
+// Safety net: never ship a localhost link to a real user
+// ---------------------------------------------------------------------------
+
+const LOCAL_LINK_PATTERN = /https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)(?::\d+)?/gi;
+
+/**
+ * Last line of defence. Every link should already come from `getAppBaseUrl`,
+ * but if a localhost URL still reaches the transport in production we rewrite
+ * it to the canonical app origin and log loudly so the source gets fixed.
+ */
+function guardAgainstLocalLinks(body: string, subject: string): string {
+  const isProduction =
+    process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
+  if (!isProduction || !LOCAL_LINK_PATTERN.test(body)) {
+    LOCAL_LINK_PATTERN.lastIndex = 0;
+    return body;
+  }
+  LOCAL_LINK_PATTERN.lastIndex = 0;
+  const base = getAppBaseUrl();
+  console.error(
+    `[email] "${subject}" contained a localhost link in production; rewrote it to ${base}. Check NEXT_PUBLIC_APP_URL.`,
+  );
+  return body.replace(LOCAL_LINK_PATTERN, base);
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -94,6 +121,10 @@ export async function sendEmail(
   }
 
   const { transporter, senderAddress } = transporterData;
+  const htmlBody = guardAgainstLocalLinks(emailOptions.htmlBody, emailOptions.subject);
+  const textBody = emailOptions.textBody
+    ? guardAgainstLocalLinks(emailOptions.textBody, emailOptions.subject)
+    : emailOptions.textBody;
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= MAXIMUM_RETRY_COUNT; attempt += 1) {
@@ -102,8 +133,8 @@ export async function sendEmail(
         from: senderAddress,
         to: emailOptions.recipientEmail,
         subject: emailOptions.subject,
-        html: emailOptions.htmlBody,
-        text: emailOptions.textBody,
+        html: htmlBody,
+        text: textBody,
       });
 
       console.log(

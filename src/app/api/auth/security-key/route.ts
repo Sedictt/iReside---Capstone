@@ -3,6 +3,7 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { describeAuditEvent } from "@/lib/audit/audit-display";
 
 /**
  * GET /api/auth/security-key
@@ -85,8 +86,7 @@ export async function POST(request: Request) {
             userRole: (userRole as any) || "tenant",
             action: "security_key_generated",
             category: "security",
-            title: "Security Recovery Key Created",
-            description: "An initial single-use AES-256 encrypted security recovery key was generated during account setup.",
+            ...describeAuditEvent({ action: "security_key_generated" }),
             severity: "info",
         });
 

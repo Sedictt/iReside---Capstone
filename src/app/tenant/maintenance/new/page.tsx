@@ -1,7 +1,7 @@
 "use client";
 
 import Image from 'next/image';
-import { useState, useRef, type ChangeEvent } from "react";
+import { useMemo, useState, useRef, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
     Wrench,
@@ -32,8 +32,24 @@ import { OfflineBlobStorage } from "@/lib/offline/offlineStorage";
 import { toast } from "sonner";
 import { WifiOff, MessageSquare } from "lucide-react";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { choiceRule } from "@/lib/validation/rules";
+import {
+    MAINTENANCE_LIMITS,
+    maintenanceDescriptionRule,
+    maintenanceTitleRule,
+} from "@/lib/validation/schemas/operations.schema";
+import { tr } from "@/hooks/useLanguage";
+
+const CATEGORY_IDS = MAINTENANCE_CATEGORIES.map((cat) => cat.id);
+
+/** Thrown for an HTTP error response so it is shown to the user instead of being queued offline. */
+class RequestRejectedError extends Error {}
 export default function NewMaintenanceRequest() {
     const router = useRouter();
+    const { t } = useLanguageContext();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [category, setCategory] = useState("");
@@ -44,12 +60,19 @@ export default function NewMaintenanceRequest() {
     const [previews, setPreviews] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const formValues = useMemo(() => ({ title, description, category }), [title, description, category]);
+    const form = useFormValidation(formValues, {
+        title: (value) => maintenanceTitleRule(value),
+        description: (value) => maintenanceDescriptionRule(value),
+        category: (value) => choiceRule(value, CATEGORY_IDS, { label: "Category" }),
+    });
+
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const rawFiles = Array.from(e.target.files || []);
         if (rawFiles.length + mediaFiles.length > 5) {
-            const limitMsg = "You can only upload up to 5 images.";
-            setError(limitMsg);
-            toast.error("Upload limit exceeded", { description: limitMsg });
+            const limitMsg = t("You can only upload up to 5 images.");
+            setError(tr(limitMsg));
+            toast.error(t("Upload limit exceeded"), { description: limitMsg });
             if (e.target) e.target.value = "";
             return;
         }
@@ -59,7 +82,7 @@ export default function NewMaintenanceRequest() {
             multiple: true,
             notify: (message, description) => {
                 setError(`${message}: ${description}`);
-                toast.error(message, { description });
+                toast.error(tr(message), { description });
             },
         });
 
@@ -90,8 +113,9 @@ export default function NewMaintenanceRequest() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title || !description || !category) {
-            setError("Please fill in all required fields.");
+        if (isSubmitting) return;
+        if (!form.validateAll()) {
+            setError(t("Please fix the highlighted fields."));
             return;
         }
 
@@ -124,7 +148,7 @@ export default function NewMaintenanceRequest() {
                     `Maintenance: ${title} (Offline Staged)`
                 );
 
-                toast.success("Request saved offline! It will be dispatched automatically once your device reconnects.");
+                toast.success(t("Request saved offline! It will be dispatched automatically once your device reconnects."));
                 router.push("/tenant/dashboard?maintenance=queued");
                 return;
             } catch (err) {
@@ -146,8 +170,8 @@ export default function NewMaintenanceRequest() {
                 });
 
                 if (!uploadRes.ok) {
-                    const data = await uploadRes.json();
-                    throw new Error(data.error || "Failed to upload images.");
+                    const data = await uploadRes.json().catch(() => ({}));
+                    throw new RequestRejectedError(data.error || t("Failed to upload images."));
                 }
 
                 const uploadData = await uploadRes.json();
@@ -168,13 +192,21 @@ export default function NewMaintenanceRequest() {
             });
 
             if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || "Failed to submit request.");
+                const data = await response.json().catch(() => ({}));
+                form.setServerErrors(data.fieldErrors);
+                throw new RequestRejectedError(data.error || t("Failed to submit request."));
             }
 
             router.push("/tenant/dashboard?maintenance=success");
             router.refresh();
         } catch (err) {
+            // The server answered and rejected the request: show why instead of queueing a retry
+            // that would fail again.
+            if (err instanceof RequestRejectedError) {
+                setError(tr(err.message));
+                toast.error(t(err.message));
+                return;
+            }
             console.warn("[NewMaintenanceRequest] Online submit failed, enqueuing offline:", err);
             // Fallback to offline queue
             mutationQueue.enqueue(
@@ -190,7 +222,7 @@ export default function NewMaintenanceRequest() {
                 },
                 `Maintenance: ${title} (Offline Staged)`
             );
-            toast.success("Network interrupted: Request saved locally and queued for dispatch!");
+            toast.success(t("Network interrupted: Request saved locally and queued for dispatch!"));
             router.push("/tenant/dashboard?maintenance=queued");
         } finally {
             setIsSubmitting(false);
@@ -207,9 +239,9 @@ export default function NewMaintenanceRequest() {
                             <WifiOff className="size-5" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-foreground">You are currently offline</h3>
+                            <h3 className="text-sm font-black text-foreground">{t("You are currently offline")}</h3>
                             <p className="text-xs text-muted-foreground">
-                                For urgent hazards (burst pipes, electrical sparks), use direct contact below:
+                                {t("For urgent hazards (burst pipes, electrical sparks), use direct contact below:")}
                             </p>
                         </div>
                     </div>
@@ -220,14 +252,14 @@ export default function NewMaintenanceRequest() {
                             className="flex-1 sm:flex-initial h-9 px-3.5 rounded-xl bg-primary text-primary-foreground font-black text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform"
                         >
                             <Phone className="size-3.5" />
-                            Direct Call
+                            {t("Direct Call")}
                         </a>
                         <a
                             href={`sms:09171234567?body=URGENT%20Maintenance%20Request:%20${encodeURIComponent(title || 'Property Issue')}`}
                             className="flex-1 sm:flex-initial h-9 px-3.5 rounded-xl neumorphic-extruded text-foreground font-black text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
                         >
                             <MessageSquare className="size-3.5" />
-                            SMS Dispatch
+                            {t("SMS Dispatch")}
                         </a>
                     </div>
                 </div>
@@ -240,14 +272,14 @@ export default function NewMaintenanceRequest() {
                         className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-4 group"
                     >
                         <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
-                        Back to Dashboard
+                        {t("Back to Dashboard")}
                     </button>
                     <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
                         <Wrench className="size-8 text-primary" />
-                        New Maintenance Request
+                        {t("New Maintenance Request")}
                     </h1>
                     <p className="text-muted-foreground mt-1">
-                        Report an issue in your unit and we'll get it fixed as soon as possible.
+                        {t("Report an issue in your unit and we'll get it fixed as soon as possible.")}
                     </p>
                 </div>
             </div>
@@ -260,52 +292,66 @@ export default function NewMaintenanceRequest() {
                         <div className="rounded-3xl p-6 sm:p-8 space-y-6 neumorphic-panel">
                             <h2 className="text-xl font-black flex items-center gap-2">
                                 <Info className="size-5 text-primary" />
-                                Issue Details
+                                {t("Issue Details")}
                             </h2>
 
                             <div className="space-y-4">
                                 <div className="space-y-2">
                                     <label htmlFor="maintenance-title" className="text-sm font-black uppercase tracking-wider text-muted-foreground ml-1">
-                                        Title
+                                        {t("Title")}
                                     </label>
-                                    <input maxLength={60}
+                                    <input
+                                        {...form.fieldProps("title")}
+                                        maxLength={MAINTENANCE_LIMITS.title}
                                         id="maintenance-title"
                                         type="text"
-                                        placeholder="e.g., Leaking faucet in the bathroom"
+                                        placeholder={t("e.g., Leaking faucet in the bathroom")}
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
-                                        className="w-full rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all font-medium neumorphic-inset"
+                                        className={cn("w-full rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all font-medium neumorphic-inset", form.errorFor("title") && "ring-1 ring-rose-500/60")}
                                         required
                                     />
+                                    <FieldError id={form.errorId("title")} message={form.errorFor("title")} />
                                 </div>
 
                                 <div className="space-y-2">
                                     <label htmlFor="maintenance-description" className="text-sm font-black uppercase tracking-wider text-muted-foreground ml-1">
-                                        Description
+                                        {t("Description")}
                                     </label>
-                                    <textarea maxLength={500}
+                                    <textarea
+                                        {...form.fieldProps("description")}
+                                        maxLength={MAINTENANCE_LIMITS.description}
                                         id="maintenance-description"
-                                        placeholder="Please provide more details about the issue..."
+                                        placeholder={t("Please provide more details about the issue...")}
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
                                         rows={4}
-                                        className="w-full rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all font-medium resize-none neumorphic-inset"
+                                        className={cn("w-full rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all font-medium resize-none neumorphic-inset", form.errorFor("description") && "ring-1 ring-rose-500/60")}
                                         required
                                     />
+                                    <FieldError id={form.errorId("description")} message={form.errorFor("description")} />
                                 </div>
                             </div>
 
                             {/* Category Selector */}
                             <div className="space-y-4">
                                 <label className="text-sm font-black uppercase tracking-wider text-muted-foreground ml-1">
-                                    Category
+                                    {t("Category")}
                                 </label>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div
+                                    role="radiogroup"
+                                    aria-label={t("Category")}
+                                    tabIndex={-1}
+                                    {...form.fieldProps("category")}
+                                    className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+                                >
                                     {MAINTENANCE_CATEGORIES.map((cat) => (
                                         <button
                                             key={cat.id}
                                             type="button"
-                                            onClick={() => setCategory(cat.id)}
+                                            role="radio"
+                                            aria-checked={category === cat.id}
+                                            onClick={() => { setCategory(cat.id); form.touch("category"); }}
                                             className={cn(
                                                 "flex flex-col items-center justify-center p-4 rounded-2xl transition-all gap-2 group",
                                                 category === cat.id
@@ -316,10 +362,11 @@ export default function NewMaintenanceRequest() {
                                             <div className={cn("p-2 rounded-xl transition-colors", cat.bg, cat.color)}>
                                                 <cat.icon className="size-5" />
                                             </div>
-                                            <span className="text-xs font-black">{cat.label}</span>
+                                            <span className="text-xs font-black">{t(cat.label)}</span>
                                         </button>
                                     ))}
                                 </div>
+                                <FieldError id={form.errorId("category")} message={form.errorFor("category")} />
                             </div>
                         </div>
 
@@ -327,10 +374,10 @@ export default function NewMaintenanceRequest() {
                         <div className="rounded-3xl p-6 sm:p-8 space-y-6 neumorphic-panel">
                             <h2 className="text-xl font-black flex items-center gap-2">
                                 <Camera className="size-5 text-primary" />
-                                Photos (Optional)
+                                {t("Photos (Optional)")}
                             </h2>
                             <p className="text-sm text-muted-foreground">
-                                Adding photos helps us understand the issue better and bring the right tools.
+                                {t("Adding photos helps us understand the issue better and bring the right tools.")}
                             </p>
 
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
@@ -343,10 +390,11 @@ export default function NewMaintenanceRequest() {
                                             exit={{ opacity: 0, scale: 0.8 }}
                                             className="relative aspect-square rounded-2xl overflow-hidden neumorphic-inset"
                                         >
-                                            <Image src={preview} alt="Preview" fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 150px" className="object-cover" />
+                                            <Image src={preview} alt={t("Preview")} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 150px" className="object-cover" />
                                             <button
                                                 type="button"
                                                 onClick={() => removeFile(idx)}
+                                                aria-label={t("Remove photo")}
                                                 className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full shadow-lg"
                                             >
                                                 <X className="size-3" />
@@ -363,7 +411,7 @@ export default function NewMaintenanceRequest() {
                                     >
                                         <Upload className="size-6 text-muted-foreground group-hover:text-primary transition-colors" />
                                         <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground group-hover:text-primary">
-                                            Upload
+                                            {t("Upload")}
                                         </span>
                                     </button>
                                 )}
@@ -385,7 +433,7 @@ export default function NewMaintenanceRequest() {
                                 className="p-4 rounded-2xl text-red-500 text-sm font-medium flex items-center gap-3 neumorphic-inset text-center"
                             >
                                 <AlertTriangle className="size-5 shrink-0" />
-                                {error}
+                                {t(error)}
                             </motion.div>
                         )}
 
@@ -397,11 +445,11 @@ export default function NewMaintenanceRequest() {
                             {isSubmitting ? (
                                 <>
                                     <Loader2 className="size-5 animate-spin" />
-                                    Submitting...
+                                    {t("Submitting...")}
                                 </>
                             ) : (
                                 <>
-                                    Submit Request
+                                    {t("Submit Request")}
                                     <ChevronRight className="size-5" />
                                 </>
                             )}
@@ -415,7 +463,7 @@ export default function NewMaintenanceRequest() {
                     <div className="rounded-3xl p-6 space-y-4 neumorphic-inset">
                         <div className="flex items-center gap-3 text-primary">
                             <Clock className="size-5" />
-                            <h3 className="font-black">What to expect?</h3>
+                            <h3 className="font-black">{t("What to expect?")}</h3>
                         </div>
                         <ul className="space-y-4">
                             <li className="flex gap-3">
@@ -423,7 +471,7 @@ export default function NewMaintenanceRequest() {
                                     <span className="text-[10px] font-black text-primary">1</span>
                                 </div>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
-                                    Your landlord will be notified immediately of your request.
+                                    {t("Your landlord will be notified immediately of your request.")}
                                 </p>
                             </li>
                             <li className="flex gap-3">
@@ -431,7 +479,7 @@ export default function NewMaintenanceRequest() {
                                     <span className="text-[10px] font-black text-primary">2</span>
                                 </div>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
-                                    Your landlord or a contractor will visit your unit if necessary, depending on the severity of the repair.
+                                    {t("Your landlord or a contractor will visit your unit if necessary, depending on the severity of the repair.")}
                                 </p>
                             </li>
                             <li className="flex gap-3">
@@ -439,7 +487,7 @@ export default function NewMaintenanceRequest() {
                                     <span className="text-[10px] font-black text-primary">3</span>
                                 </div>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
-                                    You'll receive updates via messages and notifications on the progress.
+                                    {t("You'll receive updates via messages and notifications on the progress.")}
                                 </p>
                             </li>
                         </ul>
@@ -450,15 +498,18 @@ export default function NewMaintenanceRequest() {
                         <div className="flex items-center justify-between gap-4">
                             <div className="space-y-1">
                                 <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
-                                    Self-Repair
+                                    {t("Self-Repair")}
                                 </h3>
                                 <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
-                                    Request permission to fix this issue yourself (e.g., if you have the tools or it's a minor fix).
+                                    {t("Request permission to fix this issue yourself (e.g., if you have the tools or it's a minor fix).")}
                                 </p>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setFixItMyself(!fixItMyself)}
+                                role="switch"
+                                aria-checked={fixItMyself}
+                                aria-label={t("Self-Repair")}
                                 className={cn(
                                     "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
                                     fixItMyself ? "bg-primary" : "bg-neutral-200 dark:bg-neutral-800"
@@ -478,10 +529,10 @@ export default function NewMaintenanceRequest() {
                     <div className="rounded-3xl p-6 neumorphic-inset">
                         <div className="flex items-center gap-3 text-red-500 mb-3">
                             <AlertTriangle className="size-5" />
-                            <h3 className="font-black uppercase tracking-tight">Emergency Hotlines</h3>
+                            <h3 className="font-black uppercase tracking-tight">{t("Emergency Hotlines")}</h3>
                         </div>
                         <p className="text-[10px] text-muted-foreground leading-relaxed mb-4 uppercase font-black tracking-wider">
-                            For life-threatening emergencies, please contact the authorities immediately.
+                            {t("For life-threatening emergencies, please contact the authorities immediately.")}
                         </p>
                         
                         <div className="space-y-6">
@@ -514,7 +565,7 @@ export default function NewMaintenanceRequest() {
                             ].map((hotline) => (
                                 <div key={hotline.label} className="group relative">
                                     <div className="flex flex-col">
-                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{hotline.label}</span>
+                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{t(hotline.label)}</span>
                                         <div className="space-y-1.5">
                                             {hotline.numbers.map((num) => (
                                                 <a 
@@ -527,7 +578,7 @@ export default function NewMaintenanceRequest() {
                                                 </a>
                                             ))}
                                         </div>
-                                        <span className="text-[9px] text-muted-foreground/60 font-medium uppercase tracking-tighter mt-1">{hotline.sub}</span>
+                                        <span className="text-[9px] text-muted-foreground/60 font-medium uppercase tracking-tighter mt-1">{t(hotline.sub)}</span>
                                     </div>
                                 </div>
                             ))}
@@ -535,7 +586,7 @@ export default function NewMaintenanceRequest() {
                         
                         <div className="mt-6 pt-4 border-t border-red-500/10">
                             <p className="text-[9px] text-muted-foreground leading-tight italic">
-                                * Landline numbers require (02) area code when calling from mobile.
+                                {t("* Landline numbers require (02) area code when calling from mobile.")}
                             </p>
                         </div>
                     </div>

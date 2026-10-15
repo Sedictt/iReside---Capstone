@@ -42,17 +42,20 @@ import {
     type WalkInUnit,
     validateFormStep,
 } from "@/components/landlord/applications/application-intake-shared";
+import { mapApplicationFieldErrors } from "@/lib/application-intake";
 import { cn } from "@/lib/utils";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/ui/Logo";
 import { toast } from "sonner";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import {
     calculatePaymentPreview,
     type InvitePaymentTerms,
     type PaymentPreview,
 } from "@/lib/tenant-invite-payment-terms";
+import { tr } from "@/hooks/useLanguage";
 
 type InvitePayload = {
     id: string;
@@ -85,6 +88,7 @@ const REQUIREMENT_LABELS: Record<string, string> = {
 
 export function InviteApplicationClient({ token }: { token: string }) {
     const router = useRouter();
+    const { t } = useLanguageContext();
     const [invite, setInvite] = useState<InvitePayload | null>(null);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -127,7 +131,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                 setSelectedUnit(initialUnit);
             } catch (error) {
                 if (ignore) return;
-                setLoadError(error instanceof Error ? error.message : "Invite is no longer available.");
+                setLoadError(error instanceof Error ? tr(error.message) : tr("Invite is no longer available."));
             } finally {
                 if (!ignore) setLoading(false);
             }
@@ -226,8 +230,10 @@ export function InviteApplicationClient({ token }: { token: string }) {
             maxFiles: 5,
             maxSizeBytes: 10 * 1024 * 1024,
             notify: (message, description) => {
-                setSubmitError(`${message}: ${description}`);
-                toast.error(message, { description });
+                const translatedMessage = t(message);
+                const translatedDescription = description ? t(description) : description;
+                setSubmitError(`${translatedMessage}: ${translatedDescription}`);
+                toast.error(tr(translatedMessage), { description: translatedDescription });
             },
         });
 
@@ -253,7 +259,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
             };
 
             if (!response.ok || !Array.isArray(payload.documents)) {
-                throw new Error(payload.error || "Failed to upload files.");
+                throw new Error(payload.error || t("Failed to upload files."));
             }
 
             setUploadedDocuments((prev) => {
@@ -271,7 +277,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                 },
             }));
         } catch (error) {
-            setSubmitError(error instanceof Error ? error.message : "Failed to upload files.");
+            setSubmitError(error instanceof Error ? t(error.message) : t("Failed to upload files."));
         } finally {
             setUploadingRequirementKey(null);
         }
@@ -301,6 +307,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
     };
 
     const handleSubmit = async () => {
+        if (submitting) return;
         const stepZeroErrors = validateFormStep(0, selectedUnit, formData);
         const stepOneErrors = validateFormStep(1, selectedUnit, formData);
         const allErrors = { ...stepZeroErrors, ...stepOneErrors };
@@ -320,7 +327,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                 const hasDoc = uploadedDocuments.some((doc) => doc.requirementKey === key);
                 const needsPhoto = key !== "application_form";
                 if (!checked || (needsPhoto && !hasDoc)) {
-                    setSubmitError(`Complete uploads for ${REQUIREMENT_LABELS[key]}.`);
+                    setSubmitError(t("Complete uploads for {requirement}.", { requirement: t(REQUIREMENT_LABELS[key]) }));
                     setStep(2);
                     return;
                 }
@@ -343,20 +350,30 @@ export function InviteApplicationClient({ token }: { token: string }) {
                     emergency_contact_phone: formData.emergency_contact_phone,
                     employment_info: {
                         ...formData.employment_info,
-                        monthly_income: Number(String(formData.employment_info.monthly_income).replace(/,/g, "")) || 0,
+                        // Validated above; the API parses "45,000" itself and rejects anything malformed.
+                        monthly_income: String(formData.employment_info.monthly_income).replace(/,/g, ""),
                     },
                     requirements_checklist: formData.requirements_checklist,
                     uploaded_documents: uploadedDocuments,
                     message: formData.message,
                 }),
             });
-            const payload = (await response.json()) as { error?: string };
+            const payload = (await response.json().catch(() => ({}))) as { error?: string; fieldErrors?: Record<string, string> };
             if (!response.ok) {
-                throw new Error(payload.error || "Failed to submit application.");
+                const mapped = mapApplicationFieldErrors(payload.fieldErrors);
+                if (mapped.firstStep !== null) {
+                    setFormErrors((prev) => ({ ...prev, ...mapped.errors }));
+                    setTouchedFields((prev) => ({
+                        ...prev,
+                        ...Object.fromEntries(Object.keys(mapped.errors).map((key) => [key, true])),
+                    }));
+                    setStep(mapped.firstStep);
+                }
+                throw new Error(payload.error || t("Failed to submit application."));
             }
             setSubmitted(true);
         } catch (error) {
-            setSubmitError(error instanceof Error ? error.message : "Failed to submit application.");
+            setSubmitError(error instanceof Error ? t(error.message) : t("Failed to submit application."));
         } finally {
             setSubmitting(false);
         }
@@ -376,7 +393,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                 <div className="flex-1 flex items-center justify-center">
                     <div className="flex items-center gap-3 text-sm font-bold tracking-wide text-muted-foreground">
                         <Loader2 className="size-5 animate-spin text-primary" />
-                        Loading invitation...
+                        {t("Loading invitation...")}
                     </div>
                 </div>
             </div>
@@ -403,16 +420,16 @@ export function InviteApplicationClient({ token }: { token: string }) {
                             <ShieldAlert className="size-10 text-red-500" />
                         </div>
                         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground mb-3">
-                            Invite <span className="text-red-500 italic">unavailable</span>
+                            {t("invite.noun", undefined, "Invite")} <span className="text-red-500 italic">{t("unavailable")}</span>
                         </h1>
                         <p className="text-sm leading-relaxed text-muted-foreground mb-8">
-                            {loadError || "This invite is no longer available."}
+                            {loadError ? t(loadError) : t("This invite is no longer available.")}
                         </p>
                         <Link
                             href="/login"
                             className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-muted hover:bg-muted/80 border border-border px-8 py-3.5 text-sm font-black text-foreground transition-all active:scale-95"
                         >
-                            Back to Login
+                            {t("Back to Login")}
                         </Link>
                     </div>
                 </div>
@@ -453,11 +470,11 @@ export function InviteApplicationClient({ token }: { token: string }) {
                         </motion.div>
 
                         <h1 className="text-3xl md:text-4xl font-black mb-4 tracking-tight text-foreground leading-tight">
-                            Application <br /><span className="text-primary italic">Successfully</span> Sent
+                            {t("Application")} <br /><span className="text-primary italic">{t("Successfully")}</span> {t("Sent")}
                         </h1>
 
                         <p className="text-muted-foreground text-base mb-10 leading-relaxed max-w-lg mx-auto">
-                            Your application for <span className="text-foreground font-black">{invite.propertyName}</span> has been received and is now being reviewed. You&apos;ll be contacted as soon as your application is processed.
+                            {t("Your application for")} <span className="text-foreground font-black">{invite.propertyName}</span> {t("has been received and is now being reviewed. You'll be contacted as soon as your application is processed.")}
                         </p>
 
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -466,7 +483,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                 className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-black hover:bg-primary/90 transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-primary/20"
                             >
                                 <User className="size-4" />
-                                Return Home
+                                {t("Return Home")}
                             </Link>
                         </div>
                     </motion.div>
@@ -516,7 +533,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                             className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-xl hover:bg-muted"
                         >
                             <ArrowLeft className="size-3.5" />
-                            <span>Exit</span>
+                            <span>{t("Exit")}</span>
                         </Link>
                     </div>
                 </div>
@@ -528,11 +545,11 @@ export function InviteApplicationClient({ token }: { token: string }) {
                     <div className="w-full lg:w-[360px] space-y-6 flex-shrink-0">
                         <div className="space-y-3">
                             <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight leading-none">
-                                Application <br />
-                                <span className="text-primary italic">Process</span>
+                                {t("Application")} <br />
+                                <span className="text-primary italic">{t("Process")}</span>
                             </h1>
                             <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
-                                Complete these steps to secure your future home at {invite.propertyName}.
+                                {t("Complete these steps to secure your future home at {propertyName}.", { propertyName: invite.propertyName })}
                             </p>
                         </div>
 
@@ -573,10 +590,10 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                     isActive ? "text-foreground" : "text-muted-foreground"
                                                 )}
                                             >
-                                                {stepDef.title}
+                                                {t(stepDef.title)}
                                             </p>
                                             <p className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[180px]">
-                                                {isActive ? "Currently editing" : stepDef.desc}
+                                                {isActive ? t("Currently editing") : t(stepDef.desc)}
                                             </p>
                                         </div>
 
@@ -592,35 +609,35 @@ export function InviteApplicationClient({ token }: { token: string }) {
                         
                         <div className="rounded-3xl bg-card border border-border p-5 shadow-sm space-y-3">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">
-                                Invitation Details
+                                {t("Invitation Details")}
                             </h3>
                             <div className="space-y-1">
                                 <p className="text-sm font-black text-foreground tracking-tight">{invite.propertyName}</p>
                                 <p className="text-xs text-muted-foreground">
-                                    {isOnlineInvite ? "Online Document Processing" : "Face-to-face Document Checking"}
+                                    {isOnlineInvite ? t("Online Document Processing") : t("Face-to-face Document Checking")}
                                 </p>
                             </div>
 
                             {currentPaymentPreview && (
                                 <div className="pt-3 border-t border-border/60 space-y-2">
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                                        Move-in Payment Terms
+                                        {t("Move-in Payment Terms")}
                                     </p>
                                     <div className="space-y-1.5 text-xs">
                                         <div className="flex justify-between items-center text-muted-foreground">
-                                            <span>Advance Rent</span>
+                                            <span>{t("Advance Rent")}</span>
                                             <span className="font-bold text-foreground">
                                                 ₱{currentPaymentPreview.advanceAmount.toLocaleString()}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center text-muted-foreground">
-                                            <span>Security Deposit</span>
+                                            <span>{t("Security Deposit")}</span>
                                             <span className="font-bold text-foreground">
                                                 ₱{currentPaymentPreview.securityDepositAmount.toLocaleString()}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center pt-1 border-t border-border/40 font-black text-foreground">
-                                            <span>Estimated Total</span>
+                                            <span>{t("Estimated Total")}</span>
                                             <span className="text-primary">
                                                 ₱{currentPaymentPreview.totalMoveInAmount.toLocaleString()}
                                             </span>
@@ -631,7 +648,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
 
                             {invite.expiresAt && (
                                 <div className="pt-3 border-t border-border/60">
-                                    <p className="text-[10px] font-black uppercase text-rose-500 dark:text-rose-400">Expires At</p>
+                                    <p className="text-[10px] font-black uppercase text-rose-500 dark:text-rose-400">{t("Expires At")}</p>
                                     <p className="text-xs text-muted-foreground mt-0.5">
                                         <ClientOnlyDate date={invite.expiresAt} format={{ dateStyle: 'full', timeStyle: 'short' }} />
                                     </p>
@@ -667,14 +684,14 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                             })()}
                                         </div>
                                         <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em]">
-                                            Step {step + 1} of {totalSteps}
+                                            {t("Step {current} of {total}", { current: step + 1, total: totalSteps })}
                                         </span>
                                     </div>
                                     <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight mb-2">
-                                        {stepDefinitions[step].title}
+                                        {t(stepDefinitions[step].title)}
                                     </h2>
                                     <p className="text-muted-foreground text-sm leading-relaxed max-w-2xl">
-                                        {stepDefinitions[step].desc}. Accuracy accelerates the landlord approval window.
+                                        {t("{description}. Accuracy accelerates the landlord approval window.", { description: t(stepDefinitions[step].desc) })}
                                     </p>
                                 </header>
                                 
@@ -715,15 +732,15 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                             currentUnit={currentUnit}
                                             onSelectedUnitChange={setSelectedUnit}
                                             onFieldChange={updateField}
-                                            messageLabel="Additional Notes"
-                                            messagePlaceholder="Add anything the landlord should know about your move-in timing, household setup, or application context."
+                                            messageLabel={t("Additional Notes")}
+                                            messagePlaceholder={t("Add anything the landlord should know about your move-in timing, household setup, or application context.")}
                                         />
                                     )}
 
                                     {isOnlineInvite && step === 2 && (
                                         <div className="space-y-4 max-w-2xl">
                                             <p className="text-sm leading-relaxed text-muted-foreground mb-6">
-                                                Upload at least one clear photo for each required document. Maximum file size 5MB each.
+                                                {t("Upload at least one clear photo for each required document. Maximum file size 5MB each.")}
                                             </p>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {requiredRequirementKeys.map((key) => {
@@ -734,17 +751,17 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                             <div className="flex items-start justify-between mb-4">
                                                                 <div>
                                                                     <p className="text-xs font-black uppercase tracking-[0.1em] text-foreground">
-                                                                        {REQUIREMENT_LABELS[key] ?? key}
+                                                                        {t(REQUIREMENT_LABELS[key] ?? key)}
                                                                     </p>
                                                                     {key !== "application_form" && (
-                                                                       <p className="text-[10px] text-muted-foreground mt-1">Photo Upload</p>
+                                                                       <p className="text-[10px] text-muted-foreground mt-1">{t("Photo Upload")}</p>
                                                                     )}
                                                                 </div>
                                                                 <div className="flex flex-col gap-2 relative z-10">
                                                                     {key !== "application_form" && (
                                                                         <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-border bg-background hover:bg-muted px-3 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-colors text-foreground">
                                                                             <Upload className="size-3" />
-                                                                            {uploadingRequirementKey === key ? "WAIT..." : "UPLOAD"}
+                                                                            {uploadingRequirementKey === key ? t("WAIT...") : t("UPLOAD")}
                                                                             <input
                                                                                 type="file"
                                                                                 accept={MEDIA_ACCEPT_STRINGS.image}
@@ -768,15 +785,15 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                                                 : "border-border bg-background text-muted-foreground hover:bg-muted"
                                                                         )}
                                                                     >
-                                                                        {checked ? "READY" : "SET READY"}
+                                                                        {checked ? t("READY") : t("SET READY")}
                                                                     </button>
                                                                 </div>
                                                             </div>
                                                             <div className="space-y-2 mt-4 pt-4 border-t border-border/60">
                                                                 {key === "application_form" ? (
-                                                                    <p className="text-[10px] text-primary italic font-medium">Included digitally in this app</p>
+                                                                    <p className="text-[10px] text-primary italic font-medium">{t("Included digitally in this app")}</p>
                                                                 ) : docs.length === 0 ? (
-                                                                    <p className="text-[10px] text-muted-foreground italic">No files attached yet</p>
+                                                                    <p className="text-[10px] text-muted-foreground italic">{t("No files attached yet")}</p>
                                                                 ) : (
                                                                     docs.map((doc) => (
                                                                         <div key={doc.url} className="flex items-center justify-between rounded-xl bg-background px-3 py-2 text-xs border border-border">
@@ -786,6 +803,8 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => removeUploadedDocument(doc.url)}
+                                                                                aria-label={t("Remove file")}
+                                                                                title={t("Remove file")}
                                                                                 className="p-1.5 text-muted-foreground hover:text-red-500 transition-colors bg-muted rounded-lg"
                                                                             >
                                                                                 <X className="size-3" />
@@ -804,12 +823,12 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                     {step === finalStepIndex && (
                                         <div className="space-y-6 max-w-2xl">
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <SummaryCard label="Property" value={invite.propertyName} icon={Building} />
-                                                <SummaryCard label="Unit" value={currentUnit?.name ?? "Not selected"} icon={Home} />
-                                                <SummaryCard label="Applicant" value={formData.applicant_name || "Not provided"} icon={User} />
-                                                <SummaryCard label="Email" value={formData.applicant_email || "Not provided"} icon={Mail} />
-                                                <SummaryCard label="Move-in date" value={formData.move_in_date || "Not provided"} icon={Calendar} />
-                                                <SummaryCard label="Income" value={formData.employment_info.monthly_income ? `₱${Number(String(formData.employment_info.monthly_income).replace(/,/g, "")).toLocaleString()}` : "Not provided"} icon={Briefcase} />
+                                                <SummaryCard label={t("Property")} value={invite.propertyName} icon={Building} />
+                                                <SummaryCard label={t("Unit")} value={currentUnit?.name ?? t("Not selected")} icon={Home} />
+                                                <SummaryCard label={t("Applicant")} value={formData.applicant_name || t("Not provided")} icon={User} />
+                                                <SummaryCard label={t("Email")} value={formData.applicant_email || t("Not provided")} icon={Mail} />
+                                                <SummaryCard label={t("Move-in date")} value={formData.move_in_date || t("Not provided")} icon={Calendar} />
+                                                <SummaryCard label={t("Income")} value={formData.employment_info.monthly_income ? `₱${Number(String(formData.employment_info.monthly_income).replace(/,/g, "")).toLocaleString()}` : t("Not provided")} icon={Briefcase} />
                                             </div>
 
                                             {currentPaymentPreview && (
@@ -818,28 +837,28 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                         <div className="flex items-center gap-2 text-primary">
                                                             <Shield className="size-4" />
                                                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">
-                                                                Move-in Payment Requirements
+                                                                {t("Move-in Payment Requirements")}
                                                             </p>
                                                         </div>
                                                         <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                                                            Due upon approval
+                                                            {t("Due upon approval")}
                                                         </span>
                                                     </div>
                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                                                         <div className="p-3 rounded-2xl bg-card border border-border/60">
-                                                            <p className="text-[10px] uppercase font-bold text-muted-foreground">Advance Rent</p>
+                                                            <p className="text-[10px] uppercase font-bold text-muted-foreground">{t("Advance Rent")}</p>
                                                             <p className="text-sm font-black text-foreground mt-0.5">
                                                                 ₱{currentPaymentPreview.advanceAmount.toLocaleString()}
                                                             </p>
                                                         </div>
                                                         <div className="p-3 rounded-2xl bg-card border border-border/60">
-                                                            <p className="text-[10px] uppercase font-bold text-muted-foreground">Security Deposit</p>
+                                                            <p className="text-[10px] uppercase font-bold text-muted-foreground">{t("Security Deposit")}</p>
                                                             <p className="text-sm font-black text-foreground mt-0.5">
                                                                 ₱{currentPaymentPreview.securityDepositAmount.toLocaleString()}
                                                             </p>
                                                         </div>
                                                         <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20">
-                                                            <p className="text-[10px] uppercase font-black text-primary">Estimated Total</p>
+                                                            <p className="text-[10px] uppercase font-black text-primary">{t("Estimated Total")}</p>
                                                             <p className="text-sm font-black text-foreground mt-0.5">
                                                                 ₱{currentPaymentPreview.totalMoveInAmount.toLocaleString()}
                                                             </p>
@@ -851,9 +870,9 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                             <div className="rounded-3xl border border-border bg-muted/30 p-6 lg:p-8">
                                                 <div className="flex items-center gap-3 opacity-70 mb-3">
                                                     <FileText className="size-4 text-muted-foreground" />
-                                                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">Detailed Notes</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">{t("Detailed Notes")}</p>
                                                 </div>
-                                                <p className="text-sm leading-relaxed text-foreground">{formData.message || "No additional notes provided."}</p>
+                                                <p className="text-sm leading-relaxed text-foreground">{formData.message || t("No additional notes provided.")}</p>
                                             </div>
 
                                             <div className="rounded-3xl bg-emerald-500/[0.05] border border-emerald-500/20 p-6 flex flex-col md:flex-row items-center gap-6">
@@ -861,9 +880,9 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                     <CheckCircle2 className="size-7 text-emerald-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-foreground font-black text-base mb-1">Final Review</h4>
+                                                    <h4 className="text-foreground font-black text-base mb-1">{t("Final Review")}</h4>
                                                     <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                                                        By proceeding, you grant permission for basic background validation based on the requirements provided.
+                                                        {t("By proceeding, you grant permission for basic background validation based on the requirements provided.")}
                                                     </p>
                                                 </div>
                                             </div>
@@ -882,7 +901,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                         )}
                                     >
                                         <ChevronLeft className="size-4" />
-                                        Previous
+                                        {t("Previous")}
                                     </button>
 
                                     <button
@@ -894,11 +913,11 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                         {submitting ? (
                                             <>
                                                 <Loader2 className="size-4 animate-spin" />
-                                                Submitting...
+                                                {t("Submitting...")}
                                             </>
                                         ) : (
                                             <>
-                                                {step === finalStepIndex ? "Submit Application" : "Continue"}
+                                                {step === finalStepIndex ? t("Submit Application") : t("Continue")}
                                                 {step === finalStepIndex ? <CheckCircle2 className="size-4" /> : <ChevronRight className="size-4" />}
                                             </>
                                         )}
@@ -908,9 +927,9 @@ export function InviteApplicationClient({ token }: { token: string }) {
                         </motion.div>
 
                         <div className="mt-6 flex flex-wrap items-center justify-center gap-8 opacity-40">
-                            <Seal icon={ShieldCheck} label="Bank-Level Encryption" />
-                            <Seal icon={Lock} label="DPA Compliance" />
-                            <Seal icon={Zap} label="Instant Verification" />
+                            <Seal icon={ShieldCheck} label={t("Bank-Level Encryption")} />
+                            <Seal icon={Lock} label={t("DPA Compliance")} />
+                            <Seal icon={Zap} label={t("Instant Verification")} />
                         </div>
                     </div>
                 </div>

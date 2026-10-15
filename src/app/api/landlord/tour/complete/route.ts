@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseJsonBody } from "@/lib/validation/server";
 import {
     LANDLORD_PRODUCT_TOUR_STEPS,
     completeLandlordProductTour,
 } from "@/lib/landlord-product-tour";
 
 const completeSchema = z.object({
-    stepId: z.string().optional().nullable(),
+    stepId: z.string().trim().min(1).max(100).optional().nullable(),
 });
 
 export async function POST(request: Request) {
@@ -18,9 +19,11 @@ export async function POST(request: Request) {
 
     const adminClient = createAdminClient();
 
+    const parsed = await parseJsonBody(request, completeSchema);
+    if (!parsed.ok) return parsed.response;
+    const { stepId } = parsed.data;
+
     try {
-        const body = await request.json();
-        const { stepId } = completeSchema.parse(body);
 
         const state = await completeLandlordProductTour(adminClient as any, {
             landlordId: userId,

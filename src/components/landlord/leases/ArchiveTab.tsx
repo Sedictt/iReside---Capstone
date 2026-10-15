@@ -11,10 +11,19 @@ import {
  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { useProperty } from "@/context/PropertyContext";
 import { LeaseCard, LeaseListRow, type LeaseCardData } from "./LeaseCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { leaseEndDate, leaseEndSortValue, parseLeaseDate } from "@/lib/lease-term";
+import { tr } from "@/hooks/useLanguage";
+
+/** Archived leases without an end date (rare) fall back to their start date for ordering. */
+function archiveSortValue(lease: LeaseCardData): number {
+ if (leaseEndDate(lease)) return leaseEndSortValue(lease);
+ return parseLeaseDate(lease.start_date)?.getTime() ?? 0;
+}
 
 interface ArchiveTabProps {
  searchQuery: string;
@@ -25,6 +34,7 @@ interface ArchiveTabProps {
 
 export default function ArchiveTab({ searchQuery, sortBy, onClearSearch, viewMode = "grid" }: ArchiveTabProps) {
  const router = useRouter();
+ const { t } = useLanguageContext();
  const { selectedPropertyId } = useProperty();
 
  const [leases, setLeases] = useState<LeaseCardData[]>([]);
@@ -45,7 +55,7 @@ export default function ArchiveTab({ searchQuery, sortBy, onClearSearch, viewMod
  const archiveResponse = await res.json();
  setLeases(archiveResponse as LeaseCardData[]);
  } catch (err: any) {
- setError(err.message);
+ setError(tr(err.message));
  } finally {
  setLoading(false);
  }
@@ -74,10 +84,10 @@ export default function ArchiveTab({ searchQuery, sortBy, onClearSearch, viewMod
  } else if (sortBy === "rent-asc") {
  result.sort((a, b) => a.monthly_rent - b.monthly_rent);
  } else if (sortBy === "date-asc") {
- result.sort((a, b) => new Date(a.end_date).getTime() - new Date(b.end_date).getTime());
+ result.sort((a, b) => archiveSortValue(a) - archiveSortValue(b));
  } else {
- // Default: Sort by end_date descending (most recent first)
- result.sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime());
+ // Default: Sort by end date descending (most recently ended first)
+ result.sort((a, b) => archiveSortValue(b) - archiveSortValue(a));
  }
 
  return result;
@@ -96,11 +106,11 @@ export default function ArchiveTab({ searchQuery, sortBy, onClearSearch, viewMod
  <div className="flex flex-col items-center justify-center gap-4 rounded-3xl neumorphic-inset p-12 text-center">
  <AlertCircle className="size-10 text-destructive/50" />
  <div className="space-y-1">
- <h3 className="font-bold text-foreground">Failed to load archive</h3>
+ <h3 className="font-bold text-foreground">{t("Failed to load archive")}</h3>
  <p className="text-sm text-muted-foreground">{error}</p>
  </div>
  <Button onClick={() => void fetchArchivedLeases()} variant="outline" className="rounded-xl">
- Try Again
+ {t("Try Again")}
  </Button>
  </div>
  );
@@ -111,16 +121,16 @@ export default function ArchiveTab({ searchQuery, sortBy, onClearSearch, viewMod
 
  {/* Results Info */}
  <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60 px-1">
- <span>{sortedLeases.length} Historical {sortedLeases.length === 1 ? 'Record' : 'Records'}</span>
- <span className="italic text-[10px] opacity-60">Sorted by most recently ended</span>
+ <span>{sortedLeases.length === 1 ? t("{count} Historical Record", { count: sortedLeases.length }) : t("{count} Historical Records", { count: sortedLeases.length })}</span>
+ <span className="italic text-[10px] opacity-60">{t("Sorted by most recently ended")}</span>
  </div>
 
  {/* Content: Grid or List */}
  {sortedLeases.length === 0 ? (
  <div className="flex flex-col items-center justify-center rounded-[3rem] border border-dashed border-border neumorphic-inset py-20 text-center">
  <Archive className="mb-4 size-10 text-muted-foreground/20" />
- <h4 className="font-bold text-foreground">Archive is empty</h4>
- <p className="text-sm text-muted-foreground">Historical records will appear here as tenancies conclude.</p>
+ <h4 className="font-bold text-foreground">{t("Archive is empty")}</h4>
+ <p className="text-sm text-muted-foreground">{t("Historical records will appear here as tenancies conclude.")}</p>
  </div>
  ) : viewMode === "list" ? (
  <div className="flex flex-col gap-3">

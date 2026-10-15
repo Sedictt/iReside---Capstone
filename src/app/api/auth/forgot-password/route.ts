@@ -1,25 +1,22 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
-import { resetPasswordRequestSchema } from "@/lib/validation/schemas/auth.schema";
+import { escapeLikePattern, passwordResetRequestSchema } from "@/lib/validation/schemas/account.schema";
+import { parseJsonBody } from "@/lib/validation/server";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { buildAuthCallbackUrl } from "@/lib/app-url";
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const validation = resetPasswordRequestSchema.safeParse(body);
+        const parsed = await parseJsonBody(request, passwordResetRequestSchema);
+        if (!parsed.ok) return parsed.response;
 
-        if (!validation.success) {
-            return NextResponse.json(
-                { error: "Invalid email address." },
-                { status: 400 }
-            );
-        }
-
-        const { email } = validation.data;
+        const { email } = parsed.data;
         const normalizedEmail = email.trim().toLowerCase();
 
-        const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-        const redirectTo = `${origin}/auth/callback?type=recovery&next=/auth/reset-password`;
+        // The recovery link must point at *our* configured origin. The Origin
+        // header is attacker-controlled and is only used when no app URL is set
+        // (and never when it points at localhost in production).
+        const redirectTo = buildAuthCallbackUrl("/auth/reset-password", "recovery", request.headers.get("origin"));
 
         const supabaseAdmin = createServiceRoleSupabaseClient();
 
@@ -29,7 +26,7 @@ export async function POST(request: Request) {
         const { data: profile } = await supabaseAdmin
             .from("profiles")
             .select("full_name")
-            .ilike("email", normalizedEmail)
+            .ilike("email", escapeLikePattern(normalizedEmail))
             .maybeSingle();
 
         if (profile?.full_name?.trim()) {

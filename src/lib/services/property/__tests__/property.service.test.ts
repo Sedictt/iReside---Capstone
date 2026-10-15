@@ -126,35 +126,4 @@ describe("PropertyService", () => {
       expect(result.baseRentAmount).toBe(15000);
     });
   });
-
-  describe("updateRenewalSettings", () => {
-    it("throws PropertyValidationError on invalid values", async () => {
-      await expect(
-        service.updateRenewalSettings({
-          propertyId: "prop-1",
-          landlordId: "landlord-1",
-          autoRenewalEnabled: true,
-          renewalNoticeDays: -1,
-          defaultRenewalTermMonths: 12,
-          defaultRentIncreasePercent: 5,
-        }),
-      ).rejects.toBeInstanceOf(PropertyValidationError);
-    });
-
-    it("throws PropertyAccessError when landlord doesn't own property", async () => {
-      const chain = getTableChain("properties");
-      chain.maybeSingle.mockResolvedValue({ data: null, error: null });
-
-      await expect(
-        service.updateRenewalSettings({
-          propertyId: "prop-1",
-          landlordId: "other-landlord",
-          autoRenewalEnabled: false,
-          renewalNoticeDays: 30,
-          defaultRenewalTermMonths: 12,
-          defaultRentIncreasePercent: 0,
-        }),
-      ).rejects.toBeInstanceOf(PropertyAccessError);
-    });
-  });
 });

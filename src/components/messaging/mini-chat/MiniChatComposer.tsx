@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { Tooltip } from "@/components/ui/tooltip";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { ATTACHMENT_MAX_BYTES, DRAFT_MAX_LENGTH } from "./utils";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 const MAX_ROWS = 4;
 const COUNTER_THRESHOLD = DRAFT_MAX_LENGTH - 80;
@@ -38,6 +40,7 @@ export function MiniChatComposer({
     onAttach,
     onFocus,
 }: MiniChatComposerProps) {
+    const { t } = useLanguageContext();
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const fileInputId = useId();
     const canSend = draft.trim().length > 0 && !isSending && !disabled;
@@ -73,13 +76,13 @@ export function MiniChatComposer({
     return (
         <div className="relative shrink-0 border-t border-border/80 bg-card px-2.5 pb-2.5 pt-2">
             {isUploading && (
-                <div className="absolute inset-x-0 top-0 h-0.5 overflow-hidden bg-primary/15" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={uploadProgress} aria-label="Uploading attachment">
+                <div className="absolute inset-x-0 top-0 h-0.5 overflow-hidden bg-primary/15" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={uploadProgress} aria-label={t("Uploading attachment")}>
                     <div className="h-full bg-primary transition-[width] duration-200" style={{ width: `${Math.max(8, uploadProgress)}%` }} />
                 </div>
             )}
 
             <div className="flex items-end gap-1.5">
-                <Tooltip content={isUploading ? "Uploading…" : "Attach a file"} side="top">
+                <Tooltip content={isUploading ? t("Uploading…") : t("Attach a file")} side="top">
                     <label
                         htmlFor={fileInputId}
                         className={cn(
@@ -89,7 +92,7 @@ export function MiniChatComposer({
                         )}
                     >
                         <Paperclip className="size-4" aria-hidden="true" />
-                        <span className="sr-only">Attach a file</span>
+                        <span className="sr-only">{t("Attach a file")}</span>
                         <input
                             id={fileInputId}
                             type="file"
@@ -100,7 +103,7 @@ export function MiniChatComposer({
                                 const file = handleMediaSelection(event, {
                                     preset: "chat_attachment",
                                     maxSizeBytes: ATTACHMENT_MAX_BYTES,
-                                    notify: (message, description) => toast.error(message, { description }),
+                                    notify: (message, description) => toast.error(tr(message), { description }),
                                 });
                                 if (file) onAttach(file);
                                 event.currentTarget.value = "";
@@ -122,8 +125,8 @@ export function MiniChatComposer({
                         value={draft}
                         maxLength={DRAFT_MAX_LENGTH}
                         disabled={disabled}
-                        placeholder={`Message ${contactName.split(" ")[0]}…`}
-                        aria-label={`Message ${contactName}`}
+                        placeholder={t("Message {name}…", { name: contactName.split(" ")[0] })}
+                        aria-label={t("Message {name}", { name: contactName })}
                         onChange={(event) => onChange(event.target.value)}
                         onKeyDown={handleKeyDown}
                         onFocus={onFocus}
@@ -131,12 +134,12 @@ export function MiniChatComposer({
                     />
                 </div>
 
-                <Tooltip content={canSend ? "Send (Enter)" : "Type a message to send"} side="top">
+                <Tooltip content={canSend ? t("Send (Enter)") : t("Type a message to send")} side="top">
                     <button
                         type="button"
                         onClick={onSend}
                         disabled={!canSend}
-                        aria-label="Send message"
+                        aria-label={t("Send message")}
                         className={cn(
                             "flex size-9 shrink-0 items-center justify-center rounded-full transition-all",
                             canSend

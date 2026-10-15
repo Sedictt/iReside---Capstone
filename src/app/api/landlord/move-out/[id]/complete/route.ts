@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { getTransitionErrorMessage, isValidLeaseStatusTransition } from "@/lib/lease-status-transitions";
+import type { LeaseStatus } from "@/types/database";
+import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 /**
  * PUT /api/landlord/move-out/[id]/complete
@@ -14,6 +17,10 @@ export async function PUT(
   const authContext = await requireAuthenticatedUser(request);
   if (!("userId" in authContext)) return authContext as Response;
   const { userId, supabase } = authContext;
+
+  if (!isId(id)) {
+    return NextResponse.json({ error: "Move-out request not found" }, { status: 404 });
+  }
 
   try {
 
@@ -35,6 +42,15 @@ export async function PUT(
       return NextResponse.json(
         { error: "Move-out cannot be completed. Inspection must be recorded first." },
         { status: 400 }
+      );
+    }
+
+    // Lease status changes go through the lease state machine (active → terminated only).
+    const currentLeaseStatus = (moveOutRequest.lease as { status?: string } | null)?.status;
+    if (currentLeaseStatus && !isValidLeaseStatusTransition(currentLeaseStatus as LeaseStatus, "terminated")) {
+      return NextResponse.json(
+        { error: getTransitionErrorMessage(currentLeaseStatus as LeaseStatus, "terminated") },
+        { status: 409 }
       );
     }
 
@@ -83,7 +99,7 @@ export async function PUT(
   } catch (error: any) {
     console.error("[landlord-move-out-complete] Error:", error);
     return NextResponse.json(
-      { error: "Failed to complete move-out: " + error.message },
+      { error: "Failed to complete move-out. Please try again." },
       { status: 500 }
     );
   }

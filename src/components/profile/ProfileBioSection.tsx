@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface ProfileBioSectionProps {
     initialBio: string;
@@ -22,6 +23,7 @@ export function ProfileBioSection({
 }: ProfileBioSectionProps) {
     const router = useRouter();
     const { profile, refreshProfile } = useAuth();
+    const { t } = useLanguageContext();
     const [bio, setBio] = useState(initialBio || "");
     const [tempBio, setTempBio] = useState(initialBio || "");
     const [isEditing, setIsEditing] = useState(false);
@@ -71,7 +73,7 @@ export function ProfileBioSection({
             setBio(cleanBio);
             setTempBio(cleanBio);
             setIsEditing(false);
-            toast.success("Bio updated successfully");
+            toast.success(t("Bio updated successfully"));
 
             // Non-blocking refresh and events
             void refreshProfile().catch(() => {});
@@ -85,7 +87,7 @@ export function ProfileBioSection({
             router.refresh();
         } catch (e: any) {
             console.error("Failed to save bio:", e);
-            toast.error(e?.message || "Failed to update bio. Please try again.");
+            toast.error(t(e?.message || "Failed to update bio. Please try again."));
         } finally {
             setSaving(false);
         }
@@ -104,10 +106,10 @@ export function ProfileBioSection({
                     )}
                 </div>
                 <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-display font-black tracking-tight">Bio</h2>
+                    <h2 className="text-2xl font-display font-black tracking-tight">{t("Bio")}</h2>
                     {!hasBio && isOwner && (
                         <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md bg-red-500/15 text-red-500 border border-red-500/20">
-                            Required
+                            {t("Required")}
                         </span>
                     )}
                 </div>
@@ -121,7 +123,7 @@ export function ProfileBioSection({
                             onChange={(e) => setTempBio(e.target.value)}
                             className="w-full bg-background border border-border rounded-[1.5rem] p-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors resize-none neumorphic-inset"
                             rows={4}
-                            placeholder={placeholder}
+                            placeholder={t(placeholder)}
                             autoFocus
                         />
                         <div className="flex items-center gap-3 mt-3">
@@ -132,7 +134,7 @@ export function ProfileBioSection({
                                 className="flex items-center gap-2 neumorphic-primary px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition disabled:opacity-50 cursor-pointer"
                             >
                                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-                                <span>Save Bio</span>
+                                <span>{t("Save Bio")}</span>
                             </button>
                             <button
                                 type="button"
@@ -144,7 +146,7 @@ export function ProfileBioSection({
                                 className="flex items-center gap-2 neumorphic-extruded text-muted-foreground hover:text-foreground px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition cursor-pointer"
                             >
                                 <X size={14} />
-                                <span>Cancel</span>
+                                <span>{t("Cancel")}</span>
                             </button>
                         </div>
                     </div>
@@ -154,17 +156,17 @@ export function ProfileBioSection({
                             type="button"
                             onClick={() => setIsEditing(true)}
                             className="mt-2 flex items-center gap-3 text-[10px] font-black text-red-500 dark:text-red-400 hover:text-foreground transition-all uppercase tracking-widest border border-dashed border-red-500/30 bg-red-500/5 hover:bg-red-500/10 rounded-2xl px-6 py-4 w-full justify-center relative cursor-pointer group shadow-sm"
-                            title="Add your bio (Required for profile setup)"
+                            title={t("Add your bio (Required for profile setup)")}
                         >
                             <span className="relative flex size-2 shrink-0">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
                                 <span className="relative inline-flex rounded-full size-2 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)]" />
                             </span>
                             <Plus size={16} className="group-hover:rotate-90 transition-transform" />
-                            <span>Introduce yourself (Add Bio — Required)</span>
+                            <span>{t("Introduce yourself (Add Bio — Required)")}</span>
                         </button>
                     ) : (
-                        <p className="text-sm text-muted-foreground italic">No bio provided yet.</p>
+                        <p className="text-sm text-muted-foreground italic">{t("No bio provided yet.")}</p>
                     )
                 ) : (
                     <div className="mt-2 relative group">
@@ -179,7 +181,7 @@ export function ProfileBioSection({
                                     setIsEditing(true);
                                 }}
                                 className="absolute -top-1 -right-1 p-2 rounded-full neumorphic-extruded text-muted-foreground hover:text-foreground transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-                                aria-label="Edit Bio"
+                                aria-label={t("Edit Bio")}
                             >
                                 <Edit3 size={14} />
                             </button>

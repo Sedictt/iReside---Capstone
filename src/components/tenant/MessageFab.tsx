@@ -5,8 +5,10 @@ import { MessageSquare, Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ChatWidget } from "./ChatWidget";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export function MessageFab() {
+    const { t } = useLanguageContext();
     const pathname = usePathname();
     const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -29,7 +31,7 @@ export function MessageFab() {
                         <Sparkles className="size-2.5 text-yellow-300 animate-pulse" />
                     </div>
                 </div>
-                <span className="font-black text-sm pr-1">Chat with iRis</span>
+                <span className="font-black text-sm pr-1">{t("Chat with iRis")}</span>
             </button>
 
             <ChatWidget

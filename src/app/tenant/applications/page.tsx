@@ -25,6 +25,7 @@ import {
     Lock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 // import { properties } from "@/lib/data"; // Removed legacy data
 const properties = [
     { id: "1", name: "The Obsidian Tower", address: "123 Dark St, Metro City", type: "Studio", images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop"], price: "18,500" },
@@ -77,6 +78,7 @@ const recentActivity = [
 ];
 
 export default function MyApplicationsPage() {
+    const { t } = useLanguageContext();
     const [searchTerm, setSearchTerm] = useState("");
     const [filter, setFilter] = useState("recently-updated");
 
@@ -122,12 +124,12 @@ export default function MyApplicationsPage() {
                             <AlertTriangle className="size-6" />
                         </div>
                         <div>
-                            <h3 className="text-white text-xl font-black tracking-tight">Active Attention Needed</h3>
-                            <p className="text-white/50 text-sm mt-1">You have <span className="text-red-400 font-black">2 items</span> requiring immediate document verification.</p>
+                            <h3 className="text-white text-xl font-black tracking-tight">{t("Active Attention Needed")}</h3>
+                            <p className="text-white/50 text-sm mt-1">{t("You have {count} items requiring immediate document verification.", { count: 2 })}</p>
                         </div>
                     </div>
                     <button className="relative z-10 w-full sm:w-auto px-8 py-4 bg-white text-black font-black rounded-2xl hover:bg-white/90 transition-all text-sm shadow-xl active:scale-95">
-                        Resolve Issues
+                        {t("Resolve Issues")}
                     </button>
                 </motion.div>
 
@@ -136,10 +138,10 @@ export default function MyApplicationsPage() {
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="h-1 w-6 bg-primary rounded-full" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Applications Portfolio</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">{t("Applications Portfolio")}</span>
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none">My <span className="text-primary italic">Journey</span></h1>
-                        <p className="text-white/40 font-medium max-w-md">Track the status of your future homes and manage active lease negotiations.</p>
+                        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none">{t("My")} <span className="text-primary italic">{t("Journey")}</span></h1>
+                        <p className="text-white/40 font-medium max-w-md">{t("Track the status of your future homes and manage active lease negotiations.")}</p>
                     </div>
 
                     <div className="flex items-center gap-1.5 bg-white/[0.03] p-1.5 rounded-2xl border border-white/10 backdrop-blur-md">
@@ -158,11 +160,11 @@ export default function MyApplicationsPage() {
                                         : "text-white/40 hover:text-white hover:bg-white/5"
                                 )}
                             >
-                                {item.label}
+                                {t(item.label)}
                             </button>
                         ))}
                         <div className="w-px h-6 bg-white/10 mx-2" />
-                        <button className="p-2.5 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-colors">
+                        <button aria-label={t("Filter")} className="p-2.5 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-colors">
                             <Filter className="size-5" />
                         </button>
                     </div>
@@ -204,12 +206,12 @@ export default function MyApplicationsPage() {
                                                             "px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border backdrop-blur-xl shadow-2xl",
                                                             getStatusStyles(app.color)
                                                         )}>
-                                                            {app.status}
+                                                            {t(app.status)}
                                                         </span>
                                                         {app.progress > 75 && (
                                                             <div className="px-3 py-1.5 rounded-xl bg-primary text-black flex items-center gap-1.5 w-fit shadow-lg shadow-primary/40 animate-pulse">
                                                                 <Zap className="size-3 fill-black" />
-                                                                <span className="text-[9px] font-black uppercase tracking-widest">Priority</span>
+                                                                <span className="text-[9px] font-black uppercase tracking-widest">{t("Priority")}</span>
                                                             </div>
                                                         )}
                                                         <div className="px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 flex items-center gap-1.5 w-fit">
@@ -228,7 +230,7 @@ export default function MyApplicationsPage() {
                                                             <p className="text-white/40 text-xs font-black uppercase tracking-widest">{property.address.split(',')[0]} • {property.type}</p>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-white text-xl font-black">₱{app.price}<span className="text-white/20 text-xs font-black uppercase">/mo</span></p>
+                                                            <p className="text-white text-xl font-black">₱{app.price}<span className="text-white/20 text-xs font-black uppercase">{t("/mo")}</span></p>
                                                         </div>
                                                     </div>
 
@@ -251,13 +253,13 @@ export default function MyApplicationsPage() {
                                                             <span className="absolute text-[10px] font-black text-white leading-none">{app.progress}%</span>
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <p className="text-sm font-black text-white italic tracking-tight">{app.subStatus}</p>
-                                                            <p className="text-[10px] text-white/40 font-medium line-clamp-1 mt-0.5">{app.detail}</p>
+                                                            <p className="text-sm font-black text-white italic tracking-tight">{t(app.subStatus)}</p>
+                                                            <p className="text-[10px] text-white/40 font-medium line-clamp-1 mt-0.5">{t(app.detail)}</p>
                                                         </div>
                                                     </div>
 
                                                     <button className="w-full h-14 rounded-2xl bg-white/[0.05] hover:bg-white text-white hover:text-black border border-white/10 text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3">
-                                                        Expand Details
+                                                        {t("Expand Details")}
                                                         <ArrowRight className="size-4" />
                                                     </button>
                                                 </div>
@@ -280,7 +282,7 @@ export default function MyApplicationsPage() {
                                     <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                                         <History className="size-4" />
                                     </div>
-                                    <h3 className="text-white font-black text-lg tracking-tight">Timeline</h3>
+                                    <h3 className="text-white font-black text-lg tracking-tight">{t("Timeline")}</h3>
                                 </div>
                                 <span className="size-1.5 rounded-full bg-primary animate-ping" />
                             </div>
@@ -292,11 +294,11 @@ export default function MyApplicationsPage() {
                                             "box-content absolute -left-[27.5px] top-1 size-2 rounded-full border-2 border-[#111111] transition-all",
                                             activity.active ? "bg-primary scale-125 shadow-[0_0_12px_rgba(109,152,56,0.8)]" : "bg-white/10"
                                         )} />
-                                        <p className="text-sm font-black text-white group-hover:text-primary transition-colors tracking-tight">{activity.title}</p>
+                                        <p className="text-sm font-black text-white group-hover:text-primary transition-colors tracking-tight">{t(activity.title)}</p>
                                         <p className="text-xs text-white/40 font-medium mt-1 leading-relaxed">{activity.detail}</p>
                                         <div className="flex items-center gap-1.5 mt-2 opacity-30 group-hover:opacity-60 transition-opacity">
                                             <Clock className="size-3" />
-                                            <span className="text-[9px] font-black uppercase tracking-tighter">{activity.time}</span>
+                                            <span className="text-[9px] font-black uppercase tracking-tighter">{t(activity.time)}</span>
                                         </div>
                                     </div>
                                 ))}
@@ -310,22 +312,22 @@ export default function MyApplicationsPage() {
                             </div>
 
                             <div className="flex items-center justify-between mb-8">
-                                <h3 className="text-white font-black text-lg tracking-tight">Support</h3>
+                                <h3 className="text-white font-black text-lg tracking-tight">{t("Support")}</h3>
                             </div>
 
                             <div className="space-y-4">
-                                <p className="text-white/40 text-sm font-medium">Have questions about your application or the verification process?</p>
+                                <p className="text-white/40 text-sm font-medium">{t("Have questions about your application or the verification process?")}</p>
                                 <Link 
                                     href="/tenant/messages" 
                                     className="block w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white text-center hover:bg-white/10 transition-all"
                                 >
-                                    Message Support
+                                    {t("Message Support")}
                                 </Link>
                                 <Link 
                                     href="/tenant/dashboard" 
                                     className="block w-full py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center hover:text-white transition-all"
                                 >
-                                    Back to Dashboard
+                                    {t("Back to Dashboard")}
                                 </Link>
                             </div>
                         </div>

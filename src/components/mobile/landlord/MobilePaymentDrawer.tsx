@@ -18,6 +18,7 @@ import {
     Check,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 import { DEFAULT_AVATAR_URL, getSafeAvatarBgColor } from '@/lib/constants';
 
 export interface MobilePaymentItem {
@@ -77,6 +78,7 @@ export function MobilePaymentDrawer({
     const [selectedPayment, setSelectedPayment] = useState<MobilePaymentItem | null>(null);
     const [isConfirmingSettle, setIsConfirmingSettle] = useState(false);
     const [settledIds, setSettledIds] = useState<string[]>([]);
+    const { t } = useLanguageContext();
 
     if (!category) return null;
 
@@ -132,13 +134,13 @@ export function MobilePaymentDrawer({
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-2">
                                         <h2 className="text-base font-black text-foreground tracking-tight truncate">
-                                            {meta.title}
+                                            {t(meta.title)}
                                         </h2>
                                         <span className="px-2 py-0.5 rounded-full text-[10px] font-black border bg-muted/60 text-foreground tabular-nums">
                                             {rawPayments.length}
                                         </span>
                                     </div>
-                                    <p className="text-[11px] text-muted-foreground truncate">{meta.subtitle}</p>
+                                    <p className="text-[11px] text-muted-foreground truncate">{t(meta.subtitle)}</p>
                                 </div>
                             </div>
 
@@ -146,7 +148,7 @@ export function MobilePaymentDrawer({
                                 type="button"
                                 onClick={onClose}
                                 className="size-9 min-h-[36px] min-w-[36px] rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 shrink-0"
-                                aria-label="Close sheet"
+                                aria-label={t('Close sheet')}
                             >
                                 <X className="size-4" />
                             </button>
@@ -161,7 +163,7 @@ export function MobilePaymentDrawer({
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Filter by tenant or unit..."
+                                        placeholder={t('Filter by tenant or unit...')}
                                         maxLength={60}
                                         className="w-full rounded-xl bg-background border border-border/60 py-2 pl-10 pr-9 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                     />
@@ -186,19 +188,19 @@ export function MobilePaymentDrawer({
                                         <CheckCircle2 className="size-6" />
                                     </div>
                                     <h3 className="text-sm font-black text-foreground">
-                                        {searchQuery ? 'No matching entries' : meta.emptyTitle}
+                                        {searchQuery ? t('No matching entries') : t(meta.emptyTitle)}
                                     </h3>
                                     <p className="text-xs text-muted-foreground mt-1 max-w-xs leading-relaxed">
                                         {searchQuery
-                                            ? `No records found matching "${searchQuery}". Try a different keyword.`
-                                            : meta.emptyDesc}
+                                            ? t('No records found matching "{query}". Try a different keyword.', { query: searchQuery })
+                                            : t(meta.emptyDesc)}
                                     </p>
                                     <Link
                                         href="/mobile/landlord/payments"
                                         onClick={onClose}
                                         className="mt-4 px-4 py-2 rounded-xl neumorphic-extruded text-xs font-black uppercase tracking-wider text-primary flex items-center gap-1.5 active:scale-95 transition-all"
                                     >
-                                        <span>View Payments Ledger</span>
+                                        <span>{t('View Payments Ledger')}</span>
                                         <ArrowUpRight className="size-3.5" />
                                     </Link>
                                 </div>
@@ -276,7 +278,7 @@ export function MobilePaymentDrawer({
                                                                 : 'bg-amber-500/10 text-amber-500'
                                                         )}
                                                     >
-                                                        {isSettled ? 'Settled' : category}
+                                                        {isSettled ? t('Settled') : t(category)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -293,14 +295,14 @@ export function MobilePaymentDrawer({
                                 onClick={onClose}
                                 className="flex-1 py-2.5 rounded-xl border border-border/60 bg-muted/30 text-xs font-bold text-muted-foreground hover:text-foreground text-center active:scale-95 transition-all"
                             >
-                                Open Full Ledger
+                                {t('Open Full Ledger')}
                             </Link>
                             <button
                                 type="button"
                                 onClick={onClose}
                                 className="px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider text-primary-foreground active:scale-95 transition-all"
                             >
-                                Done
+                                {t('Done')}
                             </button>
                         </div>
                     </motion.div>
@@ -368,14 +370,14 @@ export function MobilePaymentDrawer({
                                             <div className="rounded-2xl bg-muted/30 p-3.5 border border-border/50 flex items-center justify-between">
                                                 <div>
                                                     <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                                                        Total Due
+                                                        {t('Total Due')}
                                                     </span>
                                                     <h4 className="text-xl font-black text-foreground tabular-nums">
                                                         PHP {selectedPayment.amount.toLocaleString()}
                                                     </h4>
                                                 </div>
                                                 <span className="text-[10px] text-muted-foreground">
-                                                    Due: {selectedPayment.date}
+                                                    {t('Due: {date}', { date: selectedPayment.date })}
                                                 </span>
                                             </div>
 
@@ -389,7 +391,7 @@ export function MobilePaymentDrawer({
                                                     className="py-3 rounded-xl border border-border/60 bg-muted/40 flex items-center justify-center gap-2 text-xs font-bold text-foreground active:scale-95 transition-all"
                                                 >
                                                     <MessageSquare className="size-4 text-primary" />
-                                                    <span>Message</span>
+                                                    <span>{t('Message')}</span>
                                                 </Link>
 
                                                 <button
@@ -398,7 +400,7 @@ export function MobilePaymentDrawer({
                                                     className="py-3 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider text-primary-foreground flex items-center justify-center gap-2 active:scale-95 transition-all"
                                                 >
                                                     <CheckCircle2 className="size-4" />
-                                                    <span>Settle</span>
+                                                    <span>{t('Settle')}</span>
                                                 </button>
                                             </div>
                                         </>
@@ -408,9 +410,9 @@ export function MobilePaymentDrawer({
                                                 <AlertTriangle className="size-6" />
                                             </div>
                                             <div>
-                                                <h3 className="text-sm font-black text-foreground">Confirm Settlement</h3>
+                                                <h3 className="text-sm font-black text-foreground">{t('Confirm Settlement')}</h3>
                                                 <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
-                                                    Mark PHP {selectedPayment.amount.toLocaleString()} from {selectedPayment.tenant} as paid?
+                                                    {t('Mark PHP {amount} from {tenant} as paid?', { amount: selectedPayment.amount.toLocaleString(), tenant: selectedPayment.tenant })}
                                                 </p>
                                             </div>
                                             <div className="flex flex-col gap-2 pt-1">
@@ -419,14 +421,14 @@ export function MobilePaymentDrawer({
                                                     onClick={() => handleConfirmSettlement(selectedPayment.id)}
                                                     className="w-full py-3 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider text-primary-foreground active:scale-95 transition-all"
                                                 >
-                                                    Confirm & Mark Paid
+                                                    {t('Confirm & Mark Paid')}
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => setIsConfirmingSettle(false)}
                                                     className="w-full py-2.5 rounded-xl border border-border/50 text-xs font-bold text-muted-foreground active:scale-95 transition-all"
                                                 >
-                                                    Go Back
+                                                    {t('Go Back')}
                                                 </button>
                                             </div>
                                         </div>

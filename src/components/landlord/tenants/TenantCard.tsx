@@ -5,6 +5,8 @@ import { Building2, Calendar, ChevronRight, MessageSquare, MoreVertical, Wallet,
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 import { m } from "framer-motion"
+import { formatTenure, leaseEndState, leaseTermLabel } from "@/lib/lease-term"
+import { useLanguageContext } from "@/context/LanguageContext"
 
 export type TenantStatus = "Active" | "Moving Out" | "Evicted"
 export type TenantPaymentStatus = "paid" | "late" | "pending"
@@ -16,7 +18,14 @@ export type Tenant = {
  unit: string
  status: TenantStatus
  rentAmount: number | null
+ leaseStart?: string | null
+ /** Null for open-ended leases until a move-out date is agreed. */
  leaseEnd: string | null
+ /** "open_ended" (default) or "fixed"; the API may use any of these keys. */
+ leaseTermType?: string | null
+ term_type?: string | null
+ termType?: string | null
+ lease_term?: string | null
  phone: string
  email: string
  avatar: string
@@ -41,21 +50,21 @@ const getStatusStyles = (status: TenantStatus) => {
  }
 }
 
-const getPaymentBadge = (status: TenantPaymentStatus) => {
+const getPaymentBadge = (status: TenantPaymentStatus, t: (phrase: string) => string) => {
  switch (status) {
  case "paid": return (
  <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600">
- <CheckCircle2 className="size-3" /> Paid
+ <CheckCircle2 className="size-3" /> {t("Paid")}
  </div>
  )
  case "late": return (
  <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-red-600">
- <AlertCircle className="size-3" /> Overdue
+ <AlertCircle className="size-3" /> {t("Overdue")}
  </div>
  )
  case "pending": return (
  <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-amber-600">
- <Clock className="size-3" /> Pending
+ <Clock className="size-3" /> {t("Pending")}
  </div>
  )
  default: return null
@@ -63,20 +72,29 @@ const getPaymentBadge = (status: TenantPaymentStatus) => {
 }
 
 export function TenantCard({ tenant, idx, onViewProfile, onMessage }: TenantCardProps) {
+ const { t, language } = useLanguageContext()
  const [mounted, setMounted] = useState(false)
 
  useEffect(() => {
- const t = setTimeout(() => setMounted(true), 0);
- return () => clearTimeout(t);
+ const timer = setTimeout(() => setMounted(true), 0);
+ return () => clearTimeout(timer);
  }, [])
 
- const formatLeaseEnd = (value: string | null) => {
- if (!value) return "No end date"
- if (!mounted) return "---"
- const parsed = new Date(value)
- if (Number.isNaN(parsed.getTime())) return "Invalid date"
- return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+ // Open-ended leases show tenure instead of an end date; dated terms show the end.
+ const leaseTerm = {
+ term_type: tenant.leaseTermType ?? tenant.term_type ?? tenant.termType ?? tenant.lease_term ?? null,
+ end_date: tenant.leaseEnd,
+ start_date: tenant.leaseStart ?? null,
  }
+ const isOpenEnded = leaseEndState(leaseTerm).kind === "open_ended"
+ const leaseTermDisplay = (() => {
+ if (!mounted) return "---"
+ if (isOpenEnded) {
+ const tenure = formatTenure(leaseTerm.start_date, undefined, language)
+ return tenure ? t("Open-ended · {tenure}", { tenure }) : t("Open-ended")
+ }
+ return leaseTermLabel(leaseTerm, undefined, language)
+ })()
 
  return (
  <m.div
@@ -128,10 +146,10 @@ export function TenantCard({ tenant, idx, onViewProfile, onMessage }: TenantCard
  getStatusStyles(tenant.status)
  )}>
  <div className={cn("size-1.5 rounded-full bg-current")} />
- {tenant.status}
+ {t(tenant.status)}
  </div>
  <div className="rounded-2xl neumorphic-inset px-3 py-1">
- {getPaymentBadge(tenant.paymentStatus)}
+ {getPaymentBadge(tenant.paymentStatus, t)}
  </div>
  </div>
 
@@ -139,21 +157,21 @@ export function TenantCard({ tenant, idx, onViewProfile, onMessage }: TenantCard
  <div className="mt-6 space-y-3 rounded-2xl neumorphic-inset p-4">
  <div className="flex items-center justify-between text-xs">
  <span className="flex items-center gap-2 text-muted-foreground">
- <Building2 className="size-3.5" /> Property
+ <Building2 className="size-3.5" /> {t("Property")}
  </span>
  <span className="font-black text-foreground truncate max-w-[140px]">{tenant.property}</span>
  </div>
  <div className="flex items-center justify-between text-xs">
  <span className="flex items-center gap-2 text-muted-foreground">
- <Wallet className="size-3.5" /> Unit
+ <Wallet className="size-3.5" /> {t("Unit")}
  </span>
  <span className="font-black text-foreground">{tenant.unit}</span>
  </div>
  <div className="flex items-center justify-between text-xs">
  <span className="flex items-center gap-2 text-muted-foreground">
- <Calendar className="size-3.5" /> Lease Ends
+ <Calendar className="size-3.5" /> {t("Lease Term")}
  </span>
- <span className="font-black text-foreground">{formatLeaseEnd(tenant.leaseEnd)}</span>
+ <span className="font-black text-foreground truncate max-w-[160px]" title={leaseTermDisplay}>{leaseTermDisplay}</span>
  </div>
  </div>
 
@@ -163,12 +181,14 @@ export function TenantCard({ tenant, idx, onViewProfile, onMessage }: TenantCard
  onClick={() => onViewProfile(tenant.id)}
  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary/10 py-2.5 text-xs font-black text-primary transition-all hover:bg-primary/20"
  >
- View Profile
+ {t("View Profile")}
  <ChevronRight className="size-3.5" />
  </button>
  <div className="flex items-center gap-2">
  <button 
  onClick={() => onMessage(tenant.id)}
+ aria-label={t("Message tenant")}
+ title={t("Message tenant")}
  className="flex size-9 items-center justify-center rounded-xl neumorphic-panel text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
  >
  <MessageSquare className="size-4" />

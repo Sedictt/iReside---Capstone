@@ -42,19 +42,22 @@ import { CommunityAnnouncement } from "@/components/community/CommunityAnnouncem
 import { toast } from "sonner"
 import { OfflineStorage, OfflineBlobStorage } from "@/lib/offline/offlineStorage"
 import { mutationQueue } from "@/lib/offline/mutationQueue"
+import { useLanguageContext } from "@/context/LanguageContext"
+import { getCurrentLanguage, tr } from "@/hooks/useLanguage"
+import { LANGUAGE_LOCALES } from "@/lib/i18n"
 
 function formatRelative(value: string) {
     const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return "Just now"
+    if (Number.isNaN(date.getTime())) return tr("Just now")
     const diffMs = Date.now() - date.getTime()
     const minutes = Math.floor(diffMs / 60000)
-    if (minutes < 1) return "Just now"
-    if (minutes < 60) return `${minutes}m ago`
+    if (minutes < 1) return tr("Just now")
+    if (minutes < 60) return tr("{count}m ago", { count: minutes })
     const hours = Math.floor(minutes / 60)
-    if (hours < 24) return `${hours}h ago`
+    if (hours < 24) return tr("{count}h ago", { count: hours })
     const days = Math.floor(hours / 24)
-    if (days < 7) return `${days}d ago`
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    if (days < 7) return tr("{count}d ago", { count: days })
+    return date.toLocaleDateString(LANGUAGE_LOCALES[getCurrentLanguage()] ?? "en-PH", { month: "short", day: "numeric" })
 }
 
 function getAnnouncementConfig(title: string | null | undefined, content: string | null | undefined) {
@@ -67,7 +70,7 @@ function getAnnouncementConfig(title: string | null | undefined, content: string
             bg: "bg-amber-50 dark:bg-amber-950/40",
             cardBorder: "border-amber-500/30",
             cardBg: "bg-amber-50/50 dark:bg-amber-950/20",
-            badge: "Utility Alert"
+            badge: tr("Utility Alert")
         }
     }
 
@@ -76,12 +79,13 @@ function getAnnouncementConfig(title: string | null | undefined, content: string
         bg: "bg-primary/10",
         cardBorder: "border-primary/20",
         cardBg: "bg-primary/5",
-        badge: "Management Notice"
+        badge: tr("Management Notice")
     }
 }
 
 export default function TenantCommunityHubPage() {
     const { user, profile, loading } = useAuth()
+    const { t } = useLanguageContext()
     const userRole = (user?.user_metadata?.role as string | undefined) || profile?.role || 'tenant'
     const isManagementUser = userRole === 'landlord' || userRole === 'admin'
     const propertyContext = useOptionalProperty()
@@ -151,9 +155,9 @@ export default function TenantCommunityHubPage() {
             const cached = OfflineStorage.get<CommunityPost[]>(cacheKey)
             if (cached?.data) {
                 setPosts(cached.data)
-                toast.info("Offline Mode: Showing cached community feed.")
+                toast.info(t("Offline Mode: Showing cached community feed."))
             } else {
-                setError("Failed to load community feed.")
+                setError(t("Failed to load community feed."))
             }
         } finally {
             setLoadingFeed(false)
@@ -210,7 +214,7 @@ export default function TenantCommunityHubPage() {
                 await updateOwnPost(postId, { title, content })
                 await loadPosts("replace")
             } catch {
-                setError("Failed to update post.")
+                setError(t("Failed to update post."))
             }
         })
     }
@@ -221,7 +225,7 @@ export default function TenantCommunityHubPage() {
                 await deleteOwnPost(postId)
                 setPosts(current => current.filter(p => p.id !== postId))
             } catch {
-                setError("Failed to delete post.")
+                setError(t("Failed to delete post."))
             }
         })
     }
@@ -232,7 +236,7 @@ export default function TenantCommunityHubPage() {
                 const result = await togglePinPost(postId)
                 setPosts(current => current.map(p => p.id === postId ? { ...p, is_pinned: result.isPinned } : p))
             } catch {
-                setError("Failed to update pin status.")
+                setError(t("Failed to update pin status."))
             }
         })
     }
@@ -242,7 +246,7 @@ export default function TenantCommunityHubPage() {
             const { saved } = await toggleSavePost(postId)
             setSavedPostIds(prev => saved ? [...prev, postId] : prev.filter(id => id !== postId))
         } catch {
-            setError("Failed to update saved status.")
+            setError(t("Failed to update saved status."))
         }
     }
 
@@ -260,7 +264,7 @@ export default function TenantCommunityHubPage() {
                     return updated
                 })
             } catch {
-                setError("Failed to update comment.")
+                setError(t("Failed to update comment."))
             }
         })
     }
@@ -281,7 +285,7 @@ export default function TenantCommunityHubPage() {
                     commentCount: p.commentCount > 0 ? p.commentCount - 1 : 0
                 })))
             } catch {
-                setError("Failed to delete comment.")
+                setError(t("Failed to delete comment."))
             }
         })
     }
@@ -316,12 +320,12 @@ export default function TenantCommunityHubPage() {
 
                 const optimisticPost: CommunityPost = {
                     id: `offline_${Date.now()}`,
-                    title: data.title || "Community Update",
+                    title: data.title || t("Community Update"),
                     content: data.body,
                     post_type: effectiveType as any,
                     author: {
                         id: user?.id || "offline_user",
-                        full_name: profile?.full_name || "You",
+                        full_name: profile?.full_name || t("You"),
                         avatar_url: profile?.avatar_url || null,
                         role: (profile?.role || "tenant") as any,
                     },
@@ -352,7 +356,7 @@ export default function TenantCommunityHubPage() {
                     `Offline community post: "${data.title || data.body.substring(0, 30)}"`
                 )
 
-                toast.success("Post saved offline! Will publish to the community feed once reconnected.")
+                toast.success(t("Post saved offline! Will publish to the community feed once reconnected."))
                 return
             }
 
@@ -366,7 +370,7 @@ export default function TenantCommunityHubPage() {
                     const res = await fetch("/api/community/media", { method: "POST", body: formData })
                     if (!res.ok) {
                         const json = await res.json().catch(() => ({}))
-                        throw new Error(json.error || `Upload failed (${res.status})`)
+                        throw new Error(json.error || t("Upload failed ({status})", { status: res.status }))
                     }
                     const json = await res.json()
                     imageUrls = json.imageUrls
@@ -386,7 +390,7 @@ export default function TenantCommunityHubPage() {
                 if (isManagementUser) loadModerationPosts()
                 else loadPendingPosts()
             } catch (err) {
-                setError(err instanceof Error ? err.message : "Failed to create post.")
+                setError(err instanceof Error ? tr(err.message) : t("Failed to create post."))
             } finally {
                 setUploadingPhotos(false)
             }
@@ -507,7 +511,7 @@ export default function TenantCommunityHubPage() {
         const authorDisplayName = profile?.full_name 
             || (user?.user_metadata?.full_name as string | undefined)
             || user?.email?.split("@")[0]
-            || "You"
+            || t("You")
 
         const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
         const optimisticComment: CommentData = {
@@ -631,7 +635,7 @@ export default function TenantCommunityHubPage() {
                 setCommentsByPost(prev => ({ ...prev, [postId]: comments }))
                 commentCacheTimestampsRef.current[postId] = Date.now()
             } catch {
-                setError("Failed to load comments.")
+                setError(t("Failed to load comments."))
             } finally {
                 delete inFlightCommentRequestsRef.current[postId]
                 setLoadingCommentsPostId(null)
@@ -656,7 +660,7 @@ export default function TenantCommunityHubPage() {
                 await loadPosts("replace")
                 await loadModerationPosts()
             } catch {
-                setError("Moderation action failed.")
+                setError(t("Moderation action failed."))
             }
         })
     }
@@ -672,7 +676,7 @@ export default function TenantCommunityHubPage() {
                 setReportModalPostId(null)
                 setReportReason("")
             } catch {
-                setError("Failed to submit report.")
+                setError(t("Failed to submit report."))
             }
         })
     }
@@ -700,8 +704,8 @@ export default function TenantCommunityHubPage() {
             isTenantRoute ? "pb-12" : "mx-auto max-w-7xl px-4 pb-20 pt-8 md:px-8"
         )}>
             <CommunityHeader
-                title="Community Hub"
-                description="Stay connected with your neighbors, discover events, and join the conversation."
+                title={t("Community Hub")}
+                description={t("Stay connected with your neighbors, discover events, and join the conversation.")}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
                 onToggleRules={() => setShowRules(!showRules)}
@@ -752,14 +756,14 @@ export default function TenantCommunityHubPage() {
                             animate={{ opacity: 1, height: "auto" }}
                             className="rounded-2xl p-4 text-sm font-black text-red-600 neumorphic-inset"
                         >
-                            {error}
+                            {t(error)}
                         </motion.div>
                     )}
 
                     {(activeTab === "approvals" || (activeTab === "mine" && !isManagementUser)) && (
                         <div className="space-y-6">
                             <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
-                                {activeTab === "approvals" ? "Moderation Queue" : "Your Pending Posts"}
+                                {activeTab === "approvals" ? t("Moderation Queue") : t("Your Pending Posts")}
                             </h3>
                             <div className="grid gap-6 md:grid-cols-2">
                                 {(activeTab === "approvals" ? moderationPosts : pendingPosts).map(post => (
@@ -785,7 +789,7 @@ export default function TenantCommunityHubPage() {
                             </div>
                             {(activeTab === "approvals" ? moderationPosts : pendingPosts).length === 0 && (
                                 <div className="rounded-3xl p-12 text-center text-muted-foreground neumorphic-inset">
-                                    No pending posts to show.
+                                    {t("No pending posts to show.")}
                                 </div>
                             )}
                         </div>
@@ -827,8 +831,8 @@ export default function TenantCommunityHubPage() {
                                     <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-muted">
                                         <MessageCircle className="size-5" />
                                     </div>
-                                    <h3 className="mt-4 text-lg font-black text-foreground">No posts found</h3>
-                                    <p className="mt-2 text-muted-foreground">Try adjusting your search or tab to see more content.</p>
+                                    <h3 className="mt-4 text-lg font-black text-foreground">{t("No posts found")}</h3>
+                                    <p className="mt-2 text-muted-foreground">{t("Try adjusting your search or tab to see more content.")}</p>
                                 </div>
                             )}
 
@@ -839,7 +843,7 @@ export default function TenantCommunityHubPage() {
                                         disabled={loadingFeed}
                                         className="rounded-full px-10 py-3 text-sm font-black transition-all neumorphic-extruded"
                                     >
-                                        {loadingFeed ? "Loading..." : "Load More"}
+                                        {loadingFeed ? t("Loading...") : t("Load More")}
                                     </button>
                                 </div>
                             )}
@@ -857,13 +861,13 @@ export default function TenantCommunityHubPage() {
                             exit={{ opacity: 0, scale: 0.95 }}
                             className="w-full max-w-md rounded-3xl p-8 neumorphic-panel"
                         >
-                            <h3 className="text-xl font-black text-foreground">Report Content</h3>
-                            <p className="mt-2 text-sm text-muted-foreground">Help us understand what's wrong with this post. Your report is confidential.</p>
+                            <h3 className="text-xl font-black text-foreground">{t("Report Content")}</h3>
+                            <p className="mt-2 text-sm text-muted-foreground">{t("Help us understand what's wrong with this post. Your report is confidential.")}</p>
                             
                             <textarea maxLength={250}
                                 value={reportReason}
                                 onChange={(e) => setReportReason(e.target.value)}
-                                placeholder="Why are you reporting this?..."
+                                placeholder={t("Why are you reporting this?...")}
                                 className="mt-6 min-h-[120px] w-full rounded-2xl p-4 text-sm outline-none transition-all neumorphic-inset"
                             />
 
@@ -872,14 +876,14 @@ export default function TenantCommunityHubPage() {
                                     onClick={() => setReportModalPostId(null)}
                                     className="flex-1 rounded-xl py-2.5 text-sm font-black text-muted-foreground neumorphic-extruded"
                                 >
-                                    Cancel
+                                    {t("Cancel")}
                                 </button>
                                 <button 
                                     onClick={handleReportSubmit}
                                     disabled={!reportReason.trim()}
                                     className="flex-1 rounded-xl py-2.5 text-sm font-black text-red-500 neumorphic-extruded disabled:opacity-50"
                                 >
-                                    Submit Report
+                                    {t("Submit Report")}
                                 </button>
                             </div>
                         </motion.div>

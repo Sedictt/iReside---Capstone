@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Settings } from 'lucide-react'
 import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
+import { T } from '@/context/LanguageContext'
 import { LandlordProfileView } from '@/components/mobile/landlord/LandlordProfileView'
 
 export const metadata = {
@@ -17,9 +18,9 @@ export default function LandlordProfilePage() {
                     <Link
                         href="/mobile/landlord/settings"
                         className="flex items-center justify-center w-11 h-11 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                        aria-label="Settings"
                     >
-                        <Settings size={20} strokeWidth={1.8} />
+                        <Settings size={20} strokeWidth={1.8} aria-hidden="true" />
+                        <span className="sr-only"><T>Settings</T></span>
                     </Link>
                 }
             />

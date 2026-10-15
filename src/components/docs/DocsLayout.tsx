@@ -8,8 +8,10 @@ import { cn } from "@/lib/utils";
 import { AnimatePresence, m as motion } from "framer-motion";
 import Link from "next/link";
 import { ChevronRight, Home, X } from "lucide-react";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useLanguageContext();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
   const prevPathname = React.useRef(pathname);
@@ -57,9 +59,9 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                 className="fixed inset-y-0 left-0 z-50 w-72 bg-surface-0 p-6 lg:hidden"
               >
                 <div className="mb-8 flex items-center justify-between">
-                  <span className="text-xl font-black text-text-high">Navigation</span>
+                  <span className="text-xl font-black text-text-high">{t("Navigation")}</span>
                   <button onClick={() => setIsSidebarOpen(false)} className="rounded-lg p-2 hover:bg-surface-2">
-                    <span className="sr-only">Close menu</span>
+                    <span className="sr-only">{t("Close menu")}</span>
                     <X className="size-5" />
                   </button>
                 </div>
@@ -67,7 +69,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                   {DOCS_NAV.map((section) => (
                     <div key={section.title} className="mb-8">
                       <h4 className="mb-3 text-xs font-black uppercase tracking-widest text-text-disabled">
-                        {section.title}
+                        {t(section.title)}
                       </h4>
                       <div className="space-y-1">
                         {section.items.map((item) => {
@@ -81,7 +83,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                                 isActive ? "bg-primary/10 text-primary" : "text-text-medium hover:bg-surface-2 hover:text-text-high"
                               )}
                             >
-                              {item.title}
+                              {t(item.title)}
                             </Link>
                           );
                         })}
@@ -97,10 +99,10 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-1 lg:pl-64">
           <div className="mx-auto max-w-4xl py-8 lg:py-12">
             {/* Breadcrumbs */}
-            <nav className="mb-8 flex items-center gap-2 text-sm text-text-disabled" aria-label="Breadcrumb">
+            <nav className="mb-8 flex items-center gap-2 text-sm text-text-disabled" aria-label={t("Breadcrumb")}>
               <Link href="/docs" className="flex items-center gap-1 hover:text-primary transition-colors">
                 <Home className="size-5" />
-                <span>Docs</span>
+                <span>{t("Docs")}</span>
               </Link>
               {breadcrumbs.slice(1).map((crumb, index) => (
                 <React.Fragment key={crumb.href}>
@@ -112,7 +114,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                       index === breadcrumbs.length - 2 ? "text-text-medium font-medium" : ""
                     )}
                   >
-                    {crumb.title}
+                    {t(crumb.title)}
                   </Link>
                 </React.Fragment>
               ))}

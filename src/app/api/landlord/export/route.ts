@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { listLandlordInvoices, type InvoiceListItem } from "@/lib/billing/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { parseSearchParams } from "@/lib/validation/server";
+import { landlordExportQuerySchema } from "@/lib/validation/schemas/operations.schema";
+import { leaseTermTypeLabel } from "@/lib/lease-term";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +15,9 @@ export async function GET(request: Request) {
     const admin = createServiceRoleSupabaseClient();
 
     const { searchParams } = new URL(request.url);
-    const category = searchParams.get("category") || "financials";
-    const range = searchParams.get("range") || "ytd"; // ytd | 12m | all
+    const parsedQuery = parseSearchParams(searchParams, landlordExportQuerySchema);
+    if (!parsedQuery.ok) return parsedQuery.response;
+    const { category, range } = parsedQuery.data; // range: ytd | 12m | all
 
     try {
         if (category === "properties") {
@@ -122,6 +126,7 @@ export async function GET(request: Request) {
                     status,
                     start_date,
                     end_date,
+                    term_type,
                     monthly_rent,
                     security_deposit,
                     tenant:tenant_id(id, full_name, email),
@@ -140,6 +145,7 @@ export async function GET(request: Request) {
                 security_deposit?: number | null;
                 start_date?: string | null;
                 end_date?: string | null;
+                term_type?: string | null;
                 status?: string | null;
             }
 
@@ -151,7 +157,8 @@ export async function GET(request: Request) {
                 "Monthly Rent (PHP)": Number(l.monthly_rent) || 0,
                 "Security Deposit (PHP)": Number(l.security_deposit) || 0,
                 "Lease Start Date": l.start_date || "N/A",
-                "Lease End Date": l.end_date || "N/A",
+                "Lease Term": leaseTermTypeLabel(l.term_type),
+                "Lease End Date": l.end_date || "Open-ended",
                 "Lease Status": l.status || "Active",
             }));
 

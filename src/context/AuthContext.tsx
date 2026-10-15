@@ -370,7 +370,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // 2. Listen for auth state changes (login, logout, token refresh)
         const {
             data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (event, session) => {
+        } = supabase.auth.onAuthStateChange((event, session) => {
             if (cancelled) return
 
             if (event === 'SIGNED_OUT' || !session) {
@@ -378,7 +378,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 return
             }
 
-            await applyAuthedState(session)
+            // supabase-js awaits every subscriber while it still holds its auth
+            // lock. applyAuthedState calls supabase.auth.getUser(), which needs
+            // that same lock, so awaiting it here deadlocks the call that fired
+            // the event (updateUser hung forever on "Updating Password...").
+            // Deferring to the next tick lets the originating call finish first.
+            setTimeout(() => {
+                if (cancelled) return
+                void applyAuthedState(session).catch((err) => {
+                    console.warn('[AuthProvider] Failed to apply auth state:', err)
+                })
+            }, 0)
         })
 
         return () => {

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { isPhMobile, phMobileDigits } from "@/lib/phone";
 
 export type AuditCategory = "billing" | "security" | "settings" | "properties" | "maintenance" | "general";
 export type AuditSeverity = "info" | "warning" | "critical";
@@ -40,7 +41,11 @@ function sanitizeMetadata(obj: Record<string, any>): Record<string, any> {
 
         // Mask phone/GCash numbers
         if (typeof value === "string" && (lowerKey.includes("phone") || lowerKey.includes("gcash") || lowerKey.includes("mobile"))) {
-            sanitized[key] = value.replace(/^(\+?\d{2,4})?(\d{3})\d{4}(\d{3,4})$/, "$1$2****$3");
+            // PH mobile numbers in any form ("0917…", "+63 917 123 4567") → "+63917****567".
+            const digits = isPhMobile(value) ? phMobileDigits(value) : null;
+            sanitized[key] = digits
+                ? `+63${digits.slice(0, 3)}****${digits.slice(7)}`
+                : value.replace(/^(\+?\d{2,4})?(\d{3})\d{4}(\d{3,4})$/, "$1$2****$3");
             continue;
         }
 

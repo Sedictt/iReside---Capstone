@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { sendPaymentNotifications } from "@/lib/billing/workflow";
+import { PROOF_LIMITS, isUuid, proofFileExtension, proofFileRule, proofContentRule } from "@/lib/validation/schemas/billing.schema";
 
 type RouteContext = {
     params: Promise<{ id: string }>;
@@ -27,12 +28,28 @@ export async function POST(request: Request, context: RouteContext) {
     const adminClient = createServiceRoleSupabaseClient();
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
-    const { userId, supabase } = authContext;
+    const { userId } = authContext;
 
+    if (!isUuid(id)) {
+        return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+    }
 
+    let refundProofFile: File | null = null;
     try {
         const formData = await request.formData();
-        const refundProofFile = formData.get("refundProofFile") as File | null;
+        const entry = formData.get("refundProofFile");
+        refundProofFile = entry instanceof File && entry.size > 0 ? entry : null;
+    } catch {
+        // No/invalid multipart body: the proof is optional, continue without it.
+        refundProofFile = null;
+    }
+
+    const fileError = proofFileRule(refundProofFile, { label: "Refund proof", maxBytes: PROOF_LIMITS.refundProofMaxBytes }) ?? (await proofContentRule(refundProofFile, { label: "Refund proof" }));
+    if (fileError) {
+        return NextResponse.json({ error: fileError, fieldErrors: { refundProofFile: fileError } }, { status: 400 });
+    }
+
+    try {
 
         // ── 1. Verify payment ownership ─────────────────────────────────────
         const { data: payment, error: paymentError } = await adminClient
@@ -76,14 +93,13 @@ export async function POST(request: Request, context: RouteContext) {
         // ── 2. Upload refund proof image ─────────────────────────────────────
         let refundProofUrl: string | null = null;
 
-        if (refundProofFile && refundProofFile.size > 0) {
-            const fileExt = refundProofFile.name.split(".").pop();
-            const fileName = `refund-proof-${id}-${Date.now()}.${fileExt}`;
+        if (refundProofFile) {
+            const fileName = `refund-proof-${id}-${Date.now()}.${proofFileExtension(refundProofFile)}`;
 
             const { data: uploadData, error: uploadError } =
                 await adminClient.storage
                     .from("payment-proofs")
-                    .upload(fileName, refundProofFile);
+                    .upload(fileName, refundProofFile, { contentType: refundProofFile.type });
 
             if (uploadError) {
                 console.error("[mark-refunded] Upload error:", uploadError);

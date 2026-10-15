@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Building2, CalendarClock, CircleDollarSign, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type SnapshotMetric = {
     label: string;
@@ -42,6 +43,7 @@ export function OperationalSnapshotCard({
     className,
     simplifiedMode = false,
 }: OperationalSnapshotCardProps) {
+    const { t } = useLanguageContext();
     return (
         <section
             className={cn(
@@ -64,13 +66,13 @@ export function OperationalSnapshotCard({
                                     status === "Performing" ? "bg-emerald-500 animate-pulse" :
                                     status === "Stable" ? "bg-blue-500" : "bg-red-500 animate-pulse"
                                 )} />
-                                {status}
+                                {t(status)}
                             </div>
                             <div>
                                 <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
-                                    {simplifiedMode ? "OPERATIONS SUMMARY" : "OPERATIONAL SNAPSHOT"}
+                                    {simplifiedMode ? t("OPERATIONS SUMMARY") : t("OPERATIONAL SNAPSHOT")}
                                 </p>
-                                <h3 className="mt-3 text-3xl font-black tracking-tight text-foreground leading-tight">{headline}</h3>
+                                <h3 className="mt-3 text-3xl font-black tracking-tight text-foreground leading-tight">{t(headline)}</h3>
                             </div>
                         </div>
 
@@ -79,7 +81,7 @@ export function OperationalSnapshotCard({
                         </div>
                     </div>
 
-                    <p className="max-w-lg text-sm font-medium leading-relaxed text-muted-foreground">{summary}</p>
+                    <p className="max-w-lg text-sm font-medium leading-relaxed text-muted-foreground">{t(summary)}</p>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {metrics.map((metric, index) => {
@@ -95,14 +97,14 @@ export function OperationalSnapshotCard({
                                 >
                                     <div className="relative z-10 flex items-start justify-between gap-3">
                                         <div>
-                                            <p className="text-[10px] font-black uppercase tracking-[0.15em] opacity-70">{metric.label}</p>
-                                            <p className="mt-2 text-3xl font-black tracking-tight">{metric.value}</p>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.15em] opacity-70">{t(metric.label)}</p>
+                                            <p className="mt-2 text-3xl font-black tracking-tight">{t(metric.value)}</p>
                                         </div>
                                         <div className="rounded-xl bg-card/50 p-2.5 text-current shadow-sm border border-border">
                                             <Icon className="size-4" />
                                         </div>
                                     </div>
-                                    <p className="relative z-10 mt-5 text-[11px] font-black uppercase tracking-wider opacity-70">{metric.detail}</p>
+                                    <p className="relative z-10 mt-5 text-[11px] font-black uppercase tracking-wider opacity-70">{t(metric.detail)}</p>
                                 </div>
                             );
                         })}

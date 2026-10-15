@@ -30,6 +30,7 @@ import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropert
 import { triggerHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useLanguageContext } from '@/context/LanguageContext';
 
 interface CalendarEventItem {
     id: string;
@@ -50,6 +51,7 @@ export function MobileCalendarView() {
     const router = useRouter();
     const { profile } = useAuth();
     const { selectedPropertyId } = useProperty();
+    const { t, locale } = useLanguageContext();
     const role = (profile?.role as 'tenant' | 'landlord') || 'tenant';
     const isLandlord = role === 'landlord';
 
@@ -81,10 +83,11 @@ export function MobileCalendarView() {
             setEvents(Array.isArray(data.events) ? data.events : Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Error fetching calendar events:', err);
-            toast.error('Failed to load schedule');
+            toast.error(t('Failed to load schedule'));
         } finally {
             setLoading(false);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLandlord, selectedPropertyId]);
 
     useEffect(() => {
@@ -105,9 +108,9 @@ export function MobileCalendarView() {
         const isToday = d.toDateString() === today.toDateString();
         const isTomorrow = d.toDateString() === tomorrow.toDateString();
 
-        const formatted = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-        if (isToday) return `Today (${formatted})`;
-        if (isTomorrow) return `Tomorrow (${formatted})`;
+        const formatted = d.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' });
+        if (isToday) return t('Today ({date})', { date: formatted });
+        if (isTomorrow) return t('Tomorrow ({date})', { date: formatted });
         return formatted;
     };
 
@@ -131,13 +134,13 @@ export function MobileCalendarView() {
             days.push({
                 dateObj: current,
                 iso,
-                dayName: current.toLocaleDateString('en-US', { weekday: 'narrow' }),
+                dayName: current.toLocaleDateString(locale, { weekday: 'narrow' }),
                 dayNumber: current.getDate(),
                 hasEvents,
             });
         }
         return days;
-    }, [weekOffset, events]);
+    }, [weekOffset, events, locale]);
 
     // Filter events by category and sort chronologically
     const filteredEvents = useMemo(() => {
@@ -171,7 +174,7 @@ export function MobileCalendarView() {
                     ) : (
                         <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                             <CalendarIcon className="size-4 text-primary" />
-                            <span>My Schedule</span>
+                            <span>{t('My Schedule')}</span>
                         </div>
                     )}
                     <button
@@ -180,7 +183,7 @@ export function MobileCalendarView() {
                             fetchEvents();
                         }}
                         className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-card text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-2xs"
-                        aria-label="Refresh events"
+                        aria-label={t('Refresh events')}
                     >
                         <RefreshCw className={cn("size-4", loading && "animate-spin text-primary")} />
                     </button>
@@ -190,7 +193,7 @@ export function MobileCalendarView() {
                 <div className="p-3 rounded-2xl bg-card border border-slate-200 dark:border-white/10 shadow-2xs space-y-2.5">
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-black text-foreground">
-                            {weekDays[0]?.dateObj.toLocaleDateString('en-US', { month: 'short' })}{' '}
+                            {weekDays[0]?.dateObj.toLocaleDateString(locale, { month: 'short' })}{' '}
                             {weekDays[0]?.dateObj.getFullYear()}
                         </span>
                         <div className="flex items-center gap-1">
@@ -199,6 +202,7 @@ export function MobileCalendarView() {
                                     triggerHaptic('light');
                                     setWeekOffset(prev => prev - 1);
                                 }}
+                                aria-label={t('Previous week')}
                                 className="p-1 rounded-md text-muted-foreground hover:text-foreground active:scale-90"
                             >
                                 <ChevronLeft className="size-4" />
@@ -211,13 +215,14 @@ export function MobileCalendarView() {
                                 }}
                                 className="text-[10px] font-bold text-primary px-1.5 py-0.5 rounded-md hover:bg-muted"
                             >
-                                Today
+                                {t('Today')}
                             </button>
                             <button
                                 onClick={() => {
                                     triggerHaptic('light');
                                     setWeekOffset(prev => prev + 1);
                                 }}
+                                aria-label={t('Next week')}
                                 className="p-1 rounded-md text-muted-foreground hover:text-foreground active:scale-90"
                             >
                                 <ChevronRight className="size-4" />
@@ -279,7 +284,7 @@ export function MobileCalendarView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        All
+                        {t('All')}
                     </button>
                     <button
                         onClick={() => {
@@ -293,7 +298,7 @@ export function MobileCalendarView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Rent Dues
+                        {t('Rent Dues')}
                     </button>
                     <button
                         onClick={() => {
@@ -307,7 +312,7 @@ export function MobileCalendarView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Leases
+                        {t('Leases')}
                     </button>
                     <button
                         onClick={() => {
@@ -321,7 +326,7 @@ export function MobileCalendarView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Repairs
+                        {t('Repairs')}
                     </button>
                 </div>
 
@@ -330,9 +335,9 @@ export function MobileCalendarView() {
                     {Object.keys(groupedEvents).length === 0 ? (
                         <div className="p-8 text-center rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col items-center gap-2.5">
                             <CalendarIcon className="size-10 text-muted-foreground/40 stroke-1" />
-                            <h4 className="text-sm font-bold text-foreground">No Upcoming Events</h4>
+                            <h4 className="text-sm font-bold text-foreground">{t('No Upcoming Events')}</h4>
                             <p className="text-xs text-muted-foreground max-w-xs">
-                                All rent dues, lease renewals, and maintenance tickets are settled.
+                                {t('All rent dues, lease renewals, and maintenance tickets are settled.')}
                             </p>
                         </div>
                     ) : (
@@ -399,7 +404,7 @@ export function MobileCalendarView() {
                                                     <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5">
                                                         {event.unitName && (
                                                             <span className="font-bold text-foreground">
-                                                                Unit {event.unitName}
+                                                                {t('Unit {unit}', { unit: event.unitName })}
                                                             </span>
                                                         )}
                                                         {event.propertyName && <span>•</span>}

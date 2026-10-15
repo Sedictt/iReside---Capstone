@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { CheckCircle2, Camera, Phone, FileText, ArrowRight, UserCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type ProfileSetupBannerProps = {
     hasAvatar: boolean;
@@ -19,6 +20,7 @@ export function ProfileSetupBanner({
     role = "landlord",
     className
 }: ProfileSetupBannerProps) {
+    const { t } = useLanguageContext();
     const [localHasAvatar, setLocalHasAvatar] = useState(hasAvatar);
     const [localHasPhone, setLocalHasPhone] = useState(hasPhone);
     const [localHasBio, setLocalHasBio] = useState(hasBio);
@@ -113,14 +115,14 @@ export function ProfileSetupBanner({
                     <div>
                         <div className="flex flex-wrap items-center gap-2.5">
                             <h3 className="text-lg font-display font-black tracking-tight text-foreground">
-                                Complete your profile
+                                {t("Complete your profile")}
                             </h3>
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
-                                {completedCount} of 3 completed
+                                {t("{count} of 3 completed", { count: completedCount })}
                             </span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1 max-w-xl leading-relaxed">
-                            Complete your basic details so others can recognize and connect with you. The setup badge will automatically dismiss once done.
+                            {t("Complete your basic details so others can recognize and connect with you. The setup badge will automatically dismiss once done.")}
                         </p>
                     </div>
                 </div>
@@ -177,10 +179,10 @@ export function ProfileSetupBanner({
                                             step.isComplete ? "text-muted-foreground line-through opacity-75" : "text-foreground"
                                         )}
                                     >
-                                        {step.label}
+                                        {t(step.label)}
                                     </p>
                                     <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                                        {step.description}
+                                        {t(step.description)}
                                     </p>
                                 </div>
                             </div>
@@ -195,7 +197,7 @@ export function ProfileSetupBanner({
                                 </div>
                             ) : (
                                 <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 shrink-0 pl-2">
-                                    Done
+                                    {t("Done")}
                                 </span>
                             )}
                         </button>

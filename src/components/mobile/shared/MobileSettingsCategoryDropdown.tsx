@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 
 export interface SettingsCategoryItem {
     id: string;
@@ -23,9 +24,10 @@ export function MobileSettingsCategoryDropdown({
     items,
     activeTab,
     onSelectTab,
-    label = "CATEGORY",
+    label,
     className,
 }: MobileSettingsCategoryDropdownProps) {
+    const { t } = useLanguageContext();
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -66,10 +68,10 @@ export function MobileSettingsCategoryDropdown({
                     {/* Text block */}
                     <div className="flex flex-col min-w-0">
                         <span className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">
-                            {label}
+                            {label ? t(label) : t('Category').toUpperCase()}
                         </span>
                         <span className="text-[12px] font-black uppercase tracking-widest text-foreground truncate mt-0.5">
-                            {activeItem?.label?.toUpperCase() || "SELECT CATEGORY"}
+                            {activeItem?.label ? t(activeItem.label).toUpperCase() : t('Select Category').toUpperCase()}
                         </span>
                     </div>
                 </div>
@@ -85,7 +87,7 @@ export function MobileSettingsCategoryDropdown({
                 <div className="absolute left-0 right-0 top-full mt-2.5 z-[200] overflow-hidden rounded-[2.5rem] neumorphic-panel p-3.5 flex flex-col gap-2.5 animate-in fade-in zoom-in-95 duration-200 shadow-2xl">
                     <div className="px-3 pt-1">
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-                            SETTINGS CATEGORIES
+                            {t('Settings Categories')}
                         </p>
                     </div>
 
@@ -120,11 +122,11 @@ export function MobileSettingsCategoryDropdown({
                                             "text-[11px] font-black uppercase tracking-wider truncate",
                                             isActive ? "text-primary" : "text-foreground"
                                         )}>
-                                            {item.label}
+                                            {t(item.label)}
                                         </span>
                                         {item.description && (
                                             <span className="text-[10px] text-muted-foreground truncate max-w-[210px]">
-                                                {item.description}
+                                                {t(item.description)}
                                             </span>
                                         )}
                                     </div>

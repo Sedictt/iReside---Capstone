@@ -1,0 +1,320 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3140" height="2474" viewBox="0 0 3140 2474">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker>
+</defs>
+<rect width="3140" height="2474" fill="#ffffff"/>
+<text x="1570.0" y="52.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="26" font-weight="bold" fill="#111827" text-anchor="middle">iReside Property Management System</text>
+<text x="1570.0" y="82.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="16" font-weight="normal" fill="#6b7280" text-anchor="middle">Level 1 Data Flow Diagram  (Gane &amp; Sarson notation)</text>
+<text x="200.0" y="134.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="bold" fill="#6b7280" text-anchor="middle">EXTERNAL ENTITIES</text>
+<text x="1330.0" y="134.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="bold" fill="#6b7280" text-anchor="middle">SYSTEM PROCESSES (ranked by significance)</text>
+<text x="2835.0" y="134.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="bold" fill="#6b7280" text-anchor="middle">LOGICAL DATA STORES</text>
+<polyline points="330.0,173.5 586.0,173.5 586.0,209.5 1140.0,209.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,228.5 598.0,228.5 598.0,192.5 330.0,192.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,2243.5 778.0,2243.5 778.0,247.5 1140.0,247.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,266.5 790.0,266.5 790.0,2262.5 330.0,2262.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,230.5 562.0,230.5 562.0,469.5 1140.0,469.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,450.5 574.0,450.5 574.0,211.5 330.0,211.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,268.5 538.0,268.5 538.0,672.5 1140.0,672.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,653.5 550.0,653.5 550.0,249.5 330.0,249.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,2205.5 754.0,2205.5 754.0,691.5 1140.0,691.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,710.5 766.0,710.5 766.0,2224.5 330.0,2224.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,306.5 514.0,306.5 514.0,894.5 1140.0,894.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,875.5 526.0,875.5 526.0,287.5 330.0,287.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,2167.5 730.0,2167.5 730.0,913.5 1140.0,913.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,932.5 742.0,932.5 742.0,2186.5 330.0,2186.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,344.5 490.0,344.5 490.0,1116.5 1140.0,1116.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,1097.5 502.0,1097.5 502.0,325.5 330.0,325.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,2129.5 706.0,2129.5 706.0,1135.5 1140.0,1135.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,1154.5 718.0,1154.5 718.0,2148.5 330.0,2148.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,382.5 466.0,382.5 466.0,1338.5 1140.0,1338.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,1319.5 478.0,1319.5 478.0,363.5 330.0,363.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,2091.5 682.0,2091.5 682.0,1357.5 1140.0,1357.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,1376.5 694.0,1376.5 694.0,2110.5 330.0,2110.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,420.5 442.0,420.5 442.0,1560.5 1140.0,1560.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,1541.5 454.0,1541.5 454.0,401.5 330.0,401.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,2053.5 658.0,2053.5 658.0,1579.5 1140.0,1579.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,1598.5 670.0,1598.5 670.0,2072.5 330.0,2072.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,458.5 418.0,458.5 418.0,1782.5 1140.0,1782.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,1763.5 430.0,1763.5 430.0,439.5 330.0,439.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,2015.5 634.0,2015.5 634.0,1801.5 1140.0,1801.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,1820.5 646.0,1820.5 646.0,2034.5 330.0,2034.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,496.5 394.0,496.5 394.0,2023.5 1140.0,2023.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,2004.5 406.0,2004.5 406.0,477.5 330.0,477.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="330.0,2300.5 610.0,2300.5 610.0,2245.5 1140.0,2245.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1140.0,2226.5 622.0,2226.5 622.0,2281.5 330.0,2281.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,238.0 1882.0,238.0 1882.0,190.5 2600.0,190.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,171.5 1870.0,171.5 1870.0,219.0 1520.0,219.0" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,257.0 2026.0,257.0 2026.0,2302.5 2600.0,2302.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,460.0 1942.0,460.0 1942.0,396.8 2600.0,396.8" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,377.8 1930.0,377.8 1930.0,441.0 1520.0,441.0" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,479.0 2038.0,479.0 2038.0,2283.5 2600.0,2283.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,691.5 2482.0,691.5 2482.0,660.1 2600.0,660.1" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,641.1 2470.0,641.1 2470.0,672.5 1520.0,672.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,415.8 1954.0,415.8 1954.0,653.5 1520.0,653.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,634.5 1894.0,634.5 1894.0,209.5 2600.0,209.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,729.5 2050.0,729.5 2050.0,2264.5 2600.0,2264.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,710.5 2338.0,710.5 2338.0,1701.6 2600.0,1701.6" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,894.5 2122.0,894.5 2122.0,828.4 2600.0,828.4" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,809.4 2110.0,809.4 2110.0,875.5 1520.0,875.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,679.1 2494.0,679.1 2494.0,913.5 1520.0,913.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,856.5 1966.0,856.5 1966.0,434.8 2600.0,434.8" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,951.5 2062.0,951.5 2062.0,2245.5 2600.0,2245.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,932.5 2350.0,932.5 2350.0,1682.6 2600.0,1682.6" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,1135.5 2218.0,1135.5 2218.0,1091.7 2600.0,1091.7" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,1072.7 2206.0,1072.7 2206.0,1116.5 1520.0,1116.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,847.4 2134.0,847.4 2134.0,1097.5 1520.0,1097.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,453.8 1978.0,453.8 1978.0,1078.5 1520.0,1078.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,1173.5 2074.0,1173.5 2074.0,2226.5 2600.0,2226.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,1154.5 2362.0,1154.5 2362.0,1663.6 2600.0,1663.6" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,1357.5 2278.0,1357.5 2278.0,1298.0 2600.0,1298.0" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,1279.0 2266.0,1279.0 2266.0,1338.5 1520.0,1338.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,866.4 2146.0,866.4 2146.0,1319.5 1520.0,1319.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,472.8 1990.0,472.8 1990.0,1300.5 1520.0,1300.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,1395.5 2086.0,1395.5 2086.0,2207.5 2600.0,2207.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,1376.5 2374.0,1376.5 2374.0,1644.6 2600.0,1644.6" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,1608.0 2326.0,1608.0 2326.0,1490.3 2600.0,1490.3" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,1471.3 2314.0,1471.3 2314.0,1589.0 1520.0,1589.0" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,885.4 2158.0,885.4 2158.0,1532.0 1520.0,1532.0" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,1551.0 2170.0,1551.0 2170.0,904.4 2600.0,904.4" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,1513.0 2002.0,1513.0 2002.0,491.8 2600.0,491.8" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,1110.7 2230.0,1110.7 2230.0,1570.0 1520.0,1570.0" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,1627.0 2386.0,1627.0 2386.0,1625.6 2600.0,1625.6" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,1801.5 2410.0,1801.5 2410.0,1739.6 2600.0,1739.6" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,1720.6 2398.0,1720.6 2398.0,1782.5 1520.0,1782.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,228.5 1906.0,228.5 1906.0,1763.5 1520.0,1763.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,1820.5 2098.0,1820.5 2098.0,2188.5 2600.0,2188.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,510.8 2014.0,510.8 2014.0,1966.5 1520.0,1966.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,923.4 2182.0,923.4 2182.0,1985.5 1520.0,1985.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,1129.7 2242.0,1129.7 2242.0,2004.5 1520.0,2004.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,1317.0 2290.0,1317.0 2290.0,2023.5 1520.0,2023.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,2061.5 2434.0,2061.5 2434.0,1893.9 2600.0,1893.9" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,1874.9 2422.0,1874.9 2422.0,2042.5 1520.0,2042.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="1520.0,2283.5 2458.0,2283.5 2458.0,2053.2 2600.0,2053.2" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,2034.2 2446.0,2034.2 2446.0,2264.5 1520.0,2264.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,247.5 1918.0,247.5 1918.0,2188.5 1520.0,2188.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,942.4 2194.0,942.4 2194.0,2207.5 1520.0,2207.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,1148.7 2254.0,1148.7 2254.0,2226.5 1520.0,2226.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<polyline points="2600.0,1336.0 2302.0,1336.0 2302.0,2245.5 1520.0,2245.5" fill="none" stroke="#374151" stroke-width="1.2" stroke-linejoin="miter" marker-end="url(#arrow)"/>
+<text x="1131.0" y="204.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Registration &amp; Login Credentials</text>
+<text x="1131.0" y="223.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Session, OTP &amp; 2FA Status</text>
+<text x="1131.0" y="242.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Login / Account-Claim Credentials</text>
+<text x="1131.0" y="261.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Session &amp; Verification Status</text>
+<text x="1131.0" y="464.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Property, Unit &amp; Floor-Plan Details</text>
+<text x="1131.0" y="445.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Property Portfolio &amp; Unit Status</text>
+<text x="1131.0" y="667.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Invite Links &amp; Application Decisions</text>
+<text x="1131.0" y="648.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Submitted Applications &amp; Fee Proofs</text>
+<text x="1131.0" y="686.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Application Form, Documents &amp; Fee Proof</text>
+<text x="1131.0" y="705.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Invite Details &amp; Application Status</text>
+<text x="1131.0" y="889.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Lease Terms &amp; Landlord Signature</text>
+<text x="1131.0" y="870.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Lease Status &amp; Signed Document</text>
+<text x="1131.0" y="908.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Tenant Signature &amp; Renewal Request</text>
+<text x="1131.0" y="927.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Lease Document &amp; Renewal Decision</text>
+<text x="1131.0" y="1111.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Payment Confirmation &amp; Utility Readings</text>
+<text x="1131.0" y="1092.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Invoice, Payment &amp; Receipt Summary</text>
+<text x="1131.0" y="1130.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Payment Submission &amp; Proof of Payment</text>
+<text x="1131.0" y="1149.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Invoices, Balances &amp; Receipts</text>
+<text x="1131.0" y="1333.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Triage Decision &amp; Status Update</text>
+<text x="1131.0" y="1314.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Triaged Maintenance Queue</text>
+<text x="1131.0" y="1352.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Maintenance Request &amp; Photos</text>
+<text x="1131.0" y="1371.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Request Status &amp; Resolution</text>
+<text x="1131.0" y="1555.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Move-Out Decision &amp; Inspection Results</text>
+<text x="1131.0" y="1536.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Move-Out Requests &amp; Checklist</text>
+<text x="1131.0" y="1574.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Move-Out Request &amp; Checklist</text>
+<text x="1131.0" y="1593.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Move-Out Status &amp; Deposit Settlement</text>
+<text x="1131.0" y="1777.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Chat Messages &amp; Attachments</text>
+<text x="1131.0" y="1758.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Conversations &amp; Notifications</text>
+<text x="1131.0" y="1796.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Chat Messages &amp; Attachments</text>
+<text x="1131.0" y="1815.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Conversations &amp; Notifications</text>
+<text x="1131.0" y="2018.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Report Parameters &amp; Expense Entries</text>
+<text x="1131.0" y="1999.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Analytics Dashboard &amp; Exported Report</text>
+<text x="1131.0" y="2240.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Chat Prompt</text>
+<text x="1131.0" y="2221.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">AI Assistant Reply</text>
+<text x="1529.0" y="233.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Account, Profile &amp; Security Settings</text>
+<text x="1529.0" y="214.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Credentials, Role &amp; 2FA Settings</text>
+<text x="1529.0" y="252.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Business Permit Documents</text>
+<text x="1529.0" y="455.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Property, Unit &amp; Floor-Plan Records</text>
+<text x="1529.0" y="436.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Property &amp; Unit Records</text>
+<text x="1529.0" y="474.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Property Images</text>
+<text x="1529.0" y="686.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Invite, Application &amp; Fee Records</text>
+<text x="1529.0" y="667.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Invite &amp; Application Records</text>
+<text x="1529.0" y="648.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Available Unit Details</text>
+<text x="1529.0" y="629.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">New Tenant Account</text>
+<text x="1529.0" y="724.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Applicant Documents &amp; Fee Proof</text>
+<text x="1529.0" y="705.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Application Notifications</text>
+<text x="1529.0" y="889.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Lease, Signature &amp; Audit Records</text>
+<text x="1529.0" y="870.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Lease &amp; Renewal Records</text>
+<text x="1529.0" y="908.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Approved Application Details</text>
+<text x="1529.0" y="851.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Unit Occupancy Status</text>
+<text x="1529.0" y="946.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Signed Lease PDF</text>
+<text x="1529.0" y="927.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Lease Notifications</text>
+<text x="1529.0" y="1130.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Invoice, Payment &amp; Receipt Records</text>
+<text x="1529.0" y="1111.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Invoice, Payment &amp; Utility Records</text>
+<text x="1529.0" y="1092.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Active Lease Terms</text>
+<text x="1529.0" y="1073.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Property Billing Defaults</text>
+<text x="1529.0" y="1168.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Payment Proof Images</text>
+<text x="1529.0" y="1149.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Billing Notifications</text>
+<text x="1529.0" y="1352.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Request, Triage &amp; Status Records</text>
+<text x="1529.0" y="1333.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Maintenance Records</text>
+<text x="1529.0" y="1314.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Tenant Lease Reference</text>
+<text x="1529.0" y="1295.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Unit &amp; Property Reference</text>
+<text x="1529.0" y="1390.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Maintenance Photos</text>
+<text x="1529.0" y="1371.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Maintenance Notifications</text>
+<text x="1529.0" y="1603.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Move-Out, Inspection &amp; Deposit Records</text>
+<text x="1529.0" y="1584.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Move-Out Records</text>
+<text x="1529.0" y="1527.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Lease Details</text>
+<text x="1529.0" y="1546.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Lease Termination</text>
+<text x="1529.0" y="1508.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Unit Vacancy Status</text>
+<text x="1529.0" y="1565.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Outstanding Balances</text>
+<text x="1529.0" y="1622.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Move-Out Notifications</text>
+<text x="1529.0" y="1796.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Message, Report &amp; Notification Records</text>
+<text x="1529.0" y="1777.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Conversation History &amp; Notifications</text>
+<text x="1529.0" y="1758.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Participant Profiles</text>
+<text x="1529.0" y="1815.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Message Attachments</text>
+<text x="1529.0" y="1961.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Property &amp; Unit Data</text>
+<text x="1529.0" y="1980.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Lease Data</text>
+<text x="1529.0" y="1999.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Payment &amp; Invoice Data</text>
+<text x="1529.0" y="2018.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Maintenance Data</text>
+<text x="1529.0" y="2056.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Expense &amp; Export Records</text>
+<text x="1529.0" y="2037.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Expense Records</text>
+<text x="1529.0" y="2278.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Chat Transcript</text>
+<text x="1529.0" y="2259.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Chat History</text>
+<text x="1529.0" y="2183.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Tenant Profile Context</text>
+<text x="1529.0" y="2202.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Tenant Lease Context</text>
+<text x="1529.0" y="2221.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Payment Context</text>
+<text x="1529.0" y="2240.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Maintenance Context</text>
+<rect x="75" y="155" width="260" height="370" fill="#9ca3af" opacity="0.45"/>
+<rect x="70" y="150" width="260" height="370" fill="#f3f4f6" stroke="#111827" stroke-width="1.4"/>
+<text x="200.0" y="340.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Landlord</text>
+<rect x="75" y="1997.0" width="260" height="332" fill="#9ca3af" opacity="0.45"/>
+<rect x="70" y="1992.0" width="260" height="332" fill="#f3f4f6" stroke="#111827" stroke-width="1.4"/>
+<text x="200.0" y="2154.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Tenant</text>
+<text x="200.0" y="2172.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#6b7280" text-anchor="middle" font-style="italic">(applicant / resident)</text>
+<rect x="1140" y="150" width="380" height="176" rx="16" ry="16" fill="#ffffff" stroke="#111827" stroke-width="1.4"/>
+<line x1="1140" y1="184" x2="1520" y2="184" stroke="#111827" stroke-width="1.4"/>
+<text x="1330.0" y="173.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15" font-weight="bold" fill="#111827" text-anchor="middle">1.0</text>
+<text x="1330.0" y="250.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Authenticate Users &amp;</text>
+<text x="1330.0" y="271.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Secure Accounts</text>
+<rect x="1140" y="372" width="380" height="176" rx="16" ry="16" fill="#ffffff" stroke="#111827" stroke-width="1.4"/>
+<line x1="1140" y1="406" x2="1520" y2="406" stroke="#111827" stroke-width="1.4"/>
+<text x="1330.0" y="395.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15" font-weight="bold" fill="#111827" text-anchor="middle">2.0</text>
+<text x="1330.0" y="472.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Manage Properties</text>
+<text x="1330.0" y="493.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">&amp; Units</text>
+<rect x="1140" y="594" width="380" height="176" rx="16" ry="16" fill="#ffffff" stroke="#111827" stroke-width="1.4"/>
+<line x1="1140" y1="628" x2="1520" y2="628" stroke="#111827" stroke-width="1.4"/>
+<text x="1330.0" y="617.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15" font-weight="bold" fill="#111827" text-anchor="middle">3.0</text>
+<text x="1330.0" y="694.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Process Tenant</text>
+<text x="1330.0" y="715.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Applications</text>
+<rect x="1140" y="816" width="380" height="176" rx="16" ry="16" fill="#ffffff" stroke="#111827" stroke-width="1.4"/>
+<line x1="1140" y1="850" x2="1520" y2="850" stroke="#111827" stroke-width="1.4"/>
+<text x="1330.0" y="839.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15" font-weight="bold" fill="#111827" text-anchor="middle">4.0</text>
+<text x="1330.0" y="916.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Manage Leases</text>
+<text x="1330.0" y="937.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">&amp; E-Signing</text>
+<rect x="1140" y="1038" width="380" height="176" rx="16" ry="16" fill="#ffffff" stroke="#111827" stroke-width="1.4"/>
+<line x1="1140" y1="1072" x2="1520" y2="1072" stroke="#111827" stroke-width="1.4"/>
+<text x="1330.0" y="1061.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15" font-weight="bold" fill="#111827" text-anchor="middle">5.0</text>
+<text x="1330.0" y="1138.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Bill Rent &amp;</text>
+<text x="1330.0" y="1159.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Process Payments</text>
+<rect x="1140" y="1260" width="380" height="176" rx="16" ry="16" fill="#ffffff" stroke="#111827" stroke-width="1.4"/>
+<line x1="1140" y1="1294" x2="1520" y2="1294" stroke="#111827" stroke-width="1.4"/>
+<text x="1330.0" y="1283.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15" font-weight="bold" fill="#111827" text-anchor="middle">6.0</text>
+<text x="1330.0" y="1360.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Handle Maintenance</text>
+<text x="1330.0" y="1381.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Requests</text>
+<rect x="1140" y="1482" width="380" height="176" rx="16" ry="16" fill="#ffffff" stroke="#111827" stroke-width="1.4"/>
+<line x1="1140" y1="1516" x2="1520" y2="1516" stroke="#111827" stroke-width="1.4"/>
+<text x="1330.0" y="1505.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15" font-weight="bold" fill="#111827" text-anchor="middle">7.0</text>
+<text x="1330.0" y="1582.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Process Move-Out</text>
+<text x="1330.0" y="1603.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Requests</text>
+<rect x="1140" y="1704" width="380" height="176" rx="16" ry="16" fill="#ffffff" stroke="#111827" stroke-width="1.4"/>
+<line x1="1140" y1="1738" x2="1520" y2="1738" stroke="#111827" stroke-width="1.4"/>
+<text x="1330.0" y="1727.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15" font-weight="bold" fill="#111827" text-anchor="middle">8.0</text>
+<text x="1330.0" y="1804.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Deliver Messages</text>
+<text x="1330.0" y="1825.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">&amp; Notifications</text>
+<rect x="1140" y="1926" width="380" height="176" rx="16" ry="16" fill="#ffffff" stroke="#111827" stroke-width="1.4"/>
+<line x1="1140" y1="1960" x2="1520" y2="1960" stroke="#111827" stroke-width="1.4"/>
+<text x="1330.0" y="1949.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15" font-weight="bold" fill="#111827" text-anchor="middle">9.0</text>
+<text x="1330.0" y="2026.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Generate Analytics</text>
+<text x="1330.0" y="2047.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">&amp; Reports</text>
+<rect x="1140" y="2148" width="380" height="176" rx="16" ry="16" fill="#ffffff" stroke="#111827" stroke-width="1.4"/>
+<line x1="1140" y1="2182" x2="1520" y2="2182" stroke="#111827" stroke-width="1.4"/>
+<text x="1330.0" y="2171.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15" font-weight="bold" fill="#111827" text-anchor="middle">10.0</text>
+<text x="1330.0" y="2248.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Provide iRis AI</text>
+<text x="1330.0" y="2269.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15.5" font-weight="bold" fill="#111827" text-anchor="middle">Assistance</text>
+<rect x="2600" y="150" width="470" height="119" fill="#f8fafc" stroke="none"/>
+<path d="M3070,150 L2600,150 L2600,269 L3070,269" fill="none" stroke="#111827" stroke-width="1.4"/>
+<line x1="2664" y1="150" x2="2664" y2="269" stroke="#111827" stroke-width="1.4"/>
+<text x="2632.0" y="214.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">D1</text>
+<text x="2867.0" y="205.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">User Accounts &amp;</text>
+<text x="2867.0" y="224.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Security Settings</text>
+<rect x="2600" y="356.3" width="470" height="176" fill="#f8fafc" stroke="none"/>
+<path d="M3070,356.3 L2600,356.3 L2600,532.3 L3070,532.3" fill="none" stroke="#111827" stroke-width="1.4"/>
+<line x1="2664" y1="356.3" x2="2664" y2="532.3" stroke="#111827" stroke-width="1.4"/>
+<text x="2632.0" y="449.3" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">D2</text>
+<text x="2867.0" y="439.8" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Properties, Units &amp;</text>
+<text x="2867.0" y="458.8" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Floor Plans</text>
+<rect x="2600" y="619.6" width="470" height="81" fill="#f8fafc" stroke="none"/>
+<path d="M3070,619.6 L2600,619.6 L2600,700.6 L3070,700.6" fill="none" stroke="#111827" stroke-width="1.4"/>
+<line x1="2664" y1="619.6" x2="2664" y2="700.6" stroke="#111827" stroke-width="1.4"/>
+<text x="2632.0" y="665.1" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">D3</text>
+<text x="2867.0" y="655.6" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Intake Invites &amp;</text>
+<text x="2867.0" y="674.6" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Applications</text>
+<rect x="2600" y="787.9000000000001" width="470" height="176" fill="#f8fafc" stroke="none"/>
+<path d="M3070,787.9000000000001 L2600,787.9000000000001 L2600,963.9000000000001 L3070,963.9000000000001" fill="none" stroke="#111827" stroke-width="1.4"/>
+<line x1="2664" y1="787.9000000000001" x2="2664" y2="963.9000000000001" stroke="#111827" stroke-width="1.4"/>
+<text x="2632.0" y="880.9" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">D4</text>
+<text x="2867.0" y="871.4" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Leases, Renewals &amp;</text>
+<text x="2867.0" y="890.4" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Signing Audit</text>
+<rect x="2600" y="1051.2" width="470" height="119" fill="#f8fafc" stroke="none"/>
+<path d="M3070,1051.2 L2600,1051.2 L2600,1170.2 L3070,1170.2" fill="none" stroke="#111827" stroke-width="1.4"/>
+<line x1="2664" y1="1051.2" x2="2664" y2="1170.2" stroke="#111827" stroke-width="1.4"/>
+<text x="2632.0" y="1115.7" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">D5</text>
+<text x="2867.0" y="1106.2" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Invoices, Payments &amp;</text>
+<text x="2867.0" y="1125.2" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Utility Billing</text>
+<rect x="2600" y="1257.5" width="470" height="100" fill="#f8fafc" stroke="none"/>
+<path d="M3070,1257.5 L2600,1257.5 L2600,1357.5 L3070,1357.5" fill="none" stroke="#111827" stroke-width="1.4"/>
+<line x1="2664" y1="1257.5" x2="2664" y2="1357.5" stroke="#111827" stroke-width="1.4"/>
+<text x="2632.0" y="1312.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">D6</text>
+<text x="2867.0" y="1312.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Maintenance Requests</text>
+<rect x="2600" y="1444.8" width="470" height="72" fill="#f8fafc" stroke="none"/>
+<path d="M3070,1444.8 L2600,1444.8 L2600,1516.8 L3070,1516.8" fill="none" stroke="#111827" stroke-width="1.4"/>
+<line x1="2664" y1="1444.8" x2="2664" y2="1516.8" stroke="#111827" stroke-width="1.4"/>
+<text x="2632.0" y="1485.8" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">D7</text>
+<text x="2867.0" y="1485.8" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Move-Out Requests</text>
+<rect x="2600" y="1604.1" width="470" height="157" fill="#f8fafc" stroke="none"/>
+<path d="M3070,1604.1 L2600,1604.1 L2600,1761.1 L3070,1761.1" fill="none" stroke="#111827" stroke-width="1.4"/>
+<line x1="2664" y1="1604.1" x2="2664" y2="1761.1" stroke="#111827" stroke-width="1.4"/>
+<text x="2632.0" y="1687.6" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">D8</text>
+<text x="2867.0" y="1678.1" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Conversations, Messages</text>
+<text x="2867.0" y="1697.1" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">&amp; Notifications</text>
+<rect x="2600" y="1848.3999999999999" width="470" height="72" fill="#f8fafc" stroke="none"/>
+<path d="M3070,1848.3999999999999 L2600,1848.3999999999999 L2600,1920.3999999999999 L3070,1920.3999999999999" fill="none" stroke="#111827" stroke-width="1.4"/>
+<line x1="2664" y1="1848.3999999999999" x2="2664" y2="1920.3999999999999" stroke="#111827" stroke-width="1.4"/>
+<text x="2632.0" y="1889.4" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">D9</text>
+<text x="2867.0" y="1879.9" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Expenses &amp; Report</text>
+<text x="2867.0" y="1898.9" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Exports</text>
+<rect x="2600" y="2007.6999999999998" width="470" height="72" fill="#f8fafc" stroke="none"/>
+<path d="M3070,2007.6999999999998 L2600,2007.6999999999998 L2600,2079.7 L3070,2079.7" fill="none" stroke="#111827" stroke-width="1.4"/>
+<line x1="2664" y1="2007.6999999999998" x2="2664" y2="2079.7" stroke="#111827" stroke-width="1.4"/>
+<text x="2632.0" y="2048.7" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">D10</text>
+<text x="2867.0" y="2048.7" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">iRis Chat History</text>
+<rect x="2600" y="2167.0" width="470" height="157" fill="#f8fafc" stroke="none"/>
+<path d="M3070,2167.0 L2600,2167.0 L2600,2324.0 L3070,2324.0" fill="none" stroke="#111827" stroke-width="1.4"/>
+<line x1="2664" y1="2167.0" x2="2664" y2="2324.0" stroke="#111827" stroke-width="1.4"/>
+<text x="2632.0" y="2250.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">D11</text>
+<text x="2867.0" y="2241.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">Document &amp; Media Files</text>
+<text x="2867.0" y="2260.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827" text-anchor="middle">(Storage Buckets)</text>
+<text x="70.0" y="2368.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="bold" fill="#6b7280" text-anchor="start">Legend (Gane &amp; Sarson)</text>
+<rect x="74" y="2386" width="54" height="34" fill="#9ca3af" opacity="0.45"/>
+<rect x="70" y="2382" width="54" height="34" fill="#f3f4f6" stroke="#111827" stroke-width="1.2"/>
+<text x="140.0" y="2404.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start">External entity</text>
+<rect x="270" y="2382" width="70" height="34" rx="8" ry="8" fill="#ffffff" stroke="#111827" stroke-width="1.2"/>
+<line x1="270" y1="2394" x2="340" y2="2394" stroke="#111827" stroke-width="1.2"/>
+<text x="305.0" y="2391.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="bold" fill="#111827" text-anchor="middle">n.0</text>
+<text x="356.0" y="2404.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start">Process (number / name)</text>
+<path d="M600,2382 L530,2382 L530,2416 L600,2416" fill="none" stroke="#111827" stroke-width="1.2"/>
+<line x1="552" y1="2382" x2="552" y2="2416" stroke="#111827" stroke-width="1.2"/>
+<text x="541.0" y="2403.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="bold" fill="#111827" text-anchor="middle">Dn</text>
+<text x="616.0" y="2404.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start">Data store (logical grouping of tables)</text>
+<polyline points="860,2399 930,2399" fill="none" stroke="#374151" stroke-width="1.2" marker-end="url(#arrow)"/>
+<text x="946.0" y="2404.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="normal" fill="#111827" text-anchor="start">Data flow (labelled with the data carried; direction = movement of data)</text>
+<text x="3070.0" y="2434.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="normal" fill="#6b7280" text-anchor="end" font-style="italic">Processes are numbered by significance rank (1.0 = highest); numbering does not imply execution order.  Source: live Supabase schema (58 tables) and Next.js API routes, October 2026.</text>
+</svg>

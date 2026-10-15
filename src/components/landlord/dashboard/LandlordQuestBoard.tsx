@@ -43,6 +43,7 @@ import {
     type MissionConfig
 } from "@/lib/missions-config";
 import { MissionSlideshowModal } from "@/components/landlord/dashboard/MissionSlideshowModal";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface LandlordQuestBoardProps {
     isOpen: boolean;
@@ -51,6 +52,7 @@ interface LandlordQuestBoardProps {
 
 export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps) {
     const router = useRouter();
+    const { t } = useLanguageContext();
     const [state, setState] = useState<LandlordProductTourState | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeMission, setActiveMission] = useState<MissionConfig | null>(null);
@@ -118,12 +120,13 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                                         <Rocket className="size-6" />
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-black tracking-tight text-foreground">Mission Control</h2>
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Operational Roadmap</p>
+                                        <h2 className="text-xl font-black tracking-tight text-foreground">{t("Mission Control")}</h2>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t("Operational Roadmap")}</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={onClose}
+                                    aria-label={t("Close")}
                                     className="flex size-10 items-center justify-center rounded-xl bg-white/5 text-muted-foreground transition-all hover:bg-white/10 hover:text-foreground"
                                 >
                                     <X className="size-5" />
@@ -194,9 +197,9 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                                                 </div>
 
                                                 <div className="space-y-2 mb-6">
-                                                    <h3 className="text-sm font-black tracking-tight text-foreground">{quest.title}</h3>
+                                                    <h3 className="text-sm font-black tracking-tight text-foreground">{t(quest.title)}</h3>
                                                     <p className="text-[10px] leading-relaxed text-muted-foreground/70">
-                                                        {quest.description}
+                                                        {t(quest.description)}
                                                     </p>
                                                 </div>
 
@@ -221,7 +224,7 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                                                                 : "bg-white/5 text-foreground hover:bg-primary hover:text-primary-foreground"
                                                         )}
                                                     >
-                                                        {isDone ? "Review" : "Start Mission"}
+                                                        {isDone ? t("Review") : t("Start Mission")}
                                                         <ArrowRight className="size-[0.875rem]" />
                                                     </button>
                                                 </div>
@@ -236,7 +239,7 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                                 <div className="flex items-center gap-4 text-muted-foreground/60">
                                     <Layout className="size-4" />
                                     <p className="text-[10px] font-medium leading-relaxed">
-                                        Complete all missions to unlock advanced platform capabilities and professional badges.
+                                        {t("Complete all missions to unlock advanced platform capabilities and professional badges.")}
                                     </p>
                                 </div>
                             </div>

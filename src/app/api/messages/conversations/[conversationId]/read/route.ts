@@ -3,6 +3,7 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { ensureUserInConversation } from "@/lib/messages/engine";
 import { MessageService } from "@/lib/services/messaging";
+import { zUuid } from "@/lib/validation/zod-fields";
 
 export async function PATCH(
     request: Request,
@@ -13,6 +14,9 @@ export async function PATCH(
     const { userId } = authContext;
 
     const { conversationId } = await context.params;
+    if (!zUuid().safeParse(conversationId).success) {
+        return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
+    }
 
     try {
         const supabase = createServiceRoleSupabaseClient();

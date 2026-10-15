@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { DigitalSigner } from "@/components/shared/DigitalSigner/DigitalSigner";
 import { toast } from "sonner";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface SignaturePadProps {
   onSave: (dataUrl: string, blob?: Blob) => void;
@@ -29,6 +30,7 @@ export function SignaturePad({
   documentTitle = "Lease Agreement",
   variant = 'pad'
 }: SignaturePadProps) {
+  const { t } = useLanguageContext();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const signaturePadRef = useRef<SignaturePadLibrary | null>(null);
   const [isEmpty, setIsEmpty] = useState(true);
@@ -88,7 +90,7 @@ export function SignaturePad({
       onSave(reader.result as string, signedBlob);
     }
     setShowFullSigner(false);
-    toast.success("Document signed successfully");
+    toast.success(t("Document signed successfully"));
   };
 
   return (
@@ -107,8 +109,8 @@ export function SignaturePad({
             <Maximize2 size={20} strokeWidth={2.5} />
           </div>
           <div className="flex flex-col items-start gap-0.5">
-            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">Open Advanced Signer</span>
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Full Document Review & Signature</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">{t("Open Advanced Signer")}</span>
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">{t("Full Document Review & Signature")}</span>
           </div>
         </button>
       ) : (
@@ -122,7 +124,7 @@ export function SignaturePad({
             {isEmpty && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none opacity-20">
                     <FileText className="size-12 mb-2 text-white" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Sign Here</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white">{t("Sign Here")}</p>
                 </div>
             )}
 
@@ -133,7 +135,7 @@ export function SignaturePad({
                     className="absolute top-4 right-4 p-3 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary transition-all flex items-center gap-2 group/btn"
                 >
                     <Maximize2 size={16} className="group-hover/btn:scale-110 transition-transform" />
-                    <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Advanced Signer</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">{t("Advanced Signer")}</span>
                 </button>
             )}
           </div>
@@ -152,7 +154,7 @@ export function SignaturePad({
               )}
             >
               <Eraser size={18} />
-              Clear
+              {t("Clear")}
             </button>
 
             <button
@@ -168,7 +170,7 @@ export function SignaturePad({
               )}
             >
               <Save size={18} />
-              Finalize Signature
+              {t("Finalize Signature")}
             </button>
           </div>
         </>
@@ -184,7 +186,7 @@ export function SignaturePad({
             >
                 <DigitalSigner 
                     initialFile={pdfBlob}
-                    title={documentTitle}
+                    title={t(documentTitle)}
                     onSigned={handleFullSignerComplete}
                     onClose={() => setShowFullSigner(false)}
                     isProcessingInitial={true}

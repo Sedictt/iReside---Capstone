@@ -2,12 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { sendEmailVerificationOTP } from "@/lib/email";
-import { z } from "zod";
 import crypto from "crypto";
-
-const sendOtpSchema = z.object({
-  newEmail: z.string().trim().email("Please provide a valid email address."),
-});
+import { parseJsonBody } from "@/lib/validation/server";
+import { escapeLikePattern, setupSendOtpSchema } from "@/lib/validation/schemas/account.schema";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,29 +19,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let rawBody: unknown;
-    try {
-      rawBody = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
-    }
+    const parsed = await parseJsonBody(request, setupSendOtpSchema);
+    if (!parsed.ok) return parsed.response;
 
-    const validation = sendOtpSchema.safeParse(rawBody);
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.issues[0]?.message || "Invalid email address" },
-        { status: 400 }
-      );
-    }
-
-    const newEmail = validation.data.newEmail.toLowerCase();
+    const newEmail = parsed.data.newEmail;
     const adminClient = createServiceRoleSupabaseClient();
 
     // Verify this email is not already claimed by a DIFFERENT profile
     const { data: existingProfile } = await adminClient
       .from("profiles")
       .select("id")
-      .ilike("email", newEmail)
+      .ilike("email", escapeLikePattern(newEmail))
       .neq("id", userId)
       .maybeSingle();
 
@@ -73,7 +58,6 @@ export async function POST(request: NextRequest) {
         { onConflict: "profile_id" }
       );
 
-    console.info(`[Setup Email OTP] Generated code for user ${userId} -> ${newEmail}: ${otpCode}`);
 
     // Dispatch verification email
     try {
@@ -93,7 +77,7 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     console.error("[POST /api/setup/email/send-otp] Error:", err);
     return NextResponse.json(
-      { error: err?.message || "Failed to send verification code." },
+      { error: "Failed to send verification code." },
       { status: 500 }
     );
   }

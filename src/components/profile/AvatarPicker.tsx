@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
+import { useLanguageContext } from "@/context/LanguageContext";
 import {
     MAX_FILE_SIZE_MB,
     getSafeAvatarBgColor,
@@ -130,6 +131,7 @@ export function AvatarPicker({
     onProfileUpdate,
 }: AvatarPickerProps) {
     const { profile, loading, refreshProfile } = useAuth();
+    const { t } = useLanguageContext();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [mounted, setMounted] = useState(false);
 
@@ -190,7 +192,7 @@ export function AvatarPicker({
 
     const handleSave = async () => {
         if (!state.selectedAvatar) {
-            toast.error("Please select an avatar first");
+            toast.error(t("Please select an avatar first"));
             return;
         }
 
@@ -221,8 +223,15 @@ export function AvatarPicker({
                 } else {
                     const errData = await response.json().catch(() => ({}));
                     console.warn("[AvatarPicker] API route returned error:", errData);
+                    // A validation rejection must not be bypassed by the direct client write below.
+                    if (response.status >= 400 && response.status < 500) {
+                        const rejection = new Error(errData.error || "Invalid avatar selection.");
+                        (rejection as Error & { isValidationRejection?: boolean }).isValidationRejection = true;
+                        throw rejection;
+                    }
                 }
             } catch (fetchErr) {
+                if ((fetchErr as { isValidationRejection?: boolean })?.isValidationRejection) throw fetchErr;
                 console.warn("[AvatarPicker] Fetch error, attempting client fallback:", fetchErr);
             }
 
@@ -253,14 +262,14 @@ export function AvatarPicker({
                 window.dispatchEvent(new CustomEvent("profile-updated"));
             }
 
-            toast.success("Profile appearance updated");
+            toast.success(t("Profile appearance updated"));
             onProfileUpdate?.();
             onClose();
         } catch (err: any) {
             console.error("[AvatarPicker] Failed to update appearance:", err);
             const msg = err.message || "Failed to update appearance. Please try again.";
             dispatch({ type: "SET_ERROR", payload: msg });
-            toast.error(msg);
+            toast.error(t(msg));
         } finally {
             dispatch({ type: "SET_UPDATING", payload: false });
         }
@@ -305,12 +314,12 @@ export function AvatarPicker({
             const data = await response.json();
             dispatch({ type: "SET_UPLOADED_AVATAR", payload: data.avatarUrl });
             void refreshProfile().catch(() => {});
-            toast.success("Photo uploaded successfully");
+            toast.success(t("Photo uploaded successfully"));
         } catch (err: any) {
             console.error("[AvatarPicker] Upload error:", err);
             const msg = err.message || "Failed to upload avatar";
             dispatch({ type: "SET_ERROR", payload: msg });
-            toast.error(msg);
+            toast.error(t(msg));
         } finally {
             dispatch({ type: "SET_UPLOADING", payload: false });
             if (fileInputRef.current) {
@@ -353,17 +362,17 @@ export function AvatarPicker({
                                 id="avatar-picker-dialog-title"
                                 className="text-base sm:text-lg font-bold text-foreground tracking-tight"
                             >
-                                Customize Profile Appearance
+                                {t("Customize Profile Appearance")}
                             </h2>
                             <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                                Choose an illustration or upload your photo, and set your signature color.
+                                {t("Choose an illustration or upload your photo, and set your signature color.")}
                             </p>
                         </div>
                         <button
                             type="button"
                             onClick={onClose}
                             className="size-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer border border-transparent hover:border-border/60"
-                            aria-label="Close dialog"
+                            aria-label={t("Close dialog")}
                         >
                             <X className="size-4" />
                         </button>
@@ -376,7 +385,7 @@ export function AvatarPicker({
                             {/* Section Eyebrow */}
                             <div className="w-full text-center">
                                 <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                                    Live Preview
+                                    {t("Live Preview")}
                                 </span>
                             </div>
 
@@ -389,7 +398,7 @@ export function AvatarPicker({
                                     <Image
                                         key={state.selectedAvatar}
                                         src={state.selectedAvatar || DEFAULT_AVATAR_URL}
-                                        alt="Avatar preview"
+                                        alt={t("Avatar preview")}
                                         fill
                                         sizes="160px"
                                         className="object-cover"
@@ -418,12 +427,12 @@ export function AvatarPicker({
                                     {state.isUpdating ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            <span>Saving Appearance...</span>
+                                            <span>{t("Saving Appearance...")}</span>
                                         </>
                                     ) : (
                                         <>
                                             <Check className="size-4 stroke-[2.5]" />
-                                            <span>Save Appearance</span>
+                                            <span>{t("Save Appearance")}</span>
                                         </>
                                     )}
                                 </button>
@@ -432,7 +441,7 @@ export function AvatarPicker({
                                     onClick={onClose}
                                     className="w-full py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors cursor-pointer"
                                 >
-                                    Cancel
+                                    {t("Cancel")}
                                 </button>
                             </div>
                         </div>
@@ -441,14 +450,14 @@ export function AvatarPicker({
                         <div className="flex-1 min-h-0 md:overflow-y-auto p-6 sm:p-7 space-y-6">
                             {state.error && (
                                 <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3.5 text-xs font-semibold text-red-500">
-                                    {state.error}
+                                    {t(state.error)}
                                 </div>
                             )}
 
                             {/* 1. Custom Upload Card */}
                             <div className="space-y-2.5">
                                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                    Profile Photo
+                                    {t("Profile Photo")}
                                 </h3>
 
                                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5 p-3.5 rounded-2xl border border-border/80 bg-muted/15 transition-all">
@@ -458,7 +467,7 @@ export function AvatarPicker({
                                                 <div className="relative size-9 rounded-lg overflow-hidden">
                                                     <Image
                                                         src={state.customAvatarUrl}
-                                                        alt="Custom upload"
+                                                        alt={t("Custom upload")}
                                                         fill
                                                         sizes="36px"
                                                         className="object-cover"
@@ -472,12 +481,12 @@ export function AvatarPicker({
                                             <p className="text-xs font-bold text-foreground truncate">
                                                 {state.customAvatarUrl
                                                     ? isCurrentCustom
-                                                        ? "Custom Photo Active"
-                                                        : "Saved Custom Photo"
-                                                    : "Upload Custom Photo"}
+                                                        ? t("Custom Photo Active")
+                                                        : t("Saved Custom Photo")
+                                                    : t("Upload Custom Photo")}
                                             </p>
                                             <p className="text-[11px] text-muted-foreground truncate">
-                                                PNG, JPG or WebP up to 5MB
+                                                {t("PNG, JPG or WebP up to 5MB")}
                                             </p>
                                         </div>
                                     </div>
@@ -494,7 +503,7 @@ export function AvatarPicker({
                                                 }
                                                 className="px-3 py-1.5 rounded-xl text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 transition-colors cursor-pointer"
                                             >
-                                                Use Custom
+                                                {t("Use Custom")}
                                             </button>
                                         )}
                                         <input
@@ -514,13 +523,13 @@ export function AvatarPicker({
                                             {state.isUploading ? (
                                                 <>
                                                     <Loader2 className="size-3.5 animate-spin text-primary" />
-                                                    <span>Uploading...</span>
+                                                    <span>{t("Uploading...")}</span>
                                                 </>
                                             ) : (
                                                 <>
                                                     <Upload className="size-3.5 text-muted-foreground" />
                                                     <span>
-                                                        {state.customAvatarUrl ? "Replace" : "Browse Image"}
+                                                        {state.customAvatarUrl ? t("Replace") : t("Browse Image")}
                                                     </span>
                                                 </>
                                             )}
@@ -533,10 +542,10 @@ export function AvatarPicker({
                             <div className="space-y-2.5">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                        Or Choose an Illustration
+                                        {t("Or Choose an Illustration")}
                                     </h3>
                                     <span className="text-[11px] text-muted-foreground">
-                                        16 Character Styles
+                                        {t("16 Character Styles")}
                                     </span>
                                 </div>
 
@@ -555,12 +564,12 @@ export function AvatarPicker({
                                                         : "border-black/10 dark:border-white/10 opacity-85 hover:opacity-100 hover:scale-105 hover:shadow-md hover:border-white/50"
                                                 )}
                                                 style={{ backgroundColor: state.selectedColor }}
-                                                aria-label={`Select avatar ${idx + 1}`}
+                                                aria-label={t("Select avatar {number}", { number: idx + 1 })}
                                             >
                                                 <div className="relative w-full h-full rounded-xl overflow-hidden flex items-center justify-center">
                                                     <Image
                                                         src={url}
-                                                        alt={`Avatar ${idx + 1}`}
+                                                        alt={t("Avatar {number}", { number: idx + 1 })}
                                                         fill
                                                         sizes="56px"
                                                         className="object-cover transition-transform duration-200 group-hover:scale-110"
@@ -584,7 +593,7 @@ export function AvatarPicker({
                                 <div className="flex items-center justify-between border-b border-border/50 pb-2">
                                     <div>
                                         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                            Background Color
+                                            {t("Background Color")}
                                         </h3>
                                     </div>
                                     <button
@@ -596,10 +605,10 @@ export function AvatarPicker({
                                             })
                                         }
                                         className="px-2.5 py-1 rounded-lg text-xs font-bold text-primary hover:bg-primary/10 transition-colors flex items-center gap-1.5 cursor-pointer"
-                                        title="Reset to default brand violet"
+                                        title={t("Reset to default brand violet")}
                                     >
                                         <RefreshCcw className="size-3" />
-                                        <span>Reset</span>
+                                        <span>{t("Reset")}</span>
                                     </button>
                                 </div>
 
@@ -659,7 +668,7 @@ export function AvatarPicker({
                                                                 : "border-black/10 dark:border-white/10 hover:scale-105 hover:shadow-sm"
                                                         )}
                                                         style={{ backgroundColor: color }}
-                                                        aria-label={`Select background color ${color}`}
+                                                        aria-label={t("Select background color {color}", { color })}
                                                     >
                                                         {isSelected && (
                                                             <Check className="size-3.5 text-white drop-shadow stroke-[3]" />

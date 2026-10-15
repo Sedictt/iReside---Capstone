@@ -14,6 +14,7 @@ import ChartDataLabels from 'chartjs-plugin-datalabels'
 import { cn } from '@/lib/utils'
 import { useTheme } from 'next-themes'
 import { triggerHaptic } from '@/lib/haptics'
+import { useLanguageContext } from '@/context/LanguageContext'
 
 ChartJS.register(
     CategoryScale,
@@ -42,6 +43,7 @@ export function MobileFinancialPerformanceChart({ dataByWindow }: MobileFinancia
     const [activeTab, setActiveTab] = useState<'earnings' | 'expenses' | 'netIncome'>('earnings')
     const [timeWindow, setTimeWindow] = useState<'week' | 'month' | 'year'>('month')
     const { resolvedTheme } = useTheme()
+    const { t } = useLanguageContext()
     const isDark = resolvedTheme !== 'light'
 
     const fallbackChartData = {
@@ -84,10 +86,10 @@ export function MobileFinancialPerformanceChart({ dataByWindow }: MobileFinancia
     const maxValue = Math.max(...currentValues, 1)
 
     const data = {
-        labels: chartData[timeWindow].labels,
+        labels: chartData[timeWindow].labels.map((label) => t(label)),
         datasets: [
             {
-                label: 'Amount',
+                label: t('Amount'),
                 data: currentValues,
                 backgroundColor: (context: ScriptableContext<'bar'>) => {
                     if (!context.chart.chartArea) {
@@ -188,7 +190,7 @@ export function MobileFinancialPerformanceChart({ dataByWindow }: MobileFinancia
             <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl neumorphic-inset bg-muted/20">
                 {(['week', 'month', 'year'] as const).map((w) => {
                     const isSelected = timeWindow === w
-                    const label = w === 'week' ? 'Weekly' : w === 'month' ? 'Monthly' : 'Yearly'
+                    const label = w === 'week' ? t('Weekly') : w === 'month' ? t('Monthly') : t('Yearly')
                     return (
                         <button
                             key={w}
@@ -226,7 +228,7 @@ export function MobileFinancialPerformanceChart({ dataByWindow }: MobileFinancia
                     )}
                 >
                     <span className={cn('size-2 rounded-full shrink-0', activeTab === 'earnings' ? 'bg-emerald-500 shadow-sm' : 'bg-muted-foreground/40')} />
-                    <span className="truncate">Earnings</span>
+                    <span className="truncate">{t('Earnings')}</span>
                 </button>
 
                 <button
@@ -243,7 +245,7 @@ export function MobileFinancialPerformanceChart({ dataByWindow }: MobileFinancia
                     )}
                 >
                     <span className={cn('size-2 rounded-full shrink-0', activeTab === 'expenses' ? 'bg-red-500 shadow-sm' : 'bg-muted-foreground/40')} />
-                    <span className="truncate">Expenses</span>
+                    <span className="truncate">{t('Expenses')}</span>
                 </button>
 
                 <button
@@ -260,7 +262,7 @@ export function MobileFinancialPerformanceChart({ dataByWindow }: MobileFinancia
                     )}
                 >
                     <span className={cn('size-2 rounded-full shrink-0', activeTab === 'netIncome' ? 'bg-blue-500 shadow-sm' : 'bg-muted-foreground/40')} />
-                    <span className="truncate">Net</span>
+                    <span className="truncate">{t('Net')}</span>
                 </button>
             </div>
 

@@ -9,6 +9,7 @@ import { ContactItem as ContactItemType } from "./types";
 import { ContactItem } from "./ContactItem";
 import { cn } from "@/lib/utils";
 import { RoleBadge } from "@/components/profile/RoleBadge";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface ContactListProps {
     contacts: ContactItemType[];
@@ -41,6 +42,7 @@ export function ContactList({
     setConversationsError,
     dashboardHref = "/landlord/dashboard"
 }: ContactListProps) {
+    const { t } = useLanguageContext();
     const filteredContacts = useMemo(() => {
         if (!searchQuery.trim()) return contacts;
         const q = searchQuery.trim().toLowerCase();
@@ -64,11 +66,11 @@ export function ContactList({
                         <Link
                             href={dashboardHref}
                             className="rounded-xl neumorphic-extruded p-2 transition-all hover:scale-105 active:scale-95"
-                            title="Back to Dashboard"
+                            title={t("Back to Dashboard")}
                         >
                             <ArrowLeft className="size-4 text-high" />
                         </Link>
-                        <h2 className="text-xl font-black tracking-tight text-high">Messages</h2>
+                        <h2 className="text-xl font-black tracking-tight text-high">{t("Messages")}</h2>
                     </div>
                     <ThemeToggle variant="sidebar" className="size-9" />
                 </div>
@@ -82,7 +84,7 @@ export function ContactList({
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search by name or room..."
+                        placeholder={t("Search by name or room...")}
                         className="w-full rounded-2xl neumorphic-inset py-2.5 pl-10 pr-9 text-sm text-high placeholder:text-disabled transition-all focus:ring-4 focus:ring-primary/5"
                     />
                     {searchQuery && (
@@ -90,7 +92,7 @@ export function ContactList({
                             type="button"
                             onClick={() => setSearchQuery("")}
                             className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-disabled hover:text-high hover:bg-surface-3 transition-colors"
-                            title="Clear search"
+                            title={t("Clear search")}
                         >
                             <X className="size-3.5" />
                         </button>
@@ -98,12 +100,12 @@ export function ContactList({
 
                     {searchQuery.trim().length >= 2 && (userSearchResults.length > 0 || isSearchingUsers || userSearchError) && (
                         <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-50 max-h-80 overflow-y-auto rounded-3xl border border-border bg-card p-2 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-                            <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-disabled">Directory Search</div>
+                            <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-disabled">{t("Directory Search")}</div>
                             {isSearchingUsers && (
-                                <div className="px-4 py-3 text-xs font-black text-disabled uppercase tracking-widest animate-pulse">Searching users...</div>
+                                <div className="px-4 py-3 text-xs font-black text-disabled uppercase tracking-widest animate-pulse">{t("Searching users...")}</div>
                             )}
                             {!isSearchingUsers && userSearchError && (
-                                <div className="px-4 py-3 text-xs text-red-500 font-medium">{userSearchError}</div>
+                                <div className="px-4 py-3 text-xs text-red-500 font-medium">{t(userSearchError)}</div>
                             )}
                             {!isSearchingUsers && !userSearchError && userSearchResults.map((result, idx) => (
                                 <button
@@ -138,7 +140,7 @@ export function ContactList({
                 {conversationsError && (
                     <div className="flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-xs text-red-600 animate-in slide-in-from-top-2">
                         <AlertTriangle className="size-4 shrink-0 mt-0.5" />
-                        <div className="flex-1 font-medium">{conversationsError}</div>
+                        <div className="flex-1 font-medium">{t(conversationsError)}</div>
                         <button onClick={() => setConversationsError(null)} className="p-1 hover:bg-red-500/10 rounded-lg">
                             <X className="size-3" />
                         </button>
@@ -162,9 +164,9 @@ export function ContactList({
                     </div>
                 ) : filteredContacts.length === 0 ? (
                     <div className="py-12 px-4 text-center">
-                        <p className="text-sm font-bold text-medium">No conversations found</p>
+                        <p className="text-sm font-bold text-medium">{t("No conversations found")}</p>
                         <p className="text-xs text-disabled mt-1">
-                            {searchQuery ? `No chats matching "${searchQuery}"` : "You have no active conversations"}
+                            {searchQuery ? t("No chats matching \"{query}\"", { query: searchQuery }) : t("You have no active conversations")}
                         </p>
                     </div>
                 ) : (

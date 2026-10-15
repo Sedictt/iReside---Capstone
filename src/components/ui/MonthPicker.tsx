@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface MonthPickerProps {
 	value?: string; // "YYYY-MM", e.g. "2026-09"
@@ -47,6 +48,7 @@ export function MonthPicker({
 	className,
 	align = "right"
 }: MonthPickerProps) {
+	const { t } = useLanguageContext();
 	const [isOpen, setIsOpen] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
 
@@ -126,8 +128,8 @@ export function MonthPicker({
 					type="button"
 					onClick={handlePrevMonth}
 					className="flex h-full w-7 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-l-xl transition-colors cursor-pointer"
-					title="Previous Month"
-					aria-label="Previous month"
+					title={t("Previous Month")}
+					aria-label={t("Previous month")}
 				>
 					<ChevronLeft className="size-3.5" />
 				</button>
@@ -139,13 +141,13 @@ export function MonthPicker({
 					type="button"
 					onClick={() => setIsOpen((prev) => !prev)}
 					className="flex h-full items-center gap-1.5 px-2.5 text-xs font-semibold text-foreground hover:text-primary transition-colors cursor-pointer select-none"
-					title="Open Month Picker"
+					title={t("Open Month Picker")}
 					aria-haspopup="dialog"
 					aria-expanded={isOpen}
 				>
 					<Calendar className="size-3.5 text-primary shrink-0" />
 					<span className="whitespace-nowrap">
-						{MONTH_NAMES_SHORT[parsed.month]} {parsed.year}
+						{t(MONTH_NAMES_SHORT[parsed.month])} {parsed.year}
 					</span>
 					<ChevronDown className={cn("size-3 text-muted-foreground transition-transform duration-200", isOpen && "rotate-180")} />
 				</button>
@@ -157,8 +159,8 @@ export function MonthPicker({
 					type="button"
 					onClick={handleNextMonth}
 					className="flex h-full w-7 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-r-xl transition-colors cursor-pointer"
-					title="Next Month"
-					aria-label="Next month"
+					title={t("Next Month")}
+					aria-label={t("Next month")}
 				>
 					<ChevronRight className="size-3.5" />
 				</button>
@@ -177,7 +179,7 @@ export function MonthPicker({
 							align === "right" ? "right-0" : "left-0"
 						)}
 						role="dialog"
-						aria-label="Select billing month"
+						aria-label={t("Select billing month")}
 					>
 						{/* Popover Header: Year Selector */}
 						<div className="flex items-center justify-between pb-3 border-b border-border/60">
@@ -185,8 +187,8 @@ export function MonthPicker({
 								type="button"
 								onClick={() => setViewYear((y) => y - 1)}
 								className="flex size-7 items-center justify-center rounded-lg border border-border/60 bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-								title="Previous Year"
-								aria-label="Previous year"
+								title={t("Previous Year")}
+								aria-label={t("Previous year")}
 							>
 								<ChevronLeft className="size-3.5" />
 							</button>
@@ -199,8 +201,8 @@ export function MonthPicker({
 								type="button"
 								onClick={() => setViewYear((y) => y + 1)}
 								className="flex size-7 items-center justify-center rounded-lg border border-border/60 bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-								title="Next Year"
-								aria-label="Next year"
+								title={t("Next Year")}
+								aria-label={t("Next year")}
 							>
 								<ChevronRight className="size-3.5" />
 							</button>
@@ -226,7 +228,7 @@ export function MonthPicker({
 													: "text-foreground hover:bg-muted/60 hover:text-foreground"
 										)}
 									>
-										{name}
+										{t(name)}
 									</button>
 								);
 							})}
@@ -235,7 +237,7 @@ export function MonthPicker({
 						{/* Quick Action Footer */}
 						<div className="flex items-center justify-between pt-2 border-t border-border/60 text-[11px]">
 							<span className="text-muted-foreground">
-								{MONTH_NAMES_FULL[parsed.month]} {parsed.year}
+								{t(MONTH_NAMES_FULL[parsed.month])} {parsed.year}
 							</span>
 							<button
 								type="button"
@@ -243,7 +245,7 @@ export function MonthPicker({
 								disabled={isCurrentMonth}
 								className="font-semibold text-primary hover:underline disabled:opacity-40 disabled:hover:no-underline cursor-pointer"
 							>
-								This Month
+								{t("This Month")}
 							</button>
 						</div>
 					</motion.div>

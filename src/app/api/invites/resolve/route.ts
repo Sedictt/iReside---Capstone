@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateInviteToken, hashInviteToken } from "@/lib/tenant-intake-invites";
+import { isId, isUrlToken } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 export async function GET(request: Request) {
     const url = new URL(request.url);
@@ -9,9 +10,13 @@ export async function GET(request: Request) {
 
     const adminClient = createAdminClient();
 
+    if (unitId && !isId(unitId)) {
+        return NextResponse.json({ error: "Unit not found." }, { status: 404 });
+    }
+
     try {
         // 1. If an invite code was passed in query param, verify it directly
-        if (code) {
+        if (code && isUrlToken(code.trim())) {
             const { data: inviteByCode } = await (adminClient
                 .from("tenant_intake_invites" as any)
                 .select("id, public_token, status")
@@ -69,6 +74,11 @@ export async function GET(request: Request) {
 
         if (propError || !property) {
             return NextResponse.json({ error: "Property not found." }, { status: 404 });
+        }
+
+        // Same rule as landlord-created links: only vacant units can receive invite links.
+        if (unit.status !== "vacant") {
+            return NextResponse.json({ error: "This unit is not currently accepting applications." }, { status: 409 });
         }
 
         // Auto-generate an active invite token for this unit

@@ -30,7 +30,7 @@ describe("API /api/auth/sessions", () => {
                                 user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0",
                             },
                             {
-                                id: "sess-2",
+                                id: "5b2d3f4e-8a1c-4d2e-9f3a-1b2c3d4e5f60",
                                 user_id: "user-123",
                                 created_at: "2026-08-31T09:00:00Z",
                                 updated_at: "2026-08-31T11:00:00Z",
@@ -88,19 +88,19 @@ describe("API /api/auth/sessions", () => {
             const req = new Request("http://localhost:3000/api/auth/sessions", {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sessionId: "sess-2" }),
+                body: JSON.stringify({ sessionId: "5b2d3f4e-8a1c-4d2e-9f3a-1b2c3d4e5f60" }),
             });
 
             const response = await DELETE(req);
             const data = await response.json();
 
             expect(response.status).toBe(200);
-            expect(data.data.sessionId).toBe("sess-2");
+            expect(data.data.sessionId).toBe("5b2d3f4e-8a1c-4d2e-9f3a-1b2c3d4e5f60");
             expect(mockSupabase.channel).toHaveBeenCalledWith("auth-monitor:user-123");
             expect(mockChannel.send).toHaveBeenCalledWith(
                 expect.objectContaining({
                     event: "SESSION_REVOKED",
-                    payload: expect.objectContaining({ sessionId: "sess-2" }),
+                    payload: expect.objectContaining({ sessionId: "5b2d3f4e-8a1c-4d2e-9f3a-1b2c3d4e5f60" }),
                 })
             );
         });

@@ -13,6 +13,7 @@ import {
     Move
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export type LayoutPresetType = "double-loaded" | "single-loaded" | "u-shape" | "l-shape";
 
@@ -43,6 +44,7 @@ export const FirstTimePresetModal = ({
     unitCount = 0,
     floorCount = 1,
 }: FirstTimePresetModalProps) => {
+    const { t } = useLanguageContext();
     // Handle Escape key to dismiss/switch to manual layout
     useEffect(() => {
         if (!isOpen) return;
@@ -67,19 +69,19 @@ export const FirstTimePresetModal = ({
                     <div className="flex gap-1.5 justify-center">
                         {[1, 2, 3, 4].map((i) => (
                             <div key={`dl-top-${i}`} className="h-5 flex-1 rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                                <span className="text-[8px] font-bold text-primary">Room</span>
+                                <span className="text-[8px] font-bold text-primary">{t("Room")}</span>
                             </div>
                         ))}
                     </div>
                     {/* Central Corridor */}
                     <div className="h-4 w-full rounded bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Hallway</span>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">{t("Hallway")}</span>
                     </div>
                     {/* Bottom unit row */}
                     <div className="flex gap-1.5 justify-center">
                         {[1, 2, 3, 4].map((i) => (
                             <div key={`dl-bot-${i}`} className="h-5 flex-1 rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                                <span className="text-[8px] font-bold text-primary">Room</span>
+                                <span className="text-[8px] font-bold text-primary">{t("Room")}</span>
                             </div>
                         ))}
                     </div>
@@ -97,13 +99,13 @@ export const FirstTimePresetModal = ({
                     <div className="flex gap-1.5 justify-center">
                         {[1, 2, 3, 4].map((i) => (
                             <div key={`sl-top-${i}`} className="h-7 flex-1 rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                                <span className="text-[8px] font-bold text-primary">Room</span>
+                                <span className="text-[8px] font-bold text-primary">{t("Room")}</span>
                             </div>
                         ))}
                     </div>
                     {/* Single Corridor */}
                     <div className="h-5 w-full rounded bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Open Walkway</span>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">{t("Open Walkway")}</span>
                     </div>
                 </div>
             ),
@@ -117,20 +119,20 @@ export const FirstTimePresetModal = ({
                 <div className="relative h-24 w-full rounded-xl border border-border/80 bg-muted/40 p-2">
                     {/* Top wing */}
                     <div className="h-4.5 w-full rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                        <span className="text-[8px] font-bold text-primary">Top Wing</span>
+                        <span className="text-[8px] font-bold text-primary">{t("Top Wing")}</span>
                     </div>
                     <div className="mt-1 flex justify-between h-13">
                         {/* West wing */}
                         <div className="w-8 rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                            <span className="text-[7px] font-bold text-primary -rotate-90">Left</span>
+                            <span className="text-[7px] font-bold text-primary -rotate-90">{t("Left")}</span>
                         </div>
                         {/* Center Courtyard */}
                         <div className="flex-1 mx-1.5 rounded border border-dashed border-emerald-500/40 bg-emerald-500/10 flex items-center justify-center">
-                            <span className="text-[8px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Courtyard</span>
+                            <span className="text-[8px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{t("Courtyard")}</span>
                         </div>
                         {/* East wing */}
                         <div className="w-8 rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                            <span className="text-[7px] font-bold text-primary rotate-90">Right</span>
+                            <span className="text-[7px] font-bold text-primary rotate-90">{t("Right")}</span>
                         </div>
                     </div>
                 </div>
@@ -145,16 +147,16 @@ export const FirstTimePresetModal = ({
                 <div className="relative h-24 w-full rounded-xl border border-border/80 bg-muted/40 p-2">
                     {/* Top wing */}
                     <div className="h-5 w-full rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                        <span className="text-[8px] font-bold text-primary">Main Wing</span>
+                        <span className="text-[8px] font-bold text-primary">{t("Main Wing")}</span>
                     </div>
                     <div className="mt-1 flex justify-between h-13">
                         {/* Left side wing */}
                         <div className="w-10 rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                            <span className="text-[8px] font-bold text-primary -rotate-90">Side Wing</span>
+                            <span className="text-[8px] font-bold text-primary -rotate-90">{t("Side Wing")}</span>
                         </div>
                         {/* Open yard */}
                         <div className="flex-1 ml-1.5 rounded border border-dashed border-border/60 bg-background/40 flex items-center justify-center">
-                            <span className="text-[8px] font-bold text-muted-foreground/60">Open Area</span>
+                            <span className="text-[8px] font-bold text-muted-foreground/60">{t("Open Area")}</span>
                         </div>
                     </div>
                 </div>
@@ -198,7 +200,7 @@ export const FirstTimePresetModal = ({
                         <button
                             type="button"
                             onClick={onChooseManual}
-                            title="Close and edit manually"
+                            title={t("Close and edit manually")}
                             className="absolute right-6 top-6 z-20 rounded-full p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                         >
                             <X className="size-5" />
@@ -209,11 +211,11 @@ export const FirstTimePresetModal = ({
                             <div className="flex items-center gap-2 mb-3">
                                 <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-primary">
                                     <Layers className="size-4" />
-                                    Step 2 of 5 • Unit Map Setup
+                                    {t("Step 2 of 5 • Unit Map Setup")}
                                 </span>
                                 {unitCount > 0 && (
                                     <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                                        {unitCount} {unitCount === 1 ? "Room" : "Rooms"} • {floorCount} {floorCount === 1 ? "Floor" : "Floors"}
+                                        {t(unitCount === 1 ? "{count} Room" : "{count} Rooms", { count: unitCount })} • {t(floorCount === 1 ? "{count} Floor" : "{count} Floors", { count: floorCount })}
                                     </span>
                                 )}
                             </div>
@@ -222,10 +224,10 @@ export const FirstTimePresetModal = ({
                                 id="layout-preset-modal-title"
                                 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground"
                             >
-                                Choose How Your Hallway Looks
+                                {t("Choose How Your Hallway Looks")}
                             </h2>
                             <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-3xl font-medium">
-                                Pick the hallway layout that looks most like your building. We&apos;ll automatically place your rooms and hallways on the map. You can still adjust everything on the canvas later.
+                                {t("Pick the hallway layout that looks most like your building. We'll automatically place your rooms and hallways on the map. You can still adjust everything on the canvas later.")}
                             </p>
                         </div>
 
@@ -252,20 +254,20 @@ export const FirstTimePresetModal = ({
                                             {/* Details */}
                                             <div className="flex items-center justify-between gap-2 mb-1.5">
                                                 <h3 className="text-base font-black text-foreground group-hover:text-primary transition-colors">
-                                                    {preset.title}
+                                                    {t(preset.title)}
                                                 </h3>
                                                 <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
-                                                    {preset.tag}
+                                                    {t(preset.tag)}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-muted-foreground leading-relaxed font-normal">
-                                                {preset.description}
+                                                {t(preset.description)}
                                             </p>
                                         </div>
 
                                         {/* Apply Action Link */}
                                         <div className="mt-4 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-primary group-hover:underline">
-                                            <span>Apply {preset.title}</span>
+                                            <span>{t("Apply {title}", { title: t(preset.title) })}</span>
                                             <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
                                         </div>
                                     </button>
@@ -278,10 +280,10 @@ export const FirstTimePresetModal = ({
                             <div className="space-y-1">
                                 <p className="text-sm font-bold text-foreground flex items-center gap-2">
                                     <Move className="size-4 text-primary" />
-                                    Want to arrange rooms yourself?
+                                    {t("Want to arrange rooms yourself?")}
                                 </p>
                                 <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                    You can skip the presets and arrange each room on the canvas yourself anytime.
+                                    {t("You can skip the presets and arrange each room on the canvas yourself anytime.")}
                                 </p>
                             </div>
                             
@@ -294,7 +296,7 @@ export const FirstTimePresetModal = ({
                                     "transition-all active:scale-95 shadow-sm min-h-[44px] cursor-pointer"
                                 )}
                             >
-                                <span>Arrange Manually</span>
+                                <span>{t("Arrange Manually")}</span>
                                 <ArrowRight className="size-4 text-muted-foreground" />
                             </button>
                         </div>

@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Plus, Layers, Edit2, Check, Home } from 'lucide-react';
 import { FloorId } from '../types';
+import { useLanguageContext } from '@/context/LanguageContext';
 
 interface FloorTab {
     id: FloorId;
@@ -34,6 +35,7 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
     itemCount,
     assignedFloorKey
 }) => {
+    const { t } = useLanguageContext();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -48,7 +50,7 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const activeTab = floorTabs.find(t => t.id === activeFloor);
+    const activeTab = floorTabs.find(tab => tab.id === activeFloor);
     const isCurrentActiveAssigned = Boolean(readOnly && assignedFloorKey && activeTab?.id === assignedFloorKey);
 
     return (
@@ -77,7 +79,7 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
                             )}
                         </div>
                         <span className={`text-xs font-black truncate text-left uppercase tracking-wider ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                            {activeTab?.title || (floorTabs.length === 0 ? 'No Floors' : 'Unknown')}
+                            {activeTab?.title || (floorTabs.length === 0 ? t('No Floors') : t('Unknown'))}
                         </span>
                     </div>
                     <ChevronDown className={`size-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''} ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`} />
@@ -101,7 +103,7 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
                             <div className="max-h-[300px] overflow-y-auto scrollbar-hide py-1">
                                 {floorTabs.length === 0 ? (
                                     <div className="px-3 py-3 text-center">
-                                        <p className="text-[11px] font-medium text-zinc-400">No floors added yet</p>
+                                        <p className="text-[11px] font-medium text-zinc-400">{t("No floors added yet")}</p>
                                         {!readOnly && (
                                             <button
                                                 onClick={() => {
@@ -110,7 +112,7 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
                                                 }}
                                                 className="mt-2 text-[10px] font-black uppercase tracking-wider text-primary hover:underline"
                                             >
-                                                + Add First Floor
+                                                {t("+ Add First Floor")}
                                             </button>
                                         )}
                                     </div>
@@ -136,7 +138,7 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
                                                     {isAssigned && (
                                                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/15 text-primary border border-primary/30 text-[9px] font-bold tracking-normal normal-case">
                                                             <Home className="size-2.5" />
-                                                            <span>Your Unit</span>
+                                                            <span>{t("Your Unit")}</span>
                                                         </span>
                                                     )}
                                                 </div>
@@ -165,7 +167,7 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
                             flex size-8 items-center justify-center rounded-xl transition-all
                             ${isDark ? 'hover:bg-white/10 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900'}
                         `}
-                        title="Rename Level"
+                        title={t("Rename Level")}
                     >
                         <Edit2 className="size-3.5" />
                     </button>
@@ -188,7 +190,7 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
                             flex size-8 items-center justify-center rounded-xl transition-all
                             ${isDark ? 'bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20' : 'bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20'}
                         `}
-                        title="Add New Level"
+                        title={t("Add New Level")}
                     >
                         <Plus className="size-4" />
                     </button>

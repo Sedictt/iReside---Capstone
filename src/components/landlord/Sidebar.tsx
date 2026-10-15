@@ -30,6 +30,7 @@ import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal
 import { useNotifications } from "@/context/NotificationContext";
 import { useLandlordSetup } from "@/hooks/useLandlordSetup";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export function Sidebar({
     onCloseMobile,
@@ -39,6 +40,7 @@ export function Sidebar({
     className?: string;
 }) {
     const { counts, importantNotifications } = useNotifications();
+    const { t } = useLanguageContext();
     // Lock stage and tenant reminder come from the shared setup resolver (DB-backed, loading-safe)
     const setup = useLandlordSetup();
     const isTenantSetupDelayed = Boolean(setup.steps.find((step) => step.id === "first_tenant")?.deferred);
@@ -105,11 +107,11 @@ export function Sidebar({
                     icon: Users, 
                     tourId: "nav-tenant-hub",
                     warning: isTenantSetupDelayed,
-                    warningTooltip: "Action needed: Begin setting up your tenants to occupy units and activate lease tracking.",
+                    warningTooltip: t("Action needed: Begin setting up your tenants to occupy units and activate lease tracking."),
                     description: "Active resident profiles, occupancy records & emergency contacts",
                     action: {
                         icon: Plus,
-                        label: "Add Tenant",
+                        label: t("Add Tenant"),
                         href: "/landlord/tenants?action=new",
                         hotkey: "A"
                     }
@@ -153,7 +155,7 @@ export function Sidebar({
                     description: "Manage registered buildings, configure units & set property amenities",
                     action: {
                         icon: Plus,
-                        label: "Add Property",
+                        label: t("Add Property"),
                         href: "/landlord/properties/new",
                         hotkey: "P"
                     }
@@ -163,7 +165,7 @@ export function Sidebar({
                     href: "/landlord/utility-billing", 
                     icon: Zap,
                     warning: isBillingDeferred,
-                    warningTooltip: "Action needed: Configure your payment channels and utility tariffs to automate billing.",
+                    warningTooltip: t("Action needed: Configure your payment channels and utility tariffs to automate billing."),
                     description: "Calculate, allocate and bill electricity, water & submeter charges"
                 },
                 { 

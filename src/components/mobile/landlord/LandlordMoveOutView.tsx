@@ -32,7 +32,9 @@ import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropertySelector';
 import { triggerHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 import { toast } from 'sonner';
+import { tr } from '@/hooks/useLanguage';
 
 interface ClearanceData {
     rent_settled: boolean;
@@ -59,7 +61,9 @@ interface MoveOutRequestItem {
         monthly_rent: number;
         security_deposit: number;
         start_date: string;
-        end_date: string;
+        /** Null for open-ended (month-to-month) leases. */
+        end_date: string | null;
+        term_type?: string | null;
         unit?: {
             name: string;
             property?: {
@@ -88,6 +92,7 @@ const CHECKLIST_ITEMS = [
 export function LandlordMoveOutView() {
     const router = useRouter();
     const { selectedPropertyId } = useProperty();
+    const { t, locale } = useLanguageContext();
 
     const [requests, setRequests] = useState<MoveOutRequestItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -125,7 +130,7 @@ export function LandlordMoveOutView() {
             setRequests(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Error fetching move-out requests:', err);
-            toast.error('Failed to load move-out notices');
+            toast.error(tr('Failed to load move-out notices'));
         } finally {
             setLoading(false);
         }
@@ -141,9 +146,9 @@ export function LandlordMoveOutView() {
     };
 
     const formatDate = (dateStr?: string | null) => {
-        if (!dateStr) return 'N/A';
+        if (!dateStr) return t('N/A');
         const d = new Date(dateStr);
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return d.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     // Calculate metrics
@@ -196,11 +201,11 @@ export function LandlordMoveOutView() {
                 body: JSON.stringify({ inspection_date: req.intended_move_out_date }),
             });
 
-            if (!res.ok) throw new Error('Failed to approve move-out notice');
-            toast.success('Move-out notice acknowledged and scheduled.');
+            if (!res.ok) throw new Error(t('Failed to approve move-out notice'));
+            toast.success(t('Move-out notice acknowledged and scheduled.'));
             fetchRequests();
         } catch (err: any) {
-            toast.error(err.message || 'Action failed');
+            toast.error(tr(err.message || t('Action failed')));
         } finally {
             setSubmitting(false);
         }
@@ -332,15 +337,15 @@ export function LandlordMoveOutView() {
 
             if (!completeRes.ok) {
                 const data = await completeRes.json().catch(() => ({}));
-                throw new Error(data.error || 'Failed to complete move-out');
+                throw new Error(data.error || t('Failed to complete move-out'));
             }
 
-            toast.success('Inspection complete! Unit has been marked as Vacant.');
+            toast.success(t('Inspection complete! Unit has been marked as Vacant.'));
             setActiveInspectionReq(null);
             fetchRequests();
         } catch (err: any) {
             console.error('Error completing move-out:', err);
-            toast.error(err.message || 'Failed to complete move-out');
+            toast.error(tr(err.message || t('Failed to complete move-out')));
         } finally {
             setSubmitting(false);
         }
@@ -358,7 +363,7 @@ export function LandlordMoveOutView() {
                             fetchRequests();
                         }}
                         className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-card text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-2xs"
-                        aria-label="Refresh move-out notices"
+                        aria-label={t("Refresh move-out notices")}
                     >
                         <RefreshCw className={cn("size-4", loading && "animate-spin text-primary")} />
                     </button>
@@ -378,7 +383,7 @@ export function LandlordMoveOutView() {
                                 : "bg-card border-slate-200 dark:border-white/10"
                         )}
                     >
-                        <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Pending</span>
+                        <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">{t("Pending")}</span>
                         <div className="flex items-center justify-between">
                             <span className="text-lg font-black text-foreground mt-0.5">{metrics.pendingCount}</span>
                             {metrics.pendingCount > 0 && (
@@ -394,7 +399,7 @@ export function LandlordMoveOutView() {
                         }}
                         className="p-2.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex flex-col justify-between cursor-pointer active:scale-97 transition-all"
                     >
-                        <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Inspect</span>
+                        <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">{t("Inspect")}</span>
                         <span className="text-lg font-black text-foreground mt-0.5">{metrics.approvedCount}</span>
                     </div>
 
@@ -405,7 +410,7 @@ export function LandlordMoveOutView() {
                         }}
                         className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col justify-between cursor-pointer active:scale-97 transition-all"
                     >
-                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Done</span>
+                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{t("Done")}</span>
                         <span className="text-lg font-black text-foreground mt-0.5">{metrics.completedCount}</span>
                     </div>
 
@@ -416,7 +421,7 @@ export function LandlordMoveOutView() {
                         }}
                         className="p-2.5 rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col justify-between cursor-pointer active:scale-97 transition-all"
                     >
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Total</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("Total")}</span>
                         <span className="text-lg font-black text-foreground mt-0.5">{metrics.total}</span>
                     </div>
                 </div>
@@ -428,7 +433,7 @@ export function LandlordMoveOutView() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search tenant, unit, or move-out reason..."
+                        placeholder={t("Search tenant, unit, or move-out reason...")}
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
                     />
                     {searchQuery && (
@@ -455,7 +460,7 @@ export function LandlordMoveOutView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Pending
+                        {t('Pending')}
                         {metrics.pendingCount > 0 && (
                             <span className="ml-1 px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[9px] font-black">
                                 {metrics.pendingCount}
@@ -474,7 +479,7 @@ export function LandlordMoveOutView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Inspection
+                        {t('Inspection')}
                     </button>
                     <button
                         onClick={() => {
@@ -488,7 +493,7 @@ export function LandlordMoveOutView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Completed
+                        {t('Completed')}
                     </button>
                     <button
                         onClick={() => {
@@ -502,7 +507,7 @@ export function LandlordMoveOutView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        All ({requests.length})
+                        {t('All ({count})', { count: requests.length })}
                     </button>
                 </div>
 
@@ -511,9 +516,9 @@ export function LandlordMoveOutView() {
                     {filteredRequests.length === 0 ? (
                         <div className="p-8 text-center rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col items-center gap-2.5">
                             <DoorOpen className="size-10 text-muted-foreground/40 stroke-1" />
-                            <h4 className="text-sm font-bold text-foreground">No Move-Out Notices</h4>
+                            <h4 className="text-sm font-bold text-foreground">{t("No Move-Out Notices")}</h4>
                             <p className="text-xs text-muted-foreground max-w-xs">
-                                {searchQuery ? 'No move-out requests match your search.' : 'All units in this tab are settled.'}
+                                {searchQuery ? t('No move-out requests match your search.') : t('All units in this tab are settled.')}
                             </p>
                         </div>
                     ) : (
@@ -539,13 +544,13 @@ export function LandlordMoveOutView() {
                                         <div>
                                             <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase">
                                                 <Building2 className="size-3" />
-                                                <span>{req.lease?.unit?.property?.name || 'Property'}</span>
+                                                <span>{req.lease?.unit?.property?.name || t('Property')}</span>
                                             </div>
                                             <h3 className="text-sm font-black text-foreground mt-0.5">
-                                                Unit {req.lease?.unit?.name || 'N/A'}
+                                                {t('Unit {unit}', { unit: req.lease?.unit?.name || t('N/A') })}
                                             </h3>
                                             <p className="text-xs font-semibold text-foreground/90 mt-0.5">
-                                                Tenant: {req.lease?.tenant?.full_name || 'Occupant'}
+                                                {t('Tenant: {name}', { name: req.lease?.tenant?.full_name || t('Occupant') })}
                                             </p>
                                         </div>
 
@@ -557,27 +562,27 @@ export function LandlordMoveOutView() {
                                                 ? "bg-blue-500/15 text-blue-600 dark:text-blue-400"
                                                 : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                                         )}>
-                                            {isPending ? 'Pending Notice' : isApproved ? 'Scheduled Walkthrough' : 'Turnover Done'}
+                                            {isPending ? t('Pending Notice') : isApproved ? t('Scheduled Walkthrough') : t('Turnover Done')}
                                         </span>
                                     </div>
 
                                     {/* Snapshot Box */}
                                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 space-y-2 text-xs">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-[10px] text-muted-foreground font-bold uppercase">Target Move-Out</span>
+                                            <span className="text-[10px] text-muted-foreground font-bold uppercase">{t("Target Move-Out")}</span>
                                             <span className="font-bold text-foreground">
                                                 {formatDate(req.intended_move_out_date)}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-[10px] text-muted-foreground font-bold uppercase">Security Deposit Held</span>
+                                            <span className="text-[10px] text-muted-foreground font-bold uppercase">{t("Security Deposit Held")}</span>
                                             <span className="font-semibold text-foreground">
                                                 {formatCurrency(req.lease?.security_deposit)}
                                             </span>
                                         </div>
                                         {req.reason && (
                                             <div className="pt-1 border-t border-slate-200/40 dark:border-white/5 text-[11px] text-muted-foreground">
-                                                <span className="font-semibold text-foreground">Reason: </span>
+                                                <span className="font-semibold text-foreground">{t("Reason:")} </span>
                                                 {req.reason}
                                             </div>
                                         )}
@@ -593,7 +598,7 @@ export function LandlordMoveOutView() {
                                                     className="py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-xs"
                                                 >
                                                     <Check className="size-3.5" />
-                                                    Acknowledge & Schedule
+                                                    {t('Acknowledge & Schedule')}
                                                 </button>
                                                 <button
                                                     disabled={submitting}
@@ -605,7 +610,7 @@ export function LandlordMoveOutView() {
                                                     className="py-2 px-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-1 active:scale-95 transition-all"
                                                 >
                                                     <XCircle className="size-3.5" />
-                                                    Decline
+                                                    {t('Decline')}
                                                 </button>
                                             </div>
                                         ) : isApproved ? (
@@ -614,12 +619,12 @@ export function LandlordMoveOutView() {
                                                 className="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-xs"
                                             >
                                                 <ClipboardCheck className="size-3.5" />
-                                                Conduct Walkthrough
+                                                {t('Conduct Walkthrough')}
                                             </button>
                                         ) : (
                                             <span className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
                                                 <CheckCircle2 className="size-3.5 text-emerald-500" />
-                                                Unit Vacated
+                                                {t('Unit Vacated')}
                                             </span>
                                         )}
 
@@ -629,7 +634,7 @@ export function LandlordMoveOutView() {
                                                     href={`tel:${req.lease.tenant.phone}`}
                                                     onClick={() => triggerHaptic('light')}
                                                     className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-                                                    aria-label="Call tenant"
+                                                    aria-label={t("Call tenant")}
                                                 >
                                                     <Phone className="size-3.5" />
                                                 </a>
@@ -639,7 +644,7 @@ export function LandlordMoveOutView() {
                                                     href={`/mobile/landlord/messages?tenantId=${req.lease.tenant.id}`}
                                                     onClick={() => triggerHaptic('light')}
                                                     className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-                                                    aria-label="Message tenant"
+                                                    aria-label={t("Message tenant")}
                                                 >
                                                     <MessageSquare className="size-3.5" />
                                                 </Link>
@@ -661,18 +666,19 @@ export function LandlordMoveOutView() {
                                 <div>
                                     <div className="flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-wider">
                                         <ClipboardCheck className="size-3.5" />
-                                        <span>Turnkey Inspection</span>
+                                        <span>{t('Turnkey Inspection')}</span>
                                     </div>
                                     <h3 className="text-base font-black text-foreground mt-0.5">
-                                        Unit {activeInspectionReq.lease?.unit?.name} Walkthrough
+                                        {t('Unit {unit} Walkthrough', { unit: activeInspectionReq.lease?.unit?.name ?? '' })}
                                     </h3>
                                     <p className="text-xs text-muted-foreground">
-                                        Tenant: {activeInspectionReq.lease?.tenant?.full_name}
+                                        {t('Tenant: {name}', { name: activeInspectionReq.lease?.tenant?.full_name ?? '' })}
                                     </p>
                                 </div>
                                 <button
                                     onClick={() => setActiveInspectionReq(null)}
                                     className="p-1.5 rounded-full text-muted-foreground hover:text-foreground"
+                                    aria-label={t('Close')}
                                 >
                                     <X className="size-5" />
                                 </button>
@@ -681,7 +687,7 @@ export function LandlordMoveOutView() {
                             {/* Checklist Section */}
                             <div className="space-y-2">
                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-                                    Condition Checklist
+                                    {t('Condition Checklist')}
                                 </span>
                                 <div className="space-y-2">
                                     {CHECKLIST_ITEMS.map((item) => {
@@ -708,10 +714,10 @@ export function LandlordMoveOutView() {
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <span className="text-xs font-bold text-foreground block">
-                                                        {item.label}
+                                                        {t(item.label)}
                                                     </span>
                                                     <span className="text-[11px] text-muted-foreground block mt-0.5">
-                                                        {item.description}
+                                                        {t(item.description)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -815,17 +821,17 @@ export function LandlordMoveOutView() {
                             {/* Deductions & Security Deposit Calculator */}
                             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 space-y-2.5 text-xs">
                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-                                    Deposit Settlement
+                                    {t('Deposit Settlement')}
                                 </span>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-muted-foreground">Original Deposit Held:</span>
+                                    <span className="text-muted-foreground">{t("Original Deposit Held:")}</span>
                                     <span className="font-bold text-foreground">
                                         {formatCurrency(activeInspectionReq.lease?.security_deposit)}
                                     </span>
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-muted-foreground block">
-                                        Repair / Cleaning Deductions (₱):
+                                        {t('Repair / Cleaning Deductions (₱):')}
                                     </label>
                                     <input
                                         type="number"
@@ -836,7 +842,7 @@ export function LandlordMoveOutView() {
                                     />
                                 </div>
                                 <div className="flex justify-between items-center pt-1 border-t border-slate-200/40 dark:border-white/5">
-                                    <span className="font-semibold text-foreground">Est. Refund to Tenant:</span>
+                                    <span className="font-semibold text-foreground">{t("Est. Refund to Tenant:")}</span>
                                     <span className="font-black text-emerald-600 dark:text-emerald-400">
                                         {formatCurrency(
                                             Math.max(0, (activeInspectionReq.lease?.security_deposit || 0) - (parseFloat(deductionAmount) || 0))
@@ -848,13 +854,13 @@ export function LandlordMoveOutView() {
                             {/* Inspection Notes */}
                             <div className="space-y-1.5">
                                 <label className="text-xs font-bold text-muted-foreground">
-                                    Walkthrough Notes
+                                    {t('Walkthrough Notes')}
                                 </label>
                                 <textarea
                                     value={inspectionNotes}
                                     onChange={(e) => setInspectionNotes(e.target.value)}
                                     rows={2}
-                                    placeholder="e.g. Unit in good condition, slight wear on bedroom wall."
+                                    placeholder={t("e.g. Unit in good condition, slight wear on bedroom wall.")}
                                     className="w-full p-3 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                                 />
                             </div>
@@ -866,7 +872,7 @@ export function LandlordMoveOutView() {
                                     onClick={() => setActiveInspectionReq(null)}
                                     className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-muted-foreground hover:text-foreground active:scale-98 transition-all"
                                 >
-                                    Cancel
+                                    {t('Cancel')}
                                 </button>
                                 <button
                                     disabled={submitting}
@@ -878,7 +884,7 @@ export function LandlordMoveOutView() {
                                     ) : (
                                         <>
                                             <Check className="size-4" />
-                                            Complete & Release Unit
+                                            {t('Complete & Release Unit')}
                                         </>
                                     )}
                                 </button>

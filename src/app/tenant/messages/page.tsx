@@ -79,6 +79,8 @@ import { PaymentIssueResolver } from "@/components/messaging/PaymentIssueResolve
 import { playSound } from "@/hooks/useSound";
 import { toast } from "sonner";
 import { validateMediaBatch } from "@/lib/validation";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 const MESSAGE_CACHE_KEY_PREFIX = "ireside:tenant:messages-cache";
 const CONVERSATIONS_CACHE_KEY_PREFIX = "ireside:tenant:conversations-cache";
@@ -273,6 +275,7 @@ function MessagesContent() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const { user } = useAuth();
+    const { t } = useLanguageContext();
     const supabase = useMemo(() => createSupabaseClient(), []);
     const conversationFromUrl = searchParams.get("conversation")?.trim() || null;
     const panelFromUrl = searchParams.get("panel")?.trim() || null;
@@ -550,9 +553,9 @@ const seen = new Set<string>();
             participantUserId: "iris-ai",
             name: "iRis Assistant",
             role: "admin",
-            unit: "Virtual Assistant",
+            unit: t("Virtual Assistant"),
             unread: 0,
-            lastContact: "Always available",
+            lastContact: t("Always available"),
             avatarUrl: "/logos/favicon.png",
             initials: "IA",
             avatarBgColor: null,
@@ -563,7 +566,7 @@ const seen = new Set<string>();
         };
         
         return [irisContact, ...list];
-    }, [contacts]);
+    }, [contacts, t]);
 
     const activeContact = useMemo(() => {
         if (isIrisActive) return visibleContacts[0];
@@ -578,7 +581,7 @@ const seen = new Set<string>();
             setUserSearchResults([]);
             setUserSearchError(null);
         } catch (error) {
-            setUserSearchError(error instanceof Error ? error.message : "Failed to start conversation.");
+            setUserSearchError(error instanceof Error ? tr(error.message) : t("Failed to start conversation."));
         }
     };
 
@@ -609,14 +612,14 @@ const seen = new Set<string>();
     };
 
     const activeRelationshipStatus = activeContact?.relationshipStatus ?? "stranger";
-    const activeQuickActions = TENANT_QUICK_ACTIONS;
+    const activeQuickActions = TENANT_QUICK_ACTIONS.map((action) => ({ ...action, labelTop: t(`tenantQuickAction.${action.key}.top`, undefined, action.labelTop), labelBottom: t(`tenantQuickAction.${action.key}.bottom`, undefined, action.labelBottom) }));
     const canShowPaymentHistory = activeContact?.hasPaymentHistory ?? false;
     const isChatLoading = isSidebarLoading || isMessagesLoading || Boolean(activeConversationId && !activeContact);
 
     const displayContact = activeContact ?? {
         id: "",
         participantUserId: null,
-        name: "No conversation selected",
+        name: t("No conversation selected"),
         role: null,
         unit: "",
         unread: 0,
@@ -635,11 +638,11 @@ const seen = new Set<string>();
         return {
             id: conversation.id,
             participantUserId: other?.id ?? null,
-            name: other?.fullName ?? "Conversation",
+            name: other?.fullName ?? t("Conversation"),
             role: other?.role ?? null,
-            unit: other?.role === "landlord" ? "Landlord" : other?.role === "admin" ? "Property Admin" : "Participant",
+            unit: other?.role === "landlord" ? t("Landlord") : other?.role === "admin" ? t("Property Admin") : t("Participant"),
             unread: conversation.unreadCount,
-            lastContact: conversation.lastMessage ? new Date(conversation.lastMessage.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "No messages yet",
+            lastContact: conversation.lastMessage ? new Date(conversation.lastMessage.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : t("No messages yet"),
             avatarUrl: other?.avatarUrl || null,
             initials: (other?.fullName ?? "C").split(" ").filter(Boolean).slice(0, 2).map(part => part[0]?.toUpperCase()).join(""),
             avatarBgColor: other?.avatarBgColor || null,
@@ -709,19 +712,19 @@ setPaymentHistoryLoading(true);
                 body: JSON.stringify({ action }),
             });
             const payload = (await response.json().catch(() => null)) as { error?: string; state?: { archived?: boolean; blocked?: boolean } } | null;
-            if (!response.ok) throw new Error(payload?.error ?? "Failed to update action.");
+            if (!response.ok) throw new Error(payload?.error ?? t("Failed to update action."));
             updateActiveContactActionState({ archived: Boolean(payload?.state?.archived), blocked: Boolean(payload?.state?.blocked) });
             await refreshConversations();
             setPendingConfirmAction(null);
         } catch (error) {
-            setUserSearchError(error instanceof Error ? error.message : "Failed to update action.");
+            setUserSearchError(error instanceof Error ? tr(error.message) : t("Failed to update action."));
         } finally {
             setIsSubmittingConfirmAction(false);
         }
-    }, [activeContact?.participantUserId, refreshConversations, updateActiveContactActionState]);
+    }, [activeContact?.participantUserId, refreshConversations, updateActiveContactActionState, t]);
 
     const openReportWizard = useCallback((messageId?: string) => {
-        setReportMessageId(messageId);
+        setReportMessageId(typeof messageId === "string" ? messageId : undefined);
         setShowReportWizard(true);
     }, []);
 
@@ -746,12 +749,12 @@ setPaymentHistoryLoading(true);
 
         let content = message.content;
         if (message.type === "system") {
-            if (systemType === "awaiting_in_person") content = "A face-to-face cash payment has been initiated. The landlord can now verify and confirm the receipt of funds using the interface below.";
-            else if (systemType === "reminder_sent") content = "A payment reminder has been sent for this invoice. You can settle it quickly using the button below.";
-            else if (systemType === "in_person_intent_expired") content = "The face-to-face payment request has expired. The invoice status has been reverted to pending.";
+            if (systemType === "awaiting_in_person") content = t("A face-to-face cash payment has been initiated. The landlord can now verify and confirm the receipt of funds using the interface below.");
+            else if (systemType === "reminder_sent") content = t("A payment reminder has been sent for this invoice. You can settle it quickly using the button below.");
+            else if (systemType === "in_person_intent_expired") content = t("The face-to-face payment request has expired. The invoice status has been reverted to pending.");
             else if (systemType === "landlord_review") {
-                if (workflowStatus === "rejected") content = `The payment request has been rejected. Reason: ${typeof metadata?.rejectionReason === "string" ? metadata.rejectionReason : "No reason provided."}`;
-                else if (workflowStatus === "confirmed" || workflowStatus === "receipted") content = "The payment has been confirmed.";
+                if (workflowStatus === "rejected") content = t("The payment request has been rejected. Reason: {reason}", { reason: typeof metadata?.rejectionReason === "string" ? metadata.rejectionReason : t("No reason provided.") });
+                else if (workflowStatus === "confirmed" || workflowStatus === "receipted") content = t("The payment has been confirmed.");
             }
         }
 
@@ -814,7 +817,7 @@ setPaymentHistoryLoading(true);
         if (!user) return;
         try {
             const { data: list, error } = await fetchConversations();
-            setConversationsError(error);
+            setConversationsError(error ? tr(error) : error);
             const mapped = list.map(mapConversationToContact);
             setContacts(mapped);
             if (user.id) {
@@ -940,7 +943,7 @@ setPaymentHistoryLoading(true);
     };
 
     const queueSelectedFiles = (files: File[]) => {
-        if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation first."; return; }
+        if (!activeConversationId) { fileUploadErrorRef.current = t("Select a conversation first."); return; }
         fileUploadErrorRef.current = null;
 
         const validation = validateMediaBatch(files, {
@@ -949,7 +952,7 @@ setPaymentHistoryLoading(true);
         });
 
         if (!validation.isValid) {
-            toast.error(validation.message, { description: validation.description });
+            toast.error(validation.message ? tr(validation.message) : validation.message, { description: validation.description });
             fileUploadErrorRef.current = `${validation.message}: ${validation.description}`;
             return;
         }
@@ -991,7 +994,7 @@ setPaymentHistoryLoading(true);
                     } : a));
                 } catch (err) {
                     setPendingAttachments(curr => curr.map(a => a.id === id ? { ...a, status: 'error' } : a));
-                    fileUploadErrorRef.current = err instanceof Error ? err.message : "Upload failed";
+                    fileUploadErrorRef.current = err instanceof Error ? err.message : t("Upload failed");
                 }
             })();
         });
@@ -1052,9 +1055,9 @@ setPaymentHistoryLoading(true);
                     setMessagesState((prev) => prev.map((msg) => msg.id === optimisticTextId ? { ...mapped, status: "sent" } : msg));
                     window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
                 } catch (error) {
-                    const message = error instanceof Error ? error.message : "Failed to send.";
+                    const message = error instanceof Error ? error.message : t("Failed to send.");
                     messagesErrorRef.current = message;
-                    toast.error(message);
+                    toast.error(tr(message));
                     setMessagesState((prev) => prev.map((msg) => msg.id === optimisticTextId ? { ...msg, status: "failed" } : msg));
                 }
             })();
@@ -1126,9 +1129,9 @@ setPaymentHistoryLoading(true);
                     setMessagesState((prev) => prev.map((msg) => msg.id === optimisticAlbumId ? { ...mapped, status: "sent" } : msg));
                     window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
                 } catch (error) {
-                    const message = error instanceof Error ? error.message : "Failed to send album.";
+                    const message = error instanceof Error ? error.message : t("Failed to send album.");
                     messagesErrorRef.current = message;
-                    toast.error(message);
+                    toast.error(tr(message));
                     setMessagesState((prev) => prev.map((msg) => msg.id === optimisticAlbumId ? { ...msg, status: "failed" } : msg));
                 }
             })();
@@ -1179,9 +1182,9 @@ setPaymentHistoryLoading(true);
                         setMessagesState((prev) => prev.map((msg) => msg.id === optimisticImgId ? { ...mapped, status: "sent" } : msg));
                         window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
                     } catch (error) {
-                        const message = error instanceof Error ? error.message : `Failed to send ${att.file.name}`;
+                        const message = error instanceof Error ? error.message : t("Failed to send {name}", { name: att.file.name });
                         messagesErrorRef.current = message;
-                        toast.error(message);
+                        toast.error(tr(message));
                         setMessagesState((prev) => prev.map((msg) => msg.id === optimisticImgId ? { ...msg, status: "failed" } : msg));
                     }
                 })();
@@ -1233,9 +1236,9 @@ setPaymentHistoryLoading(true);
                         setMessagesState((prev) => prev.map((msg) => msg.id === optimisticFileId ? { ...mapped, status: "sent" } : msg));
                         window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
                     } catch (error) {
-                        const message = error instanceof Error ? error.message : `Failed to send ${att.file.name}`;
+                        const message = error instanceof Error ? error.message : t("Failed to send {name}", { name: att.file.name });
                         messagesErrorRef.current = message;
-                        toast.error(message);
+                        toast.error(tr(message));
                         setMessagesState((prev) => prev.map((msg) => msg.id === optimisticFileId ? { ...msg, status: "failed" } : msg));
                     }
                 })();
@@ -1393,7 +1396,7 @@ useEffect(() => {
             if (cancelled) return;
             // Batch state updates for search results
             setUserSearchResults(data); 
-            setUserSearchError(error); 
+            setUserSearchError(error ? tr(error) : error); 
             setIsSearchingUsers(false);
         }, 250);
         return () => { cancelled = true; clearTimeout(timeout); };
@@ -1408,9 +1411,9 @@ useEffect(() => {
                             <Paperclip className="size-6 text-primary" />
                         </div>
                         <p className="text-lg font-black text-foreground dark:text-white">
-                            {!activeConversationId ? "Select a conversation to upload" : "Drop here to upload"}
+                            {!activeConversationId ? t("Select a conversation to upload") : t("Drop here to upload")}
                         </p>
-                        <p className="mt-1 text-xs text-muted-foreground dark:text-neutral-400">Release to add this file to the composer</p>
+                        <p className="mt-1 text-xs text-muted-foreground dark:text-neutral-400">{t("Release to add this file to the composer")}</p>
                     </div>
                 </div>
             )}
@@ -1518,8 +1521,8 @@ useEffect(() => {
                         {showInfoSidebar ? (
                             <div className="flex h-full flex-col">
                                 <div className="flex items-center justify-between p-6">
-                                    <h3 className="text-lg font-black text-high">Conversation Info</h3>
-                                    <button onClick={() => setShowInfoSidebar(false)} className="rounded-lg p-2 hover:bg-surface-2 transition-colors"><X className="size-5" /></button>
+                                    <h3 className="text-lg font-black text-high">{t("Conversation Info")}</h3>
+                                    <button onClick={() => setShowInfoSidebar(false)} aria-label={t("Close")} className="rounded-lg p-2 hover:bg-surface-2 transition-colors"><X className="size-5" /></button>
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar-premium">
                                     <div className="flex flex-col items-center text-center">
@@ -1541,14 +1544,14 @@ useEffect(() => {
                                     {canShowPaymentHistory && (
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between">
-                                                <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Payment History</h5>
-                                                <span className="text-[10px] font-black text-primary">Total: ₱{paymentHistoryTotal.toLocaleString()}</span>
+                                                <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">{t("Payment History")}</h5>
+                                                <span className="text-[10px] font-black text-primary">{t("Total: {amount}", { amount: `₱${paymentHistoryTotal.toLocaleString()}` })}</span>
                                             </div>
                                             <div className="space-y-2">
                                                 {paymentHistoryLoading ? (
                                                     <div className="h-20 w-full animate-pulse rounded-2xl neumorphic-panel" />
                                                 ) : paymentHistory.length === 0 ? (
-                                                    <p className="text-xs text-disabled text-center py-6 neumorphic-inset rounded-2xl italic">No payments found</p>
+                                                    <p className="text-xs text-disabled text-center py-6 neumorphic-inset rounded-2xl italic">{t("No payments found")}</p>
                                                 ) : (
                                                     <>
                                                         {(isPaymentHistoryExpanded ? paymentHistory : paymentHistory.slice(0, 4)).map((payment, idx) => (
@@ -1563,7 +1566,7 @@ useEffect(() => {
                                                                     </div>
                                                                     <div className="flex flex-col">
                                                                         <span className="text-xs font-black text-high truncate max-w-[120px]">
-                                                                            {payment.typeLabel || 'Payment'}
+                                                                            {t(payment.typeLabel || 'Payment')}
                                                                         </span>
                                                                         <span className="text-[9px] font-medium text-disabled">
                                                                             {payment.dateLabel}
@@ -1583,7 +1586,7 @@ useEffect(() => {
                                                                     onClick={() => setIsPaymentHistoryExpanded(!isPaymentHistoryExpanded)}
                                                                     className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl neumorphic-inset-card text-[10px] font-black uppercase tracking-wider text-medium hover:text-primary transition-all active:scale-95"
                                                                 >
-                                                                    <span>{isPaymentHistoryExpanded ? "See Less" : `See More (${paymentHistory.length - 4})`}</span>
+                                                                    <span>{isPaymentHistoryExpanded ? t("See Less") : t("See More ({count})", { count: paymentHistory.length - 4 })}</span>
                                                                     <ChevronDown className={cn("size-3 transition-transform duration-200", isPaymentHistoryExpanded && "rotate-180")} />
                                                                 </button>
                                                             )}
@@ -1591,9 +1594,9 @@ useEffect(() => {
                                                                 type="button"
                                                                 onClick={() => setShowPaymentHistoryModal(true)}
                                                                 className="flex items-center justify-center gap-1 py-2 px-3 rounded-xl neumorphic-inset-card text-[10px] font-black uppercase tracking-wider text-primary hover:bg-surface-3 transition-all active:scale-95"
-                                                                title="View Full Payment Ledger"
+                                                                title={t("View Full Payment Ledger")}
                                                             >
-                                                                <span>Ledger</span>
+                                                                <span>{t("Ledger")}</span>
                                                                 <ArrowUpRight className="size-3" />
                                                             </button>
                                                         </div>
@@ -1603,10 +1606,10 @@ useEffect(() => {
                                         </div>
                                     )}
                                     <div className="pt-4 space-y-3">
-                                        <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Actions</h5>
+                                        <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">{t("Actions")}</h5>
                                         <div className="space-y-2">
-                                            <button onClick={() => setPendingConfirmAction("archive")} className="w-full flex items-center justify-between p-3 rounded-2xl neumorphic-inset-card transition-all group"><span className="text-xs font-black text-medium group-hover:text-high">Archive Chat</span><ChevronRight className="size-4 text-disabled" /></button>
-                                            <button onClick={() => setPendingConfirmAction("block")} className="w-full flex items-center justify-between p-3 rounded-2xl border border-red-500/10 bg-red-500/5 hover:bg-red-500/10 transition-all group"><span className="text-xs font-black text-red-500">Block Contact</span><AlertTriangle className="size-4 text-red-500/50" /></button>
+                                            <button onClick={() => setPendingConfirmAction("archive")} className="w-full flex items-center justify-between p-3 rounded-2xl neumorphic-inset-card transition-all group"><span className="text-xs font-black text-medium group-hover:text-high">{t("Archive Chat")}</span><ChevronRight className="size-4 text-disabled" /></button>
+                                            <button onClick={() => setPendingConfirmAction("block")} className="w-full flex items-center justify-between p-3 rounded-2xl border border-red-500/10 bg-red-500/5 hover:bg-red-500/10 transition-all group"><span className="text-xs font-black text-red-500">{t("Block Contact")}</span><AlertTriangle className="size-4 text-red-500/50" /></button>
                                         </div>
                                     </div>
                                 </div>
@@ -1614,12 +1617,12 @@ useEffect(() => {
                         ) : (
                             <div className="flex h-full flex-col">
                                 <div className="flex items-center justify-between border-b border-divider p-6">
-                                    <h3 className="text-lg font-black text-high">Shared Files</h3>
-                                    <button onClick={() => setShowFilesSidebar(false)} className="rounded-lg p-2 hover:bg-surface-2 transition-colors"><X className="size-5" /></button>
+                                    <h3 className="text-lg font-black text-high">{t("Shared Files")}</h3>
+                                    <button onClick={() => setShowFilesSidebar(false)} aria-label={t("Close")} className="rounded-lg p-2 hover:bg-surface-2 transition-colors"><X className="size-5" /></button>
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 custom-scrollbar-premium">
                                     <div className="flex gap-2 mb-6 p-1 bg-surface-2 rounded-2xl">
-                                        {['media', 'files'].map((f) => (<button key={f} onClick={() => setFileFilter(f)} className={cn("flex-1 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", fileFilter === f ? "neumorphic-inset text-primary" : "text-disabled hover:text-medium")}>{f}</button>))}
+                                        {['media', 'files'].map((f) => (<button key={f} onClick={() => setFileFilter(f)} className={cn("flex-1 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", fileFilter === f ? "neumorphic-inset text-primary" : "text-disabled hover:text-medium")}>{f === "media" ? t("Media") : t("Files")}</button>))}
                                     </div>
 
                                     {sharedFiles.length > 0 ? (
@@ -1682,8 +1685,8 @@ useEffect(() => {
                                     ) : (
                                         <div className="flex flex-col items-center justify-center py-12 px-6 text-center neumorphic-inset rounded-[2rem]">
                                             <div className="p-4 rounded-full bg-surface-2 mb-4"><Folder className="size-8 text-disabled" /></div>
-                                            <p className="text-sm font-black text-medium">No files shared yet</p>
-                                            <p className="text-[10px] font-medium text-disabled mt-1">Shared documents and media will appear here</p>
+                                            <p className="text-sm font-black text-medium">{t("No files shared yet")}</p>
+                                            <p className="text-[10px] font-medium text-disabled mt-1">{t("Shared documents and media will appear here")}</p>
                                         </div>
                                     )}
                                 </div>
@@ -1697,11 +1700,11 @@ useEffect(() => {
                 {pendingConfirmAction && (
                     <div key="confirm-action-backdrop" className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
                         <motion.div key="confirm-action-dialog" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-md rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl">
-                            <div className="flex items-center gap-4 mb-6"><div className={cn("p-3 rounded-2xl", pendingConfirmAction === "block" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500")}>{pendingConfirmAction === "block" ? <ShieldCheck className="size-6" /> : <Folder className="size-6" />}</div><h3 className="text-xl font-black tracking-tight text-high">{pendingConfirmAction === "block" ? "Block Contact?" : "Archive Conversation?"}</h3></div>
-                            <p className="text-sm text-medium leading-relaxed mb-8">{pendingConfirmAction === "block" ? "This user will no longer be able to message you. You can unblock them later in settings." : "This conversation will be moved to archives. You can still access it later from your archived messages."}</p>
+                            <div className="flex items-center gap-4 mb-6"><div className={cn("p-3 rounded-2xl", pendingConfirmAction === "block" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500")}>{pendingConfirmAction === "block" ? <ShieldCheck className="size-6" /> : <Folder className="size-6" />}</div><h3 className="text-xl font-black tracking-tight text-high">{pendingConfirmAction === "block" ? t("Block Contact?") : t("Archive Conversation?")}</h3></div>
+                            <p className="text-sm text-medium leading-relaxed mb-8">{pendingConfirmAction === "block" ? t("This user will no longer be able to message you. You can unblock them later in settings.") : t("This conversation will be moved to archives. You can still access it later from your archived messages.")}</p>
                             <div className="flex justify-end gap-3">
-                                <button onClick={() => setPendingConfirmAction(null)} className="px-6 py-2.5 rounded-xl text-sm font-black text-medium hover:bg-surface-2 transition-all">Cancel</button>
-                                <button onClick={() => submitMessageUserAction(pendingConfirmAction)} disabled={isSubmittingConfirmAction} className={cn("px-6 py-2.5 rounded-xl text-sm font-black text-white transition-all shadow-lg active:scale-95", pendingConfirmAction === "block" ? "bg-red-500 hover:bg-red-600 shadow-red-500/20" : "bg-primary hover:bg-primary-dark shadow-primary/20")}>{isSubmittingConfirmAction ? "Processing..." : "Confirm"}</button>
+                                <button onClick={() => setPendingConfirmAction(null)} className="px-6 py-2.5 rounded-xl text-sm font-black text-medium hover:bg-surface-2 transition-all">{t("Cancel")}</button>
+                                <button onClick={() => submitMessageUserAction(pendingConfirmAction)} disabled={isSubmittingConfirmAction} className={cn("px-6 py-2.5 rounded-xl text-sm font-black text-white transition-all shadow-lg active:scale-95", pendingConfirmAction === "block" ? "bg-red-500 hover:bg-red-600 shadow-red-500/20" : "bg-primary hover:bg-primary-dark shadow-primary/20")}>{isSubmittingConfirmAction ? t("Processing...") : t("Confirm")}</button>
                             </div>
                         </motion.div>
                     </div>
@@ -1754,6 +1757,7 @@ useEffect(() => {
                     >
                         <button
                             onClick={(e) => { e.stopPropagation(); setPreviewImages([]); }}
+                            aria-label={t("Close")}
                             className="absolute top-6 right-6 z-10 p-3 rounded-2xl border border-border bg-surface-1/80 text-high hover:bg-surface-2 transition-all active:scale-95 backdrop-blur-md"
                         >
                             <X className="size-6" />
@@ -1763,12 +1767,14 @@ useEffect(() => {
                             <>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setPreviewImageIndex((prev) => (prev === 0 ? previewImages.length - 1 : prev - 1)); }}
+                                    aria-label={t("Previous image")}
                                     className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full border border-border bg-surface-1/80 text-high hover:bg-surface-2 transition-all active:scale-95 backdrop-blur-md"
                                 >
                                     <ChevronLeft className="size-8" />
                                 </button>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setPreviewImageIndex((prev) => (prev === previewImages.length - 1 ? 0 : prev + 1)); }}
+                                    aria-label={t("Next image")}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full border border-border bg-surface-1/80 text-high hover:bg-surface-2 transition-all active:scale-95 backdrop-blur-md"
                                 >
                                     <ChevronRight className="size-8" />
@@ -1789,7 +1795,7 @@ useEffect(() => {
                         >
                             <Image
                                 src={previewImages[previewImageIndex].url}
-                                alt={`Photo ${previewImageIndex + 1} of ${previewImages.length}`}
+                                alt={t("Photo {current} of {total}", { current: previewImageIndex + 1, total: previewImages.length })}
                                 width={800}
                                 height={600}
                                 className="object-contain rounded-3xl shadow-2xl border border-border"
@@ -1815,7 +1821,7 @@ useEffect(() => {
                                     >
                                         <Image
                                             src={img.url}
-                                            alt={`Thumbnail ${idx + 1}`}
+                                            alt={t("Thumbnail {index}", { index: idx + 1 })}
                                             width={80}
                                             height={80}
                                             className="object-cover"
@@ -1833,10 +1839,10 @@ useEffect(() => {
                 onClose={() => setIsF2FInterfaceOpen(false)}
                 payment={activeF2FPayment ? {
                     id: activeF2FPayment.id,
-                    tenantName: activeF2FPayment.tenantName || 'Unknown Tenant',
-                    unit: activeF2FPayment.unit || 'Unknown Unit',
+                    tenantName: activeF2FPayment.tenantName || t('Unknown Tenant'),
+                    unit: activeF2FPayment.unit || t('Unknown Unit'),
                     amount: activeF2FPayment.amount || '0',
-                    invoiceNumber: activeF2FPayment.invoiceNumber || 'N/A',
+                    invoiceNumber: activeF2FPayment.invoiceNumber || t('N/A'),
                     description: activeF2FPayment.description || ''
                 } : null}
                 onConfirm={handleConfirmF2FPayment}

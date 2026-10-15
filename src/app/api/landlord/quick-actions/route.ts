@@ -6,6 +6,9 @@ import {
     sanitizeQuickActionsConfig,
     type QuickActionsConfig,
 } from "@/lib/landlord/quick-actions";
+import { parseJsonBody } from "@/lib/validation/server";
+
+const actionId = z.string({ error: "Action ID must be text." }).trim().min(1, "Action ID is required.").max(64, "Action ID is too long.");
 
 interface CachedQuickActions {
     config: QuickActionsConfig;
@@ -14,10 +17,13 @@ interface CachedQuickActions {
 const quickActionsMemoryCache = new Map<string, CachedQuickActions>();
 
 const quickActionsPatchSchema = z.object({
-    order: z.array(z.string()).optional(),
-    hidden: z.array(z.string()).optional(),
-    sortMode: z.enum(["custom", "frequently_used"]).optional(),
-    usageCounts: z.record(z.string(), z.number()).optional(),
+    order: z.array(actionId).max(100, "Too many actions.").optional(),
+    hidden: z.array(actionId).max(100, "Too many actions.").optional(),
+    sortMode: z.enum(["custom", "frequently_used"], { error: "Select a valid sort mode." }).optional(),
+    usageCounts: z
+        .record(actionId, z.number({ error: "Usage count must be a number." }).int("Usage count must be a whole number.").min(0, "Usage count cannot be negative.").max(1_000_000_000, "Usage count is too large."))
+        .refine((counts) => Object.keys(counts).length <= 100, "Too many actions.")
+        .optional(),
 });
 
 /**
@@ -55,6 +61,10 @@ export async function GET(request: Request) {
             .eq("id", userId)
             .single();
 
+        // A query failure (e.g. a timeout) is not "not found"; PGRST116 means no row.
+        if (profileError && profileError.code !== "PGRST116") {
+            return NextResponse.json({ error: "Quick actions are temporarily unavailable. Please try again." }, { status: 503 });
+        }
         if (profileError || !profile) {
             return NextResponse.json({ error: "Profile not found" }, { status: 404 });
         }
@@ -102,19 +112,10 @@ export async function PATCH(request: Request) {
     const { userId } = authContext;
     const admin = createServiceRoleSupabaseClient();
 
-    try {
-        const body = await request.json();
-        const validation = quickActionsPatchSchema.safeParse(body);
+    const validation = await parseJsonBody(request, quickActionsPatchSchema);
+    if (!validation.ok) return validation.response;
 
-        if (!validation.success) {
-            return NextResponse.json(
-                {
-                    error: "Invalid quick actions payload",
-                    details: validation.error.flatten().fieldErrors,
-                },
-                { status: 400 }
-            );
-        }
+    try {
 
         const { data: profile, error: profileError } = await admin
             .from("profiles")
@@ -122,6 +123,10 @@ export async function PATCH(request: Request) {
             .eq("id", userId)
             .single();
 
+        // A query failure (e.g. a timeout) is not "not found"; PGRST116 means no row.
+        if (profileError && profileError.code !== "PGRST116") {
+            return NextResponse.json({ error: "Quick actions are temporarily unavailable. Please try again." }, { status: 503 });
+        }
         if (profileError || !profile) {
             return NextResponse.json({ error: "Profile not found" }, { status: 404 });
         }

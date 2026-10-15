@@ -23,8 +23,10 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export default function AppDownloadPage() {
+  const { t } = useLanguageContext();
   const [activeModal, setActiveModal] = useState<"qr" | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedApkUrl, setCopiedApkUrl] = useState(false);
@@ -66,8 +68,8 @@ export default function AppDownloadPage() {
     if (typeof window !== "undefined") {
       navigator.clipboard.writeText(window.location.origin);
       setCopiedLink(true);
-      toast.success("Website address copied", {
-        description: "You can now paste and send this link to anyone.",
+      toast.success(t("Website address copied"), {
+        description: t("You can now paste and send this link to anyone."),
       });
       setTimeout(() => setCopiedLink(false), 2500);
     }
@@ -77,8 +79,8 @@ export default function AppDownloadPage() {
     if (typeof window !== "undefined") {
       navigator.clipboard.writeText(apkDirectDownloadUrl);
       setCopiedApkUrl(true);
-      toast.success("Download link copied", {
-        description: "Paste and send this link to install on any Android phone.",
+      toast.success(t("Download link copied"), {
+        description: t("Paste and send this link to install on any Android phone."),
       });
       setTimeout(() => setCopiedApkUrl(false), 2500);
     }
@@ -106,12 +108,12 @@ export default function AppDownloadPage() {
       link.click();
       document.body.removeChild(link);
 
-      toast.success("Downloading Windows app", {
-        description: "Check your computer's Downloads folder to start installing.",
+      toast.success(t("Downloading Windows app"), {
+        description: t("Check your computer's Downloads folder to start installing."),
       });
     } catch (error) {
-      toast.error("Download temporarily unavailable", {
-        description: error instanceof Error ? error.message : "Please try again shortly or use the web browser version below.",
+      toast.error(t("Download temporarily unavailable"), {
+        description: error instanceof Error ? t(error.message) : t("Please try again shortly or use the web browser version below."),
       });
     } finally {
       setIsWindowsDownloading(false);
@@ -139,8 +141,8 @@ export default function AppDownloadPage() {
       link.click();
       document.body.removeChild(link);
 
-      toast.success("Downloading Android app", {
-        description: "When the download finishes, tap the notification to install.",
+      toast.success(t("Downloading Android app"), {
+        description: t("When the download finishes, tap the notification to install."),
       });
     } catch {
       const fallbackFilename = variant === "debug" ? "iReside-v1.0.0-debug.apk" : "iReside-v1.0.0-release.apk";
@@ -151,8 +153,8 @@ export default function AppDownloadPage() {
       link.click();
       document.body.removeChild(link);
 
-      toast.success("Downloading Android app", {
-        description: "When the download finishes, tap the notification to install.",
+      toast.success(t("Downloading Android app"), {
+        description: t("When the download finishes, tap the notification to install."),
       });
     } finally {
       setIsAndroidDownloading(false);
@@ -190,7 +192,7 @@ export default function AppDownloadPage() {
           <Link
             href="/"
             className="flex items-center transition-transform hover:scale-105 active:scale-95 rounded-xl p-1 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            aria-label="iReside Home"
+            aria-label={t("iReside Home")}
           >
             <Logo className="h-8 w-28 sm:h-9 sm:w-32" />
           </Link>
@@ -199,7 +201,7 @@ export default function AppDownloadPage() {
         <div className="flex items-center gap-3">
           <ThemeToggle
             className="rounded-xl border border-border/60 bg-background shadow-xs focus-visible:ring-2 focus-visible:ring-primary"
-            aria-label="Toggle theme"
+            aria-label={t("Toggle theme")}
           />
         </div>
       </header>
@@ -210,19 +212,19 @@ export default function AppDownloadPage() {
         <section className="text-center max-w-2xl mx-auto space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
             <Download className="size-3.5 shrink-0" />
-            <span>Official iReside Apps</span>
+            <span>{t("Official iReside Apps")}</span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground leading-tight [text-wrap:balance]">
-            Get iReside on Your Device
+            {t("Get iReside on Your Device")}
           </h1>
           <p className="text-base sm:text-lg font-normal text-muted-foreground max-w-xl mx-auto leading-relaxed [text-wrap:pretty]">
-            Choose your device below to get started. Everything connects together automatically so your records are always up to date.
+            {t("Choose your device below to get started. Everything connects together automatically so your records are always up to date.")}
           </p>
         </section>
 
         {/* 2-Column Platform Cards Grid */}
         <section
-          aria-label="Download options"
+          aria-label={t("Download options")}
           className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-stretch max-w-4xl mx-auto w-full"
         >
           {/* Card 1: Windows Computer */}
@@ -234,17 +236,17 @@ export default function AppDownloadPage() {
                   <Monitor className="size-7" />
                 </div>
                 <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
-                  Best for Landlords
+                  {t("Best for Landlords")}
                 </span>
               </div>
 
               {/* Title & Description */}
               <div>
                 <h2 className="text-2xl font-bold tracking-tight text-foreground">
-                  Windows Computer
+                  {t("Windows Computer")}
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Best for managing rental properties, room layouts, and monthly billing on a desktop PC or laptop.
+                  {t("Best for managing rental properties, room layouts, and monthly billing on a desktop PC or laptop.")}
                 </p>
               </div>
 
@@ -252,15 +254,15 @@ export default function AppDownloadPage() {
               <ul className="space-y-3 text-sm text-foreground/90 pt-1">
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="size-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-                  <span>Large, easy-to-read screen layout for comfortable typing</span>
+                  <span>{t("Large, easy-to-read screen layout for comfortable typing")}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="size-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-                  <span>Interactive room map layout and 1-click printable receipts</span>
+                  <span>{t("Interactive room map layout and 1-click printable receipts")}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="size-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-                  <span>Automatically backs up all your records safely to the cloud</span>
+                  <span>{t("Automatically backs up all your records safely to the cloud")}</span>
                 </li>
               </ul>
             </div>
@@ -270,18 +272,18 @@ export default function AppDownloadPage() {
               <button
                 onClick={handleDownloadWindows}
                 disabled={isWindowsDownloading}
-                aria-label="Download for Windows Computer"
+                aria-label={t("Download for Windows Computer")}
                 className="w-full h-13 min-h-[52px] sm:min-h-[54px] px-6 rounded-2xl neumorphic-primary active:scale-[0.98] disabled:cursor-wait disabled:opacity-70 text-sm font-bold tracking-wide transition-all flex items-center justify-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 shadow-md"
               >
                 {isWindowsDownloading ? (
                   <>
                     <Loader2 className="size-5 animate-spin" />
-                    <span>Preparing download...</span>
+                    <span>{t("Preparing download...")}</span>
                   </>
                 ) : (
                   <>
                     <Download className="size-5" />
-                    <span>Download for Windows PC</span>
+                    <span>{t("Download for Windows PC")}</span>
                   </>
                 )}
               </button>
@@ -291,19 +293,19 @@ export default function AppDownloadPage() {
                 className="w-full h-12 min-h-[48px] px-5 rounded-2xl neumorphic-extruded hover:text-primary active:scale-[0.98] text-sm font-semibold tracking-wide transition-all flex items-center justify-center gap-2 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <Globe className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span>Open in Web Browser Instead</span>
+                <span>{t("Open in Web Browser Instead")}</span>
               </Link>
 
               <div className="text-center pt-0.5">
                 <p className="text-xs text-muted-foreground">
-                  Works on Windows 10 & 11 · Free & safe to install
+                  {t("Works on Windows 10 & 11 · Free & safe to install")}
                 </p>
               </div>
 
               {/* Reassuring 3-step hint for non-tech users */}
               <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">3 simple steps: </span>
-                <span>1. Click Download → 2. Open file → 3. Sign in</span>
+                <span className="font-semibold text-foreground">{t("3 simple steps:")} </span>
+                <span>{t("1. Click Download → 2. Open file → 3. Sign in")}</span>
               </div>
             </div>
           </div>
@@ -317,17 +319,17 @@ export default function AppDownloadPage() {
                   <Smartphone className="size-7" />
                 </div>
                 <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                  Best for Tenants & Mobile
+                  {t("Best for Tenants & Mobile")}
                 </span>
               </div>
 
               {/* Title & Description */}
               <div>
                 <h2 className="text-2xl font-bold tracking-tight text-foreground">
-                  Android Phone & Tablet
+                  {t("Android Phone & Tablet")}
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Take iReside with you anywhere. Best for paying rent, sending receipt photos, and receiving urgent alerts.
+                  {t("Take iReside with you anywhere. Best for paying rent, sending receipt photos, and receiving urgent alerts.")}
                 </p>
               </div>
 
@@ -335,15 +337,15 @@ export default function AppDownloadPage() {
               <ul className="space-y-3 text-sm text-foreground/90 pt-1">
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Snap and upload payment receipt photos with your phone camera</span>
+                  <span>{t("Snap and upload payment receipt photos with your phone camera")}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Receive reminder alerts when rent or utility bills are due</span>
+                  <span>{t("Receive reminder alerts when rent or utility bills are due")}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Send direct repair requests and chat without leaving the app</span>
+                  <span>{t("Send direct repair requests and chat without leaving the app")}</span>
                 </li>
               </ul>
             </div>
@@ -353,46 +355,46 @@ export default function AppDownloadPage() {
               <button
                 onClick={() => handleDownloadAndroid("release")}
                 disabled={isAndroidDownloading}
-                aria-label="Download Android App directly"
+                aria-label={t("Download Android App directly")}
                 className="w-full h-13 min-h-[52px] sm:min-h-[54px] px-6 rounded-2xl neumorphic-primary active:scale-[0.98] disabled:cursor-wait disabled:opacity-70 text-sm font-bold tracking-wide transition-all flex items-center justify-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 shadow-md"
               >
                 {isAndroidDownloading ? (
                   <>
                     <Loader2 className="size-5 animate-spin" />
-                    <span>Preparing download...</span>
+                    <span>{t("Preparing download...")}</span>
                   </>
                 ) : (
                   <>
                     <Download className="size-5" />
-                    <span>Download Android App</span>
+                    <span>{t("Download Android App")}</span>
                   </>
                 )}
               </button>
 
               <button
                 onClick={() => setActiveModal("qr")}
-                aria-label="Scan QR code with phone camera"
+                aria-label={t("Scan QR code with phone camera")}
                 className="w-full h-12 min-h-[48px] px-5 rounded-2xl neumorphic-extruded hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-[0.98] text-sm font-semibold tracking-wide transition-all flex items-center justify-center gap-2 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
               >
                 <QrCode className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>Scan QR with Phone Camera</span>
+                <span>{t("Scan QR with Phone Camera")}</span>
               </button>
 
               <div className="flex items-center justify-between text-xs text-muted-foreground px-1 pt-0.5">
-                <span>Works on all Android phones</span>
+                <span>{t("Works on all Android phones")}</span>
                 <button
                   type="button"
                   onClick={() => handleDownloadAndroid("debug")}
                   className="text-primary hover:underline font-medium focus-visible:outline-none"
                 >
-                  Trouble installing? Tap here
+                  {t("Trouble installing? Tap here")}
                 </button>
               </div>
 
               {/* Reassuring 3-step hint for non-tech users */}
               <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">3 simple steps: </span>
-                <span>1. Scan QR or Download → 2. Tap install → 3. Sign in</span>
+                <span className="font-semibold text-foreground">{t("3 simple steps:")} </span>
+                <span>{t("1. Scan QR or Download → 2. Tap install → 3. Sign in")}</span>
               </div>
             </div>
           </div>
@@ -400,7 +402,7 @@ export default function AppDownloadPage() {
 
         {/* Universal Web Access Banner */}
         <section
-          aria-label="Web portal access"
+          aria-label={t("Web portal access")}
           className="neumorphic-panel rounded-3xl p-6 sm:p-7 border border-border/60 bg-muted/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 max-w-4xl mx-auto w-full"
         >
           <div className="flex items-start gap-4">
@@ -409,10 +411,10 @@ export default function AppDownloadPage() {
             </div>
             <div className="space-y-1">
               <h3 className="text-base font-bold text-foreground">
-                Using an iPhone, iPad, Mac, or Chromebook?
+                {t("Using an iPhone, iPad, Mac, or Chromebook?")}
               </h3>
               <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
-                You can access the full iReside web portal directly in Safari, Chrome, or any browser without installing anything.
+                {t("You can access the full iReside web portal directly in Safari, Chrome, or any browser without installing anything.")}
               </p>
             </div>
           </div>
@@ -422,24 +424,24 @@ export default function AppDownloadPage() {
               href="/"
               className="flex-1 md:flex-initial min-h-[44px] px-5 rounded-xl neumorphic-primary active:scale-95 text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shadow-xs"
             >
-              <span>Open Web Portal</span>
+              <span>{t("Open Web Portal")}</span>
               <ExternalLink className="size-3.5" />
             </Link>
 
             <button
               onClick={handleCopyLink}
-              aria-label="Copy website address to clipboard"
+              aria-label={t("Copy website address to clipboard")}
               className="min-h-[44px] px-4 rounded-xl neumorphic-extruded hover:text-primary active:scale-95 text-xs font-semibold text-foreground transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               {copiedLink ? (
                 <>
                   <Check className="size-4 text-emerald-500" />
-                  <span className="text-emerald-500 font-bold">Copied!</span>
+                  <span className="text-emerald-500 font-bold">{t("Copied!")}</span>
                 </>
               ) : (
                 <>
                   <Share2 className="size-4" />
-                  <span>Copy Link</span>
+                  <span>{t("Copy Link")}</span>
                 </>
               )}
             </button>
@@ -448,7 +450,7 @@ export default function AppDownloadPage() {
 
         {/* Safety & Cloud Backup Reassurance */}
         <section
-          aria-label="Data safety reassurance"
+          aria-label={t("Data safety reassurance")}
           className="neumorphic-extruded rounded-3xl p-6 sm:p-8 border border-border/50 max-w-4xl mx-auto w-full flex items-start gap-4 sm:gap-5"
         >
           <div className="size-12 sm:size-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
@@ -456,10 +458,10 @@ export default function AppDownloadPage() {
           </div>
           <div className="space-y-1.5">
             <h3 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
-              Your Data is Always Safe and Backed Up
+              {t("Your Data is Always Safe and Backed Up")}
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
-              All your properties, tenant records, payments, and photos are safely stored in the cloud. Even if you switch phones or get a new computer, simply sign in and everything is right there waiting for you.
+              {t("All your properties, tenant records, payments, and photos are safely stored in the cloud. Even if you switch phones or get a new computer, simply sign in and everything is right there waiting for you.")}
             </p>
           </div>
         </section>
@@ -468,10 +470,10 @@ export default function AppDownloadPage() {
         <section aria-labelledby="faq-heading" className="space-y-6 max-w-4xl mx-auto w-full">
           <div className="text-center space-y-1.5">
             <h2 id="faq-heading" className="text-2xl font-bold tracking-tight text-foreground">
-              Common Questions & Quick Help
+              {t("Common Questions & Quick Help")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Simple answers to help you get started without any confusion.
+              {t("Simple answers to help you get started without any confusion.")}
             </p>
           </div>
 
@@ -490,7 +492,7 @@ export default function AppDownloadPage() {
                   >
                     <span className="flex items-center gap-3">
                       <HelpCircle className="size-5 text-primary shrink-0" />
-                      {faq.question}
+                      {t(faq.question)}
                     </span>
                     <ChevronDown
                       className={`size-4 text-muted-foreground shrink-0 transition-transform duration-200 ${
@@ -509,7 +511,7 @@ export default function AppDownloadPage() {
                         className="overflow-hidden"
                       >
                         <div className="px-5 pb-5 pt-1 text-sm text-muted-foreground leading-relaxed border-t border-border/30">
-                          {faq.answer}
+                          {t(faq.answer)}
                         </div>
                       </motion.div>
                     )}
@@ -524,14 +526,14 @@ export default function AppDownloadPage() {
       {/* Footer */}
       <footer className="mt-auto border-t border-border/40 py-6 px-4 sm:px-8 text-center text-xs text-muted-foreground">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span>&copy; {new Date().getFullYear()} iReside. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} iReside. {t("All rights reserved.")}</span>
           <div className="flex items-center gap-4">
             <Link href="/" className="hover:text-foreground transition-colors">
-              Web Portal Home
+              {t("Web Portal Home")}
             </Link>
             <span aria-hidden="true">&middot;</span>
             <Link href="/docs" className="hover:text-foreground transition-colors">
-              User Guide
+              {t("User Guide")}
             </Link>
           </div>
         </div>
@@ -567,13 +569,13 @@ export default function AppDownloadPage() {
                 <div className="flex items-center gap-2">
                   <QrCode className="size-5 text-primary shrink-0" />
                   <h3 id="qr-modal-title" className="text-sm font-bold text-foreground">
-                    Scan with Your Phone Camera
+                    {t("Scan with Your Phone Camera")}
                   </h3>
                 </div>
                 <button
                   onClick={() => setActiveModal(null)}
                   className="size-8 rounded-xl neumorphic-inset flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  aria-label="Close dialog"
+                  aria-label={t("Close dialog")}
                 >
                   <X className="size-4" />
                 </button>
@@ -585,7 +587,7 @@ export default function AppDownloadPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={qrCodeApiUrl}
-                    alt="QR code to install Android app"
+                    alt={t("QR code to install Android app")}
                     className="size-full object-contain rounded-lg"
                     loading="lazy"
                   />
@@ -602,19 +604,19 @@ export default function AppDownloadPage() {
                   <span className="size-5 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-[11px] shrink-0">
                     1
                   </span>
-                  <span>Open the <strong>Camera</strong> on your Android phone</span>
+                  <span>{t("Open the Camera on your Android phone")}</span>
                 </div>
                 <div className="flex items-center gap-2 font-medium">
                   <span className="size-5 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-[11px] shrink-0">
                     2
                   </span>
-                  <span>Point it at this QR code</span>
+                  <span>{t("Point it at this QR code")}</span>
                 </div>
                 <div className="flex items-center gap-2 font-medium">
                   <span className="size-5 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-[11px] shrink-0">
                     3
                   </span>
-                  <span>Tap the link that appears on your screen to install</span>
+                  <span>{t("Tap the link that appears on your screen to install")}</span>
                 </div>
               </div>
 
@@ -627,12 +629,12 @@ export default function AppDownloadPage() {
                   {copiedApkUrl ? (
                     <>
                       <Check className="size-4 text-emerald-500" />
-                      <span className="text-emerald-500 font-bold">Download Link Copied!</span>
+                      <span className="text-emerald-500 font-bold">{t("Download Link Copied!")}</span>
                     </>
                   ) : (
                     <>
                       <Copy className="size-4" />
-                      <span>Copy Download Link (to send via Chat/SMS)</span>
+                      <span>{t("Copy Download Link (to send via Chat/SMS)")}</span>
                     </>
                   )}
                 </button>
@@ -641,7 +643,7 @@ export default function AppDownloadPage() {
                   onClick={() => setActiveModal(null)}
                   className="min-h-[44px] px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
-                  Close
+                  {t("Close")}
                 </button>
               </div>
             </motion.div>

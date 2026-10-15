@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Fragment, type ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { useProperty } from '@/context/PropertyContext';
@@ -19,6 +19,7 @@ import {
     Image as ImageIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModal';
 import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropertySelector';
@@ -38,6 +39,20 @@ interface MaintenanceRequest {
     ai_triage_notes?: string;
 }
 
+const PRIORITY_LABELS: Record<string, string> = {
+    low: 'Low Priority',
+    medium: 'Medium Priority',
+    high: 'High Priority',
+    urgent: 'Urgent Priority',
+};
+
+function fillRich(text: string, nodes: Record<string, ReactNode>) {
+    return text.split(/(\{\w+\})/g).map((part, i) => {
+        const match = part.match(/^\{(\w+)\}$/);
+        return match && nodes[match[1]] !== undefined ? <Fragment key={i}>{nodes[match[1]]}</Fragment> : part;
+    });
+}
+
 function normalizeStatus(status?: string | null): 'pending' | 'in_progress' | 'resolved' | 'other' {
     if (!status) return 'other';
     const s = status.toLowerCase().replace(/[\s_-]+/g, '');
@@ -50,6 +65,7 @@ function normalizeStatus(status?: string | null): 'pending' | 'in_progress' | 'r
 export function LandlordTicketsView() {
     const { selectedPropertyId } = useProperty();
     const searchParams = useSearchParams();
+    const { t, locale } = useLanguageContext();
     const [tickets, setTickets] = useState<MaintenanceRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -106,19 +122,19 @@ export function LandlordTicketsView() {
 
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error || 'Failed to update ticket status.');
+                throw new Error(errData.error || t('Failed to update ticket status.'));
             }
 
             setToast({
                 type: 'success',
-                message: nextStatus === 'resolved' ? 'Ticket marked as resolved!' : 'Ticket marked in progress.',
+                message: nextStatus === 'resolved' ? t('Ticket marked as resolved!') : t('Ticket marked in progress.'),
             });
             setPendingResolveTicket(null);
             fetchTickets();
         } catch (err: any) {
             setToast({
                 type: 'error',
-                message: err?.message || 'Update failed.',
+                message: err?.message || t('Update failed.'),
             });
             setPendingResolveTicket(null);
         } finally {
@@ -127,11 +143,11 @@ export function LandlordTicketsView() {
     };
 
     const openTicketsCount = useMemo(() => {
-        return tickets.filter(t => normalizeStatus(t.status) === 'pending').length;
+        return tickets.filter(ticket => normalizeStatus(ticket.status) === 'pending').length;
     }, [tickets]);
 
     const inProgressTicketsCount = useMemo(() => {
-        return tickets.filter(t => normalizeStatus(t.status) === 'in_progress').length;
+        return tickets.filter(ticket => normalizeStatus(ticket.status) === 'in_progress').length;
     }, [tickets]);
 
     const filteredTickets = useMemo(() => {
@@ -203,7 +219,7 @@ export function LandlordTicketsView() {
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40 pointer-events-none" />
                             <input
                                 type="text"
-                                placeholder="SEARCH MAINTENANCE, UNITS, ISSUES…"
+                                placeholder={t("SEARCH MAINTENANCE, UNITS, ISSUES…")}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="h-11 w-full rounded-2xl border-none text-[11px] font-black uppercase tracking-wider pl-11 pr-8 focus:outline-none neumorphic-inset placeholder:text-muted-foreground/40 text-foreground"
@@ -213,7 +229,7 @@ export function LandlordTicketsView() {
                                     type="button"
                                     onClick={() => setSearchQuery('')}
                                     className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/50 hover:text-foreground"
-                                    aria-label="Clear search"
+                                    aria-label={t("Clear search")}
                                 >
                                     <X className="size-3.5" />
                                 </button>
@@ -242,7 +258,7 @@ export function LandlordTicketsView() {
                     <div className="px-4 flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1">
                         {(['all', 'open', 'in_progress', 'resolved'] as const).map((tab) => {
                             const isActive = statusFilter === tab;
-                            const label = tab === 'all' ? 'All' : tab === 'open' ? 'Open' : tab === 'in_progress' ? 'In Progress' : 'Resolved';
+                            const label = tab === 'all' ? t('All') : tab === 'open' ? t('Open') : tab === 'in_progress' ? t('In Progress') : t('Resolved');
                             const count = tab === 'open' ? openTicketsCount : tab === 'in_progress' ? inProgressTicketsCount : 0;
                             return (
                                 <button
@@ -275,16 +291,16 @@ export function LandlordTicketsView() {
                 {loading ? (
                     <div className="py-12 flex flex-col items-center justify-center gap-2">
                         <div className="w-8 h-8 rounded-full border-2 border-muted border-t-primary animate-spin" />
-                        <span className="text-xs text-muted-foreground font-medium">Loading maintenance tickets…</span>
+                        <span className="text-xs text-muted-foreground font-medium">{t("Loading maintenance tickets…")}</span>
                     </div>
                 ) : filteredTickets.length === 0 ? (
                     <div className="rounded-[2rem] neumorphic-panel p-8 text-center flex flex-col items-center justify-center shadow-sm my-2">
                         <div className="neumorphic-inset-card flex size-12 items-center justify-center rounded-2xl text-muted-foreground/50 mb-3">
                             <Wrench className="size-6" />
                         </div>
-                        <h4 className="text-xs font-black uppercase tracking-wider text-foreground">No tickets found</h4>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-foreground">{t("No tickets found")}</h4>
                         <p className="text-[11px] text-muted-foreground mt-1">
-                            {statusFilter === 'open' ? 'All maintenance requests are resolved or in progress.' : 'No maintenance requests match the selected filter.'}
+                            {statusFilter === 'open' ? t('All maintenance requests are resolved or in progress.') : t('No maintenance requests match the selected filter.')}
                         </p>
                     </div>
                 ) : (
@@ -306,7 +322,7 @@ export function LandlordTicketsView() {
                                             {ticket.title}
                                         </h4>
                                         <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/80 mt-0.5 block">
-                                            {ticket.unit?.name ? (ticket.unit.name.toLowerCase().startsWith('unit') ? ticket.unit.name : `Unit ${ticket.unit.name}`) : 'Unit N/A'}
+                                            {ticket.unit?.name ? (ticket.unit.name.toLowerCase().startsWith('unit') ? ticket.unit.name : t('Unit {unit}', { unit: ticket.unit.name })) : t('Unit N/A')}
                                             {ticket.tenant?.full_name ? ` • ${ticket.tenant.full_name}` : ''}
                                         </span>
                                     </div>
@@ -318,7 +334,7 @@ export function LandlordTicketsView() {
                                             normStatus === 'in_progress' && "border-blue-500/30 bg-blue-500/10 text-blue-500",
                                             normStatus === 'pending' && "border-amber-500/30 bg-amber-500/10 text-amber-500"
                                         )}>
-                                            {normStatus === 'in_progress' ? 'In Progress' : normStatus === 'resolved' ? 'Resolved' : 'Pending'}
+                                            {normStatus === 'in_progress' ? t('In Progress') : normStatus === 'resolved' ? t('Resolved') : t('Pending')}
                                         </span>
 
                                         <span className={cn(
@@ -328,7 +344,7 @@ export function LandlordTicketsView() {
                                             priority === 'medium' && "border-blue-500/30 bg-blue-500/10 text-blue-500",
                                             priority === 'low' && "border-border bg-muted/30 text-muted-foreground"
                                         )}>
-                                            {priority} Priority
+                                            {PRIORITY_LABELS[priority] ? t(PRIORITY_LABELS[priority]) : t('{priority} Priority', { priority })}
                                         </span>
                                     </div>
                                 </div>
@@ -347,38 +363,38 @@ export function LandlordTicketsView() {
                                         <div className="grid grid-cols-2 gap-2 text-[11px]">
                                             <div className="flex flex-col gap-0.5">
                                                 <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70">
-                                                    Category
+                                                    {t('Category')}
                                                 </span>
                                                 <span className="font-bold text-foreground capitalize truncate">
-                                                    {ticket.category ? ticket.category.replace(/\|/g, ', ') : 'General Maintenance'}
+                                                    {ticket.category ? ticket.category.replace(/\|/g, ', ') : t('General Maintenance')}
                                                 </span>
                                             </div>
 
                                             <div className="flex flex-col gap-0.5">
                                                 <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70">
-                                                    Resident
+                                                    {t('Resident')}
                                                 </span>
                                                 <span className="font-bold text-foreground truncate">
-                                                    {typeof ticket.tenant === 'object' ? (ticket.tenant?.full_name || 'Resident') : (ticket.tenant || 'Resident')}
+                                                    {typeof ticket.tenant === 'object' ? (ticket.tenant?.full_name || t('Resident')) : (ticket.tenant || t('Resident'))}
                                                 </span>
                                             </div>
 
                                             <div className="flex flex-col gap-0.5">
                                                 <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70">
-                                                    Location
+                                                    {t('Location')}
                                                 </span>
                                                 <span className="font-bold text-foreground truncate">
-                                                    {ticket.unit?.name ? `Unit ${ticket.unit.name}` : 'Unit N/A'}
+                                                    {ticket.unit?.name ? t('Unit {unit}', { unit: ticket.unit.name }) : t('Unit N/A')}
                                                     {(ticket as any).property ? ` • ${(ticket as any).property}` : ''}
                                                 </span>
                                             </div>
 
                                             <div className="flex flex-col gap-0.5">
                                                 <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70">
-                                                    Submitted
+                                                    {t('Submitted')}
                                                 </span>
                                                 <span className="font-bold text-foreground truncate">
-                                                    {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Recently'}
+                                                    {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString(locale, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : t('Recently')}
                                                 </span>
                                             </div>
                                         </div>
@@ -386,10 +402,10 @@ export function LandlordTicketsView() {
                                         {/* Full Description */}
                                         <div className="pt-2 border-t border-border/40 flex flex-col gap-1">
                                             <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70">
-                                                Full Issue Details
+                                                {t('Full Issue Details')}
                                             </span>
                                             <p className="text-[11px] text-foreground/90 leading-relaxed font-normal whitespace-pre-wrap">
-                                                {ticket.description || 'No additional description provided.'}
+                                                {ticket.description || t('No additional description provided.')}
                                             </p>
                                         </div>
 
@@ -398,7 +414,7 @@ export function LandlordTicketsView() {
                                             <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-[11px] text-primary flex items-start gap-2">
                                                 <Sparkles className="size-3.5 shrink-0 mt-0.5" />
                                                 <div>
-                                                    <span className="text-[9px] font-black uppercase tracking-wider block">AI Triage Note</span>
+                                                    <span className="text-[9px] font-black uppercase tracking-wider block">{t("AI Triage Note")}</span>
                                                     <p className="leading-snug mt-0.5">{ticket.ai_triage_notes || (ticket as any).triageReason}</p>
                                                 </div>
                                             </div>
@@ -414,9 +430,9 @@ export function LandlordTicketsView() {
                                                 key={i}
                                                 onClick={() => setLightboxImage(imgUrl)}
                                                 className="relative size-14 rounded-2xl overflow-hidden border border-border/40 shadow-xs shrink-0 hover:opacity-80 active:scale-95 transition-all"
-                                                aria-label="Inspect issue photo"
+                                                aria-label={t("Inspect issue photo")}
                                             >
-                                                <Image src={imgUrl} alt="Issue photo" fill sizes="56px" className="object-cover" />
+                                                <Image src={imgUrl} alt={t("Issue photo")} fill sizes="56px" className="object-cover" />
                                             </button>
                                         ))}
                                     </div>
@@ -429,7 +445,7 @@ export function LandlordTicketsView() {
                                             <Clock className="size-3" />
                                         </div>
                                         <span className="font-semibold text-[11px]">
-                                            {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                                            {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                                         </span>
                                     </div>
 
@@ -439,7 +455,7 @@ export function LandlordTicketsView() {
                                             onClick={() => setExpandedId(isExpanded ? null : ticket.id)}
                                             className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-0.5 px-2 py-1 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer"
                                         >
-                                            <span>{isExpanded ? 'Less' : 'Details'}</span>
+                                            <span>{isExpanded ? t('Less') : t('Details')}</span>
                                             {isExpanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
                                         </button>
 
@@ -451,7 +467,7 @@ export function LandlordTicketsView() {
                                                 className="px-3 py-1.5 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-500 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 active:scale-95 transition-all disabled:opacity-50 cursor-pointer shadow-xs"
                                             >
                                                 <Wrench className="size-3" />
-                                                <span>Start Work</span>
+                                                <span>{t('Start Work')}</span>
                                             </button>
                                         )}
 
@@ -463,7 +479,7 @@ export function LandlordTicketsView() {
                                                 className="px-3 py-1.5 rounded-xl neumorphic-primary text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs hover:brightness-105 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                                             >
                                                 <CheckCircle2 className="size-3" />
-                                                <span>Resolve</span>
+                                                <span>{t('Resolve')}</span>
                                             </button>
                                         )}
                                     </div>
@@ -481,13 +497,13 @@ export function LandlordTicketsView() {
                         <button
                             onClick={() => setLightboxImage(null)}
                             className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20"
-                            aria-label="Close photo"
+                            aria-label={t("Close photo")}
                         >
                             <X className="size-4" />
                         </button>
                     </div>
                     <div className="flex-1 relative my-3 flex items-center justify-center overflow-hidden rounded-xl">
-                        <Image src={lightboxImage} alt="Enlarged issue" fill sizes="100vw" className="object-contain" />
+                        <Image src={lightboxImage} alt={t("Enlarged issue")} fill sizes="100vw" className="object-contain" />
                     </div>
                 </div>,
                 document.body
@@ -497,14 +513,18 @@ export function LandlordTicketsView() {
             {pendingResolveTicket && (
                 <MobileConfirmModal
                     isOpen={Boolean(pendingResolveTicket)}
-                    title="Resolve Maintenance Request?"
+                    title={t("Resolve Maintenance Request?")}
                     description={
                         <span>
-                            Are you sure you want to mark <strong className="text-foreground font-bold">&quot;{pendingResolveTicket.title}&quot;</strong> for <strong className="text-foreground font-bold">{pendingResolveTicket.tenant?.full_name || 'Resident'}</strong> ({pendingResolveTicket.unit?.name ? `Unit ${pendingResolveTicket.unit.name}` : 'Unit'}) as resolved?
+                            {fillRich(t('Are you sure you want to mark {title} for {tenant} ({unit}) as resolved?'), {
+                                title: <strong className="text-foreground font-bold">&quot;{pendingResolveTicket.title}&quot;</strong>,
+                                tenant: <strong className="text-foreground font-bold">{pendingResolveTicket.tenant?.full_name || t('Resident')}</strong>,
+                                unit: pendingResolveTicket.unit?.name ? t('Unit {unit}', { unit: pendingResolveTicket.unit.name }) : t('Unit'),
+                            })}
                         </span>
                     }
-                    confirmLabel="Resolve Ticket"
-                    cancelLabel="Cancel"
+                    confirmLabel={t("Resolve Ticket")}
+                    cancelLabel={t("Cancel")}
                     variant="success"
                     isLoading={updatingId === pendingResolveTicket.id}
                     icon={<CheckCircle2 className="size-5" />}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { DEFAULT_AVATAR_URL, getSafeAvatarBgColor } from "@/lib/constants";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface PaymentModalProps {
     isOpen: boolean;
@@ -45,6 +46,7 @@ const CATEGORY_COPY: Record<"Overdue" | "Near Due" | "Paid", { title: string; de
 };
 
 export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: PaymentModalProps) {
+    const { t } = useLanguageContext();
     const [confirmedPayments, setConfirmedPayments] = useState<string[]>([]);
     const [selectedActionPayment, setSelectedActionPayment] = useState<PaymentListItem | null>(null);
     const [isConfirmingAction, setIsConfirmingAction] = useState(false);
@@ -106,18 +108,18 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                 </div>
                                 <div>
                                     <h2 className="flex items-center gap-3 text-xl sm:text-2xl font-black text-foreground text-balance">
-                                        {categoryCopy.title}
+                                        {t(categoryCopy.title)}
                                         <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-black text-primary border border-primary/20 tabular-nums">
                                             {filteredPayments.length}
                                         </span>
                                     </h2>
-                                    <p className="mt-1 text-xs font-medium text-muted-foreground text-pretty">{categoryCopy.description}</p>
+                                    <p className="mt-1 text-xs font-medium text-muted-foreground text-pretty">{t(categoryCopy.description)}</p>
                                 </div>
                             </div>
                             <button 
                                 onClick={onClose} 
                                 className="group flex size-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-2xl neumorphic-extruded text-muted-foreground transition-all hover:text-primary hover:rotate-90 active:scale-95"
-                                aria-label="Close dialog"
+                                aria-label={t("Close dialog")}
                             >
                                 <X className="size-5" />
                             </button>
@@ -131,7 +133,8 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder={`Filter ${categoryCopy.filterLabel} entries…`}
+                                    placeholder={t("Filter {label} entries…", { label: t(categoryCopy.filterLabel) })}
+                                    aria-label={t("Filter {label} entries…", { label: t(categoryCopy.filterLabel) })}
                                     className="w-full rounded-2xl neumorphic-inset bg-background py-3.5 pl-14 pr-6 text-sm text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
                                 />
                             </div>
@@ -146,10 +149,10 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                     </div>
                                     <div>
                                         <h3 className="text-sm sm:text-base font-black text-foreground">
-                                            {category === 'Overdue' ? 'All Caught Up!' : category === 'Near Due' ? 'Clear Horizon' : 'No Records'}
+                                            {category === 'Overdue' ? t('All Caught Up!') : category === 'Near Due' ? t('Clear Horizon') : t('No Records')}
                                         </h3>
                                         <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto leading-relaxed">
-                                            {categoryCopy.emptyState}
+                                            {t(categoryCopy.emptyState)}
                                         </p>
                                     </div>
                                 </div>
@@ -189,7 +192,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                     "px-2 py-0.5 rounded-full border border-neutral-200 dark:border-white/5 bg-neutral-100 dark:bg-white/5",
                                                     confirmedPayments.includes(payment.id) || category === "Paid" ? "text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20" : getStatusStyles()
                                                 )}>
-                                                    {confirmedPayments.includes(payment.id) ? "Acknowledged" : category}
+                                                    {confirmedPayments.includes(payment.id) ? t("Acknowledged") : t(category)}
                                                 </span>
                                                 <span className="text-muted-foreground/60">{payment.date}</span>
                                             </div>
@@ -243,7 +246,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mt-1">{selectedActionPayment.unit}</p>
                                                 
                                                 <div className="mt-6 sm:mt-8 flex flex-col gap-2 rounded-2xl bg-neutral-100/50 dark:bg-white/[0.02] p-5 sm:p-6 border border-neutral-200 dark:border-white/5">
-                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Settlement Due</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t("Settlement Due")}</p>
                                                     <h4 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter tabular-nums">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
                                                 </div>
                                             </div>
@@ -257,7 +260,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                         <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
                                                             <CheckCircle2 className="size-4 text-white" />
                                                         </div>
-                                                        <span className="text-xs sm:text-sm font-black uppercase tracking-tight text-white">Record Settlement</span>
+                                                        <span className="text-xs sm:text-sm font-black uppercase tracking-tight text-white">{t("Record Settlement")}</span>
                                                     </div>
                                                     <ChevronRight className="size-4 text-white/60 transition-transform group-hover:translate-x-1" />
                                                 </button>
@@ -266,7 +269,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                     onClick={() => setSelectedActionPayment(null)}
                                                     className="flex min-h-[44px] items-center justify-center rounded-xl neumorphic-extruded py-3 text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground transition-all hover:text-foreground hover:scale-[1.02] active:scale-95"
                                                 >
-                                                    Dismiss
+                                                    {t("Dismiss")}
                                                 </button>
                                             </div>
                                         </>
@@ -275,11 +278,11 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                             <div className="mx-auto mb-6 flex size-16 sm:size-20 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                                 <AlertTriangle className="size-8 sm:size-10" />
                                             </div>
-                                            <h3 className="text-xl sm:text-2xl font-black text-foreground tracking-tight text-balance">Double Check</h3>
+                                            <h3 className="text-xl sm:text-2xl font-black text-foreground tracking-tight text-balance">{t("Double Check")}</h3>
                                             
                                             <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
                                                 <p className="text-xs font-black leading-relaxed text-primary/80 text-pretty">
-                                                    Make sure that the tenant has already paid their rent. Seek proof of payment for GCash payments.
+                                                    {t("Make sure that the tenant has already paid their rent. Seek proof of payment for GCash payments.")}
                                                 </p>
                                             </div>
 
@@ -288,13 +291,13 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                     onClick={() => handleConfirm(selectedActionPayment.id)}
                                                     className="w-full min-h-[48px] rounded-xl bg-primary py-3.5 text-xs sm:text-sm font-black uppercase tracking-widest text-white transition-all hover:scale-[1.02] active:scale-95"
                                                 >
-                                                    Confirm Record
+                                                    {t("Confirm Record")}
                                                 </button>
                                                 <button 
                                                     onClick={() => setIsConfirmingAction(false)}
                                                     className="w-full min-h-[44px] rounded-xl neumorphic-extruded py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:text-foreground hover:scale-[1.02] active:scale-95"
                                                 >
-                                                    Go Back
+                                                    {t("Go Back")}
                                                 </button>
                                             </div>
                                         </div>

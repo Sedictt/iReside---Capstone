@@ -26,6 +26,12 @@ import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
 import type { InvoiceListItem } from "@/lib/billing/server";
 import { formatPhpCurrency } from "@/lib/billing/utils";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { dateRule, parseNumericInput, textRule, todayIsoDate } from "@/lib/validation/rules";
+import { BILLING_LIMITS, amountWithinBalanceRule } from "@/lib/validation/schemas/billing.schema";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 interface CollectPaymentModalProps {
     isOpen: boolean;
@@ -63,6 +69,7 @@ function formatWithCommas(value: string | number): string {
 
 export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: CollectPaymentModalProps) {
     const { selectedPropertyId } = useProperty();
+    const { t } = useLanguageContext();
     
     // State
     const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
@@ -73,7 +80,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
     const [amount, setAmount] = useState<string>("");
     const [method, setMethod] = useState<PaymentMethodType>("cash");
     const [referenceNumber, setReferenceNumber] = useState("");
-    const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().split("T")[0]);
+    const [paymentDate, setPaymentDate] = useState(() => todayIsoDate());
     const [note, setNote] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -242,6 +249,18 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
         : 0;
     const isFullyPaid = remainingBalance <= 0 && numAmount > 0;
 
+    const collectValues = useMemo(
+        () => ({ amount, paymentDate, referenceNumber, note, due: invoiceDueAmount }),
+        [amount, paymentDate, referenceNumber, note, invoiceDueAmount],
+    );
+    const collectForm = useFormValidation(collectValues, {
+        amount: (value, all) => amountWithinBalanceRule(value, all.due, { label: "Amount collected" }),
+        paymentDate: (value) =>
+            dateRule(value, { label: "Date received", max: todayIsoDate(), maxMessage: "Date received cannot be in the future." }),
+        referenceNumber: (value) => textRule(value, { label: "Reference number", max: BILLING_LIMITS.reference }),
+        note: (value) => textRule(value, { label: "Note", max: BILLING_LIMITS.collectionNote }),
+    });
+
     // Send Invoice & Reminder to Tenant(s)
     const handleSendInvoice = async () => {
         if (selectedInvoiceIds.length === 0) return;
@@ -258,14 +277,18 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
             const successfulCount = results.filter((r) => r.status === "fulfilled").length;
 
             if (selectedInvoiceIds.length === 1 && singleSelectedInvoice) {
-                setReminderSuccessMsg(`Invoice & Pay Now reminder sent to ${singleSelectedInvoice.tenant}!`);
+                setReminderSuccessMsg(t("Invoice & Pay Now reminder sent to {tenant}!", { tenant: singleSelectedInvoice.tenant }));
             } else {
-                setReminderSuccessMsg(`Sent invoice reminders to ${successfulCount} tenant${successfulCount > 1 ? "s" : ""}!`);
+                setReminderSuccessMsg(
+                    successfulCount === 1
+                        ? t("Sent invoice reminders to {count} tenant!", { count: successfulCount })
+                        : t("Sent invoice reminders to {count} tenants!", { count: successfulCount })
+                );
             }
             setTimeout(() => setReminderSuccessMsg(null), 5000);
         } catch (err: any) {
             console.error("Reminder error:", err);
-            setError(err.message || "Failed to send invoice reminder.");
+            setError(tr(err.message || "Failed to send invoice reminder."));
         } finally {
             setIsSendingReminder(false);
         }
@@ -279,8 +302,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
             return;
         }
 
-        if (selectedInvoiceIds.length === 1 && numAmount <= 0) {
-            setError("Payment amount must be greater than ₱0.00.");
+        if (selectedInvoiceIds.length === 1 && !collectForm.validateAll()) {
             return;
         }
 
@@ -303,7 +325,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         invoiceId: singleSelectedInvoice.id,
-                        amount: numAmount,
+                        amount: parseNumericInput(amount),
                         method,
                         referenceNumber: referenceNumber.trim() || undefined,
                         paymentDate,
@@ -311,8 +333,11 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                     }),
                 });
 
-                const data = await res.json();
-                if (!res.ok || !data.ok) throw new Error(data.error || "Failed to record payment.");
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.ok) {
+                    collectForm.setServerErrors(data.fieldErrors);
+                    throw new Error(data.error || "Failed to record payment.");
+                }
 
                 setIsConfirmDialogOpen(false);
                 setSuccessResult({
@@ -342,13 +367,14 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                     })
                 );
 
-                const succeeded = results.filter((r) => r.status === "fulfilled").length;
+                // A rejected HTTP response is still a "fulfilled" fetch; only 2xx counts as settled.
+                const succeeded = results.filter((r) => r.status === "fulfilled" && r.value.ok).length;
                 setIsConfirmDialogOpen(false);
                 setSuccessResult({
                     receiptNumber: `BULK-${Date.now().toString().slice(-6)}`,
                     amount: totalSelectedDue,
-                    tenant: `${succeeded} Residents Settled`,
-                    unit: `${succeeded} Units`,
+                    tenant: t("{count} Residents Settled", { count: succeeded }),
+                    unit: t("{count} Units", { count: succeeded }),
                     isFullyPaid: true,
                     isBulk: true,
                     count: succeeded,
@@ -360,7 +386,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
             }
         } catch (err: any) {
             console.error("Collection error:", err);
-            setError(err.message || "Failed to record payment. Please check your connection.");
+            setError(tr(err.message || "Failed to record payment. Please check your connection."));
             setIsConfirmDialogOpen(false);
         } finally {
             setIsSubmitting(false);
@@ -394,7 +420,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                             <span className="flex size-7 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-xs">
                                 ₱
                             </span>
-                            <h2 className="text-sm font-bold text-slate-800 dark:text-neutral-200">Rent Collection & Invoicing</h2>
+                            <h2 className="text-sm font-bold text-slate-800 dark:text-neutral-200">{t("Rent Collection & Invoicing")}</h2>
                         </div>
 
                         <div className="flex items-center gap-2.5">
@@ -404,13 +430,13 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                 className="flex items-center min-h-[44px] gap-1.5 px-4 py-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-xs font-semibold text-slate-600 dark:text-neutral-300 transition-colors"
                             >
                                 <HelpCircle className="size-4 text-slate-500 dark:text-neutral-400" />
-                                <span>Need Help?</span>
+                                <span>{t("Need Help?")}</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={onClose}
                                 className="flex size-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
-                                aria-label="Close"
+                                aria-label={t("Close")}
                             >
                                 <X className="size-4" />
                             </button>
@@ -430,29 +456,29 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
 
                                 <div className="space-y-1">
                                     <h3 className="text-2xl font-black text-slate-900 dark:text-white">
-                                        {successResult.isBulk ? "Bulk Settlements Recorded!" : "Payment Recorded Successfully!"}
+                                        {successResult.isBulk ? t("Bulk Settlements Recorded!") : t("Payment Recorded Successfully!")}
                                     </h3>
                                     <p className="text-sm text-slate-500 dark:text-neutral-400">
                                         {successResult.isBulk
-                                            ? `Successfully processed and issued receipts for ${successResult.count} tenants.`
-                                            : <>Official Receipt <span className="font-bold text-slate-900 dark:text-white">#{successResult.receiptNumber}</span> has been issued.</>}
+                                            ? t("Successfully processed and issued receipts for {count} tenants.", { count: successResult.count ?? 0 })
+                                            : t("Official Receipt #{receipt} has been issued.", { receipt: successResult.receiptNumber })}
                                     </p>
                                 </div>
 
                                 {/* Summary Box */}
                                 <div className="w-full max-w-md rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5 text-left space-y-3">
                                     <div className="flex justify-between items-center text-sm border-b border-slate-200/60 dark:border-white/10 pb-2">
-                                        <span className="text-slate-500 dark:text-neutral-400">Tenant / Unit</span>
+                                        <span className="text-slate-500 dark:text-neutral-400">{t("Tenant / Unit")}</span>
                                         <span className="font-bold text-slate-900 dark:text-white">{successResult.tenant}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-sm border-b border-slate-200/60 dark:border-white/10 pb-2">
-                                        <span className="text-slate-500 dark:text-neutral-400">Total Collected</span>
+                                        <span className="text-slate-500 dark:text-neutral-400">{t("Total Collected")}</span>
                                         <span className="font-black text-emerald-600 dark:text-emerald-400 text-base">{formatPhpCurrency(successResult.amount)}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="text-slate-500 dark:text-neutral-400">Status</span>
+                                        <span className="text-slate-500 dark:text-neutral-400">{t("Status")}</span>
                                         <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                                            {successResult.isFullyPaid ? "Fully Settled ✓" : "Partial Payment Logged"}
+                                            {successResult.isFullyPaid ? t("Fully Settled ✓") : t("Partial Payment Logged")}
                                         </span>
                                     </div>
                                 </div>
@@ -468,13 +494,13 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                         className="flex-1 min-h-[44px] py-3 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 font-bold text-sm text-slate-700 dark:text-white transition-all flex items-center justify-center gap-2"
                                     >
                                         <RefreshCw className="size-4" />
-                                        Record Another
+                                        {t("Record Another")}
                                     </button>
                                     <button
                                         onClick={onClose}
                                         className="flex-1 min-h-[44px] py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 font-black text-sm text-white transition-all shadow-lg shadow-emerald-500/20"
                                     >
-                                        Done
+                                        {t("Done")}
                                     </button>
                                 </div>
                             </div>
@@ -496,14 +522,14 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                 <Square className="size-4 text-slate-400" />
                                             )}
                                             <span>
-                                                {selectedInvoiceIds.length > 0 
-                                                    ? `${selectedInvoiceIds.length} Selected` 
-                                                    : "Select All"}
+                                                {selectedInvoiceIds.length > 0
+                                                    ? t("{count} Selected", { count: selectedInvoiceIds.length })
+                                                    : t("Select All")}
                                             </span>
                                         </button>
 
                                         <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20">
-                                            {collectibleInvoices.length} pending
+                                            {t("{count} pending", { count: collectibleInvoices.length })}
                                         </span>
                                     </div>
 
@@ -519,7 +545,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     : "text-slate-500 dark:text-neutral-400 hover:text-slate-900"
                                             )}
                                         >
-                                            All ({collectibleInvoices.length})
+                                            {t("All ({count})", { count: collectibleInvoices.length })}
                                         </button>
                                         <button
                                             type="button"
@@ -531,7 +557,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     : "text-slate-500 dark:text-neutral-400 hover:text-rose-500"
                                             )}
                                         >
-                                            Overdue ({overdueCount})
+                                            {t("Overdue ({count})", { count: overdueCount })}
                                         </button>
                                         <button
                                             type="button"
@@ -543,7 +569,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     : "text-slate-500 dark:text-neutral-400 hover:text-amber-500"
                                             )}
                                         >
-                                            Pending ({pendingCount})
+                                            {t("Pending ({count})", { count: pendingCount })}
                                         </button>
                                     </div>
 
@@ -554,7 +580,8 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                             type="text"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            placeholder="Search tenant, unit, inv #..."
+                                            placeholder={t("Search tenant, unit, inv #...")}
+                                            aria-label={t("Search tenant, unit, inv #...")}
                                             className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/60 dark:bg-white/5 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all"
                                         />
                                     </div>
@@ -564,11 +591,11 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                         {loadingInvoices ? (
                                             <div className="flex flex-col items-center justify-center py-12 text-slate-400 gap-2 text-xs">
                                                 <Loader2 className="size-5 animate-spin text-emerald-500" />
-                                                Loading invoices...
+                                                {t("Loading invoices...")}
                                             </div>
                                         ) : filteredInvoices.length === 0 ? (
                                             <div className="p-8 text-center border border-dashed border-slate-200 dark:border-white/10 rounded-2xl text-slate-400 text-xs">
-                                                No matching invoices found.
+                                                {t("No matching invoices found.")}
                                             </div>
                                         ) : (
                                             filteredInvoices.map((inv) => {
@@ -592,6 +619,8 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                             <button
                                                                 type="button"
                                                                 onClick={(e) => handleToggleCheckbox(inv.id, e)}
+                                                                aria-label={t("Select invoice {invoice}", { invoice: inv.invoiceNumber })}
+                                                                aria-pressed={isChecked}
                                                                 className={cn(
                                                                     "size-5 rounded-lg border flex items-center justify-center transition-colors shrink-0",
                                                                     isChecked
@@ -620,7 +649,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                                 "text-[9px] font-bold uppercase tracking-wider block mt-0.5",
                                                                 isOverdue ? "text-rose-500" : "text-amber-500"
                                                             )}>
-                                                                {isOverdue ? "Overdue" : "Pending"}
+                                                                {isOverdue ? t("Overdue") : t("Pending")}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -638,7 +667,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                             {error && (
                                                 <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-semibold">
                                                     <AlertCircle className="size-4 shrink-0" />
-                                                    <span>{error}</span>
+                                                    <span>{t(error)}</span>
                                                 </div>
                                             )}
 
@@ -657,7 +686,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     </div>
                                                     <div className="min-w-0">
                                                         <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-emerald-400/80 block">
-                                                            Selected Invoice
+                                                            {t("Selected Invoice")}
                                                         </span>
                                                         <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate">
                                                             {singleSelectedInvoice.tenant} • {singleSelectedInvoice.unit}
@@ -670,7 +699,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
 
                                                 <div className="text-right shrink-0 ml-4">
                                                     <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-neutral-400 block">
-                                                        Balance Due
+                                                        {t("Balance Due")}
                                                     </span>
                                                     <span className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
                                                         {formatPhpCurrency(invoiceDueAmount)}
@@ -683,11 +712,12 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                 {/* Left: 2. AMOUNT COLLECTED (PHP) (5 cols) */}
                                                 <div className="md:col-span-5 space-y-2">
                                                     <label className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-neutral-300 block">
-                                                        2. AMOUNT COLLECTED (PHP)
+                                                        {t("2. AMOUNT COLLECTED (PHP)")}
                                                     </label>
                                                     <div className="relative flex items-center">
                                                         <span className="absolute left-4 text-slate-700 dark:text-neutral-300 font-bold text-base select-none">₱</span>
-                                                        <input maxLength={10}
+                                                        <input maxLength={14}
+                                                            {...collectForm.fieldProps("amount")}
                                                             type="text"
                                                             inputMode="decimal"
                                                             value={amount}
@@ -698,6 +728,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                                 }
                                                             }}
                                                             onBlur={() => {
+                                                                collectForm.touch("amount");
                                                                 const raw = amount.replace(/,/g, "");
                                                                 const parsed = parseFloat(raw);
                                                                 if (!isNaN(parsed) && parsed > 0) {
@@ -705,16 +736,17 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                                 }
                                                             }}
                                                             placeholder="18,200.00"
-                                                            className="w-full pl-9 pr-4 py-3.5 text-base sm:text-lg font-black text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all placeholder:text-slate-400 tabular-nums"
+                                                            className={cn("w-full pl-9 pr-4 py-3.5 text-base sm:text-lg font-black text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all placeholder:text-slate-400 tabular-nums", collectForm.errorFor("amount") && fieldErrorClass)}
                                                             required
                                                         />
                                                     </div>
+                                                    <FieldError id={collectForm.errorId("amount")} message={collectForm.errorFor("amount")} />
                                                 </div>
 
                                                 {/* Right: 3. PAYMENT METHOD (7 cols) */}
                                                 <div className="md:col-span-7 space-y-2">
                                                     <label className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-neutral-300 block">
-                                                        3. PAYMENT METHOD
+                                                        {t("3. PAYMENT METHOD")}
                                                     </label>
                                                     <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
                                                         {PAYMENT_METHODS.map((pm) => {
@@ -734,11 +766,11 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                                 >
                                                                     <Icon className={cn("size-5 mb-1", isSelected ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-neutral-400")} />
                                                                     <span className="text-[11px] font-bold leading-tight block truncate w-full">
-                                                                        {pm.title}
+                                                                        {t(pm.title)}
                                                                     </span>
                                                                     {pm.subtitle && (
                                                                         <span className="text-[9px] font-medium leading-tight block opacity-80 truncate w-full">
-                                                                            {pm.subtitle}
+                                                                            {t(pm.subtitle)}
                                                                         </span>
                                                                     )}
                                                                 </button>
@@ -752,43 +784,48 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-1.5">
                                                     <label className="text-xs font-semibold text-slate-600 dark:text-neutral-400">
-                                                        Reference # (Optional)
+                                                        {t("Reference # (Optional)")}
                                                     </label>
-                                                    <input maxLength={60}
+                                                    <input maxLength={BILLING_LIMITS.reference}
+                                                        {...collectForm.fieldProps("referenceNumber")}
                                                         type="text"
                                                         value={referenceNumber}
                                                         onChange={(e) => setReferenceNumber(e.target.value)}
-                                                        placeholder={method === "gcash" ? "GCash Ref Number" : method === "bank_transfer" ? "Bank Ref Number" : "Cash Receipt / Slip / OR #"}
-                                                        className="w-full px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 placeholder:text-slate-400 transition-all"
+                                                        placeholder={method === "gcash" ? t("GCash Ref Number") : method === "bank_transfer" ? t("Bank Ref Number") : t("Cash Receipt / Slip / OR #")}
+                                                        className={cn("w-full px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 placeholder:text-slate-400 transition-all", collectForm.errorFor("referenceNumber") && fieldErrorClass)}
                                                     />
+                                                    <FieldError id={collectForm.errorId("referenceNumber")} message={collectForm.errorFor("referenceNumber")} />
                                                 </div>
 
                                                 <div className="space-y-1.5">
                                                     <label className="text-xs font-semibold text-slate-600 dark:text-neutral-400">
-                                                        Date Received
+                                                        {t("Date Received")}
                                                     </label>
                                                     <div className="relative flex items-center">
-                                                        <input min="2000-01-01" max="2099-12-31"
+                                                        <input min="2000-01-01" max={todayIsoDate()}
+                                                            {...collectForm.fieldProps("paymentDate")}
                                                             type="date"
                                                             value={paymentDate}
                                                             onChange={(e) => setPaymentDate(e.target.value)}
-                                                            className="w-full px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all pr-10"
+                                                            className={cn("w-full px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all pr-10", collectForm.errorFor("paymentDate") && fieldErrorClass)}
                                                         />
                                                         <Calendar className="absolute right-3.5 size-4 text-slate-400 dark:text-neutral-500 pointer-events-none" />
                                                     </div>
+                                                    <FieldError id={collectForm.errorId("paymentDate")} message={collectForm.errorFor("paymentDate")} />
                                                 </div>
                                             </div>
 
                                             {/* Notes / Remarks */}
                                             <div className="space-y-1.5">
                                                 <label className="text-xs font-semibold text-slate-600 dark:text-neutral-400">
-                                                    Notes / Remarks (Optional)
+                                                    {t("Notes / Remarks (Optional)")}
                                                 </label>
                                                 <input maxLength={250}
+                                                    {...collectForm.fieldProps("note")}
                                                     type="text"
                                                     value={note}
                                                     onChange={(e) => setNote(e.target.value)}
-                                                    placeholder="e.g. Handed personally in management office"
+                                                    placeholder={t("e.g. Handed personally in management office")}
                                                     className="w-full px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 placeholder:text-slate-400 transition-all"
                                                 />
                                             </div>
@@ -797,7 +834,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                             <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/60 dark:bg-white/[0.03]">
                                                 <div>
                                                     <span className="text-[11px] font-semibold text-slate-500 dark:text-neutral-400 block">
-                                                        Remaining Balance
+                                                        {t("Remaining Balance")}
                                                     </span>
                                                     <span className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tabular-nums">
                                                         {formatPhpCurrency(remainingBalance)}
@@ -806,10 +843,10 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
 
                                                 <div className="text-right">
                                                     <span className="text-[11px] font-semibold text-slate-500 dark:text-neutral-400 block">
-                                                        Settlement
+                                                        {t("Settlement")}
                                                     </span>
                                                     <span className={cn("text-xs sm:text-sm font-bold flex items-center gap-1", isFullyPaid ? "text-emerald-600 dark:text-emerald-400" : "text-amber-500")}>
-                                                        {isFullyPaid ? "✓ Full Settlement" : "⚠ Partial Payment"}
+                                                        {isFullyPaid ? t("✓ Full Settlement") : t("⚠ Partial Payment")}
                                                     </span>
                                                 </div>
                                             </div>
@@ -825,12 +862,12 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     {isSendingReminder ? (
                                                         <>
                                                             <Loader2 className="size-4 animate-spin text-emerald-500" />
-                                                            Sending...
+                                                            {t("Sending...")}
                                                         </>
                                                     ) : (
                                                         <>
                                                             <Send className="size-4 text-emerald-500" />
-                                                            Send Invoice to Tenant
+                                                            {t("Send Invoice to Tenant")}
                                                         </>
                                                     )}
                                                 </button>
@@ -841,7 +878,9 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     className="w-full sm:flex-1 py-3.5 sm:py-4 min-h-[44px] rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 disabled:opacity-50 active:scale-[0.99] cursor-pointer"
                                                 >
                                                     <Receipt className="size-4 sm:size-5" />
-                                                    Record {numAmount > 0 ? formatPhpCurrency(numAmount) : "Payment"} & Settle
+                                                    {numAmount > 0
+                                                        ? t("Record {amount} & Settle", { amount: formatPhpCurrency(numAmount) })
+                                                        : t("Record Payment & Settle")}
                                                 </button>
                                             </div>
                                         </form>
@@ -851,7 +890,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                             {error && (
                                                 <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-semibold">
                                                     <AlertCircle className="size-4 shrink-0" />
-                                                    <span>{error}</span>
+                                                    <span>{t(error)}</span>
                                                 </div>
                                             )}
 
@@ -870,20 +909,20 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     </div>
                                                     <div className="min-w-0">
                                                         <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-emerald-400/80 block">
-                                                            Bulk Action Mode
+                                                            {t("Bulk Action Mode")}
                                                         </span>
                                                         <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate">
-                                                            {selectedInvoiceIds.length} Invoices Selected
+                                                            {t("{count} Invoices Selected", { count: selectedInvoiceIds.length })}
                                                         </h3>
                                                         <p className="text-[11px] text-slate-400 dark:text-neutral-400 mt-0.5">
-                                                            Send digital invoices & reminders in bulk
+                                                            {t("Send digital invoices & reminders in bulk")}
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 <div className="text-right shrink-0 ml-4">
                                                     <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-neutral-400 block">
-                                                        Total Outstanding
+                                                        {t("Total Outstanding")}
                                                     </span>
                                                     <span className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
                                                         {formatPhpCurrency(totalSelectedDue)}
@@ -894,8 +933,8 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                             {/* Selected Items Breakdown List */}
                                             <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/60 dark:bg-white/5 p-4 space-y-2.5">
                                                 <div className="flex justify-between items-center text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">
-                                                    <span>Selected Residents ({selectedInvoicesList.length})</span>
-                                                    <span>Balance Due</span>
+                                                    <span>{t("Selected Residents ({count})", { count: selectedInvoicesList.length })}</span>
+                                                    <span>{t("Balance Due")}</span>
                                                 </div>
                                                 <div className="space-y-2 max-h-52 overflow-y-auto custom-scrollbar-premium pr-1">
                                                     {selectedInvoicesList.map((inv) => (
@@ -920,7 +959,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                             <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs flex items-start gap-2.5">
                                                 <AlertCircle className="size-4 shrink-0 mt-0.5 text-amber-500" />
                                                 <p className="leading-relaxed">
-                                                    <strong className="font-bold">Settlement is disabled for multi-select.</strong> To record individual payment collections and issue receipts, select a single resident from the list on the left.
+                                                    <strong className="font-bold">{t("Settlement is disabled for multi-select.")}</strong> {t("To record individual payment collections and issue receipts, select a single resident from the list on the left.")}
                                                 </p>
                                             </div>
 
@@ -934,12 +973,12 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                 {isSendingReminder ? (
                                                     <>
                                                         <Loader2 className="size-5 animate-spin" />
-                                                        Sending Invoices to {selectedInvoiceIds.length} Tenants...
+                                                        {t("Sending Invoices to {count} Tenants...", { count: selectedInvoiceIds.length })}
                                                     </>
                                                 ) : (
                                                     <>
                                                         <Send className="size-5" />
-                                                        Send Invoices & Reminders to All ({selectedInvoiceIds.length})
+                                                        {t("Send Invoices & Reminders to All ({count})", { count: selectedInvoiceIds.length })}
                                                     </>
                                                 )}
                                             </button>
@@ -951,9 +990,9 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                 <Banknote className="size-7" />
                                             </div>
                                             <div className="space-y-1">
-                                                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Select Invoices to Begin</h4>
+                                                <h4 className="text-sm font-bold text-slate-900 dark:text-white">{t("Select Invoices to Begin")}</h4>
                                                 <p className="text-xs max-w-xs text-slate-500 dark:text-neutral-400">
-                                                    Select one or multiple outstanding invoices from the left to record payments or send reminders.
+                                                    {t("Select one or multiple outstanding invoices from the left to record payments or send reminders.")}
                                                 </p>
                                             </div>
                                         </div>
@@ -979,9 +1018,9 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                         </div>
                                         <div>
                                             <h3 className="text-base font-black text-slate-900 dark:text-white">
-                                                {selectedInvoiceIds.length > 1 ? "Confirm Bulk Settlement" : "Confirm Rent Settlement"}
+                                                {selectedInvoiceIds.length > 1 ? t("Confirm Bulk Settlement") : t("Confirm Rent Settlement")}
                                             </h3>
-                                            <p className="text-xs text-slate-500 dark:text-neutral-400">Please double-check payment details before proceeding.</p>
+                                            <p className="text-xs text-slate-500 dark:text-neutral-400">{t("Please double-check payment details before proceeding.")}</p>
                                         </div>
                                     </div>
 
@@ -989,36 +1028,36 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                     <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 p-4 space-y-2.5 text-xs">
                                         <div className="flex justify-between items-center border-b border-slate-200/60 dark:border-white/5 pb-2">
                                             <span className="text-slate-500 dark:text-neutral-400 font-medium">
-                                                {selectedInvoiceIds.length > 1 ? "Selected Invoices" : "Tenant"}
+                                                {selectedInvoiceIds.length > 1 ? t("Selected Invoices") : t("Tenant")}
                                             </span>
                                             <span className="font-bold text-slate-900 dark:text-white">
                                                 {selectedInvoiceIds.length > 1 
-                                                    ? `${selectedInvoiceIds.length} Residents` 
+                                                    ? t("{count} Residents", { count: selectedInvoiceIds.length })
                                                     : `${singleSelectedInvoice?.tenant} (${singleSelectedInvoice?.unit})`}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center border-b border-slate-200/60 dark:border-white/5 pb-2">
-                                            <span className="text-slate-500 dark:text-neutral-400 font-medium">Payment Method</span>
+                                            <span className="text-slate-500 dark:text-neutral-400 font-medium">{t("Payment Method")}</span>
                                             <span className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
-                                                {method === "cash" ? "Cash (Hand-to-Hand)" : method === "gcash" ? "GCash Transfer" : "Bank Deposit"}
+                                                {method === "cash" ? t("Cash (Hand-to-Hand)") : method === "gcash" ? t("GCash Transfer") : t("Bank Deposit")}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center border-b border-slate-200/60 dark:border-white/5 pb-2">
-                                            <span className="text-slate-500 dark:text-neutral-400 font-medium">Total Amount</span>
+                                            <span className="text-slate-500 dark:text-neutral-400 font-medium">{t("Total Amount")}</span>
                                             <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
                                                 {formatPhpCurrency(selectedInvoiceIds.length > 1 ? totalSelectedDue : numAmount)}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-slate-500 dark:text-neutral-400 font-medium">Resulting Status</span>
+                                            <span className="text-slate-500 dark:text-neutral-400 font-medium">{t("Resulting Status")}</span>
                                             <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                                                ✓ Full Settlement
+                                                {t("✓ Full Settlement")}
                                             </span>
                                         </div>
                                     </div>
 
                                     <p className="text-[11px] text-slate-500 dark:text-neutral-400 leading-relaxed">
-                                        Confirming will record this settlement in the ledger, issue official digital receipts, and notify the resident(s).
+                                        {t("Confirming will record this settlement in the ledger, issue official digital receipts, and notify the resident(s).")}
                                     </p>
 
                                     {/* Action Buttons */}
@@ -1029,7 +1068,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                             disabled={isSubmitting}
                                             className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 font-bold text-xs text-slate-700 dark:text-white transition-all"
                                         >
-                                            Cancel / Edit
+                                            {t("Cancel / Edit")}
                                         </button>
                                         <button
                                             type="button"
@@ -1040,12 +1079,12 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                             {isSubmitting ? (
                                                 <>
                                                     <Loader2 className="size-3.5 animate-spin" />
-                                                    Recording...
+                                                    {t("Recording...")}
                                                 </>
                                             ) : (
                                                 <>
                                                     <Check className="size-4 stroke-[3]" />
-                                                    Yes, Settle & Issue Receipt
+                                                    {t("Yes, Settle & Issue Receipt")}
                                                 </>
                                             )}
                                         </button>

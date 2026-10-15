@@ -35,7 +35,10 @@ import {
   isValidLeaseStatusTransition,
   getTransitionErrorMessage,
 } from "./lease-status-machine";
+import { isLeaseExpiringSoon } from "@/lib/lease-term";
 
+/** Pseudo-status accepted by the lease list filter (see landlordLeaseListQuerySchema). */
+export const EXPIRING_SOON_FILTER = "expiring_soon";
 
 
 
@@ -45,6 +48,7 @@ const LANDLORD_LIST_QUERY = `
   status,
   start_date,
   end_date,
+  term_type,
   monthly_rent,
   security_deposit,
   signed_at,
@@ -77,6 +81,7 @@ const LEASE_DETAIL_QUERY = `
   landlord_id,
   start_date,
   end_date,
+  term_type,
   monthly_rent,
   security_deposit,
   terms,
@@ -151,7 +156,7 @@ const LEASE_BY_ID_QUERY = `
 const TENANT_RENEWAL_REQUESTS_QUERY = `
   *,
   current_lease:leases!renewal_requests_current_lease_id_fkey (
-    id, start_date, end_date, monthly_rent
+    id, start_date, end_date, term_type, monthly_rent
   ),
   new_lease:leases!renewal_requests_new_lease_id_fkey (*)
 `;
@@ -179,6 +184,7 @@ const TENANT_RICH_LEASE_QUERY = `
   status,
   start_date,
   end_date,
+  term_type,
   monthly_rent,
   security_deposit,
   terms,
@@ -249,12 +255,24 @@ export class LeaseService {
       query = query.eq("unit_id", filters.unitId);
     }
 
-    // Apply status filter (supports comma-separated values)
+    // Apply status filter (supports comma-separated values). "expiring_soon" is
+    // a pseudo-status: it maps to active fixed-term leases ending within
+    // EXPIRING_SOON_DAYS and is applied after the query.
+    let postFilter: ((lease: LeaseListItem) => boolean) | null = null;
     if (filters.status) {
-      const statuses = filters.status
+      const requested = filters.status
         .split(",")
         .map((status) => status.trim())
         .filter(Boolean);
+      const wantsExpiringSoon = requested.includes(EXPIRING_SOON_FILTER);
+      const statuses = requested.filter((status) => status !== EXPIRING_SOON_FILTER);
+      if (wantsExpiringSoon && !statuses.includes("active")) {
+        // "active" was not asked for explicitly, so only the expiring subset of
+        // active leases may come back alongside the other requested statuses.
+        const explicit = new Set(statuses);
+        statuses.push("active");
+        postFilter = (lease) => explicit.has(lease.status) || isLeaseExpiringSoon(lease);
+      }
       if (statuses.length === 1) {
         query = query.eq("status", statuses[0] as Database["public"]["Tables"]["leases"]["Row"]["status"]);
       } else if (statuses.length > 1) {
@@ -268,7 +286,8 @@ export class LeaseService {
       throw new Error(`Failed to fetch leases: ${error.message}`);
     }
 
-    return (data ?? []) as unknown as LeaseListItem[];
+    const leases = (data ?? []) as unknown as LeaseListItem[];
+    return postFilter ? leases.filter(postFilter) : leases;
   }
 
   /**

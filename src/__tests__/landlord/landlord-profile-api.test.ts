@@ -316,6 +316,11 @@ describe("Landlord Profile API (/api/landlord/profile)", () => {
         if (table === "profiles") {
           return {
             select: vi.fn().mockReturnValue({
+              ilike: vi.fn().mockReturnValue({
+                neq: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+                }),
+              }),
               eq: vi.fn().mockReturnValue({
                 single: vi.fn().mockResolvedValue({
                   data: {
@@ -373,6 +378,62 @@ describe("Landlord Profile API (/api/landlord/profile)", () => {
           email_confirm: true,
         })
       );
+    });
+
+    it("rejects invalid fields with 400 and field errors before touching the database", async () => {
+      mockRequireAuthenticatedUser.mockResolvedValue({
+        userId: "landlord-user-1",
+        userEmail: "owner@customdomain.ph",
+        userRole: "landlord",
+      });
+
+      const req = new NextRequest("http://localhost:3000/api/landlord/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ full_name: "J0hn <b>", phone: "0917-12", website: "not a url", socials: { instagram: "bad handle!" } }),
+      });
+
+      const res = await PATCH(req);
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.fieldErrors.full_name).toMatch(/can only contain/);
+      expect(json.fieldErrors.phone).toBeDefined();
+      expect(json.fieldErrors.website).toBeDefined();
+      expect(json.fieldErrors["socials.instagram"]).toBeDefined();
+      expect(mockAdminFrom).not.toHaveBeenCalled();
+    });
+
+    it("returns 409 when the new email belongs to another account", async () => {
+      mockRequireAuthenticatedUser.mockResolvedValue({
+        userId: "landlord-user-1",
+        userEmail: "owner@customdomain.ph",
+        userRole: "landlord",
+      });
+
+      mockAdminFrom.mockImplementation(() => ({
+        select: vi.fn().mockReturnValue({
+          ilike: vi.fn().mockReturnValue({
+            neq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: { id: "someone-else" }, error: null }),
+            }),
+          }),
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { id: "landlord-user-1", email: "owner@customdomain.ph", socials: {} },
+              error: null,
+            }),
+          }),
+        }),
+        update: vi.fn(),
+      }));
+
+      const req = new NextRequest("http://localhost:3000/api/landlord/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ email: "Taken@Example.com" }),
+      });
+
+      const res = await PATCH(req);
+      expect(res.status).toBe(409);
+      expect(mockUpdateUserById).not.toHaveBeenCalled();
     });
 
     it("sanitizes pre-seeded dummy phone numbers to null during update", async () => {

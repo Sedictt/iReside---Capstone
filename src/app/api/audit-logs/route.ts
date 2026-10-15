@@ -1,7 +1,18 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseSearchParams } from "@/lib/validation/server";
+import { auditLogQuerySchema } from "@/lib/validation/schemas/operations.schema";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import type { AuditCategory, AuditSeverity } from "@/lib/audit/audit-logger";
+import { describeAuditEvent } from "@/lib/audit/audit-display";
+
+// A payment step can be logged twice: once as a payment workflow event and once in
+// user_audit_logs. These pairs are the same thing, so only the user_audit_logs entry is kept.
+const DUPLICATE_WORKFLOW_ACTIONS: Record<string, string> = {
+    confirm_received: "PAYMENT_COLLECTED",
+    reminder_sent: "INVOICE_REMINDER_SENT",
+};
+const DUPLICATE_WINDOW_MS = 5 * 60 * 1000;
 
 export interface AuditLogItem {
     id: string;
@@ -25,11 +36,11 @@ export async function GET(request: Request) {
     const { userId } = authContext;
 
     const url = new URL(request.url);
-    const category = url.searchParams.get("category");
-    const severity = url.searchParams.get("severity");
-    const search = url.searchParams.get("search")?.toLowerCase().trim() || "";
-    const isExport = url.searchParams.get("export") === "csv";
-    const limit = Math.min(parseInt(url.searchParams.get("limit") || "100", 10), 500);
+    const parsedQuery = parseSearchParams(url.searchParams, auditLogQuerySchema);
+    if (!parsedQuery.ok) return parsedQuery.response;
+    const { category, severity, limit } = parsedQuery.data;
+    const search = parsedQuery.data.search.toLowerCase();
+    const isExport = parsedQuery.data.export === "csv";
 
     const adminClient = createServiceRoleSupabaseClient();
     const logs: AuditLogItem[] = [];
@@ -45,20 +56,23 @@ export async function GET(request: Request) {
 
         if (!directError && Array.isArray(directLogs)) {
             for (const item of directLogs) {
+                const metadata = item.metadata || {};
+                // Older rows were stored with technical wording; describe them from the action instead.
+                const { title, description } = describeAuditEvent({ action: item.action, title: item.title, description: item.description, metadata });
                 logs.push({
                     id: item.id,
                     userId: item.user_id,
                     userRole: item.user_role || "landlord",
                     action: item.action,
                     category: item.category || "general",
-                    title: item.title,
-                    description: item.description,
+                    title,
+                    description,
                     severity: item.severity || "info",
                     targetId: item.target_id,
                     targetType: item.target_type,
-                    metadata: item.metadata || {},
+                    metadata,
                     createdAt: item.created_at,
-                    device: item.user_agent || item.metadata?.device || "Web Application",
+                    device: item.user_agent || metadata.device || undefined,
                 });
             }
         }
@@ -83,25 +97,29 @@ export async function GET(request: Request) {
             if (workflowEvents) {
                 const paymentMap = new Map(payments.map((p) => [p.id, p]));
                 for (const ev of workflowEvents) {
-                    const pay = paymentMap.get(ev.payment_id);
-                    const actionName = ev.action.replace(/_/g, " ").toUpperCase();
-                    let category: AuditCategory = "billing";
-                    let severity: AuditSeverity = "info";
-                    let title = `Payment Event: ${actionName}`;
-                    let description = `Workflow action '${ev.action}' on invoice ${pay?.invoice_number || ev.payment_id}.`;
-
-                    if (ev.action.includes("collect") || ev.action.includes("receipt") || ev.action.includes("confirm")) {
-                        title = "Rent Payment Collected & Receipted";
-                        description = `Recorded settlement for invoice ${pay?.invoice_number || ""}.`;
-                    } else if (ev.action.includes("reminder")) {
-                        title = "Rent Invoice & Reminder Dispatched";
-                        description = `Sent Pay Now checkout notice for invoice ${pay?.invoice_number || ""}.`;
-                    } else if (ev.action.includes("reject")) {
-                        severity = "warning";
-                        title = "Payment Review Rejected";
+                    const pairedAction = DUPLICATE_WORKFLOW_ACTIONS[ev.action];
+                    if (pairedAction) {
+                        const eventTime = new Date(ev.created_at).getTime();
+                        const alreadyLogged = logs.some(
+                            (log) =>
+                                log.action === pairedAction &&
+                                log.targetId === ev.payment_id &&
+                                Math.abs(new Date(log.createdAt).getTime() - eventTime) <= DUPLICATE_WINDOW_MS
+                        );
+                        if (alreadyLogged) continue;
                     }
 
+                    const pay = paymentMap.get(ev.payment_id);
+                    const category: AuditCategory = "billing";
+                    const severity: AuditSeverity = ev.action.includes("reject") ? "warning" : "info";
                     const evMetadata = (typeof ev.metadata === "object" && ev.metadata !== null ? ev.metadata : {}) as Record<string, any>;
+                    const metadata = {
+                        ...evMetadata,
+                        source: ev.source,
+                        invoiceNumber: pay?.invoice_number,
+                        amount: pay?.amount,
+                    };
+                    const { title, description } = describeAuditEvent({ action: ev.action, title: "Payment update", metadata });
 
                     logs.push({
                         id: `wf-${ev.id}`,
@@ -114,54 +132,11 @@ export async function GET(request: Request) {
                         severity,
                         targetId: ev.payment_id,
                         targetType: "payment",
-                        metadata: {
-                            ...evMetadata,
-                            source: ev.source,
-                            invoiceNumber: pay?.invoice_number,
-                            amount: pay?.amount,
-                        },
+                        metadata,
                         createdAt: ev.created_at,
-                        device: "Web Dashboard",
                     });
                 }
             }
-        }
-
-        // 3. Fallback Seed Activity for New Accounts / Demonstrations
-        if (logs.length === 0) {
-            const now = Date.now();
-            logs.push(
-                {
-                    id: "seed-1",
-                    userId,
-                    userRole: "landlord",
-                    action: "WORKSPACE_SESSION_INITIALIZED",
-                    category: "security",
-                    title: "Secure Session Authenticated",
-                    description: "Authenticated into landlord portal with active workspace session.",
-                    severity: "info",
-                    targetId: null,
-                    targetType: "session",
-                    metadata: { method: "Password / SSO", status: "Active" },
-                    createdAt: new Date(now - 1000 * 60 * 15).toISOString(),
-                    device: "Chrome on Windows",
-                },
-                {
-                    id: "seed-2",
-                    userId,
-                    userRole: "landlord",
-                    action: "AUDIT_MONITORING_ENABLED",
-                    category: "settings",
-                    title: "Audit Logging System Active",
-                    description: "Ethical activity tracking initialized with OWASP and GDPR compliance standards.",
-                    severity: "info",
-                    targetId: null,
-                    targetType: "settings",
-                    metadata: { retention: "Standard", piiSanitized: true },
-                    createdAt: new Date(now - 1000 * 60 * 45).toISOString(),
-                    device: "System",
-                }
-            );
         }
 
         // Sort all aggregated logs chronologically descending
@@ -197,7 +172,7 @@ export async function GET(request: Request) {
                     `"${log.action}"`,
                     `"${log.title.replace(/"/g, '""')}"`,
                     `"${log.description.replace(/"/g, '""')}"`,
-                    `"${(log.device || "Web Browser").replace(/"/g, '""')}"`,
+                    `"${(log.device || "").replace(/"/g, '""')}"`,
                     `"${log.targetId || "N/A"}"`,
                 ].join(",")),
             ];
@@ -230,7 +205,7 @@ export async function GET(request: Request) {
     } catch (err: any) {
         console.error("Error retrieving audit logs:", err);
         return NextResponse.json(
-            { error: "Failed to retrieve audit logs.", details: err.message },
+            { error: "Failed to retrieve audit logs." },
             { status: 500 }
         );
     }

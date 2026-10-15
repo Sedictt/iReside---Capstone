@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseJsonBody } from "@/lib/validation/server";
+import { analyticsInsightsSchema } from "@/lib/validation/schemas/operations.schema";
 
 type InsightSource = "ai" | "fallback";
 
@@ -102,24 +104,10 @@ export async function POST(request: Request) {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
-    const body = (await request.json()) as Partial<InsightRequestBody>;
-    if (!body.rangeStart || !body.rangeEnd || !Array.isArray(body.kpis) || body.kpis.length === 0) {
-        return NextResponse.json({ error: "Invalid insights payload." }, { status: 400 });
-    }
-
-    const kpis = body.kpis.filter(
-        (kpi): kpi is KpiInput =>
-            Boolean(kpi) &&
-            typeof kpi.title === "string" &&
-            typeof kpi.value === "string" &&
-            typeof kpi.change === "string" &&
-            Array.isArray(kpi.trendData) &&
-            (kpi.changeType === "positive" || kpi.changeType === "negative" || kpi.changeType === "neutral")
-    );
-
-    if (kpis.length === 0) {
-        return NextResponse.json({ error: "No valid KPI records found." }, { status: 400 });
-    }
+    const parsed = await parseJsonBody(request, analyticsInsightsSchema);
+    if (!parsed.ok) return parsed.response;
+    const body: InsightRequestBody = parsed.data;
+    const kpis: KpiInput[] = body.kpis;
 
     const fallbackInsights = Object.fromEntries(kpis.map((kpi) => [kpi.title, buildFallbackInsight(kpi)]));
 

@@ -1,17 +1,24 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import { getAppBaseUrl } from '@/lib/app-url';
 
 /**
  * JWT utilities for lease signing links
  * Provides secure token generation and verification for tenant lease signing
  */
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+// Local-development convenience only. In production a missing secret fails
+// closed: a public fallback would let anyone forge lease signing links.
+const DEV_FALLBACK_JWT_SECRET = 'iReside-dev-fallback-secret-2024';
 
-const FALLBACK_JWT_SECRET = 'iReside-dev-fallback-secret-2024';
-const JWT_SECRET = process.env.JWT_SECRET || FALLBACK_JWT_SECRET;
-
-const getJwtSecret = (): string => JWT_SECRET;
+const getJwtSecret = (): string => {
+  const configured = process.env.JWT_SECRET?.trim();
+  if (configured) return configured;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET must be configured in production: lease signing links cannot be issued or verified without it.');
+  }
+  return DEV_FALLBACK_JWT_SECRET;
+};
 
 interface SigningTokenPayload {
   leaseId: string;
@@ -108,7 +115,7 @@ export function verifySigningToken(token: string): VerifyTokenResult {
  */
 export function generateSigningLink(leaseId: string, tenantId: string): string {
   const token = generateSigningToken(leaseId, tenantId, 'tenant');
-  return `${APP_URL}/signing/tenant/${leaseId}?token=${token}`;
+  return `${getAppBaseUrl()}/signing/tenant/${leaseId}?token=${token}`;
 }
 
 /**
@@ -119,7 +126,7 @@ export function generateSigningLink(leaseId: string, tenantId: string): string {
  */
 export function generateLandlordSigningLink(leaseId: string, landlordId: string): string {
   const token = generateSigningToken(leaseId, landlordId, 'landlord');
-  return `${APP_URL}/signing/landlord/${leaseId}?token=${token}`;
+  return `${getAppBaseUrl()}/signing/landlord/${leaseId}?token=${token}`;
 }
 
 /**

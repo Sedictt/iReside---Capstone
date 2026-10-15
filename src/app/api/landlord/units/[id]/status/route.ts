@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { databaseErrorResponse, parseJsonBody, parseWithSchema } from "@/lib/validation/server";
+import { unitIdSchema, unitStatusSchema } from "@/lib/validation/schemas/properties.schema";
+
+/** Lease states that hold a unit (mirrors the unit-delete safeguard). */
+const UNIT_HOLDING_LEASE_STATUSES = ["active", "pending_signature", "pending_tenant_signature", "pending_landlord_signature"];
 
 /** PATCH /api/landlord/units/[id]/status
  *  Body: { status: "vacant" | "occupied" | "maintenance" }
@@ -17,19 +22,12 @@ export async function PATCH(
     if (!unitId) {
         return NextResponse.json({ error: "Unit ID is required" }, { status: 400 });
     }
+    const idCheck = parseWithSchema(unitIdSchema, unitId);
+    if (!idCheck.ok) return idCheck.response;
 
-    const body = await request.json() as { status?: string };
-    const { status } = body;
-
-    const ALLOWED_STATUSES = ["vacant", "occupied", "maintenance"] as const;
-    type UnitStatus = typeof ALLOWED_STATUSES[number];
-
-    if (!status || !ALLOWED_STATUSES.includes(status as UnitStatus)) {
-        return NextResponse.json(
-            { error: `Status must be one of: ${ALLOWED_STATUSES.join(", ")}` },
-            { status: 400 }
-        );
-    }
+    const parsed = await parseJsonBody(request, unitStatusSchema);
+    if (!parsed.ok) return parsed.response;
+    const { status } = parsed.data;
 
     // Verify the landlord owns this unit via the property
     const { data: unit, error: unitError } = await supabase
@@ -47,15 +45,35 @@ export async function PATCH(
         return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Prevent marking as occupied if there's an active lease (the DB trigger handles it)
-    // Just update the status directly — the trigger on leases will keep it in sync
+    // A unit held by a signed/pending lease cannot be manually released back to vacant;
+    // the lease lifecycle (move-out / termination) frees it and the DB trigger keeps it in sync.
+    if (status === "vacant" && unit.status !== "vacant") {
+        const { data: holdingLeases, error: leaseError } = await supabase
+            .from("leases")
+            .select("id")
+            .eq("unit_id", unitId)
+            .in("status", UNIT_HOLDING_LEASE_STATUSES as any)
+            .limit(1);
+
+        if (leaseError) {
+            return databaseErrorResponse(leaseError, "Failed to update status.");
+        }
+        if (holdingLeases && holdingLeases.length > 0) {
+            return NextResponse.json(
+                { error: "This unit has an active or pending lease and cannot be marked vacant.", fieldErrors: { status: "This unit has an active or pending lease and cannot be marked vacant." } },
+                { status: 409 }
+            );
+        }
+    }
+
     const { error: updateError } = await supabase
         .from("units")
-        .update({ status: status as UnitStatus })
+        .update({ status })
         .eq("id", unitId);
 
     if (updateError) {
-        return NextResponse.json({ error: `Failed to update status: ${updateError.message}` }, { status: 500 });
+        console.error("Failed to update unit status:", updateError);
+        return databaseErrorResponse(updateError, "Failed to update status.");
     }
 
     return NextResponse.json({ success: true, status });

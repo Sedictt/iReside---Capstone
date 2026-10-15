@@ -78,6 +78,8 @@ describe("Lease Renewal Integration", () => {
             landlord_id: testLandlord.id,
             status: 'active',
             start_date: new Date().toISOString().split('T')[0],
+            // Renewal windows only apply to fixed-term leases (open-ended is the default).
+            term_type: 'fixed',
             end_date: endDate.toISOString().split('T')[0],
             monthly_rent: 1000
         }).select().single();

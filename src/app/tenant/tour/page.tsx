@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 /**
  * @deprecated The interactive walkthrough has been replaced by the dashboard slideshows.
@@ -9,6 +10,7 @@ import { useRouter } from "next/navigation";
  */
 export default function TenantTourPage() {
     const router = useRouter();
+    const { t } = useLanguageContext();
 
     useEffect(() => {
         router.replace("/tenant/dashboard");
@@ -16,7 +18,7 @@ export default function TenantTourPage() {
 
     return (
         <div className="flex min-h-[50vh] items-center justify-center p-6 text-sm text-muted-foreground">
-            Redirecting to dashboard...
+            {t("Redirecting to dashboard...")}
         </div>
     );
 }

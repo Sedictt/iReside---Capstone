@@ -13,6 +13,7 @@ import {
     X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface TenantSetupPromptModalProps {
     isOpen: boolean;
@@ -35,6 +36,7 @@ export function TenantSetupPromptModal({
     onMaybeLater,
     propertyName,
 }: TenantSetupPromptModalProps) {
+    const { t } = useLanguageContext();
     const [step, setStep] = useState<"inquire" | "choose_method">("inquire");
 
     // Reset step when modal opens
@@ -59,6 +61,8 @@ export function TenantSetupPromptModal({
     }, [isOpen, step, onMaybeLater]);
 
     if (!isOpen) return null;
+
+    const [readyBefore, readyAfter] = t("Your property and utility rates for {property} are ready! Would you like to add your tenants and assign them to rooms now?").split("{property}");
 
     return (
         <div
@@ -87,7 +91,7 @@ export function TenantSetupPromptModal({
                 <button
                     type="button"
                     onClick={step === "inquire" ? onMaybeLater : onClose}
-                    aria-label="Close dialog"
+                    aria-label={t("Close dialog")}
                     className="absolute top-5 right-5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                     <X className="size-4" />
@@ -102,7 +106,7 @@ export function TenantSetupPromptModal({
                                 <Users className="size-6" />
                             </div>
                             <span className="inline-flex items-center text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/25">
-                                Step 4 of 5 • Onboarding
+                                {t("Step {step} of {total} • Onboarding", { step: 4, total: 5 })}
                             </span>
                         </div>
 
@@ -112,10 +116,14 @@ export function TenantSetupPromptModal({
                                 id="tenant-setup-modal-title"
                                 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground leading-tight"
                             >
-                                Configure Your Tenants
+                                {t("Configure Your Tenants")}
                             </h2>
                             <p id="tenant-setup-modal-desc" className="text-sm text-muted-foreground leading-relaxed">
-                                Your property and utility rates{propertyName ? <> for <span className="font-semibold text-foreground">{propertyName}</span></> : ""} are ready! Would you like to add your tenants and assign them to rooms now?
+                                {propertyName ? (
+                                    <>{readyBefore}<span className="font-semibold text-foreground">{propertyName}</span>{readyAfter}</>
+                                ) : (
+                                    t("Your property and utility rates are ready! Would you like to add your tenants and assign them to rooms now?")
+                                )}
                             </p>
                         </div>
 
@@ -123,15 +131,15 @@ export function TenantSetupPromptModal({
                         <div className="rounded-2xl border border-border/70 bg-muted/30 dark:bg-muted/10 p-4 sm:p-5 space-y-3">
                             <div className="flex items-center gap-3 text-sm font-medium text-foreground">
                                 <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                                <span>Assign residents to vacant rooms</span>
+                                <span>{t("Assign residents to vacant rooms")}</span>
                             </div>
                             <div className="flex items-center gap-3 text-sm font-medium text-foreground">
                                 <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                                <span>Send monthly rent bills automatically</span>
+                                <span>{t("Send monthly rent bills automatically")}</span>
                             </div>
                             <div className="flex items-center gap-3 text-sm font-medium text-foreground">
                                 <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                                <span>Keep tenant phone numbers, contacts, and lease dates safe</span>
+                                <span>{t("Keep tenant phone numbers, contacts, and lease dates safe")}</span>
                             </div>
                         </div>
 
@@ -143,7 +151,7 @@ export function TenantSetupPromptModal({
                                 className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl border border-border/80 bg-background hover:bg-muted text-muted-foreground hover:text-foreground text-sm font-semibold transition-all cursor-pointer active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 <Clock className="size-4" />
-                                <span>Maybe Later</span>
+                                <span>{t("Maybe Later")}</span>
                             </button>
 
                             <button
@@ -151,7 +159,7 @@ export function TenantSetupPromptModal({
                                 onClick={() => setStep("choose_method")}
                                 className="flex-1 group inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm shadow-md shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                             >
-                                <span>Yes, Configure Tenants</span>
+                                <span>{t("Yes, Configure Tenants")}</span>
                                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                             </button>
                         </div>
@@ -169,10 +177,10 @@ export function TenantSetupPromptModal({
                                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer py-1 px-2 -ml-2 rounded-lg hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 <ArrowLeft className="size-4" />
-                                <span>Back</span>
+                                <span>{t("Back")}</span>
                             </button>
                             <span className="text-xs font-semibold text-primary">
-                                Setup Method
+                                {t("Setup Method")}
                             </span>
                         </div>
 
@@ -182,10 +190,10 @@ export function TenantSetupPromptModal({
                                 id="tenant-setup-modal-title"
                                 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground leading-tight"
                             >
-                                How would you like to add tenants?
+                                {t("How would you like to add tenants?")}
                             </h2>
                             <p id="tenant-setup-modal-desc" className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                Choose the onboarding mode that best fits your workflow.
+                                {t("Choose the onboarding mode that best fits your workflow.")}
                             </p>
                         </div>
 
@@ -200,14 +208,14 @@ export function TenantSetupPromptModal({
                                     <div className="flex-1 min-w-0 space-y-1">
                                         <div className="flex items-center justify-between gap-2 flex-wrap">
                                             <h3 className="text-sm sm:text-base font-bold text-foreground">
-                                                Add Tenants Manually
+                                                {t("Add Tenants Manually")}
                                             </h3>
                                             <span className="inline-flex text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
-                                                Quick Add / Existing Tenants
+                                                {t("Quick Add / Existing Tenants")}
                                             </span>
                                         </div>
                                         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                             Quickly add existing residents who are already living in your property:
+                                             {t("Quickly add existing residents who are already living in your property:")}
                                         </p>
                                     </div>
                                 </div>
@@ -219,7 +227,7 @@ export function TenantSetupPromptModal({
                                             1
                                         </span>
                                         <span className="leading-snug">
-                                            <strong className="text-foreground">Select Unit:</strong> Pick which vacant room or unit this resident will occupy.
+                                            <strong className="text-foreground">{t("Select Unit:")}</strong> {t("Pick which vacant room or unit this resident will occupy.")}
                                         </span>
                                     </div>
                                     <div className="flex items-start gap-2.5">
@@ -227,7 +235,7 @@ export function TenantSetupPromptModal({
                                             2
                                         </span>
                                         <span className="leading-snug">
-                                            <strong className="text-foreground">Resident Info:</strong> Provide their full legal name, phone number, and email.
+                                            <strong className="text-foreground">{t("Resident Info:")}</strong> {t("Provide their full legal name, phone number, and email.")}
                                         </span>
                                     </div>
                                     <div className="flex items-start gap-2.5">
@@ -235,7 +243,7 @@ export function TenantSetupPromptModal({
                                             3
                                         </span>
                                         <span className="leading-snug">
-                                            <strong className="text-foreground">Lease Terms:</strong> Confirm monthly rent, security deposit, and start date.
+                                            <strong className="text-foreground">{t("Lease Terms:")}</strong> {t("Confirm monthly rent, security deposit, and start date.")}
                                         </span>
                                     </div>
                                 </div>
@@ -252,7 +260,7 @@ export function TenantSetupPromptModal({
                                     className="w-full flex items-center justify-center gap-2 h-12 px-5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                 >
                                     <UserPlus className="size-4" />
-                                    <span>Open Manual Resident Form</span>
+                                    <span>{t("Open Manual Resident Form")}</span>
                                 </button>
                             </div>
 
@@ -269,22 +277,22 @@ export function TenantSetupPromptModal({
                                     <div className="flex-1 min-w-0 space-y-1.5">
                                         <div className="flex items-center justify-between gap-2 flex-wrap">
                                             <h3 className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors">
-                                                Invite via Reusable Link
+                                                {t("Invite via Reusable Link")}
                                             </h3>
                                             <div className="flex items-center gap-1.5 flex-wrap">
                                                 <span className="inline-flex text-xs font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
-                                                    Recommended
+                                                    {t("Recommended")}
                                                 </span>
                                                 <span className="inline-flex text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
-                                                    Remote Onboarding
+                                                    {t("Remote Onboarding")}
                                                 </span>
                                             </div>
                                         </div>
                                         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                            Generate a link or QR code to share directly or post in a group chat (Messenger, Viber, WhatsApp). Tenants can fill out their details and complete onboarding directly from their own phone.
+                                            {t("Generate a link or QR code to share directly or post in a group chat (Messenger, Viber, WhatsApp). Tenants can fill out their details and complete onboarding directly from their own phone.")}
                                         </p>
                                         <div className="flex items-center gap-1.5 pt-0.5 text-xs sm:text-sm font-semibold text-primary">
-                                            <span>Generate and share link</span>
+                                            <span>{t("Generate and share link")}</span>
                                             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                                         </div>
                                     </div>
@@ -310,17 +318,17 @@ export function TenantSetupPromptModal({
                                     <div className="flex-1 min-w-0 space-y-1.5">
                                         <div className="flex items-center justify-between gap-2 flex-wrap">
                                             <h3 className="text-sm sm:text-base font-bold text-foreground group-hover:text-emerald-500 transition-colors">
-                                                Walk-in Application
+                                                {t("Walk-in Application")}
                                             </h3>
                                             <span className="inline-flex text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                                                In-Person Leasing
+                                                {t("In-Person Leasing")}
                                             </span>
                                         </div>
                                         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                            Process prospective walk-in applicants on-site with live document verification, instant digital contract signing, and downpayment recording.
+                                            {t("Process prospective walk-in applicants on-site with live document verification, instant digital contract signing, and downpayment recording.")}
                                         </p>
                                         <div className="flex items-center gap-1.5 pt-0.5 text-xs sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                                            <span>Start in-person intake</span>
+                                            <span>{t("Start in-person intake")}</span>
                                             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                                         </div>
                                     </div>

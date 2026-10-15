@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { triggerHaptic } from '@/lib/haptics'
+import { useLanguageContext } from '@/context/LanguageContext'
 import {
     LayoutDashboard,
     CreditCard,
@@ -106,10 +107,11 @@ interface BottomTabBarProps {
 
 export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
     const pathname = usePathname()
+    const { t } = useLanguageContext()
     const tabs = role === 'tenant' ? TENANT_TABS : LANDLORD_TABS
 
     return (
-        <nav className="mobile-tab-bar relative z-[60] pointer-events-auto" aria-label="Main navigation">
+        <nav className="mobile-tab-bar relative z-[60] pointer-events-auto" aria-label={t("Main navigation")}>
             {tabs.map((tab) => {
                 const isMenuTab = tab.label === 'Menu'
                 const isActive = pathname?.startsWith(tab.matchPrefix) || 
@@ -127,7 +129,7 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
                             'mobile-tab-item cursor-pointer touch-manipulation active:scale-95 transition-transform',
                             isActive && 'active'
                         )}
-                        aria-label={tab.label}
+                        aria-label={t(tab.label)}
                         aria-current={isActive ? 'page' : undefined}
                     >
                         <span className="tab-icon relative">
@@ -137,12 +139,12 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
                                 aria-hidden="true"
                             />
                             {badgeCount > 0 && (
-                                <span className="mobile-tab-badge" aria-label={`${badgeCount} unread`}>
+                                <span className="mobile-tab-badge" aria-label={t('{count} unread', { count: badgeCount })}>
                                     {badgeCount > 9 ? '9+' : badgeCount}
                                 </span>
                             )}
                         </span>
-                        <span className="font-bold">{tab.label}</span>
+                        <span className="font-bold">{t(tab.label)}</span>
                     </Link>
                 )
             })}

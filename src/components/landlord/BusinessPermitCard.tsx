@@ -6,6 +6,8 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 type BusinessPermitCardProps = {
     businessName: string | null;
@@ -19,6 +21,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
     const [showLightbox, setShowLightbox] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
+    const { t } = useLanguageContext();
 
     const handleUploadClick = () => {
         fileInputRef.current?.click();
@@ -27,7 +30,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = handleMediaSelection(e, {
             preset: "image",
-            notify: (message, description) => toast.error(message, { description }),
+            notify: (message, description) => toast.error(tr(message), { description }),
         });
         if (!file) return;
 
@@ -43,15 +46,15 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
-                throw new Error(data.error || "Failed to upload permit document");
+                throw new Error(data.error || t("Failed to upload permit document"));
             }
 
-            toast.success("Business permit uploaded successfully");
+            toast.success(t("Business permit uploaded successfully"));
             router.refresh();
             window.dispatchEvent(new CustomEvent("profile-updated"));
         } catch (error: any) {
             console.error("Upload failed:", error);
-            toast.error(error.message || "Failed to upload permit photo. Please try again.");
+            toast.error(tr(error.message || t("Failed to upload permit photo. Please try again.")));
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
@@ -60,7 +63,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
 
     const handleRemove = async () => {
         if (uploading || removing) return;
-        const confirmed = window.confirm("Are you sure you want to remove your uploaded business permit?");
+        const confirmed = window.confirm(t("Are you sure you want to remove your uploaded business permit?"));
         if (!confirmed) return;
 
         setRemoving(true);
@@ -71,15 +74,15 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
-                throw new Error(data.error || "Failed to remove permit");
+                throw new Error(data.error || t("Failed to remove permit"));
             }
 
-            toast.success("Business permit removed successfully");
+            toast.success(t("Business permit removed successfully"));
             router.refresh();
             window.dispatchEvent(new CustomEvent("profile-updated"));
         } catch (error: any) {
             console.error("Remove failed:", error);
-            toast.error(error.message || "Failed to remove permit document");
+            toast.error(tr(error.message || t("Failed to remove permit document")));
         } finally {
             setRemoving(false);
         }
@@ -99,13 +102,13 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                     <Building2 className="text-primary" size={32} />
                 </div>
                 <div className="flex items-center justify-center gap-2.5 mb-2">
-                    <h4 className="text-2xl font-display font-black text-foreground tracking-tight">Business Permit</h4>
+                    <h4 className="text-2xl font-display font-black text-foreground tracking-tight">{t("Business Permit")}</h4>
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-muted text-muted-foreground border border-border">
-                        Optional
+                        {t("Optional")}
                     </span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
-                    You can optionally upload a copy of your business or registration permit to display on your profile for prospective tenants.
+                    {t("You can optionally upload a copy of your business or registration permit to display on your profile for prospective tenants.")}
                 </p>
                 <button 
                     type="button"
@@ -116,12 +119,12 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                     {uploading ? (
                         <>
                             <Loader2 size={16} className="animate-spin" />
-                            <span>Uploading...</span>
+                            <span>{t("Uploading...")}</span>
                         </>
                     ) : (
                         <>
                             <UploadCloud size={16} />
-                            <span>Upload Business Permit (Optional)</span>
+                            <span>{t("Upload Business Permit (Optional)")}</span>
                         </>
                     )}
                 </button>
@@ -144,14 +147,14 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                         <div>
                             <div className="flex flex-wrap items-center gap-2.5 mb-1">
                                 <h3 className="text-2xl md:text-3xl font-display font-black text-foreground tracking-tight">
-                                    {businessName || "Business Permit"}
+                                    {businessName || t("Business Permit")}
                                 </h3>
                                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-muted text-muted-foreground border border-border">
-                                    Optional
+                                    {t("Optional")}
                                 </span>
                             </div>
                             <p className="text-[11px] font-black tracking-[0.2em] uppercase text-muted-foreground">
-                                Business Permit Document
+                                {t("Business Permit Document")}
                             </p>
                         </div>
                     </div>
@@ -170,10 +173,10 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                                 onClick={handleRemove}
                                 disabled={uploading || removing}
                                 className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl neumorphic-extruded text-muted-foreground hover:text-red-500 text-[11px] font-black tracking-widest uppercase transition-all disabled:opacity-50 cursor-pointer"
-                                title="Remove uploaded permit"
+                                title={t("Remove uploaded permit")}
                             >
                                 {removing ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                                <span>Remove</span>
+                                <span>{t("Remove")}</span>
                             </button>
                         )}
                         <button 
@@ -185,12 +188,12 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                             {uploading ? (
                                 <>
                                     <Loader2 size={16} className="animate-spin" />
-                                    <span>Uploading...</span>
+                                    <span>{t("Uploading...")}</span>
                                 </>
                             ) : (
                                 <>
                                     <UploadCloud size={16} />
-                                    <span>{permitUrl ? "Replace Document" : "Upload Document"}</span>
+                                    <span>{permitUrl ? t("Replace Document") : t("Upload Document")}</span>
                                 </>
                             )}
                         </button>
@@ -206,7 +209,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                         >
                             <img 
                                 src={permitUrl} 
-                                alt="Business Permit" 
+                                alt={t("Business Permit")} 
                                 className="w-full h-auto object-cover filter brightness-95 contrast-105 group-hover/permit:brightness-100 transition-all duration-700"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/permit:opacity-100 transition-opacity duration-500 flex items-center justify-center">
@@ -215,7 +218,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                                 </div>
                                 <div className="absolute bottom-8 left-8">
                                     <p className="text-xs font-black text-foreground tracking-widest uppercase bg-background/90 backdrop-blur-md px-4 py-1.5 rounded-full shadow-lg border border-border/40">
-                                        Uploaded Document
+                                        {t("Uploaded Document")}
                                     </p>
                                 </div>
                             </div>
@@ -226,9 +229,9 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                                 <FileText size={32} className="text-muted-foreground" />
                             </div>
                             <div>
-                                <p className="text-lg font-black text-foreground">No Permit Photo Uploaded</p>
+                                <p className="text-lg font-black text-foreground">{t("No Permit Photo Uploaded")}</p>
                                 <p className="text-[11px] text-muted-foreground uppercase tracking-[0.2em] mt-1.5">
-                                    Uploading a business permit is completely optional
+                                    {t("Uploading a business permit is completely optional")}
                                 </p>
                             </div>
                         </div>
@@ -256,7 +259,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                         type="button"
                         onClick={() => setShowLightbox(false)}
                         className="absolute top-6 right-6 size-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all z-20 cursor-pointer"
-                        aria-label="Close Preview"
+                        aria-label={t("Close Preview")}
                     >
                         <X size={24} />
                     </button>
@@ -264,12 +267,12 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                     <div className="relative max-w-5xl w-full max-h-full overflow-hidden flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                         <img 
                             src={permitUrl} 
-                            alt="Permit Lightbox" 
+                            alt={t("Business permit preview")} 
                             className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl border border-white/10"
                         />
                         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent flex flex-col items-center">
-                            <p className="text-white font-black text-lg">{businessName || "Business Permit"}</p>
-                            <p className="text-neutral-400 text-[10px] uppercase tracking-widest mt-1">Document Preview</p>
+                            <p className="text-white font-black text-lg">{businessName || t("Business Permit")}</p>
+                            <p className="text-neutral-400 text-[10px] uppercase tracking-widest mt-1">{t("Document Preview")}</p>
                         </div>
                     </div>
                 </div>

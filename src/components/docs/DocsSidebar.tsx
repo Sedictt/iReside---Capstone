@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 import { AnimatePresence, m as motion } from "framer-motion";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface NavItem {
   title: string;
@@ -309,6 +310,7 @@ export const DOCS_NAV: NavSection[] = [
 ];
 
 export function DocsSidebar() {
+  const { t } = useLanguageContext();
   const pathname = usePathname();
   const [isManualCollapse, setIsManualCollapse] = useState<Record<string, boolean>>({});
 
@@ -324,7 +326,7 @@ export function DocsSidebar() {
         {DOCS_NAV.map((section) => (
           <div key={section.title} className="flex flex-col gap-2">
             <h4 className="text-xs font-black uppercase tracking-widest text-text-disabled">
-              {section.title}
+              {t(section.title)}
             </h4>
             <div className="flex flex-col gap-1">
               {section.items.map((item) => {
@@ -348,7 +350,7 @@ export function DocsSidebar() {
                           "size-4 transition-colors",
                           isActive ? "text-primary" : "text-text-disabled group-hover:text-text-medium"
                         )} />
-                        {item.title}
+                        {t(item.title)}
                         {isActive && (
                           <div className="ml-auto mr-8 size-1.5 rounded-full bg-primary animate-pulse-subtle" />
                         )}
@@ -360,6 +362,8 @@ export function DocsSidebar() {
                             e.preventDefault();
                             toggleCollapse();
                           }}
+                          aria-label={isExpanded ? t("Collapse section outline") : t("Expand section outline")}
+                          aria-expanded={isExpanded}
                           className={cn(
                             "absolute right-2 flex size-7 items-center justify-center rounded-md hover:bg-surface-2 transition-all",
                             isExpanded ? "rotate-90" : "rotate-0"
@@ -391,7 +395,7 @@ export function DocsSidebar() {
                                 className="py-1.5 text-xs font-medium text-text-disabled hover:text-primary transition-colors flex items-center gap-2 group/sub"
                               >
                                 <div className="size-1 rounded-full bg-text-disabled group-hover/sub:bg-primary transition-colors" />
-                                {subItem.title}
+                                {t(subItem.title)}
                               </Link>
                             ))}
                           </div>

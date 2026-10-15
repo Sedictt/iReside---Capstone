@@ -5,9 +5,11 @@ import { useSearchParams } from "next/navigation";
 import { MoveOutRequestsList } from "@/components/landlord/move-out/MoveOutRequestsList";
 import { MoveOutRequestDetails } from "@/components/landlord/move-out/MoveOutRequestDetails";
 import { m as motion, AnimatePresence } from "framer-motion";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export default function MoveOutRequestsPage() {
  const searchParams = useSearchParams();
+ const { t } = useLanguageContext();
  const initialStatus = searchParams.get("status") || "pending";
  const isPreview = searchParams.get("preview") === "true";
  const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
@@ -28,16 +30,16 @@ export default function MoveOutRequestsPage() {
  <div className="mb-10 space-y-1">
  <div className="flex items-center gap-4">
  <h1 className="text-4xl font-black tracking-tight text-foreground">
- Move-Out Requests
+ {t("Move-Out Requests")}
  </h1>
  {isPreview && (
  <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/20">
- Preview Mode
+ {t("Preview Mode")}
  </span>
  )}
  </div>
  <p className="text-sm font-medium text-muted-foreground">
- Manage tenant departures, approvals, and inspections.
+ {t("Manage tenant departures, approvals, and inspections.")}
  </p>
  </div>
  <MoveOutRequestsList 

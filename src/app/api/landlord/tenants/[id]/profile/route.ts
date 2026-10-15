@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { leaseEndSortValue, normalizeTermType } from "@/lib/lease-term";
 
 /**
  * GET /api/landlord/tenants/[tenantId]/profile
@@ -12,6 +14,9 @@ export async function GET(
     context: { params: Promise<{ id: string }> }
 ) {
     const { id: tenantId } = await context.params;
+    if (!isId(tenantId)) {
+      return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
+    }
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
@@ -45,13 +50,14 @@ export async function GET(
     }
 
     // Fetch active lease for this tenant (belonging to this landlord)
-    const { data: lease, error: leaseError } = await supabase
+    const { data: leaseRows, error: leaseError } = await supabase
         .from("leases")
         .select(`
             id,
             status,
             start_date,
             end_date,
+            term_type,
             monthly_rent,
             unit:units!inner (
                 id,
@@ -66,20 +72,27 @@ export async function GET(
         `)
         .eq("tenant_id", tenantId)
         .eq("landlord_id", userId)
-        .in("status", ["active", "expired"])
-        .maybeSingle();
+        .in("status", ["active", "expired"]);
 
     if (leaseError) {
         console.error("[tenant-profile] Failed to load lease:", leaseError);
         return NextResponse.json({ error: "Failed to load lease" }, { status: 500 });
     }
 
+    // Prefer the active lease; otherwise the one ending latest (open-ended = no end = latest).
+    const lease = [...(leaseRows ?? [])].sort((a, b) => {
+        const score = (row: { status: string }) => (row.status === "active" ? 1 : 0);
+        return score(b) - score(a) || leaseEndSortValue(b) - leaseEndSortValue(a);
+    })[0] ?? null;
+
     const activeLease = lease
         ? {
               id: lease.id,
               status: lease.status,
               start_date: lease.start_date,
-              end_date: lease.end_date,
+              // null for open-ended leases until a move-out date is agreed.
+              end_date: lease.end_date ?? null,
+              term_type: normalizeTermType(lease.term_type),
               monthly_rent: lease.monthly_rent,
               unit: lease.unit
                   ? {

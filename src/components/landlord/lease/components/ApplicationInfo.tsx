@@ -1,4 +1,5 @@
 import { Home, User, Mail } from "lucide-react";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface ApplicationInfoProps {
     propertyName: string;
@@ -13,6 +14,7 @@ export function ApplicationInfo({
     applicantName,
     applicantEmail,
 }: ApplicationInfoProps) {
+    const { t } = useLanguageContext();
     return (
         <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-3 text-sm">
             <div className="flex items-center gap-3 text-neutral-300">
@@ -24,7 +26,7 @@ export function ApplicationInfo({
             <div className="flex items-center gap-3 text-neutral-300">
                 <User className="size-4 text-neutral-500" />
                 <span>
-                    Tenant: <span className="text-white font-medium">{applicantName}</span>
+                    {t("Tenant:")} <span className="text-white font-medium">{applicantName}</span>
                 </span>
             </div>
             <div className="flex items-center gap-3 text-neutral-300">

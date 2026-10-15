@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { normalizeTermType } from "@/lib/lease-term";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,7 @@ export async function GET(
                 status,
                 start_date,
                 end_date,
+                term_type,
                 monthly_rent,
                 security_deposit,
                 created_at,
@@ -171,7 +173,9 @@ export async function GET(
             email: tenantProfile?.email || null,
             phone: tenantProfile?.phone || null,
             leaseStart: lease.start_date,
-            leaseEnd: lease.end_date,
+            // null for open-ended leases until a move-out date is agreed.
+            leaseEnd: lease.end_date ?? null,
+            leaseTerm: normalizeTermType(lease.term_type),
             rent: Number(lease.monthly_rent) || Number(unit.rent_amount) || 0,
             securityDeposit: Number(lease.security_deposit) || 0,
             status: formatLeaseStatus(lease.status),

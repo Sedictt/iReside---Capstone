@@ -30,6 +30,20 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
 import type { ContactItem } from "@/components/landlord/messages/types";
+import { formatLeaseDate, leaseTermLabel, normalizeTermType } from "@/lib/lease-term";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
+
+const LEASE_STATUS_LABELS: Record<string, string> = {
+    active: "Active",
+    pending: "Pending",
+    pending_signature: "Pending Signature",
+    pending_tenant_signature: "Pending Tenant Signature",
+    pending_landlord_signature: "Pending Landlord Signature",
+    draft: "Draft",
+    expired: "Expired",
+    terminated: "Terminated",
+};
 
 interface QuickActionSummaryModalProps {
     isOpen: boolean;
@@ -43,7 +57,9 @@ interface QuickActionSummaryModalProps {
 type LeaseSummaryData = {
     monthlyRent?: number;
     startDate?: string;
-    endDate?: string;
+    /** Null/undefined for open-ended (month-to-month) leases. */
+    endDate?: string | null;
+    termType?: "open_ended" | "fixed";
     status?: string;
     propertyName?: string;
     unitName?: string;
@@ -78,6 +94,7 @@ export function QuickActionSummaryModal({
     currentUserRole,
     onInsertMessage,
 }: QuickActionSummaryModalProps) {
+    const { t, language } = useLanguageContext();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [leaseData, setLeaseData] = useState<LeaseSummaryData | null>(null);
@@ -107,10 +124,11 @@ export function QuickActionSummaryModal({
                                 setLeaseData({
                                     monthlyRent: data.lease.monthly_rent,
                                     startDate: data.lease.start_date,
-                                    endDate: data.lease.end_date,
+                                    endDate: data.lease.end_date ?? null,
+                                    termType: normalizeTermType(data.lease.term_type ?? data.lease.termType ?? data.lease.lease_term),
                                     status: data.lease.status || "active",
                                     unitName: data.lease.unit?.name || contact.unit,
-                                    propertyName: data.lease.unit?.property?.name || "Property",
+                                    propertyName: data.lease.unit?.property?.name || undefined,
                                     deposit: data.lease.monthly_rent ? data.lease.monthly_rent * 2 : undefined
                                 });
                             }
@@ -123,7 +141,8 @@ export function QuickActionSummaryModal({
                                 setLeaseData({
                                     monthlyRent: data.lease.monthlyRent,
                                     startDate: data.lease.startDate,
-                                    endDate: data.lease.endDate,
+                                    endDate: data.lease.endDate ?? null,
+                                    termType: normalizeTermType(data.lease.termType ?? data.lease.term_type ?? data.lease.lease_term),
                                     status: data.lease.status || "active",
                                     unitName: data.lease.unitName,
                                     propertyName: data.lease.propertyName,
@@ -176,10 +195,11 @@ export function QuickActionSummaryModal({
                                     setLeaseData({
                                         monthlyRent: profileData.lease.monthly_rent,
                                         startDate: profileData.lease.start_date,
-                                        endDate: profileData.lease.end_date,
+                                        endDate: profileData.lease.end_date ?? null,
+                                        termType: normalizeTermType(profileData.lease.term_type ?? profileData.lease.termType ?? profileData.lease.lease_term),
                                         status: profileData.lease.status || "active",
                                         unitName: profileData.lease.unit?.name || contact.unit,
-                                        propertyName: profileData.lease.unit?.property?.name || "Property",
+                                        propertyName: profileData.lease.unit?.property?.name || undefined,
                                     });
                                     if (!unpaidFound) {
                                         setPaymentData((prev) => prev ?? {
@@ -230,20 +250,20 @@ export function QuickActionSummaryModal({
 
     const noticeTemplates = [
         {
-            title: "Rent Due Reminder",
-            text: `Friendly reminder: your monthly rent payment for ${contact?.unit || "your unit"} is due. Please settle your balance at your earliest convenience.`
+            title: t("Rent Due Reminder"),
+            text: t("Friendly reminder: your monthly rent payment for {unit} is due. Please settle your balance at your earliest convenience.", { unit: contact?.unit || t("your unit") })
         },
         {
-            title: "Property Inspection Notice",
-            text: `Notice: A routine property inspection for ${contact?.unit || "your unit"} is scheduled for this upcoming week. We will notify you of the exact schedule.`
+            title: t("Property Inspection Notice"),
+            text: t("Notice: A routine property inspection for {unit} is scheduled for this upcoming week. We will notify you of the exact schedule.", { unit: contact?.unit || t("your unit") })
         },
         {
-            title: "Maintenance Service Alert",
-            text: `Notice: Scheduled maintenance service will be conducted in the building. Please ensure common pathways are clear.`
+            title: t("Maintenance Service Alert"),
+            text: t("Notice: Scheduled maintenance service will be conducted in the building. Please ensure common pathways are clear.")
         },
         {
-            title: "General Advisory",
-            text: `Important advisory for residents of ${contact?.unit || "the property"}: please check the community board for recent updates.`
+            title: t("General Advisory"),
+            text: t("Important advisory for residents of {unit}: please check the community board for recent updates.", { unit: contact?.unit || t("the property") })
         }
     ];
 
@@ -274,7 +294,7 @@ export function QuickActionSummaryModal({
             });
             const data = await res.json();
             if (!res.ok) {
-                throw new Error(data.error || "Failed to send system reminder.");
+                throw new Error(data.error || t("Failed to send system reminder."));
             }
             setReminderSentSuccess(true);
             setPaymentData((prev) => prev ? { ...prev, status: "reminder_sent", statusLabel: "Reminder Sent" } : null);
@@ -282,7 +302,7 @@ export function QuickActionSummaryModal({
                 onClose();
             }, 2000);
         } catch (err: any) {
-            setReminderError(err.message || "Failed to dispatch system reminder.");
+            setReminderError(tr(err.message || t("Failed to dispatch system reminder.")));
         } finally {
             setIsSendingReminder(false);
         }
@@ -324,7 +344,7 @@ export function QuickActionSummaryModal({
                                 <h3 className="text-base font-black text-high leading-snug">{contact.name}</h3>
                                 <div className="flex items-center gap-2 mt-0.5">
                                     {contact.role && <RoleBadge role={contact.role as BadgeRole} />}
-                                    <span className="text-xs font-medium text-medium">{contact.unit || "Contact"}</span>
+                                    <span className="text-xs font-medium text-medium">{contact.unit || t("Contact")}</span>
                                 </div>
                             </div>
                         </div>
@@ -332,6 +352,7 @@ export function QuickActionSummaryModal({
                         <button
                             type="button"
                             onClick={onClose}
+                            aria-label={t("Close")}
                             className="rounded-xl p-2 text-medium hover:bg-surface-2 hover:text-high transition-colors"
                         >
                             <X className="size-5" />
@@ -343,7 +364,7 @@ export function QuickActionSummaryModal({
                         {loading ? (
                             <div className="flex flex-col items-center justify-center py-12 gap-3">
                                 <Loader2 className="size-6 text-primary animate-spin" />
-                                <p className="text-xs text-medium">Loading summary...</p>
+                                <p className="text-xs text-medium">{t("Loading summary...")}</p>
                             </div>
                         ) : (
                             <>
@@ -352,35 +373,35 @@ export function QuickActionSummaryModal({
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary">
                                             <FileText className="size-4" />
-                                            <span>Lease Agreement Summary</span>
+                                            <span>{t("Lease Agreement Summary")}</span>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="p-3.5 rounded-2xl neumorphic-inset-card space-y-1">
-                                                <p className="text-[10px] font-black uppercase tracking-wider text-disabled">Assigned Unit</p>
-                                                <p className="text-sm font-black text-high">{leaseData?.unitName || contact.unit || "Unit Assigned"}</p>
-                                                <p className="text-[10px] text-medium">{leaseData?.propertyName || "Property"}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-wider text-disabled">{t("Assigned Unit")}</p>
+                                                <p className="text-sm font-black text-high">{leaseData?.unitName || contact.unit || t("Unit Assigned")}</p>
+                                                <p className="text-[10px] text-medium">{leaseData?.propertyName || t("Property")}</p>
                                             </div>
                                             <div className="p-3.5 rounded-2xl neumorphic-inset-card space-y-1">
-                                                <p className="text-[10px] font-black uppercase tracking-wider text-disabled">Monthly Rent</p>
+                                                <p className="text-[10px] font-black uppercase tracking-wider text-disabled">{t("Monthly Rent")}</p>
                                                 <p className="text-sm font-black text-emerald-500">
-                                                    {leaseData?.monthlyRent ? `₱${leaseData.monthlyRent.toLocaleString()}` : "Active Rate"}
+                                                    {leaseData?.monthlyRent ? `₱${leaseData.monthlyRent.toLocaleString()}` : t("Active Rate")}
                                                 </p>
-                                                <p className="text-[10px] text-medium">Due monthly</p>
+                                                <p className="text-[10px] text-medium">{t("Due monthly")}</p>
                                             </div>
                                             <div className="p-3.5 rounded-2xl neumorphic-inset-card space-y-1">
-                                                <p className="text-[10px] font-black uppercase tracking-wider text-disabled">Lease Period</p>
+                                                <p className="text-[10px] font-black uppercase tracking-wider text-disabled">{t("Lease Period")}</p>
                                                 <p className="text-xs font-bold text-high">
-                                                    {leaseData?.startDate ? new Date(leaseData.startDate).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : "Active"}
+                                                    {leaseData?.startDate ? formatLeaseDate(leaseData.startDate, undefined, language) : t("Active")}
                                                     {" — "}
-                                                    {leaseData?.endDate ? new Date(leaseData.endDate).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : "Ongoing"}
+                                                    {leaseTermLabel({ term_type: leaseData?.termType, end_date: leaseData?.endDate, start_date: leaseData?.startDate }, undefined, language)}
                                                 </p>
                                             </div>
                                             <div className="p-3.5 rounded-2xl neumorphic-inset-card space-y-1">
-                                                <p className="text-[10px] font-black uppercase tracking-wider text-disabled">Status</p>
+                                                <p className="text-[10px] font-black uppercase tracking-wider text-disabled">{t("Status")}</p>
                                                 <div className="flex items-center gap-1.5 pt-0.5">
                                                     <span className="size-2 rounded-full bg-emerald-500" />
-                                                    <span className="text-xs font-black text-high capitalize">{leaseData?.status || "Active Lease"}</span>
+                                                    <span className="text-xs font-black text-high capitalize">{leaseData?.status ? t(LEASE_STATUS_LABELS[leaseData.status] ?? leaseData.status) : t("Active Lease")}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -401,7 +422,7 @@ export function QuickActionSummaryModal({
                                                 }}
                                                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
                                             >
-                                                <span>{currentUserRole === "landlord" ? "View Full Profile & Lease" : "View Full Lease Agreement"}</span>
+                                                <span>{currentUserRole === "landlord" ? t("View Full Profile & Lease") : t("View Full Lease Agreement")}</span>
                                                 <ArrowUpRight className="size-4" />
                                             </button>
                                         </div>
@@ -414,17 +435,17 @@ export function QuickActionSummaryModal({
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-emerald-500">
                                                 <CreditCard className="size-4" />
-                                                <span>Payment & Billing Summary</span>
+                                                <span>{t("Payment & Billing Summary")}</span>
                                             </div>
                                             {paymentData?.pendingAmount && paymentData.pendingAmount > 0 ? (
                                                 <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center gap-1.5">
                                                     <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                                    {paymentData.statusLabel || "Payment Due"}
+                                                    {paymentData.statusLabel ? t(paymentData.statusLabel) : t("Payment Due")}
                                                 </span>
                                             ) : (
                                                 <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center gap-1.5">
                                                     <CheckCircle2 className="size-3" />
-                                                    {paymentData?.statusLabel || "All Settled"}
+                                                    {paymentData?.statusLabel ? t(paymentData.statusLabel) : t("All Settled")}
                                                 </span>
                                             )}
                                         </div>
@@ -434,7 +455,7 @@ export function QuickActionSummaryModal({
                                             <div className="flex items-start justify-between">
                                                 <div>
                                                     <p className="text-[10px] font-black uppercase tracking-wider text-disabled">
-                                                        {paymentData?.pendingAmount && paymentData.pendingAmount > 0 ? "Outstanding Amount Due" : "Current Account Balance"}
+                                                        {paymentData?.pendingAmount && paymentData.pendingAmount > 0 ? t("Outstanding Amount Due") : t("Current Account Balance")}
                                                     </p>
                                                     <p className={cn(
                                                         "text-3xl font-black mt-1 tracking-tight",
@@ -446,20 +467,20 @@ export function QuickActionSummaryModal({
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-[10px] font-black uppercase tracking-wider text-disabled">Target Unit</p>
-                                                    <p className="text-xs font-black text-high mt-1">{leaseData?.unitName || contact.unit || "Unit"}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-wider text-disabled">{t("Target Unit")}</p>
+                                                    <p className="text-xs font-black text-high mt-1">{leaseData?.unitName || contact.unit || t("Unit")}</p>
                                                 </div>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-divider text-xs">
                                                 <div>
-                                                    <span className="text-[10px] font-medium text-medium block">Invoice / Fee</span>
-                                                    <span className="font-bold text-high">{paymentData?.invoiceDescription || "Monthly Rent"}</span>
+                                                    <span className="text-[10px] font-medium text-medium block">{t("Invoice / Fee")}</span>
+                                                    <span className="font-bold text-high">{paymentData?.invoiceDescription ? t(paymentData.invoiceDescription) : t("Monthly Rent")}</span>
                                                 </div>
                                                 <div className="text-right">
-                                                    <span className="text-[10px] font-medium text-medium block">Due / Status</span>
+                                                    <span className="text-[10px] font-medium text-medium block">{t("Due / Status")}</span>
                                                     <span className="font-bold text-high">
-                                                        {paymentData?.dueDate ? paymentData.dueDate : (paymentData?.lastPaymentDate ? `Last: ${paymentData.lastPaymentDate}` : "Current Cycle")}
+                                                        {paymentData?.dueDate ? paymentData.dueDate : (paymentData?.lastPaymentDate ? t("Last: {date}", { date: paymentData.lastPaymentDate }) : t("Current Cycle"))}
                                                     </span>
                                                 </div>
                                             </div>
@@ -470,8 +491,8 @@ export function QuickActionSummaryModal({
                                             <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 animate-in fade-in slide-in-from-top-1 duration-200">
                                                 <CheckCircle2 className="size-5 shrink-0" />
                                                 <div className="text-xs">
-                                                    <p className="font-black">Official System Reminder Sent</p>
-                                                    <p className="text-[11px] opacity-90 mt-0.5">iReside System has dispatched a neutral payment notification and Pay Now button directly to the tenant.</p>
+                                                    <p className="font-black">{t("Official System Reminder Sent")}</p>
+                                                    <p className="text-[11px] opacity-90 mt-0.5">{t("iReside System has dispatched a neutral payment notification and Pay Now button directly to the tenant.")}</p>
                                                 </div>
                                             </div>
                                         )}
@@ -498,17 +519,17 @@ export function QuickActionSummaryModal({
                                                                 {isSendingReminder ? (
                                                                     <>
                                                                         <Loader2 className="size-4 animate-spin" />
-                                                                        <span>Dispatching System Reminder...</span>
+                                                                        <span>{t("Dispatching System Reminder...")}</span>
                                                                     </>
                                                                 ) : (
                                                                     <>
                                                                         <Bot className="size-4" />
-                                                                        <span>Send Official System Reminder</span>
+                                                                        <span>{t("Send Official System Reminder")}</span>
                                                                     </>
                                                                 )}
                                                             </button>
                                                             <p className="text-[10px] text-center text-disabled font-medium px-2">
-                                                                Dispatched automatically from <span className="font-bold text-medium">iReside System</span> to prevent false hostility or personal confrontation.
+                                                                {t("Dispatched automatically from iReside System to prevent false hostility or personal confrontation.")}
                                                             </p>
                                                         </div>
                                                     ) : null}
@@ -520,7 +541,7 @@ export function QuickActionSummaryModal({
                                                         }}
                                                         className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-inset-card text-high hover:text-primary text-xs font-black uppercase tracking-widest transition-all"
                                                     >
-                                                        <span>View Invoices & Billing Details</span>
+                                                        <span>{t("View Invoices & Billing Details")}</span>
                                                         <ArrowUpRight className="size-4" />
                                                     </button>
                                                 </>
@@ -532,7 +553,7 @@ export function QuickActionSummaryModal({
                                                             onClick={() => handleNavigate(paymentData.invoiceId ? `/tenant/payments/${paymentData.invoiceId}/checkout` : "/tenant/payments?action=pay")}
                                                             className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
                                                         >
-                                                            <span>Pay Outstanding Balance (₱{paymentData.pendingAmount.toLocaleString()})</span>
+                                                            <span>{t("Pay Outstanding Balance ({amount})", { amount: `₱${paymentData.pendingAmount.toLocaleString()}` })}</span>
                                                             <ArrowUpRight className="size-4" />
                                                         </button>
                                                     ) : null}
@@ -542,7 +563,7 @@ export function QuickActionSummaryModal({
                                                         onClick={() => handleNavigate("/tenant/payments")}
                                                         className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-inset-card text-high hover:text-primary text-xs font-black uppercase tracking-widest transition-all"
                                                     >
-                                                        <span>View Payment History & Receipts</span>
+                                                        <span>{t("View Payment History & Receipts")}</span>
                                                         <ArrowUpRight className="size-4" />
                                                     </button>
                                                 </>
@@ -556,20 +577,20 @@ export function QuickActionSummaryModal({
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-amber-500">
                                             <Hammer className="size-4" />
-                                            <span>Maintenance & Repairs</span>
+                                            <span>{t("Maintenance & Repairs")}</span>
                                         </div>
 
                                         <div className="p-4 rounded-2xl neumorphic-inset-card space-y-3">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs font-medium text-medium">Target Unit</span>
-                                                <span className="text-xs font-black text-high">{contact.unit || "Assigned Unit"}</span>
+                                                <span className="text-xs font-medium text-medium">{t("Target Unit")}</span>
+                                                <span className="text-xs font-black text-high">{contact.unit || t("Assigned Unit")}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs font-medium text-medium">Ticket Triage</span>
-                                                <span className="text-xs font-black text-amber-500">Priority Support</span>
+                                                <span className="text-xs font-medium text-medium">{t("Ticket Triage")}</span>
+                                                <span className="text-xs font-black text-amber-500">{t("Priority Support")}</span>
                                             </div>
                                             <p className="text-[11px] text-medium leading-relaxed pt-1">
-                                                Maintenance requests submitted for this unit are logged with real-time status tracking and vendor dispatching.
+                                                {t("Maintenance requests submitted for this unit are logged with real-time status tracking and vendor dispatching.")}
                                             </p>
                                         </div>
 
@@ -585,7 +606,7 @@ export function QuickActionSummaryModal({
                                                 }}
                                                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
                                             >
-                                                <span>{currentUserRole === "landlord" ? "Open in Maintenance Dashboard" : "Create New Repair Request"}</span>
+                                                <span>{currentUserRole === "landlord" ? t("Open in Maintenance Dashboard") : t("Create New Repair Request")}</span>
                                                 <ArrowUpRight className="size-4" />
                                             </button>
                                         </div>
@@ -597,15 +618,15 @@ export function QuickActionSummaryModal({
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-purple-400">
                                             <Bell className="size-4" />
-                                            <span>Send Formal Notice Template</span>
+                                            <span>{t("Send Formal Notice Template")}</span>
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-wider text-disabled">Select Preset Notice</label>
+                                            <label className="text-[10px] font-black uppercase tracking-wider text-disabled">{t("Select Preset Notice")}</label>
                                             <div className="grid grid-cols-1 gap-2">
                                                 {noticeTemplates.map((template, idx) => (
                                                     <button
-                                                        key={template.title}
+                                                        key={idx}
                                                         type="button"
                                                         onClick={() => setSelectedNoticeTemplate(idx)}
                                                         className={cn(
@@ -629,7 +650,7 @@ export function QuickActionSummaryModal({
                                                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
                                             >
                                                 <Send className="size-4" />
-                                                <span>Apply Notice into Chat</span>
+                                                <span>{t("Apply Notice into Chat")}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -640,22 +661,22 @@ export function QuickActionSummaryModal({
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-400">
                                             <FileText className="size-4" />
-                                            <span>Rental Application Summary</span>
+                                            <span>{t("Rental Application Summary")}</span>
                                         </div>
 
                                         <div className="p-4 rounded-2xl neumorphic-inset-card space-y-3">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs font-medium text-medium">Applicant Name</span>
+                                                <span className="text-xs font-medium text-medium">{t("Applicant Name")}</span>
                                                 <span className="text-xs font-black text-high">{contact.name}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs font-medium text-medium">Target Unit</span>
-                                                <span className="text-xs font-black text-high">{contact.unit || "Prospective Unit"}</span>
+                                                <span className="text-xs font-medium text-medium">{t("Target Unit")}</span>
+                                                <span className="text-xs font-black text-high">{contact.unit || t("Prospective Unit")}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs font-medium text-medium">Application Status</span>
+                                                <span className="text-xs font-medium text-medium">{t("Application Status")}</span>
                                                 <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                                    In Review
+                                                    {t("In Review")}
                                                 </span>
                                             </div>
                                         </div>
@@ -666,7 +687,7 @@ export function QuickActionSummaryModal({
                                                 onClick={() => handleNavigate(`/landlord/applications?search=${encodeURIComponent(contact.name)}`)}
                                                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
                                             >
-                                                <span>Open Application for Review</span>
+                                                <span>{t("Open Application for Review")}</span>
                                                 <ArrowUpRight className="size-4" />
                                             </button>
                                         </div>
@@ -678,13 +699,13 @@ export function QuickActionSummaryModal({
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-amber-500">
                                             <CalendarClock className="size-4" />
-                                            <span>Schedule Property Viewing</span>
+                                            <span>{t("Schedule Property Viewing")}</span>
                                         </div>
 
                                         <div className="p-4 rounded-2xl neumorphic-inset-card space-y-2">
-                                            <p className="text-xs font-black text-high">Viewing Invitation for {contact.name}</p>
+                                            <p className="text-xs font-black text-high">{t("Viewing Invitation for {name}", { name: contact.name })}</p>
                                             <p className="text-[11px] text-medium leading-relaxed">
-                                                Send standard viewing hours for {contact.unit || "the property"} directly to the prospect.
+                                                {t("Send standard viewing hours for {unit} directly to the prospect.", { unit: contact.unit || t("the property") })}
                                             </p>
                                         </div>
 
@@ -693,13 +714,13 @@ export function QuickActionSummaryModal({
                                                 type="button"
                                                 onClick={() => {
                                                     handleApplyNotice(
-                                                        `Hello ${contact.name}! We would love to schedule a property viewing for ${contact.unit || "the unit"}. Please let us know your availability during our standard viewing hours:\n• Weekdays: 10:00 AM - 4:00 PM\n• Saturdays: 1:00 PM - 5:00 PM`
+                                                        t("Hello {name}! We would love to schedule a property viewing for {unit}. Please let us know your availability during our standard viewing hours:\n• Weekdays: 10:00 AM - 4:00 PM\n• Saturdays: 1:00 PM - 5:00 PM", { name: contact.name, unit: contact.unit || t("the unit") })
                                                     );
                                                 }}
                                                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
                                             >
                                                 <Send className="size-4" />
-                                                <span>Insert Viewing Schedule into Chat</span>
+                                                <span>{t("Insert Viewing Schedule into Chat")}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -710,16 +731,16 @@ export function QuickActionSummaryModal({
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary">
                                             <ShieldCheck className="size-4" />
-                                            <span>Tenancy Screening Requirements</span>
+                                            <span>{t("Tenancy Screening Requirements")}</span>
                                         </div>
 
                                         <div className="p-4 rounded-2xl neumorphic-inset-card space-y-2 text-xs">
-                                            <p className="font-black text-high">Required Documents Checklist:</p>
+                                            <p className="font-black text-high">{t("Required Documents Checklist:")}</p>
                                             <ul className="space-y-1 text-medium text-[11px] list-disc list-inside">
-                                                <li>2 Valid Government-issued IDs</li>
-                                                <li>Proof of Income (latest 3 months payslips or bank statements)</li>
-                                                <li>Certificate of Employment (or School Enrollment)</li>
-                                                <li>1 Month Advance + 1 Month Security Deposit</li>
+                                                <li>{t("2 Valid Government-issued IDs")}</li>
+                                                <li>{t("Proof of Income (latest 3 months payslips or bank statements)")}</li>
+                                                <li>{t("Certificate of Employment (or School Enrollment)")}</li>
+                                                <li>{t("1 Month Advance + 1 Month Security Deposit")}</li>
                                             </ul>
                                         </div>
 
@@ -728,13 +749,13 @@ export function QuickActionSummaryModal({
                                                 type="button"
                                                 onClick={() => {
                                                     handleApplyNotice(
-                                                        `Here are the standard screening documents required to process your tenancy application for ${contact.unit || "our property"}:\n1. 2 Valid Government-issued IDs\n2. Proof of Income (latest 3 months payslips or bank statements)\n3. Certificate of Employment or School Enrollment\n4. 1 Month Advance + 1 Month Security Deposit\n\nPlease send photos or PDFs of these documents here.`
+                                                        t("Here are the standard screening documents required to process your tenancy application for {unit}:\n1. 2 Valid Government-issued IDs\n2. Proof of Income (latest 3 months payslips or bank statements)\n3. Certificate of Employment or School Enrollment\n4. 1 Month Advance + 1 Month Security Deposit\n\nPlease send photos or PDFs of these documents here.", { unit: contact.unit || t("our property") })
                                                     );
                                                 }}
                                                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
                                             >
                                                 <Send className="size-4" />
-                                                <span>Share Requirements in Chat</span>
+                                                <span>{t("Share Requirements in Chat")}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -745,13 +766,13 @@ export function QuickActionSummaryModal({
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-neutral-300">
                                             <Search className="size-4" />
-                                            <span>Property Listings</span>
+                                            <span>{t("Property Listings")}</span>
                                         </div>
 
                                         <div className="p-4 rounded-2xl neumorphic-inset-card space-y-2">
-                                            <p className="text-xs font-black text-high">Manage & Share Property Units</p>
+                                            <p className="text-xs font-black text-high">{t("Manage & Share Property Units")}</p>
                                             <p className="text-[11px] text-medium leading-relaxed">
-                                                Browse all properties and available units to share details or generate direct listing links.
+                                                {t("Browse all properties and available units to share details or generate direct listing links.")}
                                             </p>
                                         </div>
 
@@ -761,7 +782,7 @@ export function QuickActionSummaryModal({
                                                 onClick={() => handleNavigate("/landlord/properties")}
                                                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
                                             >
-                                                <span>Browse Property Listings</span>
+                                                <span>{t("Browse Property Listings")}</span>
                                                 <ArrowUpRight className="size-4" />
                                             </button>
                                         </div>
@@ -773,7 +794,7 @@ export function QuickActionSummaryModal({
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-400">
                                             <User className="size-4" />
-                                            <span>Resident Profile Summary</span>
+                                            <span>{t("Resident Profile Summary")}</span>
                                         </div>
 
                                         <div className="p-4 rounded-2xl neumorphic-inset-card space-y-3 text-center flex flex-col items-center">
@@ -786,7 +807,7 @@ export function QuickActionSummaryModal({
                                             </div>
                                             <div>
                                                 <p className="text-sm font-black text-high">{contact.name}</p>
-                                                <p className="text-xs text-medium">{contact.unit || "Resident"}</p>
+                                                <p className="text-xs text-medium">{contact.unit || t("Resident")}</p>
                                             </div>
                                         </div>
 
@@ -802,7 +823,7 @@ export function QuickActionSummaryModal({
                                                 }}
                                                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
                                             >
-                                                <span>Open Full Profile</span>
+                                                <span>{t("Open Full Profile")}</span>
                                                 <ArrowUpRight className="size-4" />
                                             </button>
                                         </div>

@@ -16,11 +16,15 @@ import {
     Mail, 
     MapPin, 
     Shield, 
-    Briefcase 
+    Briefcase,
+    Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModal';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
+import { formatPhMobile } from "@/lib/phone";
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
 
@@ -29,6 +33,7 @@ export function LandlordProfileView() {
     const { properties } = useProperty();
     const brand = useBrand();
     const router = useRouter();
+    const { t } = useLanguageContext();
 
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
@@ -49,7 +54,7 @@ export function LandlordProfileView() {
         profile?.full_name || 
         user?.user_metadata?.full_name || 
         user?.user_metadata?.name || 
-        'Landlord';
+        t('Landlord');
     const avatarUrl = profile?.avatar_url || FALLBACK_AVATAR;
 
     const totalUnits = properties.reduce((acc, p) => acc + (p.units?.length || 0), 0);
@@ -75,13 +80,13 @@ export function LandlordProfileView() {
                             <div className="flex items-center gap-1.5 flex-wrap">
                                 <h2 className="text-base font-black text-foreground truncate">{fullName}</h2>
                                 {isVerified && (
-                                    <span title="Verified Landlord">
+                                    <span title={t("Verified Landlord")}>
                                         <ShieldCheck className="size-4 text-emerald-500 shrink-0" />
                                     </span>
                                 )}
                             </div>
                             <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-primary/15 text-primary">
-                                Property Manager / Landlord
+                                {t("Property Manager / Landlord")}
                             </span>
                             <p className="text-xs text-muted-foreground truncate mt-1">
                                 {brand?.propertyName || 'iReside Properties'}
@@ -102,7 +107,7 @@ export function LandlordProfileView() {
                 <div className="p-4 rounded-2xl neumorphic-extruded space-y-3">
                     <div className="flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-wider">
                         <Briefcase className="size-3.5" />
-                        <span>Business &amp; Contact Details</span>
+                        <span>{t("Business & Contact Details")}</span>
                     </div>
 
                     <div className="space-y-2.5 text-xs">
@@ -113,7 +118,7 @@ export function LandlordProfileView() {
                         {profile?.phone && (
                             <div className="flex items-center gap-2.5 text-muted-foreground">
                                 <Phone className="size-3.5 text-primary shrink-0" />
-                                <span className="text-foreground">{profile.phone}</span>
+                                <span className="text-foreground">{formatPhMobile(profile.phone)}</span>
                             </div>
                         )}
                         {profile?.address && (
@@ -125,9 +130,9 @@ export function LandlordProfileView() {
                         <div className="flex items-center gap-2.5 text-muted-foreground">
                             <Shield className="size-3.5 text-primary shrink-0" />
                             <span className="text-foreground">
-                                Verification Status:{" "}
+                                {t("Verification Status:")}{" "}
                                 <span className={cn("font-bold", isVerified ? "text-emerald-500" : "text-amber-500")}>
-                                    {isVerified ? "Verified Account" : "Verification Pending"}
+                                    {isVerified ? t("Verified Account") : t("Verification Pending")}
                                 </span>
                             </span>
                         </div>
@@ -139,24 +144,24 @@ export function LandlordProfileView() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-wider">
                             <Building2 className="size-3.5" />
-                            <span>Portfolio Overview</span>
+                            <span>{t("Portfolio Overview")}</span>
                         </div>
                         <span className="text-[10px] font-bold text-muted-foreground">
-                            {properties.length} {properties.length === 1 ? 'Property' : 'Properties'}
+                            {properties.length === 1 ? t('{count} Property', { count: properties.length }) : t('{count} Properties', { count: properties.length })}
                         </span>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2">
                         <div className="p-3 rounded-xl neumorphic-inset text-center">
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase block">Properties</span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase block">{t("Properties")}</span>
                             <span className="text-sm font-black text-foreground mt-0.5 block">{properties.length}</span>
                         </div>
                         <div className="p-3 rounded-xl neumorphic-inset text-center">
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase block">Total Units</span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase block">{t("Total Units")}</span>
                             <span className="text-sm font-black text-foreground mt-0.5 block">{totalUnits}</span>
                         </div>
                         <div className="p-3 rounded-xl neumorphic-inset text-center">
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase block">Occupied</span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase block">{t("Occupied")}</span>
                             <span className="text-sm font-black text-emerald-500 mt-0.5 block">{occupiedUnits}</span>
                         </div>
                     </div>
@@ -167,15 +172,24 @@ export function LandlordProfileView() {
                                 <div key={`${prop.id || 'property'}-${index}`} className="flex items-center justify-between p-2 rounded-xl neumorphic-inset text-xs">
                                     <div className="truncate mr-2">
                                         <span className="font-bold text-foreground block truncate">{prop.name}</span>
-                                        <span className="text-[10px] text-muted-foreground truncate block">{prop.address || 'Address on file'}</span>
+                                        <span className="text-[10px] text-muted-foreground truncate block">{prop.address || t('Address on file')}</span>
                                     </div>
                                     <span className="text-[10px] font-black text-primary shrink-0">
-                                        {prop.units?.length || 0} units
+                                        {t('{count} units', { count: prop.units?.length || 0 })}
                                     </span>
                                 </div>
                             ))}
                         </div>
                     )}
+                </div>
+
+                {/* Language */}
+                <div className="p-4 rounded-2xl neumorphic-extruded space-y-3">
+                    <div className="flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-wider">
+                        <Globe className="size-3.5" />
+                        <span>{t("Language")}</span>
+                    </div>
+                    <LanguageToggle variant="segmented" />
                 </div>
 
                 {/* Sign Out Action */}
@@ -185,17 +199,17 @@ export function LandlordProfileView() {
                     className="w-full p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center gap-2 text-red-500 active:scale-[0.98] transition-all cursor-pointer shadow-2xs"
                 >
                     <LogOut className="size-4" />
-                    <span className="text-xs font-bold">Sign Out</span>
+                    <span className="text-xs font-bold">{t("Sign Out")}</span>
                 </button>
             </div>
 
             {/* Logout Confirm Modal */}
             <MobileConfirmModal
                 isOpen={showLogoutConfirm}
-                title="Sign Out of iReside?"
-                description="Are you sure you want to sign out of your landlord account?"
-                confirmLabel="Sign Out"
-                cancelLabel="Cancel"
+                title={t("Sign Out of iReside?")}
+                description={t("Are you sure you want to sign out of your landlord account?")}
+                confirmLabel={t("Sign Out")}
+                cancelLabel={t("Cancel")}
                 variant="danger"
                 isLoading={loggingOut}
                 icon={<LogOut className="size-5" />}

@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { MAINTENANCE_CATEGORIES } from "@/lib/constants/maintenance-categories";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface CategorySelectorProps {
  value: string;
@@ -10,6 +11,7 @@ interface CategorySelectorProps {
 }
 
 export function CategorySelector({ value, onChange, error }: CategorySelectorProps) {
+ const { t } = useLanguageContext();
  return (
  <div className="space-y-3">
  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -31,12 +33,12 @@ export function CategorySelector({ value, onChange, error }: CategorySelectorPro
  <div className={cn("p-2 rounded-xl transition-colors", cat.bg, cat.color)}>
  <Icon className="size-5" />
  </div>
- <span className="text-xs font-black text-center">{cat.label}</span>
+ <span className="text-xs font-black text-center">{t(cat.label)}</span>
  </button>
  );
  })}
  </div>
- {error && <p className="text-sm text-red-500">{error}</p>}
+ {error && <p className="text-sm text-red-500">{t(error)}</p>}
  </div>
  );
 }

@@ -5,6 +5,7 @@ import { m as motion, AnimatePresence, useDragControls } from "framer-motion";
 import { HexColorPicker } from "react-colorful";
 import { X, Pipette, GripVertical, Check, Sliders } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface DraggableColorPickerProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ export function DraggableColorPicker({
   ],
 }: DraggableColorPickerProps) {
   const dragControls = useDragControls();
+  const { t } = useLanguageContext();
 
   if (!isOpen) return null;
 
@@ -61,13 +63,14 @@ export function DraggableColorPicker({
           <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-foreground">
             <GripVertical className="size-3.5 text-muted-foreground" />
             <Pipette className="size-3.5 text-primary" />
-            <span className="text-[11px] truncate max-w-[140px]">{title}</span>
+            <span className="text-[11px] truncate max-w-[140px]">{t(title)}</span>
           </div>
 
           <button
             type="button"
             onPointerDown={(e) => e.stopPropagation()}
             onClick={onClose}
+            aria-label={t("Close")}
             className="size-6 rounded-lg neumorphic-inset flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 transition-all"
           >
             <X className="size-3" />
@@ -122,7 +125,7 @@ export function DraggableColorPicker({
             <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Sliders className="size-2.5" />
-                <span>Surface Opacity</span>
+                <span>{t("Surface Opacity")}</span>
               </span>
               <span className="font-mono font-bold text-foreground w-9 text-right tabular-nums inline-block shrink-0">
                 {opacity}%

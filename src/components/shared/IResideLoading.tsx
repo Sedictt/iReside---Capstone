@@ -5,6 +5,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { FileText, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { useLanguageContext } from '@/context/LanguageContext';
 
 interface IResideLoadingProps {
   isVisible: boolean;
@@ -30,6 +31,7 @@ export function IResideLoading({
   icon: Icon = FileText,
   className
 }: IResideLoadingProps) {
+  const { t } = useLanguageContext();
   return (
     <AnimatePresence>
       {isVisible && (
@@ -61,10 +63,10 @@ export function IResideLoading({
 
             <div className="mt-8 space-y-2">
               <h2 className="text-2xl font-black tracking-tighter text-foreground uppercase leading-none">
-                {title}
+                {t(title)}
               </h2>
               <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.4em] opacity-60">
-                {subtext}
+                {t(subtext)}
               </p>
             </div>
           </motion.div>

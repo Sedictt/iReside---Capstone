@@ -66,6 +66,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -82,6 +83,7 @@ const staggerContainer = {
 };
 
 export default function TechnicalDocPage() {
+  const { t } = useLanguageContext();
   return (
     <div className="flex w-full flex-col gap-24 bg-background text-foreground pb-32">
       
@@ -103,22 +105,21 @@ export default function TechnicalDocPage() {
             <div className="flex flex-wrap gap-3">
               <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-primary backdrop-blur-md">
                 <Terminal className="size-3" />
-                v2.5.4 Stable
+                {t("v2.5.4 Stable")}
               </div>
               <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-blue-500 backdrop-blur-md">
                 <ShieldCheck className="size-3" />
-                Security Hardened
+                {t("Security Hardened")}
               </div>
             </div>
             <ThemeToggle className="size-10 shrink-0" />
           </div>
           <h1 className="text-5xl font-black tracking-tighter text-foreground sm:text-7xl lg:text-[84px] leading-[0.85]">
             Technical <br />
-            <span className="text-primary italic">Source of Truth</span>
+            <span className="text-primary italic">{t("Source of Truth")}</span>
           </h1>
           <p className="max-w-3xl text-xl text-muted-foreground leading-relaxed font-medium">
-            The definitive engineering manual for the iReside platform. From low-level database isolation 
-            to high-level AI orchestration and distributed real-time state management.
+            {t("The definitive engineering manual for the iReside platform. From low-level database isolation to high-level AI orchestration and distributed real-time state management.")}
           </p>
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
@@ -128,9 +129,9 @@ export default function TechnicalDocPage() {
               { label: "Database", value: "PostgreSQL 16" },
               { label: "AI Engine", value: "Llama 3.1 70B" }
             ].map((stat) => (
-              <div key={stat.label} className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{stat.label}</p>
-                <p className="text-sm font-bold text-foreground">{stat.value}</p>
+              <div key={t(stat.label)} className="space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t(stat.label)}</p>
+                <p className="text-sm font-bold text-foreground">{t(stat.value)}</p>
               </div>
             ))}
           </div>
@@ -140,8 +141,8 @@ export default function TechnicalDocPage() {
       {/* 2. Core Infrastructure & Deployment */}
       <section id="infrastructure" className="space-y-12">
         <div className="space-y-4">
-          <h2 className="text-3xl font-black text-foreground tracking-tight">Infrastructure & Deployment</h2>
-          <p className="text-muted-foreground max-w-2xl">A global, resilient stack designed for high availability and low latency.</p>
+          <h2 className="text-3xl font-black text-foreground tracking-tight">{t("Infrastructure & Deployment")}</h2>
+          <p className="text-muted-foreground max-w-2xl">{t("A global, resilient stack designed for high availability and low latency.")}</p>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-3">
@@ -165,12 +166,12 @@ export default function TechnicalDocPage() {
               tags: ["GitHub Actions", "Vitest"]
             }
           ].map((item) => (
-            <div key={item.title} className="flex flex-col rounded-3xl border border-border bg-card p-8 shadow-sm transition-all hover:border-primary/50">
+            <div key={t(item.title)} className="flex flex-col rounded-3xl border border-border bg-card p-8 shadow-sm transition-all hover:border-primary/50">
               <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-surface-2 text-primary shadow-inner">
                 <item.icon className="size-7" />
               </div>
-              <h3 className="mb-3 text-xl font-black text-foreground">{item.title}</h3>
-              <p className="mb-6 flex-1 text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+              <h3 className="mb-3 text-xl font-black text-foreground">{t(item.title)}</h3>
+              <p className="mb-6 flex-1 text-sm text-muted-foreground leading-relaxed">{t(item.desc)}</p>
               <div className="flex flex-wrap gap-2">
                 {item.tags.map(tag => (
                   <span key={tag} className="rounded-lg bg-muted/50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground border border-border">
@@ -193,13 +194,11 @@ export default function TechnicalDocPage() {
           <div className="relative z-10 space-y-16">
             <div className="max-w-3xl space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-primary">
-                Multi-Tenant Protocol
+                {t("Multi-Tenant Protocol")}
               </div>
-              <h2 className="text-4xl font-black leading-tight sm:text-5xl text-foreground">Row-Level Security (RLS) Deep-Dive</h2>
+              <h2 className="text-4xl font-black leading-tight sm:text-5xl text-foreground">{t("Row-Level Security (RLS) Deep-Dive")}</h2>
               <p className="text-xl text-muted-foreground leading-relaxed">
-                iReside employs a "Zero Trust" data architecture. We enforce data boundaries 
-                at the database engine level, ensuring that even a compromised application 
-                layer cannot access data belonging to another landlord or tenant.
+                {t("iReside employs a \"Zero Trust\" data architecture. We enforce data boundaries at the database engine level, ensuring that even a compromised application layer cannot access data belonging to another landlord or tenant.")}
               </p>
             </div>
 
@@ -208,7 +207,7 @@ export default function TechnicalDocPage() {
                 <div className="space-y-4">
                   <h4 className="text-lg font-black text-foreground flex items-center gap-3">
                     <Fingerprint className="size-5 text-primary" />
-                    How Isolation Works
+                    {t("How Isolation Works")}
                   </h4>
                   <div className="space-y-6 relative before:absolute before:left-3 before:top-4 before:bottom-4 before:w-px before:bg-border">
                     {[
@@ -216,13 +215,13 @@ export default function TechnicalDocPage() {
                       { label: "Policy Injection", text: "PostgreSQL automatically appends WHERE clauses to every query based on the active session context." },
                       { label: "Bypass Prevention", text: "Direct table access is disabled; all queries must pass through the authenticated RLS layer." }
 ].map((item, i) => (
-                      <div key={item.label} className="relative pl-10">
+                      <div key={t(item.label)} className="relative pl-10">
                         <div className="absolute left-0 top-1 size-6 rounded-full bg-muted border border-primary/50 flex items-center justify-center text-[10px] font-black text-primary z-10">
                           {i + 1}
                         </div>
                         <div>
-                          <p className="font-bold text-foreground text-sm">{item.label}</p>
-                          <p className="text-xs text-muted-foreground/60 leading-relaxed">{item.text}</p>
+                          <p className="font-bold text-foreground text-sm">{t(item.label)}</p>
+                          <p className="text-xs text-muted-foreground/60 leading-relaxed">{t(item.text)}</p>
                         </div>
                       </div>
                     ))}
@@ -233,7 +232,7 @@ export default function TechnicalDocPage() {
               <div className="space-y-6">
                 <div className="rounded-3xl border border-border bg-muted/30 p-8 font-mono text-xs shadow-2xl backdrop-blur-md">
                   <div className="mb-4 flex items-center justify-between border-b border-border pb-4">
-                    <span className="text-muted-foreground uppercase tracking-[0.2em] font-black">Internal SQL Policy</span>
+                    <span className="text-muted-foreground uppercase tracking-[0.2em] font-black">{t("Internal SQL Policy")}</span>
                     <div className="flex gap-1.5">
                       <div className="size-2 rounded-full bg-red-500/30" />
                       <div className="size-2 rounded-full bg-yellow-500/30" />
@@ -258,7 +257,7 @@ USING (
                 <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 flex items-start gap-4">
                   <ShieldCheck className="size-6 text-primary shrink-0" />
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    <span className="text-foreground font-black uppercase">Standard Compliance:</span> Our RLS implementation meets the strict requirements for HIPAA and GDPR data isolation standards.
+                    <span className="text-foreground font-black uppercase">{t("Standard Compliance:")}</span> {t("Our RLS implementation meets the strict requirements for HIPAA and GDPR data isolation standards.")}
                   </p>
                 </div>
               </div>
@@ -270,8 +269,8 @@ USING (
       {/* 4. iRis Intelligence Pipeline (RAG) */}
       <section id="iris" className="space-y-12">
         <div className="space-y-4">
-          <h2 className="text-3xl font-black text-foreground tracking-tight">iRis Intelligence & RAG</h2>
-          <p className="text-muted-foreground max-w-2xl">The AI brain behind iReside, combining retrieval-augmented generation with property forensics.</p>
+          <h2 className="text-3xl font-black text-foreground tracking-tight">{t("iRis Intelligence & RAG")}</h2>
+          <p className="text-muted-foreground max-w-2xl">{t("The AI brain behind iReside, combining retrieval-augmented generation with property forensics.")}</p>
         </div>
 
         <div className="grid gap-12 lg:grid-cols-2">
@@ -279,12 +278,10 @@ USING (
             <div className="rounded-[2.5rem] border border-border bg-card p-10 space-y-6 shadow-sm">
               <h3 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-3">
                 <Search className="size-6 text-primary" />
-                Semantic Retrieval Logic
+                {t("Semantic Retrieval Logic")}
               </h3>
               <p className="text-muted-foreground leading-relaxed text-sm">
-                iRis doesn't rely on generic knowledge. It performs a high-dimensional vector search 
-                against the property's digital handbook and historical maintenance logs 
-                before synthesizing a response.
+                {t("iRis doesn't rely on generic knowledge. It performs a high-dimensional vector search against the property's digital handbook and historical maintenance logs before synthesizing a response.")}
               </p>
               <div className="space-y-4 pt-4 relative before:absolute before:left-3 before:top-4 before:bottom-4 before:w-px before:bg-border">
                 {[
@@ -292,12 +289,12 @@ USING (
                   { label: "pgvector Search", text: "Cosine similarity identifies the most relevant property clauses." },
                   { label: "Knowledge Augmentation", text: "Retrieved context is injected into the Llama 3.1 system prompt." }
                 ].map((item, i) => (
-                  <div key={item.label} className="relative pl-10">
+                  <div key={t(item.label)} className="relative pl-10">
                     <div className="absolute left-0 top-1 size-6 rounded-full bg-card border border-border flex items-center justify-center text-[10px] font-black text-primary z-10">
                       {i + 1}
                     </div>
                     <p className="text-xs leading-relaxed text-muted-foreground">
-                      <span className="font-bold text-foreground">{item.label}:</span> {item.text}
+                      <span className="font-bold text-foreground">{t(item.label)}:</span> {t(item.text)}
                     </p>
                   </div>
                 ))}
@@ -309,15 +306,15 @@ USING (
                 <div className="size-12 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center">
                   <Chip className="size-6" />
                 </div>
-                <h4 className="font-black text-foreground">Fast Inference</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">Sub-800ms response times powered by Groq's LPU acceleration.</p>
+                <h4 className="font-black text-foreground">{t("Fast Inference")}</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t("Sub-800ms response times powered by Groq's LPU acceleration.")}</p>
               </div>
               <div className="rounded-3xl border border-border bg-card p-8 space-y-4">
                 <div className="size-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
                   <HardDrive className="size-6" />
                 </div>
-                <h4 className="font-black text-foreground">Long-term Memory</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">Conversation history persistence across sessions with summarization logic.</p>
+                <h4 className="font-black text-foreground">{t("Long-term Memory")}</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t("Conversation history persistence across sessions with summarization logic.")}</p>
               </div>
             </div>
           </div>
@@ -325,15 +322,15 @@ USING (
           <div className="relative overflow-hidden rounded-[2.5rem] border border-border bg-muted/20 p-1">
             <div className="bg-card rounded-[2.2rem] h-full w-full p-10 flex flex-col justify-between">
               <div className="space-y-2">
-                <div className="text-[10px] font-black uppercase tracking-widest text-primary">Inference Trace</div>
-                <h4 className="text-2xl font-black text-foreground">Context Window Mapping</h4>
+                <div className="text-[10px] font-black uppercase tracking-widest text-primary">{t("Inference Trace")}</div>
+                <h4 className="text-2xl font-black text-foreground">{t("Context Window Mapping")}</h4>
               </div>
               
               <div className="py-12 space-y-6">
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase">
-                    <span>System Prompt</span>
-                    <span>2.4k Tokens</span>
+                    <span>{t("System Prompt")}</span>
+                    <span>{t("2.4k Tokens")}</span>
                   </div>
                   <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                     <div className="h-full w-[40%] bg-primary" />
@@ -341,8 +338,8 @@ USING (
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase">
-                    <span>Retrieved Knowledge (RAG)</span>
-                    <span>1.2k Tokens</span>
+                    <span>{t("Retrieved Knowledge (RAG)")}</span>
+                    <span>{t("1.2k Tokens")}</span>
                   </div>
                   <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                     <div className="h-full w-[20%] bg-blue-500" />
@@ -350,8 +347,8 @@ USING (
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase">
-                    <span>Conversation History</span>
-                    <span>4.1k Tokens</span>
+                    <span>{t("Conversation History")}</span>
+                    <span>{t("4.1k Tokens")}</span>
                   </div>
                   <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                     <div className="h-full w-[60%] bg-orange-500" />
@@ -366,9 +363,9 @@ USING (
                     transition={{ duration: 2, repeat: Infinity }}
                     className="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" 
                   />
-                  <span className="text-[10px] font-black text-text-medium uppercase tracking-widest">Logic Stream Stable</span>
+                  <span className="text-[10px] font-black text-text-medium uppercase tracking-widest">{t("Logic Stream Stable")}</span>
                 </div>
-                <div className="text-[10px] font-mono text-muted-foreground">LATENCY: 842ms</div>
+                <div className="text-[10px] font-mono text-muted-foreground">{t("LATENCY: 842ms")}</div>
               </div>
             </div>
           </div>
@@ -378,8 +375,8 @@ USING (
       {/* 5. Verification & Triage Logic */}
       <section id="verification" className="space-y-12">
         <div className="space-y-4">
-          <h2 className="text-3xl font-black text-foreground tracking-tight">Verification & Triage Engines</h2>
-          <p className="text-muted-foreground max-w-2xl">Deterministic algorithms for business verification and maintenance prioritization.</p>
+          <h2 className="text-3xl font-black text-foreground tracking-tight">{t("Verification & Triage Engines")}</h2>
+          <p className="text-muted-foreground max-w-2xl">{t("Deterministic algorithms for business verification and maintenance prioritization.")}</p>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-2">
@@ -389,8 +386,8 @@ USING (
                 <FileSearch className="size-7" />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-foreground">Valenzuela Scraper</h3>
-                <p className="text-sm text-muted-foreground uppercase tracking-widest font-black">Business Verification</p>
+                <h3 className="text-2xl font-black text-foreground">{t("Valenzuela Scraper")}</h3>
+                <p className="text-sm text-muted-foreground uppercase tracking-widest font-black">{t("Business Verification")}</p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -401,8 +398,8 @@ USING (
             </p>
             <div className="p-6 rounded-2xl bg-muted/30 border border-border space-y-4 font-mono text-[10px]">
               <div className="flex justify-between items-center text-muted-foreground">
-                <span>[PROCESS] RUNNING SCRAPER_ENGINE_V2</span>
-                <span className="text-emerald-500">STABLE</span>
+                <span>{t("[PROCESS] RUNNING SCRAPER_ENGINE_V2")}</span>
+                <span className="text-emerald-500">{t("STABLE")}</span>
               </div>
               <div className="space-y-1 text-primary">
                 <p>{`> navigate("valenzuela.gov.ph/business-lookup")`}</p>
@@ -419,8 +416,8 @@ USING (
                 <Wrench className="size-7" />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-foreground">Maintenance AI Triage</h3>
-                <p className="text-sm text-muted-foreground uppercase tracking-widest font-black">Issue Prioritization</p>
+                <h3 className="text-2xl font-black text-foreground">{t("Maintenance AI Triage")}</h3>
+                <p className="text-sm text-muted-foreground uppercase tracking-widest font-black">{t("Issue Prioritization")}</p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -435,8 +432,8 @@ USING (
                 { label: "Priority", val: "Quality of Life", color: "text-orange-500" },
                 { label: "Deferred", val: "Aesthetic Only", color: "text-muted-foreground" }
               ].map((lvl) => (
-                <div key={lvl.label} className="p-4 rounded-xl border border-border bg-muted/20">
-                  <p className={cn("text-[10px] font-black uppercase tracking-widest", lvl.color)}>{lvl.label}</p>
+                <div key={t(lvl.label)} className="p-4 rounded-xl border border-border bg-muted/20">
+                  <p className={cn("text-[10px] font-black uppercase tracking-widest", lvl.color)}>{t(lvl.label)}</p>
                   <p className="text-sm font-bold text-foreground">{lvl.val}</p>
                 </div>
               ))}
@@ -448,8 +445,8 @@ USING (
       {/* 6. Financial Ledger & Atomic Integrity */}
       <section id="ledger" className="space-y-12">
         <div className="space-y-4">
-          <h2 className="text-3xl font-black text-foreground tracking-tight">The Financial Ledger</h2>
-          <p className="text-muted-foreground max-w-2xl">Immutability and transparency for every rental transaction.</p>
+          <h2 className="text-3xl font-black text-foreground tracking-tight">{t("The Financial Ledger")}</h2>
+          <p className="text-muted-foreground max-w-2xl">{t("Immutability and transparency for every rental transaction.")}</p>
         </div>
 
         <div className="grid gap-12 lg:grid-cols-12">
@@ -458,9 +455,9 @@ USING (
               <div className="size-14 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
                 <Scale className="size-7" />
               </div>
-              <h3 className="text-xl font-black text-foreground">Ledger Immutability</h3>
+              <h3 className="text-xl font-black text-foreground">{t("Ledger Immutability")}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Our financial system is designed as an append-only ledger. Mutations 
+                {t("Our financial system is designed as an append-only ledger. Mutations")}
                 are prohibited; corrections must be handled as separate offsetting entries, 
                 preserving a full audit trail of the rental history.
               </p>
@@ -484,8 +481,8 @@ USING (
             <div className="flex flex-col sm:flex-row h-full">
               <div className="flex-1 p-10 space-y-6 border-b sm:border-b-0 sm:border-r border-border">
                 <div className="space-y-2">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-primary">Transaction Workflow</div>
-                  <h4 className="text-2xl font-black text-foreground">Lifecycle of a Payment</h4>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-primary">{t("Transaction Workflow")}</div>
+                  <h4 className="text-2xl font-black text-foreground">{t("Lifecycle of a Payment")}</h4>
                 </div>
                 <div className="space-y-6">
                   {[
@@ -494,13 +491,13 @@ USING (
                     { label: "Verification", text: "Landlord confirms receipt of funds." },
                     { label: "Settlement", text: "Ledger row is finalized and locked." }
                   ].map((step, i) => (
-                    <div key={step.label} className="flex items-center gap-4">
+                    <div key={t(step.label)} className="flex items-center gap-4">
                       <div className="size-8 shrink-0 rounded-full bg-surface-2 border border-border flex items-center justify-center text-xs font-black text-foreground">
                         {i + 1}
                       </div>
                       <div className="space-y-0.5">
-                        <p className="text-sm font-bold text-foreground">{step.label}</p>
-                        <p className="text-xs text-muted-foreground">{step.text}</p>
+                        <p className="text-sm font-bold text-foreground">{t(step.label)}</p>
+                        <p className="text-xs text-muted-foreground">{t(step.text)}</p>
                       </div>
                     </div>
                   ))}
@@ -512,13 +509,13 @@ USING (
                     <PieChart className="size-8" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs font-black text-foreground uppercase tracking-widest">Real-time Analytics</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">Automated revenue tracking and expense categorization for tax compliance.</p>
+                    <p className="text-xs font-black text-foreground uppercase tracking-widest">{t("Real-time Analytics")}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{t("Automated revenue tracking and expense categorization for tax compliance.")}</p>
                   </div>
                 </div>
                 <div className="pt-6 border-t border-border">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-[10px] font-black text-muted-foreground uppercase">Ledger Health</span>
+                    <span className="text-[10px] font-black text-muted-foreground uppercase">{t("Ledger Health")}</span>
                     <span className="text-[10px] font-mono text-emerald-500">100.0%</span>
                   </div>
                   <div className="h-1 w-full bg-border rounded-full overflow-hidden">
@@ -534,8 +531,8 @@ USING (
       {/* 7. Connectivity & Real-Time Engine */}
       <section id="realtime" className="space-y-12">
         <div className="space-y-4">
-          <h2 className="text-3xl font-black text-foreground tracking-tight">Connectivity & Real-Time Engine</h2>
-          <p className="text-muted-foreground max-w-2xl">Powering the "Live" experience with ultra-low latency WebSocket channels.</p>
+          <h2 className="text-3xl font-black text-foreground tracking-tight">{t("Connectivity & Real-Time Engine")}</h2>
+          <p className="text-muted-foreground max-w-2xl">{t("Powering the \"Live\" experience with ultra-low latency WebSocket channels.")}</p>
         </div>
 
         <div className="grid gap-12 lg:grid-cols-2">
@@ -545,23 +542,21 @@ USING (
                 <Wifi className="size-7" />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-foreground">WebSocket Channels</h3>
-                <p className="text-sm text-muted-foreground uppercase tracking-widest font-black">Live Data Stream</p>
+                <h3 className="text-2xl font-black text-foreground">{t("WebSocket Channels")}</h3>
+                <p className="text-sm text-muted-foreground uppercase tracking-widest font-black">{t("Live Data Stream")}</p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Using Supabase Real-time, we broadcast database changes to authorized 
-              clients in under 50ms. This ensures that the Unit Map, Messaging Hub, 
-              and Notifications are always in sync without page refreshes.
+              {t("Using Supabase Real-time, we broadcast database changes to authorized clients in under 50ms. This ensures that the Unit Map, Messaging Hub, and Notifications are always in sync without page refreshes.")}
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-1">
-                <p className="text-[10px] font-black uppercase text-pink-500">Unit Map</p>
-                <p className="text-xs text-foreground font-bold">Live Vacancy Tracking</p>
+                <p className="text-[10px] font-black uppercase text-pink-500">{t("Unit Map")}</p>
+                <p className="text-xs text-foreground font-bold">{t("Live Vacancy Tracking")}</p>
               </div>
               <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-1">
-                <p className="text-[10px] font-black uppercase text-blue-500">Messaging</p>
-                <p className="text-xs text-foreground font-bold">Instant Delivery</p>
+                <p className="text-[10px] font-black uppercase text-blue-500">{t("Messaging")}</p>
+                <p className="text-xs text-foreground font-bold">{t("Instant Delivery")}</p>
               </div>
             </div>
           </div>
@@ -572,20 +567,19 @@ USING (
                 <Smartphone className="size-7" />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-foreground">PWA Service Workers</h3>
-                <p className="text-sm text-muted-foreground uppercase tracking-widest font-black">Offline Resilience</p>
+                <h3 className="text-2xl font-black text-foreground">{t("PWA Service Workers")}</h3>
+                <p className="text-sm text-muted-foreground uppercase tracking-widest font-black">{t("Offline Resilience")}</p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              The iReside PWA implements advanced caching strategies (Stale-While-Revalidate) 
-              to ensure fast initial loads and offline accessibility for critical property info.
+              {t("The iReside PWA implements advanced caching strategies (Stale-While-Revalidate) to ensure fast initial loads and offline accessibility for critical property info.")}
             </p>
             <div className="p-6 rounded-2xl bg-muted/30 border border-border flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="size-3 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
-                <span className="text-[10px] font-black text-text-medium uppercase tracking-widest">Service Worker: ACTIVE</span>
+                <span className="text-[10px] font-black text-text-medium uppercase tracking-widest">{t("Service Worker: ACTIVE")}</span>
               </div>
-              <div className="text-[10px] font-mono text-muted-foreground">CACHE_HIT_RATE: 94%</div>
+              <div className="text-[10px] font-mono text-muted-foreground">{t("CACHE_HIT_RATE: 94%")}</div>
             </div>
           </div>
         </div>
@@ -594,8 +588,8 @@ USING (
       {/* 8. Full Tech Stack Schema (Exhaustive) */}
       <section id="stack" className="space-y-12">
         <div className="space-y-4">
-          <h2 className="text-3xl font-black text-foreground tracking-tight">Complete Ecosystem Stack</h2>
-          <p className="text-muted-foreground max-w-2xl">The full engineering map from the presentation layer down to the edge.</p>
+          <h2 className="text-3xl font-black text-foreground tracking-tight">{t("Complete Ecosystem Stack")}</h2>
+          <p className="text-muted-foreground max-w-2xl">{t("The full engineering map from the presentation layer down to the edge.")}</p>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -626,7 +620,7 @@ USING (
                 <group.icon className="size-6" />
               </div>
               <div className="space-y-4">
-                <h4 className="text-sm font-black text-foreground uppercase tracking-widest">{group.cat}</h4>
+                <h4 className="text-sm font-black text-foreground uppercase tracking-widest">{t(group.cat)}</h4>
                 <div className="flex flex-col gap-2">
                   {group.items.map(item => (
                     <div key={item} className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -644,8 +638,8 @@ USING (
       {/* 9. Lease Lifecycle State Machine */}
       <section id="lifecycle" className="space-y-12">
         <div className="space-y-4">
-          <h2 className="text-3xl font-black text-foreground tracking-tight">Lease Lifecycle State Machine</h2>
-          <p className="text-muted-foreground max-w-2xl">Deterministic workflow transitions for rental management.</p>
+          <h2 className="text-3xl font-black text-foreground tracking-tight">{t("Lease Lifecycle State Machine")}</h2>
+          <p className="text-muted-foreground max-w-2xl">{t("Deterministic workflow transitions for rental management.")}</p>
         </div>
 
         <div className="overflow-x-auto pb-12">
@@ -659,12 +653,12 @@ USING (
               { status: "Renewal", icon: HistoryIcon, color: "bg-orange-500" },
               { status: "Closure", icon: Lock, color: "bg-red-500" }
             ].map((item, i) => (
-              <div key={item.status} className="flex flex-col items-center gap-4 w-32 bg-background z-10">
+              <div key={t(item.status)} className="flex flex-col items-center gap-4 w-32 bg-background z-10">
                 <div className={cn("size-14 rounded-full flex items-center justify-center text-primary-foreground shadow-xl transition-all hover:scale-110", item.color)}>
                   <item.icon className="size-6" />
                 </div>
                 <div className="text-center space-y-1">
-                  <p className="text-sm font-black text-foreground">{item.status}</p>
+                  <p className="text-sm font-black text-foreground">{t(item.status)}</p>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Phase {i + 1}</p>
                 </div>
               </div>
@@ -676,8 +670,8 @@ USING (
       {/* 10. Definition of Terms (Glossary) */}
       <section id="glossary" className="space-y-12">
         <div className="space-y-4">
-          <h2 className="text-3xl font-black text-foreground tracking-tight">Definition of Terms</h2>
-          <p className="text-muted-foreground max-w-2xl">A technical glossary of concepts and technologies used within iReside.</p>
+          <h2 className="text-3xl font-black text-foreground tracking-tight">{t("Definition of Terms")}</h2>
+          <p className="text-muted-foreground max-w-2xl">{t("A technical glossary of concepts and technologies used within iReside.")}</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -699,7 +693,7 @@ USING (
                 <BookOpen className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <p className="text-base font-bold text-foreground mb-1">{item.full}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{t(item.desc)}</p>
             </div>
           ))}
         </div>
@@ -712,20 +706,20 @@ USING (
             <div className="size-14 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center shadow-inner">
               <TableIcon className="size-7" />
             </div>
-            <h2 className="text-4xl font-black text-foreground tracking-tight">Immutable Audit Trails</h2>
+            <h2 className="text-4xl font-black text-foreground tracking-tight">{t("Immutable Audit Trails")}</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Every sensitive action, from lease adjustments to payment verification, is recorded
+              {t("Every sensitive action, from lease adjustments to payment verification, is recorded")}
               in the `audit_logs` table. These records are non-removable and serve as the
               ultimate source of truth during stakeholder disputes.
             </p>
             <div className="grid grid-cols-2 gap-6 pt-4">
               <div className="space-y-1">
                 <p className="text-2xl font-black text-foreground">100%</p>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Traceability Coverage</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("Traceability Coverage")}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-2xl font-black text-foreground">~0.1ms</p>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Logging Latency</p>
+                <p className="text-2xl font-black text-foreground">{t("~0.1ms")}</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("Logging Latency")}</p>
               </div>
             </div>
           </div>
@@ -734,7 +728,7 @@ USING (
             <div className="absolute -right-20 -bottom-20 opacity-5 rotate-12">
               <HistoryIcon className="size-64" />
             </div>
-            <h3 className="text-xl font-black text-foreground">Security Header Validation</h3>
+            <h3 className="text-xl font-black text-foreground">{t("Security Header Validation")}</h3>
             <div className="space-y-4">
               {[
                 { label: "X-Content-Type-Options", val: "nosniff" },
@@ -742,8 +736,8 @@ USING (
                 { label: "Strict-Transport-Security", val: "Enabled" },
                 { label: "Content-Security-Policy", val: "Dynamic" }
               ].map((item) => (
-                <div key={item.label} className="flex justify-between items-center py-3 border-b border-border last:border-0">
-                  <span className="text-xs text-muted-foreground font-medium">{item.label}</span>
+                <div key={t(item.label)} className="flex justify-between items-center py-3 border-b border-border last:border-0">
+                  <span className="text-xs text-muted-foreground font-medium">{t(item.label)}</span>
                   <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-3 py-1 rounded-full tracking-widest">{item.val}</span>
                 </div>
               ))}
@@ -755,8 +749,8 @@ USING (
       {/* 11. Comprehensive API Reference */}
       <section id="api" className="space-y-12">
         <div className="space-y-4">
-          <h2 className="text-3xl font-black text-foreground tracking-tight">Comprehensive API Reference</h2>
-          <p className="text-muted-foreground max-w-2xl">Complete REST API documentation with authentication, endpoints, request/response formats, and error handling.</p>
+          <h2 className="text-3xl font-black text-foreground tracking-tight">{t("Comprehensive API Reference")}</h2>
+          <p className="text-muted-foreground max-w-2xl">{t("Complete REST API documentation with authentication, endpoints, request/response formats, and error handling.")}</p>
         </div>
 
         {/* 11.1 Architecture & Authentication */}
@@ -766,15 +760,15 @@ USING (
               <Server className="size-6" />
             </div>
             <div>
-              <h3 className="text-xl font-black text-foreground">Architecture & Authentication</h3>
-              <p className="text-sm text-muted-foreground">RESTful API with JSON bodies, served via Next.js</p>
+              <h3 className="text-xl font-black text-foreground">{t("Architecture & Authentication")}</h3>
+              <p className="text-sm text-muted-foreground">{t("RESTful API with JSON bodies, served via Next.js")}</p>
             </div>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-6">
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
-                <Code2 className="size-4" /> Base URL
+                <Code2 className="size-4" /> {t("Base URL")}
               </div>
               <code className="block bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm font-mono text-foreground">
                 http://localhost:3000/api/
@@ -782,7 +776,7 @@ USING (
             </div>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
-                <Lock className="size-4" /> Authentication
+                <Lock className="size-4" /> {t("Authentication")}
               </div>
               <code className="block bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm font-mono text-foreground">
                 Authorization: Bearer {'<supabase_jwt>'}
@@ -792,7 +786,7 @@ USING (
 
           <div className="rounded-xl bg-muted/30 border border-border p-6 space-y-3">
             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">
-              <Box className="size-4" /> Available Route Namespaces
+              <Box className="size-4" /> {t("Available Route Namespaces")}
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {[
@@ -811,7 +805,7 @@ USING (
               ].map((r) => (
                 <div key={r.route} className="flex items-start gap-2 text-xs">
                   <code className="bg-primary/10 text-primary px-2 py-1 rounded-md font-mono shrink-0">{r.route}</code>
-                  <span className="text-muted-foreground">{r.desc}</span>
+                  <span className="text-muted-foreground">{t(r.desc)}</span>
                 </div>
               ))}
             </div>
@@ -820,7 +814,7 @@ USING (
 
         {/* 11.2 Core Endpoints */}
         <div className="space-y-6">
-          <h3 className="text-lg font-black text-foreground tracking-tight">Core Endpoints</h3>
+          <h3 className="text-lg font-black text-foreground tracking-tight">{t("Core Endpoints")}</h3>
           <div className="grid gap-6">
             {/* iRis Chat */}
             <div className="rounded-[1.5rem] border border-border bg-card overflow-hidden shadow-sm">
@@ -831,18 +825,18 @@ USING (
                   </div>
                   <div>
                     <code className="text-sm font-mono font-bold text-foreground">POST /api/iris/chat</code>
-                    <p className="text-[10px] text-muted-foreground">AI Assistant with RAG context retrieval</p>
+                    <p className="text-[10px] text-muted-foreground">{t("AI Assistant with RAG context retrieval")}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">Auth Required</span>
-                  <span className="text-[10px] font-black uppercase bg-primary/10 text-primary px-3 py-1 rounded-full tracking-widest">30/min rate limit</span>
+                  <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">{t("Auth Required")}</span>
+                  <span className="text-[10px] font-black uppercase bg-primary/10 text-primary px-3 py-1 rounded-full tracking-widest">{t("30/min rate limit")}</span>
                 </div>
               </div>
               <div className="p-6 space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Request</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Request")}</span>
                     <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
 {`{
   "message": "What amenities are available?",
@@ -854,7 +848,7 @@ USING (
                     </pre>
                   </div>
                   <div className="space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Response (200)</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Response (200)")}</span>
                     <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
 {`{
   "response": "Your property offers...",
@@ -883,15 +877,15 @@ USING (
                   </div>
                   <div>
                     <code className="text-sm font-mono font-bold text-foreground">POST /api/landlord/statistics/insights</code>
-                    <p className="text-[10px] text-muted-foreground">AI-powered KPI insights via Groq Llama</p>
+                    <p className="text-[10px] text-muted-foreground">{t("AI-powered KPI insights via Groq Llama")}</p>
                   </div>
                 </div>
-                <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">Auth Required</span>
+                <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">{t("Auth Required")}</span>
               </div>
               <div className="p-6 space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Request</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Request")}</span>
                     <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
 {`{
   "propertyId": "uuid",
@@ -906,7 +900,7 @@ USING (
                     </pre>
                   </div>
                   <div className="space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Response</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Response")}</span>
                     <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
 {`{
   "insights": {
@@ -932,22 +926,22 @@ USING (
                   </div>
                   <div>
                     <code className="text-sm font-mono font-bold text-foreground">GET /api/messages/conversations</code>
-                    <p className="text-[10px] text-muted-foreground">List all user conversations with pagination</p>
+                    <p className="text-[10px] text-muted-foreground">{t("List all user conversations with pagination")}</p>
                   </div>
                 </div>
-                <span className="text-[10px] font-black uppercase bg-yellow-500/10 text-yellow-600 px-3 py-1 rounded-full tracking-widest">60/min</span>
+                <span className="text-[10px] font-black uppercase bg-yellow-500/10 text-yellow-600 px-3 py-1 rounded-full tracking-widest">{t("60/min")}</span>
               </div>
               <div className="p-6">
                 <div className="space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Query Parameters</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Query Parameters")}</span>
                   <div className="bg-muted/50 border border-border rounded-xl p-4 space-y-2">
                     <div className="flex justify-between text-xs">
                       <code className="text-foreground font-mono">limit</code>
-                      <span className="text-muted-foreground">integer (default: 20)</span>
+                      <span className="text-muted-foreground">{t("integer (default: 20)")}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <code className="text-foreground font-mono">offset</code>
-                      <span className="text-muted-foreground">integer (default: 0)</span>
+                      <span className="text-muted-foreground">{t("integer (default: 0)")}</span>
                     </div>
                   </div>
                 </div>
@@ -963,14 +957,14 @@ USING (
                   </div>
                   <div>
                     <code className="text-sm font-mono font-bold text-foreground">GET /api/tenant/payments</code>
-                    <p className="text-[10px] text-muted-foreground">Payment history with itemized billing breakdown</p>
+                    <p className="text-[10px] text-muted-foreground">{t("Payment history with itemized billing breakdown")}</p>
                   </div>
                 </div>
-                <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">Auth Required</span>
+                <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">{t("Auth Required")}</span>
               </div>
               <div className="p-6">
                 <div className="space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Response Structure</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Response Structure")}</span>
                   <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
 {`{
   "payments": [{
@@ -1007,15 +1001,15 @@ USING (
                   </div>
                   <div>
                     <code className="text-sm font-mono font-bold text-foreground">POST /api/tenant/maintenance</code>
-                    <p className="text-[10px] text-muted-foreground">Submit new maintenance request with photo upload</p>
+                    <p className="text-[10px] text-muted-foreground">{t("Submit new maintenance request with photo upload")}</p>
                   </div>
                 </div>
-                <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">Auth Required</span>
+                <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">{t("Auth Required")}</span>
               </div>
               <div className="p-6 space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Request</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Request")}</span>
                     <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
 {`{
   "title": "Leaking faucet in bathroom",
@@ -1027,7 +1021,7 @@ USING (
                     </pre>
                   </div>
                   <div className="space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Response (201)</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Response (201)")}</span>
                     <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
 {`{
   "id": "req_uuid",
@@ -1051,14 +1045,14 @@ USING (
                   </div>
                   <div>
                     <code className="text-sm font-mono font-bold text-foreground">POST /api/tenant/lease/{'{leaseId}'}/sign</code>
-                    <p className="text-[10px] text-muted-foreground">Digital lease agreement signing with signature capture</p>
+                    <p className="text-[10px] text-muted-foreground">{t("Digital lease agreement signing with signature capture")}</p>
                   </div>
                 </div>
-                <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">Auth Required</span>
+                <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">{t("Auth Required")}</span>
               </div>
               <div className="p-6">
                 <div className="space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Request Body</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Request Body")}</span>
                   <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
 {`{
   "signature": "base64_encoded_signature_image",
@@ -1080,9 +1074,9 @@ USING (
               <div className="size-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center">
                 <AlertCircle className="size-5" />
               </div>
-              <h3 className="text-lg font-black text-foreground">Error Handling</h3>
+              <h3 className="text-lg font-black text-foreground">{t("Error Handling")}</h3>
             </div>
-            <p className="text-sm text-muted-foreground">All errors follow a consistent JSON structure:</p>
+            <p className="text-sm text-muted-foreground">{t("All errors follow a consistent JSON structure:")}</p>
             <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
 {`{
   "error": {
@@ -1107,7 +1101,7 @@ USING (
               ].map((e) => (
                 <div key={e.code} className="flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-2">
                   <span className="text-xs font-black text-red-500">{e.code}</span>
-                  <span className="text-[10px] font-mono text-muted-foreground">{e.label}</span>
+                  <span className="text-[10px] font-mono text-muted-foreground">{t(e.label)}</span>
                 </div>
               ))}
             </div>
@@ -1118,9 +1112,9 @@ USING (
               <div className="size-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
                 <Gauge className="size-5" />
               </div>
-              <h3 className="text-lg font-black text-foreground">Rate Limiting</h3>
+              <h3 className="text-lg font-black text-foreground">{t("Rate Limiting")}</h3>
             </div>
-            <p className="text-sm text-muted-foreground">Per-endpoint rate limits protect system stability:</p>
+            <p className="text-sm text-muted-foreground">{t("Per-endpoint rate limits protect system stability:")}</p>
             <div className="space-y-3">
               {[
                 { endpoint: "/api/iris/*", limit: "30 req/min", color: "bg-purple-500/10 text-purple-500" },
@@ -1134,11 +1128,11 @@ USING (
               ))}
             </div>
             <div className="rounded-xl bg-muted/30 border border-border p-4 space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Response Headers</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Response Headers")}</span>
               {["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"].map((h) => (
                 <div key={h} className="flex justify-between text-xs font-mono">
                   <span className="text-muted-foreground">{h}</span>
-                  <span className="text-foreground">Included in all responses</span>
+                  <span className="text-foreground">{t("Included in all responses")}</span>
                 </div>
               ))}
             </div>
@@ -1152,8 +1146,8 @@ USING (
               <FileCode className="size-6" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-foreground">OpenAPI 3.1 Specification</h3>
-              <p className="text-sm text-muted-foreground">Full interactive API documentation available at /openapi.json</p>
+              <h3 className="text-lg font-black text-foreground">{t("OpenAPI 3.1 Specification")}</h3>
+              <p className="text-sm text-muted-foreground">{t("Full interactive API documentation available at /openapi.json")}</p>
             </div>
           </div>
           <div className="grid sm:grid-cols-3 gap-4">
@@ -1162,11 +1156,11 @@ USING (
               { label: "Generate", value: "Client SDKs" },
               { label: "Interactive Docs", value: "Swagger UI (coming soon)" }
             ].map((item) => (
-              <div key={item.label} className="flex items-center gap-3 bg-muted/30 rounded-xl px-4 py-3">
+              <div key={t(item.label)} className="flex items-center gap-3 bg-muted/30 rounded-xl px-4 py-3">
                 <div className="size-1 rounded-full bg-primary" />
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">{item.label}</span>
-                  <span className="text-sm font-bold text-foreground">{item.value}</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">{t(item.label)}</span>
+                  <span className="text-sm font-bold text-foreground">{t(item.value)}</span>
                 </div>
               </div>
             ))}
@@ -1185,10 +1179,9 @@ USING (
             <Key className="size-10 text-primary-foreground" />
           </div>
           <div className="space-y-4">
-            <h2 className="text-4xl font-black text-background dark:text-foreground tracking-tighter sm:text-6xl">Unlock Developer Access</h2>
+            <h2 className="text-4xl font-black text-background dark:text-foreground tracking-tighter sm:text-6xl">{t("Unlock Developer Access")}</h2>
             <p className="text-lg text-background/60 dark:text-muted-foreground leading-relaxed font-medium">
-              Join the iReside ecosystem. Request verified developer keys to build on our API, 
-              access internal webhooks, and integrate third-party rental services.
+              {t("Join the iReside ecosystem. Request verified developer keys to build on our API, access internal webhooks, and integrate third-party rental services.")}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
@@ -1198,7 +1191,7 @@ USING (
               </Link>
             </Button>
             <Button variant="ghost" className="h-16 rounded-2xl px-8 text-background dark:text-foreground hover:bg-background/10 dark:hover:bg-muted/50 font-black text-lg" asChild>
-              <Link href="/docs">Standard Docs</Link>
+              <Link href="/docs">{t("Standard Docs")}</Link>
             </Button>
           </div>
         </div>
@@ -1210,29 +1203,27 @@ USING (
           <div className="flex items-center gap-4">
             <ShieldCheck className="size-10 text-primary" />
             <div>
-              <div className="text-xl font-black text-foreground tracking-tighter">iReside Engineering Core</div>
-              <div className="text-xs text-muted-foreground font-black uppercase tracking-widest">Internal Security Protocol v2.5.4</div>
+              <div className="text-xl font-black text-foreground tracking-tighter">{t("iReside Engineering Core")}</div>
+              <div className="text-xs text-muted-foreground font-black uppercase tracking-widest">{t("Internal Security Protocol v2.5.4")}</div>
             </div>
           </div>
           <p className="text-xs text-muted-foreground max-w-sm leading-relaxed font-medium">
-            Confidential technical manual for iReside internal operations. 
-            Reproduction or redistribution without verified developer credentials 
-            is strictly prohibited.
+            {t("Confidential technical manual for iReside internal operations. Reproduction or redistribution without verified developer credentials is strictly prohibited.")}
           </p>
         </div>
         
         <div className="grid grid-cols-2 gap-16">
           <div className="space-y-4">
-            <h5 className="text-[10px] font-black text-foreground uppercase tracking-[0.2em]">Contact</h5>
+            <h5 className="text-[10px] font-black text-foreground uppercase tracking-[0.2em]">{t("Contact")}</h5>
             <div className="space-y-2">
-              <Link href="mailto:security@ireside.app" className="block text-xs text-muted-foreground hover:text-primary transition-colors">security@ireside.app</Link>
-              <Link href="mailto:api@ireside.app" className="block text-xs text-muted-foreground hover:text-primary transition-colors">api@ireside.app</Link>
+              <Link href="mailto:security@ireside.app" className="block text-xs text-muted-foreground hover:text-primary transition-colors">{t("security@ireside.app")}</Link>
+              <Link href="mailto:api@ireside.app" className="block text-xs text-muted-foreground hover:text-primary transition-colors">{t("api@ireside.app")}</Link>
             </div>
           </div>
           <div className="space-y-4">
-            <h5 className="text-[10px] font-black text-foreground uppercase tracking-[0.2em]">Institution</h5>
+            <h5 className="text-[10px] font-black text-foreground uppercase tracking-[0.2em]">{t("Institution")}</h5>
             <p className="text-xs text-muted-foreground leading-tight font-medium">
-              CEIT - Pamantasan ng Lungsod ng Valenzuela
+              {t("CEIT - Pamantasan ng Lungsod ng Valenzuela")}
             </p>
           </div>
         </div>

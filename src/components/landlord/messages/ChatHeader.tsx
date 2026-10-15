@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { ContactItem, QuickAction } from "./types";
 import { RoleBadge } from "@/components/profile/RoleBadge";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface ChatHeaderProps {
     contact: ContactItem;
@@ -35,6 +36,7 @@ export function ChatHeader({
     openReportWizard,
     onBack
 }: ChatHeaderProps) {
+    const { t } = useLanguageContext();
     if (isLoading) {
         return (
             <div className="z-20 flex h-20 shrink-0 items-center justify-between px-6 pt-2 animate-in fade-in duration-200">
@@ -69,7 +71,7 @@ export function ChatHeader({
                     <button
                         onClick={onBack}
                         className="flex sm:hidden items-center justify-center p-2 rounded-xl neumorphic-extruded transition-all active:scale-95"
-                        title="Back to List"
+                        title={t("Back to List")}
                     >
                         <ArrowLeft className="size-4" />
                     </button>
@@ -99,12 +101,12 @@ export function ChatHeader({
                             {contact.isOnline ? (
                                 <span className="text-emerald-500 flex items-center gap-1">
                                     <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    Online
+                                    {t("Online")}
                                 </span>
                             ) : (
                                 <span className="text-disabled flex items-center gap-1">
                                     <span className="size-1.5 rounded-full bg-disabled" />
-                                    Offline
+                                    {t("Offline")}
                                 </span>
                             )}
                         </div>
@@ -115,11 +117,11 @@ export function ChatHeader({
             {!isPlaceholder && (
                 <div className="flex items-center gap-2">
                     <button 
-                        onClick={openReportWizard}
+                        onClick={() => openReportWizard()}
                         className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/5 text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-500/10 hover:bg-red-500/10 transition-all active:scale-95"
                     >
                         <AlertTriangle className="size-3.5" />
-                        <span className="hidden sm:inline">Report</span>
+                        <span className="hidden sm:inline">{t("Report")}</span>
                     </button>
                     
                     <div className="h-8 w-[1px] bg-divider mx-2" />
@@ -135,7 +137,7 @@ export function ChatHeader({
                                 ? "neumorphic-primary text-white" 
                                 : "text-medium hover:bg-surface-2"
                         )}
-                        title="Shared Files"
+                        title={t("Shared Files")}
                     >
                         <Folder className="size-5" />
                     </button>
@@ -151,6 +153,7 @@ export function ChatHeader({
                                 ? "neumorphic-primary text-white" 
                                 : "text-medium hover:bg-surface-2"
                         )}
+                        title={t("Conversation Details")}
                     >
                         <MoreVertical className="size-5" />
                     </button>

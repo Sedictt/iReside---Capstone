@@ -6,6 +6,7 @@ import { AnimatePresence, m as motion, useReducedMotion } from "framer-motion";
 import { FileText, FolderOpen, X } from "lucide-react";
 import type { MiniChatContact, MiniChatMessage } from "./types";
 import { formatFullTimestamp, isImageMessage } from "./utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface MiniChatSharedFilesPanelProps {
     chat: MiniChatContact | null;
@@ -14,6 +15,7 @@ interface MiniChatSharedFilesPanelProps {
 }
 
 export function MiniChatSharedFilesPanel({ chat, files, onClose }: MiniChatSharedFilesPanelProps) {
+    const { t } = useLanguageContext();
     const closeButtonRef = useRef<HTMLButtonElement | null>(null);
     const shouldReduceMotion = useReducedMotion();
     const isOpen = Boolean(chat);
@@ -62,9 +64,9 @@ export function MiniChatSharedFilesPanel({ chat, files, onClose }: MiniChatShare
                                     <FolderOpen className="size-4" aria-hidden="true" />
                                 </span>
                                 <div className="min-w-0">
-                                    <h2 id="mini-chat-shared-files-title" className="truncate text-sm font-bold text-foreground">Shared files</h2>
+                                    <h2 id="mini-chat-shared-files-title" className="truncate text-sm font-bold text-foreground">{t("Shared files")}</h2>
                                     <p className="truncate text-[11px] text-muted-foreground">
-                                        {files.length === 0 ? chat.name : `${files.length} with ${chat.name}`}
+                                        {files.length === 0 ? chat.name : t("{count} with {name}", { count: files.length, name: chat.name })}
                                     </p>
                                 </div>
                             </div>
@@ -72,7 +74,7 @@ export function MiniChatSharedFilesPanel({ chat, files, onClose }: MiniChatShare
                                 ref={closeButtonRef}
                                 type="button"
                                 onClick={onClose}
-                                aria-label="Close shared files"
+                                aria-label={t("Close shared files")}
                                 className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                             >
                                 <X className="size-4" aria-hidden="true" />
@@ -83,14 +85,14 @@ export function MiniChatSharedFilesPanel({ chat, files, onClose }: MiniChatShare
                             {files.length === 0 && (
                                 <div className="flex flex-col items-center gap-2 py-10 text-center">
                                     <FileText className="size-6 text-muted-foreground/60" aria-hidden="true" />
-                                    <p className="text-sm font-semibold text-foreground">Nothing shared yet</p>
-                                    <p className="text-xs text-muted-foreground">Photos and documents from this chat will show up here.</p>
+                                    <p className="text-sm font-semibold text-foreground">{t("Nothing shared yet")}</p>
+                                    <p className="text-xs text-muted-foreground">{t("Photos and documents from this chat will show up here.")}</p>
                                 </div>
                             )}
 
                             {images.length > 0 && (
-                                <section className="mb-5" aria-label="Photos">
-                                    <h3 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Photos</h3>
+                                <section className="mb-5" aria-label={t("Photos")}>
+                                    <h3 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("Photos")}</h3>
                                     <div className="grid grid-cols-3 gap-2">
                                         {images.map((file) => (
                                             <a
@@ -103,7 +105,7 @@ export function MiniChatSharedFilesPanel({ chat, files, onClose }: MiniChatShare
                                             >
                                                 <Image
                                                     src={file.fileUrl ?? ""}
-                                                    alt={file.fileName ?? "Shared photo"}
+                                                    alt={file.fileName ?? t("Shared photo")}
                                                     fill
                                                     sizes="120px"
                                                     className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -115,8 +117,8 @@ export function MiniChatSharedFilesPanel({ chat, files, onClose }: MiniChatShare
                             )}
 
                             {documents.length > 0 && (
-                                <section aria-label="Documents">
-                                    <h3 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Documents</h3>
+                                <section aria-label={t("Documents")}>
+                                    <h3 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("Documents")}</h3>
                                     <ul className="space-y-1.5">
                                         {documents.map((file) => (
                                             <li key={file.id}>
@@ -130,9 +132,9 @@ export function MiniChatSharedFilesPanel({ chat, files, onClose }: MiniChatShare
                                                         <FileText className="size-4" aria-hidden="true" />
                                                     </span>
                                                     <span className="min-w-0 flex-1">
-                                                        <span className="block truncate text-xs font-semibold text-foreground">{file.fileName || file.content || "Attachment"}</span>
+                                                        <span className="block truncate text-xs font-semibold text-foreground">{file.fileName || file.content || t("Attachment")}</span>
                                                         <span className="block text-[10px] text-muted-foreground">
-                                                            {file.isOwn ? "You" : chat.name.split(" ")[0]} · {formatFullTimestamp(file.createdAt)}
+                                                            {file.isOwn ? t("You") : chat.name.split(" ")[0]} · {formatFullTimestamp(file.createdAt)}
                                                         </span>
                                                     </span>
                                                 </a>

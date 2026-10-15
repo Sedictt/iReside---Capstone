@@ -6,6 +6,7 @@ import { MessageBubble } from "./MessageBubble";
 import { MessageListSkeleton } from "./MessageListSkeleton";
 import { MessageSquare, Loader2, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface MessageListProps {
     messages: UiMessage[];
@@ -44,6 +45,7 @@ export function MessageList({
     onReportMessage,
     onResolveIssue
 }: MessageListProps) {
+    const { t } = useLanguageContext();
     const groupedMessages = useMemo(() => {
         const result: UiMessage[] = [];
         for (let i = 0; i < messages.length; i++) {
@@ -90,12 +92,12 @@ export function MessageList({
                     {isMessagesLoading ? (
                         <span className="inline-flex items-center gap-2 rounded-full neumorphic-inset-card px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-primary shadow-sm animate-in fade-in duration-200">
                             <Loader2 className="size-3.5 animate-spin text-primary" />
-                            <span>Loading Messages…</span>
+                            <span>{t("Loading Messages…")}</span>
                         </span>
                     ) : isLoadingEarlier ? (
                         <span className="inline-flex items-center gap-2 rounded-full neumorphic-inset-card px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-primary shadow-sm animate-in fade-in duration-200">
                             <Loader2 className="size-3.5 animate-spin text-primary" />
-                            <span>Loading earlier messages…</span>
+                            <span>{t("Loading earlier messages…")}</span>
                         </span>
                     ) : hasMoreMessages ? (
                         <button
@@ -104,11 +106,11 @@ export function MessageList({
                             className="inline-flex items-center gap-2 rounded-full neumorphic-extruded px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.15em] text-medium hover:text-high transition-all active:scale-95"
                         >
                             <ChevronUp className="size-3.5 text-primary" />
-                            <span>Load earlier messages</span>
+                            <span>{t("Load earlier messages")}</span>
                         </button>
                     ) : groupedMessages.length > 0 ? (
                         <span className="inline-flex items-center gap-2 rounded-full neumorphic-inset-card px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-disabled">
-                            <span>Beginning of Conversation</span>
+                            <span>{t("Beginning of Conversation")}</span>
                         </span>
                     ) : null}
                 </div>
@@ -121,9 +123,9 @@ export function MessageList({
                             <MessageSquare className="size-8 opacity-60" />
                         </div>
                         <div className="space-y-1">
-                            <p className="text-sm font-black text-high">No messages yet</p>
+                            <p className="text-sm font-black text-high">{t("No messages yet")}</p>
                             <p className="text-xs text-medium max-w-xs">
-                                Send a message or attach a file below to start the conversation.
+                                {t("Send a message or attach a file below to start the conversation.")}
                             </p>
                         </div>
                     </div>

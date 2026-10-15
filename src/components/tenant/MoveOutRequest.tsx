@@ -7,9 +7,27 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 import { MoveOutChecklist } from "./MoveOutChecklist";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { FieldError } from "@/components/ui/field-error";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { textRule, todayIsoDate } from "@/lib/validation/rules";
+import {
+    LIFECYCLE_LIMITS,
+    MOVE_OUT_NOTICE_DAYS,
+    addDaysIso,
+    moveOutDateRule,
+} from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { tr } from "@/hooks/useLanguage";
 
 type MoveOutStatus = "pending" | "approved" | "denied" | "completed";
+
+const MOVE_OUT_STATUS_LABELS: Record<MoveOutStatus, string> = {
+    pending: "Pending",
+    approved: "Approved",
+    denied: "Denied",
+    completed: "Completed",
+};
 
 interface MoveOutRequestData {
     id: string;
@@ -28,11 +46,18 @@ interface MoveOutRequestData {
 }
 
 interface MoveOutRequestProps {
-    variant?: "sidebar" | "quickAction" | "hub";
+    /** "link" renders a compact text button that opens the same move-out flow (used inside other cards). */
+    variant?: "sidebar" | "quickAction" | "hub" | "link";
     initialRequest?: MoveOutRequestData | null;
+    /**
+     * Lease end date (YYYY-MM-DD) when the lease has one. Open-ended leases have none,
+     * so the move-out date is bounded only by the notice period.
+     */
+    leaseEndDate?: string | null;
 }
 
-export default function MoveOutRequest({ variant = "sidebar", initialRequest = null }: MoveOutRequestProps) {
+export default function MoveOutRequest({ variant = "sidebar", initialRequest = null, leaseEndDate = null }: MoveOutRequestProps) {
+    const { t, locale } = useLanguageContext();
     const [isOpen, setIsOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -40,6 +65,17 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
     const [existingRequest, setExistingRequest] = useState<MoveOutRequestData | null>(initialRequest);
     const [reason, setReason] = useState("");
     const [requestedDate, setRequestedDate] = useState("");
+
+    // Same rules as POST /api/tenant/lease/move-out (30-day notice, real date, reason length).
+    const earliestMoveOutDate = addDaysIso(todayIsoDate(), MOVE_OUT_NOTICE_DAYS);
+    const latestMoveOutDate = leaseEndDate && leaseEndDate >= earliestMoveOutDate ? leaseEndDate : "2100-12-31";
+    const moveOutForm = useFormValidation(
+        { requestedDate, reason },
+        {
+            requestedDate: (value) => moveOutDateRule(value, { leaseEndDate }),
+            reason: (value) => textRule(value, { label: "Reason", max: LIFECYCLE_LIMITS.moveOutReason }),
+        }
+    );
 
     useEffect(() => {
         setMounted(true);
@@ -71,8 +107,8 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
 
     const handleRequest = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!requestedDate) {
-            toast.error("Please select a target move-out date");
+        if (isSubmitting) return;
+        if (!moveOutForm.validateAll()) {
             return;
         }
 
@@ -84,15 +120,19 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                 body: JSON.stringify({ reason, requestedDate }),
             });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to submit request");
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                moveOutForm.setServerErrors(data.fieldErrors);
+                throw new Error(data.error || t("Failed to submit request"));
+            }
+            moveOutForm.reset();
 
-            toast.success("Move-out request submitted successfully");
+            toast.success(t("Move-out request submitted successfully"));
             setIsOpen(false);
             fetchExistingRequest();
         } catch (err: unknown) {
             const error = err as Error;
-            toast.error(error.message);
+            toast.error(tr(error.message));
         } finally {
             setIsSubmitting(false);
         }
@@ -100,7 +140,17 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
 
     return (
         <>
-            {existingRequest ? (
+            {variant === "link" ? (
+                /* Compact inline trigger, embedded in other cards (e.g. the open-ended renewal card) */
+                <button
+                    type="button"
+                    onClick={() => setIsOpen(true)}
+                    className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:underline underline-offset-4 transition-colors"
+                >
+                    {existingRequest ? t("View move-out status") : t("Request a move-out")}
+                    <ArrowRight className="size-3.5" />
+                </button>
+            ) : existingRequest ? (
                 /* Existing Request State */
                 variant === "hub" ? (
                     <div className="neumorphic-panel rounded-[2.5rem] p-8 flex flex-col justify-between transition-all relative overflow-hidden h-full">
@@ -122,17 +172,17 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                             </div>
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <h4 className="text-lg font-black text-foreground tracking-tight">Move-Out: {existingRequest.status.charAt(0).toUpperCase() + existingRequest.status.slice(1)}</h4>
+                                    <h4 className="text-lg font-black text-foreground tracking-tight">{t("Move-Out: {status}", { status: t(MOVE_OUT_STATUS_LABELS[existingRequest.status] ?? existingRequest.status) })}</h4>
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                                    {existingRequest.status === "pending" ? "Your request is currently being reviewed by the landlord." :
-                                     existingRequest.status === "approved" ? "Your request has been approved. Please prepare for inspection." :
-                                     existingRequest.status === "denied" ? `Your request was denied. Reason: ${existingRequest.denial_reason}` :
-                                     "Your move-out clearance is complete."}
+                                    {existingRequest.status === "pending" ? t("Your request is currently being reviewed by the landlord.") :
+                                     existingRequest.status === "approved" ? t("Your request has been approved. Please prepare for inspection.") :
+                                     existingRequest.status === "denied" ? t("Your request was denied. Reason: {reason}", { reason: existingRequest.denial_reason ?? "" }) :
+                                     t("Your move-out clearance is complete.")}
                                 </p>
                                 <div className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                                     <Calendar className="size-3" />
-                                    Target Date: <ClientOnlyDate date={existingRequest.requested_date} />
+                                    {t("Target Date:")} <ClientOnlyDate date={existingRequest.requested_date} />
                                 </div>
                             </div>
                         </div>
@@ -140,7 +190,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                             onClick={() => setIsOpen(true)}
                             className="w-full mt-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 neumorphic-extruded"
                         >
-                            View Timeline & Checklist
+                            {t("View Timeline & Checklist")}
                         </button>
                     </div>
                 ) : variant === "quickAction" ? (
@@ -168,7 +218,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                             existingRequest.status === "denied" ? "text-red-500 group-hover:text-red-400" :
                             "text-emerald-500 group-hover:text-emerald-400"
                         )}>
-                            Move Out
+                            {t("Move Out")}
                         </span>
                     </button>
                 ) : (
@@ -182,16 +232,16 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                             )}>
                                 <Clock className="size-5" />
                             </div>
-                            <h3 className="text-xl font-black text-foreground">Move-Out Status</h3>
+                            <h3 className="text-xl font-black text-foreground">{t("Move-Out Status")}</h3>
                         </div>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                            Your request for <ClientOnlyDate date={existingRequest.requested_date} /> is <strong>{existingRequest.status}</strong>.
+                            {t("Your request for")} <ClientOnlyDate date={existingRequest.requested_date} /> {t("is")} <strong>{t(MOVE_OUT_STATUS_LABELS[existingRequest.status] ?? existingRequest.status)}</strong>.
                         </p>
                         <button
                             onClick={() => setIsOpen(true)}
                             className="w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all neumorphic-extruded"
                         >
-                            View Progress
+                            {t("View Progress")}
                         </button>
                     </div>
                 )
@@ -206,9 +256,9 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                             <LogOut className="size-6" />
                         </div>
                         <div>
-                            <h4 className="text-lg font-black text-foreground tracking-tight">End of Lease</h4>
+                            <h4 className="text-lg font-black text-foreground tracking-tight">{t("End of Lease")}</h4>
                             <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                                Planning to move out? Initiate a digital clearance request and manage your move-out timeline.
+                                {t("Planning to move out? Initiate a digital clearance request with at least {days} days' notice and manage your move-out timeline.", { days: MOVE_OUT_NOTICE_DAYS })}
                             </p>
                         </div>
                     </div>
@@ -216,7 +266,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                         onClick={() => setIsOpen(true)}
                         className="w-full mt-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-red-500 transition-all flex items-center justify-center gap-2 neumorphic-extruded"
                     >
-                        Request Move-Out
+                        {t("Request Move-Out")}
                     </button>
                 </div>
             ) : variant === "sidebar" ? (
@@ -228,16 +278,16 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                             <div className="flex size-10 items-center justify-center rounded-xl bg-red-500/10 text-red-500 border border-red-500/20">
                                 <LogOut className="size-5" />
                             </div>
-                            <h3 className="text-xl font-black text-foreground">End of Lease</h3>
+                            <h3 className="text-xl font-black text-foreground">{t("End of Lease")}</h3>
                         </div>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-8">
-                            Planning to move out? You must initiate a digital clearance request before leaving the property.
+                            {t("Planning to move out? You must initiate a digital clearance request at least {days} days before leaving the property.", { days: MOVE_OUT_NOTICE_DAYS })}
                         </p>
                         <button
                             onClick={() => setIsOpen(true)}
                             className="w-full py-4 rounded-2xl text-red-600 font-black uppercase tracking-widest text-[10px] transition-all neumorphic-extruded"
                         >
-                            Request Move-Out
+                            {t("Request Move-Out")}
                         </button>
                     </div>
                 </div>
@@ -250,7 +300,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                     <div className="size-12 sm:size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 text-red-500 neumorphic-inset-card">
                         <LogOut className="size-6 sm:size-7" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-black text-center group-hover:text-red-500 transition-colors uppercase tracking-wider truncate max-w-full">Move Out</span>
+                    <span className="text-[10px] sm:text-xs font-black text-center group-hover:text-red-500 transition-colors uppercase tracking-wider truncate max-w-full">{t("Move Out")}</span>
                 </button>
             )}
 
@@ -266,12 +316,13 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                     <LogOut className="size-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-2xl font-black text-foreground tracking-tight">Move-Out Clearance</h3>
-                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Residency Termination Protocol</p>
+                                    <h3 className="text-2xl font-black text-foreground tracking-tight">{t("Move-Out Clearance")}</h3>
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("Residency Termination Protocol")}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}
+                                aria-label={t("Close")}
                                 className="p-2 rounded-xl transition-colors text-muted-foreground hover:text-foreground neumorphic-extruded"
                             >
                                 <X className="size-5" />
@@ -282,7 +333,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                         {existingRequest ? (
                             <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto">
                                 <div className="space-y-6">
-                                    <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Clearance Progress</h4>
+                                    <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">{t("Clearance Progress")}</h4>
                                     
                                     <div className="relative space-y-8">
                                         {/* Vertical line */}
@@ -294,7 +345,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                                 <Clock className="size-4" />
                                             </div>
                                             <div className="flex flex-col">
-                                                <p className="text-sm font-black text-foreground">Request Submitted</p>
+                                                <p className="text-sm font-black text-foreground">{t("Request Submitted")}</p>
                                                 <p className="text-xs font-medium text-muted-foreground"><ClientOnlyDate date={existingRequest.created_at} /></p>
                                             </div>
                                         </div>
@@ -310,15 +361,15 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                             </div>
                                             <div className="flex flex-col" suppressHydrationWarning>
                                                 <p className={cn("text-sm font-black", existingRequest.status === "pending" ? "text-muted-foreground" : "text-foreground")}>
-                                                    {existingRequest.status === "denied" ? "Request Denied" : "Landlord Approval"}
+                                                    {existingRequest.status === "denied" ? t("Request Denied") : t("Landlord Approval")}
                                                 </p>
                                                 <p className="text-xs font-medium text-muted-foreground">
                                                     {existingRequest.approved_at ? <ClientOnlyDate date={existingRequest.approved_at} /> : 
-                                                     existingRequest.denied_at ? <ClientOnlyDate date={existingRequest.denied_at} /> : "Awaiting review"}
+                                                     existingRequest.denied_at ? <ClientOnlyDate date={existingRequest.denied_at} /> : t("Awaiting review")}
                                                 </p>
                                                 {existingRequest.status === "denied" && (
                                                     <div className="mt-2 rounded-xl bg-red-500/5 border border-red-500/10 p-3 text-[11px] font-medium text-red-600">
-                                                        Reason: {existingRequest.denial_reason}
+                                                        {t("Reason: {reason}", { reason: existingRequest.denial_reason ?? "" })}
                                                     </div>
                                                 )}
                                             </div>
@@ -333,9 +384,9 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                                 <ShieldCheck className="size-4" />
                                             </div>
                                             <div className="flex flex-col">
-                                                <p className={cn("text-sm font-black", !existingRequest.inspection_date ? "text-muted-foreground" : "text-foreground")}>Physical Inspection</p>
+                                                <p className={cn("text-sm font-black", !existingRequest.inspection_date ? "text-muted-foreground" : "text-foreground")}>{t("Physical Inspection")}</p>
                                                 <p className="text-xs font-medium text-muted-foreground">
-                                                    {existingRequest.inspection_date ? <ClientOnlyDate date={existingRequest.inspection_date} /> : "Scheduled after approval"}
+                                                    {existingRequest.inspection_date ? <ClientOnlyDate date={existingRequest.inspection_date} /> : t("Scheduled after approval")}
                                                 </p>
                                             </div>
                                         </div>
@@ -349,9 +400,9 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                                 <LogOut className="size-4" />
                                             </div>
                                             <div className="flex flex-col">
-                                                <p className={cn("text-sm font-black", existingRequest.status !== "completed" ? "text-muted-foreground" : "text-foreground")}>Lease Terminated</p>
+                                                <p className={cn("text-sm font-black", existingRequest.status !== "completed" ? "text-muted-foreground" : "text-foreground")}>{t("Lease Terminated")}</p>
                                                 <p className="text-xs font-medium text-muted-foreground">
-                                                    {existingRequest.completed_at ? <ClientOnlyDate date={existingRequest.completed_at} /> : "Final step"}
+                                                    {existingRequest.completed_at ? <ClientOnlyDate date={existingRequest.completed_at} /> : t("Final step")}
                                                 </p>
                                             </div>
                                         </div>
@@ -360,17 +411,17 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
 
                                 {existingRequest.inspection_date && (
                                     <div className="pt-6 border-t border-border space-y-4">
-                                        <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Security Deposit Summary</h4>
+                                        <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">{t("Security Deposit Summary")}</h4>
                                         <div className="rounded-2xl p-4 space-y-3 neumorphic-inset">
                                             {existingRequest.deposit_deductions && Array.isArray(existingRequest.deposit_deductions) && existingRequest.deposit_deductions.map((d: any) => (
                                                 <div key={d.description} className="flex justify-between text-xs font-medium">
                                                     <span className="text-muted-foreground">{d.description}</span>
-                                                    <span className="text-red-500 font-black">- ₱{d.amount.toLocaleString()}</span>
+                                                    <span className="text-red-500 font-black">- ₱{d.amount.toLocaleString(locale)}</span>
                                                 </div>
                                             ))}
                                             <div className="pt-3 border-t border-border/50 flex justify-between items-center">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Estimated Refund</span>
-                                                <span className="text-lg font-black text-primary">₱{(existingRequest.deposit_refund_amount || 0).toLocaleString()}</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-foreground">{t("Estimated Refund")}</span>
+                                                <span className="text-lg font-black text-primary">₱{(existingRequest.deposit_refund_amount || 0).toLocaleString(locale)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -388,33 +439,44 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                 <div className="neumorphic-inset rounded-2xl p-6 flex gap-4">
                                     <AlertOctagon className="size-5 text-red-500 shrink-0" />
                                     <p className="text-[11px] font-medium text-red-600/80 leading-relaxed uppercase tracking-wider">
-                                        Submitting this request initiates the digital clearance process. Your landlord will review your account for any pending balances and inspect the unit condition.
+                                        {t("Submitting this request initiates the digital clearance process. Your landlord will review your account for any pending balances and inspect the unit condition.")}
                                     </p>
                                 </div>
 
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <label htmlFor="moveOutDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Target Move-Out Date</label>
-                                        <input min={new Date().toISOString().split("T")[0]} max="2099-12-31" 
+                                        <label htmlFor="moveOutDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">{t("Target Move-Out Date")}</label>
+                                        <input min={earliestMoveOutDate} max={latestMoveOutDate}
+                                            {...moveOutForm.fieldProps("requestedDate")}
                                             id="moveOutDate"
-                                            type="date" 
+                                            type="date"
                                             required
                                             value={requestedDate}
                                             onChange={(e) => setRequestedDate(e.target.value)}
-                                            className="w-full rounded-xl px-4 py-3 text-sm font-black outline-none transition-all neumorphic-inset"
+                                            className={cn(
+                                                "w-full rounded-xl px-4 py-3 text-sm font-black outline-none transition-all neumorphic-inset",
+                                                moveOutForm.errorFor("requestedDate") && "ring-1 ring-rose-500/60"
+                                            )}
                                         />
+                                        <FieldError id={moveOutForm.errorId("requestedDate")} message={moveOutForm.errorFor("requestedDate")} className="px-1" />
+                                        <p className="text-[10px] text-muted-foreground px-1 leading-relaxed">
+                                            {t("A minimum of {days} days' notice is required. Earliest date:", { days: MOVE_OUT_NOTICE_DAYS })} <ClientOnlyDate date={earliestMoveOutDate} />
+                                            {leaseEndDate ? <> · {t("Lease ends")} <ClientOnlyDate date={leaseEndDate} /></> : null}.
+                                        </p>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label htmlFor="moveOutReason" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Reason for Leaving (Optional)</label>
-                                        <textarea maxLength={500} 
+                                        <label htmlFor="moveOutReason" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">{t("Reason for Leaving (Optional)")}</label>
+                                        <textarea maxLength={LIFECYCLE_LIMITS.moveOutReason}
+                                            {...moveOutForm.fieldProps("reason")}
                                             id="moveOutReason"
                                             rows={3}
                                             value={reason}
                                             onChange={(e) => setReason(e.target.value)}
-                                            placeholder="Briefly explain your reason for moving out..."
+                                            placeholder={t("Briefly explain your reason for moving out...")}
                                             className="w-full rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all resize-none neumorphic-inset"
                                         />
+                                        <FieldError id={moveOutForm.errorId("reason")} message={moveOutForm.errorFor("reason")} className="px-1" />
                                     </div>
                                 </div>
 
@@ -424,7 +486,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                         onClick={() => setIsOpen(false)}
                                         className="flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all neumorphic-extruded"
                                     >
-                                        Cancel
+                                        {t("Cancel")}
                                     </button>
                                     <button
                                         type="submit"
@@ -434,7 +496,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                         {isSubmitting ? (
                                             <Loader2 className="size-4 animate-spin" />
                                         ) : (
-                                            <>Submit Request <ArrowRight className="size-4" /></>
+                                            <>{t("Submit Request")} <ArrowRight className="size-4" /></>
                                         )}
                                     </button>
                                 </div>

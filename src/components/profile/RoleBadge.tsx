@@ -1,4 +1,7 @@
+"use client";
+
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { Building2, ShieldCheck, User } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -32,6 +35,7 @@ const ROLE_META: Record<
 };
 
 export function RoleBadge({ role, className, showTenant = false }: RoleBadgeProps) {
+    const { t } = useLanguageContext();
     if (!role) return null;
     if (role === "tenant" && !showTenant) return null;
 
@@ -41,8 +45,8 @@ export function RoleBadge({ role, className, showTenant = false }: RoleBadgeProp
     return (
         <span
             role="img"
-            aria-label={meta.label}
-            title={meta.label}
+            aria-label={t(meta.label)}
+            title={t(meta.label)}
             className={cn(
                 "inline-flex size-4 shrink-0 items-center justify-center rounded-full border",
                 meta.className,

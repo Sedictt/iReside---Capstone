@@ -1,5 +1,6 @@
 import { Loader2, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface ContractActionsProps {
     canSubmit: boolean;
@@ -14,6 +15,7 @@ export function ContractActions({
     isFinalApproval,
     onClick,
 }: ContractActionsProps) {
+    const { t } = useLanguageContext();
     return (
         <button
             onClick={onClick}
@@ -32,11 +34,11 @@ export function ContractActions({
             )}
             {submitting
                 ? isFinalApproval
-                    ? "Approving…"
-                    : "Requesting…"
+                    ? t("Approving…")
+                    : t("Requesting…")
                 : isFinalApproval
-                  ? "Approve Application"
-                  : "Request Payments"}
+                  ? t("Approve Application")
+                  : t("Request Payments")}
         </button>
     );
 }

@@ -7,6 +7,8 @@ import {
 } from "@/lib/application-payment-pending";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseJsonBody } from "@/lib/validation/server";
+import { isId, paymentBypassSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 type RouteContext = {
     params: Promise<{ applicationId: string }>;
@@ -21,16 +23,13 @@ export async function POST(request: Request, context: RouteContext) {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, userEmail, supabase } = authContext;
 
-    const body = (await request.json()) as { password?: string; reason?: string };
-    const password = typeof body.password === "string" ? body.password : "";
-    const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+    if (!isId(applicationId)) {
+        return NextResponse.json({ error: "Application not found." }, { status: 404 });
+    }
 
-    if (!password) {
-        return NextResponse.json({ error: "Password is required for bypass." }, { status: 400 });
-    }
-    if (reason.length < 10) {
-        return NextResponse.json({ error: "A detailed bypass reason is required (at least 10 characters)." }, { status: 400 });
-    }
+    const parsed = await parseJsonBody(request, paymentBypassSchema);
+    if (!parsed.ok) return parsed.response;
+    const { password, reason } = parsed.data;
 
     const { data: application, error: applicationError } = await adminClient
         .from("applications")

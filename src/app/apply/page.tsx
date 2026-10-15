@@ -8,9 +8,11 @@ import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 function ApplyForm() {
     const router = useRouter();
+    const { t } = useLanguageContext();
     const searchParams = useSearchParams();
     const unitParam = searchParams.get("unit") || searchParams.get("unitId");
     const codeParam = searchParams.get("code") || searchParams.get("token");
@@ -41,12 +43,12 @@ function ApplyForm() {
                         return;
                     }
                     if (data.error) {
-                        setError(data.error);
+                        setError(t(data.error));
                     }
                 }
             } catch {
                 if (!isCancelled) {
-                    setError("Unable to automatically load the application for this unit. Please enter your invite code below.");
+                    setError(t("Unable to automatically load the application for this unit. Please enter your invite code below."));
                 }
             } finally {
                 if (!isCancelled) {
@@ -60,7 +62,7 @@ function ApplyForm() {
         return () => {
             isCancelled = true;
         };
-    }, [unitParam, router]);
+    }, [unitParam, router, t]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -68,7 +70,7 @@ function ApplyForm() {
 
         const trimmedCode = inviteCode.trim();
         if (!trimmedCode) {
-            setError("Please enter your invite code");
+            setError(t("Please enter your invite code"));
             return;
         }
 
@@ -79,7 +81,7 @@ function ApplyForm() {
             const data = await response.json();
 
             if (!response.ok || data.error) {
-                setError(data.error || "Invalid invite code. Please check and try again.");
+                setError(t(data.error || "Invalid invite code. Please check and try again."));
                 setLoading(false);
                 return;
             }
@@ -87,7 +89,7 @@ function ApplyForm() {
             // Valid invite - redirect to the application page
             router.push(`/apply/${encodeURIComponent(trimmedCode)}`);
         } catch {
-            setError("Unable to verify invite code. Please try again.");
+            setError(t("Unable to verify invite code. Please try again."));
             setLoading(false);
         }
     };
@@ -104,7 +106,7 @@ function ApplyForm() {
                 </div>
                 <div className="flex items-center gap-2 text-sm font-bold text-foreground">
                     <Loader2 className="size-4 animate-spin text-primary" />
-                    <span>Loading unit application...</span>
+                    <span>{t("Loading unit application...")}</span>
                 </div>
             </div>
         );
@@ -134,7 +136,7 @@ function ApplyForm() {
                             className="flex items-center gap-2 text-sm font-black text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <ArrowLeft className="size-4" />
-                            Back
+                            {t("Back")}
                         </Link>
                     </motion.div>
                 </div>
@@ -157,15 +159,15 @@ function ApplyForm() {
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-black uppercase tracking-widest mb-8"
                         >
                             <KeyRound className="size-3.5" />
-                            Invite Code Required
+                            {t("Invite Code Required")}
                         </motion.div>
 
                         <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-[1.1] mb-6">
-                            Enter your<br />
-                            <span className="text-primary">invite code</span>
+                            {t("Enter your")}<br />
+                            <span className="text-primary">{t("invite code")}</span>
                         </h1>
                         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
-                            Your invite code was provided by your landlord or property manager. Enter it below to start your application.
+                            {t("Your invite code was provided by your landlord or property manager. Enter it below to start your application.")}
                         </p>
                     </motion.div>
 
@@ -181,7 +183,7 @@ function ApplyForm() {
                                     htmlFor="inviteCode"
                                     className="text-sm font-medium text-foreground"
                                 >
-                                    Invite Code
+                                    {t("Invite Code")}
                                 </label>
                                 <div className="relative">
                                     <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
@@ -194,7 +196,7 @@ function ApplyForm() {
                                             setInviteCode(e.target.value);
                                             setError(null);
                                         }}
-                                        placeholder="Enter your invite code"
+                                        placeholder={t("Enter your invite code")}
                                         className={cn(
                                             "w-full pl-12 pr-4 py-4 rounded-2xl border bg-card text-foreground placeholder:text-muted-foreground",
                                             "text-base font-medium",
@@ -229,11 +231,11 @@ function ApplyForm() {
                                 {loading ? (
                                     <>
                                         <Loader2 className="size-5 animate-spin" />
-                                        Verifying...
+                                        {t("Verifying...")}
                                     </>
                                 ) : (
                                     <>
-                                        Continue
+                                        {t("Continue")}
                                         <ArrowRight className="size-5" />
                                     </>
                                 )}
@@ -241,12 +243,12 @@ function ApplyForm() {
                         </form>
 
                         <p className="text-center text-sm text-muted-foreground mt-8">
-                            Don&apos;t have an invite code?{" "}
+                            {t("Don't have an invite code?")}{" "}
                             <Link
                                 href="/signup/tenant"
                                 className="text-primary hover:underline font-medium"
                             >
-                                Learn more about iReside
+                                {t("Learn more about iReside")}
                             </Link>
                         </p>
                     </motion.div>

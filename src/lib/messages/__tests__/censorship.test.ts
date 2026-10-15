@@ -179,3 +179,22 @@ describe("messages censorship", () => {
         expect(spamLexicon.phrases.some((phrase: string) => phrase.trim().length === 0)).toBe(false);
     });
 });
+
+describe("messages censorship: Philippine mobile numbers", () => {
+    it.each([
+        "call me at 09171234567",
+        "call me at 0917 123 4567",
+        "call me at 0917-123-4567",
+        "call me at +639171234567",
+        "call me at +63 917 123 4567",
+        "+63 917 123 4567 is my number",
+    ])("redacts %s", (source) => {
+        const result = redactSensitiveContent(source);
+        expect(result.isSensitive).toBe(true);
+        expect(result.redactedMessage).not.toMatch(/917/);
+    });
+
+    it("leaves ordinary numbers alone", () => {
+        expect(redactSensitiveContent("Unit 1204, rent is 9500 for 12 months").redactedMessage).toContain("9500");
+    });
+});

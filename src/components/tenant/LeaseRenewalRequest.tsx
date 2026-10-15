@@ -2,9 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { RefreshCw, Calendar, X, CheckCircle2, ArrowRight, ShieldCheck, Clock, Info, Loader2 } from "lucide-react";
+import { RefreshCw, Calendar, X, CheckCircle2, ArrowRight, ShieldCheck, Clock, Info, Loader2, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+    EXPIRING_SOON_DAYS,
+    OPEN_ENDED_NOTICE_DAYS,
+    daysUntilLeaseEnd,
+    isOpenEnded,
+    type LeaseTermLike,
+} from "@/lib/lease-term";
+import { useLanguageContext } from "@/context/LanguageContext";
+import MoveOutRequest from "./MoveOutRequest";
 
 export interface ActiveRenewalRequestInfo {
     id?: string;
@@ -19,7 +28,13 @@ export interface ActiveRenewalRequestInfo {
 
 interface LeaseRenewalRequestProps {
     variant?: "sidebar" | "quickAction" | "none";
-    daysRemaining: number;
+    /**
+     * The lease this request is for. Open-ended leases have nothing to renew, so the
+     * card explains that and points to the move-out flow instead of showing the form.
+     */
+    lease?: LeaseTermLike | null;
+    /** Days until the lease ends. Derived from `lease` when omitted. */
+    daysRemaining?: number;
     leaseId?: string;
     autoOpen?: boolean;
     onSuccess?: () => void;
@@ -47,18 +62,19 @@ const DEFAULT_RENEWAL_TERMS = [
     { months: 24, label: "2 Years Extension", price_label: "Standard Rent" }
 ];
 
-function formatDisplayDate(dateStr?: string | null): string {
+function formatDisplayDate(dateStr?: string | null, locale: string = "en-US"): string {
     if (!dateStr) return "";
     try {
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return dateStr;
-        return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        return d.toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" });
     } catch {
         return dateStr;
     }
 }
 
-export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining, leaseId, autoOpen = false, onSuccess, onClose, existingRequest, renewalSettings }: LeaseRenewalRequestProps) {
+export default function LeaseRenewalRequest({ variant = "sidebar", lease, daysRemaining: daysRemainingProp, leaseId, autoOpen = false, onSuccess, onClose, existingRequest, renewalSettings }: LeaseRenewalRequestProps) {
+    const { t, locale } = useLanguageContext();
     const [isOpen, setIsOpen] = useState(autoOpen);
     const [step, setStep] = useState<"disclosure" | "request">("disclosure");
     const [submitting, setSubmitting] = useState(false);
@@ -119,8 +135,9 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
     }, [leaseId]);
 
     const handleSubmit = async () => {
+        if (submitting) return;
         if (!leaseId) {
-            toast.error("Lease ID not found");
+            toast.error(t("Lease ID not found"));
             return;
         }
 
@@ -132,18 +149,18 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                 body: JSON.stringify({ term_months: selectedTerm })
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
 
             if (!response.ok) {
-                toast.error("Renewal Request Failed", {
-                    description: data.error || "Something went wrong"
+                toast.error(t("Renewal Request Failed"), {
+                    description: data.error || t("Something went wrong")
                 });
                 return;
             }
 
             setSubmitted(true);
-            toast.success("Renewal Request Sent", {
-                description: `Landlord has been notified of your ${selectedTerm}-month renewal intent.`
+            toast.success(t("Renewal Request Sent"), {
+                description: t("Landlord has been notified of your {months}-month renewal intent.", { months: selectedTerm })
             });
 
             onSuccess?.();
@@ -158,8 +175,8 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                 onClose?.();
             }, 3000);
         } catch {
-            toast.error("Renewal Request Failed", {
-                description: "Network error. Please try again."
+            toast.error(t("Renewal Request Failed"), {
+                description: t("Network error. Please try again.")
             });
         } finally {
             setSubmitting(false);
@@ -169,7 +186,36 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
     const isPending = activeRequest?.status === "pending";
     const isApproved = activeRequest?.status === "approved";
     const hasOngoing = isPending || isApproved;
-    const isEligible = (daysRemaining <= 90) || hasOngoing;
+    // Open-ended (month-to-month) leases never need renewing; only a legacy in-flight request keeps the form reachable.
+    const openEnded = Boolean(lease) && isOpenEnded(lease) && !hasOngoing;
+    const daysRemaining = daysRemainingProp ?? daysUntilLeaseEnd(lease) ?? Number.POSITIVE_INFINITY;
+    const isEligible = (daysRemaining <= EXPIRING_SOON_DAYS) || hasOngoing;
+    const daysUntilEligible = Number.isFinite(daysRemaining) ? Math.max(0, Math.ceil(daysRemaining - EXPIRING_SOON_DAYS)) : null;
+
+    if (openEnded) {
+        if (variant !== "sidebar") return null;
+        return (
+            <div className="rounded-[2rem] p-8 relative overflow-hidden flex-shrink-0 backdrop-blur-sm neumorphic-panel" data-testid="renewal-not-needed">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.08] via-transparent to-transparent opacity-80" />
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="flex size-10 items-center justify-center rounded-xl text-primary neumorphic-inset-card">
+                            <Home className="size-5" />
+                        </div>
+                        <h3 className="text-xl font-black text-foreground">{t("No renewal needed")}</h3>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 mb-4 rounded-full text-[9px] font-black uppercase tracking-wider text-primary border border-primary/20 neumorphic-inset">
+                        <span className="size-1.5 rounded-full bg-primary" />
+                        {t("Open-ended · month-to-month")}
+                    </span>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                        {t("Your lease is open-ended. You can stay for as long as rent is paid, and you can request a move-out at any time with {days} days' notice.", { days: OPEN_ENDED_NOTICE_DAYS })}
+                    </p>
+                    <MoveOutRequest variant="link" />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <>
@@ -201,30 +247,32 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                         <RefreshCw className={cn("size-5", isEligible && "animate-spin-slow")} />
                                     )}
                                 </div>
-                                <h3 className="text-xl font-black text-foreground">Lease Renewal</h3>
+                                <h3 className="text-xl font-black text-foreground">{t("Lease Renewal")}</h3>
                             </div>
                             {isPending && (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 border border-amber-500/20 neumorphic-inset">
                                     <span className="size-1.5 rounded-full bg-amber-500 animate-ping" />
-                                    Under Review
+                                    {t("Under Review")}
                                 </span>
                             )}
                             {isApproved && (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 neumorphic-inset">
                                     <CheckCircle2 className="size-3 text-emerald-500" />
-                                    Approved
+                                    {t("Approved")}
                                 </span>
                             )}
                         </div>
 
                         <p className="text-sm text-muted-foreground leading-relaxed mb-8">
                             {isPending
-                                ? "You have an ongoing renewal request under review by your landlord. Additional requests are paused to prevent duplicate submissions."
+                                ? t("You have an ongoing renewal request under review by your landlord. Additional requests are paused to prevent duplicate submissions.")
                                 : isApproved
-                                ? "Your renewal request has been approved! A new lease agreement is ready for you to review and sign."
-                                : isEligible 
-                                ? "Your lease is eligible for renewal. Select a term below to notify your landlord of your intent to stay."
-                                : `Renewal requests open when your lease has 90 days remaining (in ${daysRemaining - 90} days).`}
+                                ? t("Your renewal request has been approved! A new lease agreement is ready for you to review and sign.")
+                                : isEligible
+                                ? t("Your lease is eligible for renewal. Select a term below to notify your landlord of your intent to stay.")
+                                : daysUntilEligible !== null
+                                ? t("Renewal requests open when your lease has {days} days remaining (in {daysUntil} days).", { days: EXPIRING_SOON_DAYS, daysUntil: daysUntilEligible })
+                                : t("Renewal requests open when your lease has {days} days remaining.", { days: EXPIRING_SOON_DAYS })}
                         </p>
 
                         {isPending ? (
@@ -233,7 +281,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                 className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all neumorphic-extruded text-foreground hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
                             >
                                 <Clock className="size-3.5 text-amber-500" />
-                                <span>View Request Status</span>
+                                <span>{t("View Request Status")}</span>
                             </button>
                         ) : isApproved ? (
                             <button
@@ -241,7 +289,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                 className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all neumorphic-primary cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
                             >
                                 <CheckCircle2 className="size-3.5" />
-                                <span>View Approved Request</span>
+                                <span>{t("View Approved Request")}</span>
                             </button>
                         ) : (
                             <button
@@ -254,7 +302,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                         : "neumorphic-extruded text-muted-foreground cursor-not-allowed opacity-50"
                                 )}
                             >
-                                {isEligible ? "Request Renewal" : "Locked"}
+                                {isEligible ? t("Request Renewal") : t("Locked")}
                             </button>
                         )}
                     </div>
@@ -281,7 +329,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                         "text-[10px] font-black text-center transition-colors uppercase tracking-widest",
                         isPending ? "text-amber-600 dark:text-amber-400" : isApproved ? "text-emerald-600 dark:text-emerald-400" : "group-hover:text-primary"
                     )}>
-                        {isPending ? "Renewal Pending" : isApproved ? "Renewal Ready" : "Renew Lease"}
+                        {isPending ? t("Renewal Pending") : isApproved ? t("Renewal Ready") : t("Renew Lease")}
                     </span>
                 </button>
             ) : variant === "none" ? null : null}
@@ -303,8 +351,8 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                 <div>
                                     <h3 className="text-xl font-black text-foreground tracking-tight">
                                         {hasOngoing 
-                                            ? (isPending ? "Renewal Request Under Review" : "Renewal Request Approved")
-                                            : (step === "disclosure" ? "Latest Property Terms" : "Lease Renewal Request")}
+                                            ? (isPending ? t("Renewal Request Under Review") : t("Renewal Request Approved"))
+                                            : (step === "disclosure" ? t("Latest Property Terms") : t("Lease Renewal Request"))}
                                     </h3>
                                 </div>
                             </div>
@@ -327,13 +375,13 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                         <CheckCircle2 className="size-10" />
                                     </div>
                                     <div className="space-y-2">
-                                        <h4 className="text-2xl font-black text-foreground">Request Sent</h4>
+                                        <h4 className="text-2xl font-black text-foreground">{t("Request Sent")}</h4>
                                         <p className="text-sm text-muted-foreground max-w-[280px] mx-auto leading-relaxed">
-                                            Your request to renew for **{selectedTerm} months** has been sent to your landlord for review.
+                                            {t("Your request to renew for **{months} months** has been sent to your landlord for review.", { months: selectedTerm })}
                                         </p>
                                     </div>
                                     <div className="inline-flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest px-4 py-2 rounded-full neumorphic-inset">
-                                        <Clock className="size-3" /> Awaiting Landlord Response
+                                        <Clock className="size-3" /> {t("Awaiting Landlord Response")}
                                     </div>
                                 </div>
                             ) : hasOngoing ? (
@@ -350,47 +398,47 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                     </div>
                                     <div className="space-y-2">
                                         <h4 className="text-2xl font-black text-foreground">
-                                            {isPending ? "Request Under Review" : "Renewal Approved"}
+                                            {isPending ? t("Request Under Review") : t("Renewal Approved")}
                                         </h4>
                                         <p className="text-sm text-muted-foreground leading-relaxed">
-                                            {isPending 
-                                                ? "You already have an on-going lease renewal request submitted. It is currently awaiting review by your landlord."
-                                                : "Your lease renewal request was approved! A new lease agreement is ready for your signature."}
+                                            {isPending
+                                                ? t("You already have an on-going lease renewal request submitted. It is currently awaiting review by your landlord.")
+                                                : t("Your lease renewal request was approved! A new lease agreement is ready for your signature.")}
                                         </p>
                                     </div>
 
                                     <div className="rounded-2xl p-4 neumorphic-inset text-left space-y-2.5">
                                         <div className="flex items-center justify-between text-xs">
-                                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Status</span>
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Status")}</span>
                                             <span className={cn(
                                                 "font-black text-[11px] flex items-center gap-1.5",
                                                 isPending ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"
                                             )}>
                                                 {isPending && <span className="size-1.5 rounded-full bg-amber-500 animate-ping" />}
-                                                {isPending ? "Pending Approval" : "Approved"}
+                                                {isPending ? t("Pending Approval") : t("Approved")}
                                             </span>
                                         </div>
                                         {activeRequest?.proposed_start_date && activeRequest?.proposed_end_date && (
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Proposed Period</span>
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Proposed Period")}</span>
                                                 <span className="font-semibold text-foreground text-[11px]">
-                                                    {formatDisplayDate(activeRequest.proposed_start_date)} - {formatDisplayDate(activeRequest.proposed_end_date)}
+                                                    {formatDisplayDate(activeRequest.proposed_start_date, locale)} - {formatDisplayDate(activeRequest.proposed_end_date, locale)}
                                                 </span>
                                             </div>
                                         )}
                                         {activeRequest?.proposed_monthly_rent ? (
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Proposed Rent</span>
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Proposed Rent")}</span>
                                                 <span className="font-black text-primary text-[11px]">
-                                                    PHP {Number(activeRequest.proposed_monthly_rent).toLocaleString()}/mo
+                                                    {t("PHP {amount}/mo", { amount: Number(activeRequest.proposed_monthly_rent).toLocaleString() })}
                                                 </span>
                                             </div>
                                         ) : null}
                                         {activeRequest?.created_at && (
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Submitted On</span>
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Submitted On")}</span>
                                                 <span className="font-semibold text-muted-foreground text-[11px]">
-                                                    {formatDisplayDate(activeRequest.created_at)}
+                                                    {formatDisplayDate(activeRequest.created_at, locale)}
                                                 </span>
                                             </div>
                                         )}
@@ -400,8 +448,8 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                         <Info className="size-4 text-muted-foreground shrink-0 mt-0.5" />
                                         <p className="text-[11px] text-muted-foreground leading-relaxed">
                                             {isPending 
-                                                ? "Additional submissions are locked to prevent duplicate processing. You will receive an in-app notification when your landlord responds."
-                                                : "Navigate to your lease documents section to inspect and sign the renewed agreement."}
+                                                ? t("Additional submissions are locked to prevent duplicate processing. You will receive an in-app notification when your landlord responds.")
+                                                : t("Navigate to your lease documents section to inspect and sign the renewed agreement.")}
                                         </p>
                                     </div>
                                 </div>
@@ -411,34 +459,34 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                         <div className="absolute top-0 right-0 p-4 opacity-[0.05]">
                                             <ShieldCheck className="size-16" />
                                         </div>
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-4">Official Property Memo</p>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-4">{t("Official Property Memo")}</p>
                                         <p className="text-sm font-medium text-foreground leading-relaxed">
-                                            {renewalSettings?.landlord_memo || "No specific updates have been posted by the landlord for this renewal window."}
+                                            {renewalSettings?.landlord_memo || t("No specific updates have been posted by the landlord for this renewal window.")}
                                         </p>
                                     </div>
 
                                     <div className="space-y-4">
-                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Updated Terms</h4>
+                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">{t("Updated Terms")}</h4>
                                         <div className="grid grid-cols-1 gap-3">
                                             <div className="flex items-center justify-between p-4 rounded-2xl neumorphic-inset">
                                                 <div className="flex items-center gap-3">
                                                     <div className="size-8 rounded-lg flex items-center justify-center text-primary neumorphic-inset-card">
                                                         <ArrowRight className="size-4" />
                                                     </div>
-                                                    <span className="text-xs font-black text-foreground uppercase tracking-widest">Expected Rent Adjustment</span>
+                                                    <span className="text-xs font-black text-foreground uppercase tracking-widest">{t("Expected Rent Adjustment")}</span>
                                                 </div>
                                                 <span className="text-sm font-black text-primary">
                                                     {renewalSettings?.base_rent_adjustment ? (
                                                         renewalSettings.adjustment_type === "percentage" 
                                                             ? `+${renewalSettings.base_rent_adjustment}%` 
                                                             : `+PHP ${renewalSettings.base_rent_adjustment.toLocaleString()}`
-                                                    ) : "No change"}
+                                                    ) : t("No change")}
                                                 </span>
                                             </div>
 
                                             {renewalSettings?.new_rules && renewalSettings.new_rules.length > 0 && (
                                                 <div className="space-y-3 pt-2">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New Rules & Clauses</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("New Rules & Clauses")}</p>
                                                     {renewalSettings.new_rules.map((rule, i) => (
                                                         <div key={rule} className="flex items-start gap-3 p-3 rounded-xl neumorphic-inset">
                                                             <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
@@ -459,15 +507,15 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                             className="size-5 rounded-lg text-primary focus:ring-primary/20 neumorphic-inset-card"
                                         />
                                         <label htmlFor="acknowledge" className="text-[11px] font-black text-muted-foreground cursor-pointer select-none">
-                                            I have reviewed the latest property terms and rules.
+                                            {t("I have reviewed the latest property terms and rules.")}
                                         </label>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="w-full animate-in slide-in-from-right-4 duration-500 space-y-6">
                                     <div className="text-center space-y-2 mb-8">
-                                        <h4 className="text-2xl font-black text-foreground">Select Your Term</h4>
-                                        <p className="text-sm text-muted-foreground">Choose your preferred extension period.</p>
+                                        <h4 className="text-2xl font-black text-foreground">{t("Select Your Term")}</h4>
+                                        <p className="text-sm text-muted-foreground">{t("Choose your preferred extension period.")}</p>
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-3">
@@ -493,15 +541,15 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                                             <Calendar className="size-5" />
                                                         </div>
                                                         <div>
-                                                            <p className="text-sm font-black text-foreground">{opt.months} Months</p>
-                                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{opt.label}</p>
+                                                            <p className="text-sm font-black text-foreground">{t("{months} Months", { months: opt.months })}</p>
+                                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t(opt.label)}</p>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-3">
                                                         <span className={cn(
                                                             "text-[10px] font-black uppercase tracking-widest",
                                                             isSelected ? "text-primary" : "text-muted-foreground"
-                                                        )}>{opt.price_label}</span>
+                                                        )}>{t(opt.price_label)}</span>
                                                         <div className={cn(
                                                             "size-6 rounded-full flex items-center justify-center transition-all",
                                                             isSelected ? "neumorphic-primary text-primary-foreground" : "neumorphic-inset-card text-transparent"
@@ -517,7 +565,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                     <div className="flex items-start gap-3 p-4 rounded-xl neumorphic-inset">
                                         <Info className="size-4 text-muted-foreground shrink-0 mt-0.5" />
                                         <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                                            Terms are based on the renewal policy disclosed in the previous step. Final approval is subject to landlord signature.
+                                            {t("Terms are based on the renewal policy disclosed in the previous step. Final approval is subject to landlord signature.")}
                                         </p>
                                     </div>
                                 </div>
@@ -536,7 +584,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                         }}
                                         className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all neumorphic-extruded text-muted-foreground hover:text-foreground cursor-pointer active:scale-[0.98]"
                                     >
-                                        Close
+                                        {t("Close")}
                                     </button>
                                 ) : step === "disclosure" ? (
                                     <button
@@ -545,7 +593,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                         disabled={!acknowledged}
                                         className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 neumorphic-primary cursor-pointer active:scale-[0.98]"
                                     >
-                                        <span>Accept & Proceed</span>
+                                        <span>{t("Accept & Proceed")}</span>
                                         <ArrowRight className="size-4" />
                                     </button>
                                 ) : (
@@ -555,7 +603,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                             onClick={() => setStep("disclosure")}
                                             className="px-6 py-4 rounded-2xl text-muted-foreground font-black uppercase tracking-widest text-[10px] transition-all flex-1 flex items-center justify-center gap-2 hover:text-foreground cursor-pointer neumorphic-extruded active:scale-[0.98]"
                                         >
-                                            Back
+                                            {t("Back")}
                                         </button>
                                         <button
                                             type="button"
@@ -566,11 +614,11 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                             {submitting ? (
                                                 <>
                                                     <Loader2 className="size-4 animate-spin" />
-                                                    <span>Submitting...</span>
+                                                    <span>{t("Submitting...")}</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <span>Submit Request</span>
+                                                    <span>{t("Submit Request")}</span>
                                                     <ArrowRight className="size-4" />
                                                 </>
                                             )}

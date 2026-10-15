@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { m as motion } from "framer-motion";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface KpiCardProps {
     title: string;
@@ -30,6 +31,7 @@ export function KpiCard({
     iconColor = "bg-blue-500",
     className,
 }: KpiCardProps) {
+    const { t } = useLanguageContext();
     const displayTitle = simplifiedTitle || title;
     const displayChange = simplifiedChange || change;
 
@@ -51,7 +53,7 @@ export function KpiCard({
                 <div className="relative z-10 w-full">
                     <div className="flex items-center gap-3 mb-5">
                         <span className={cn("size-2.5 rounded-full shadow-sm", iconColor)}></span>
-                        <span className="text-xs font-black uppercase tracking-[0.15em] text-muted-foreground">{displayTitle}</span>
+                        <span className="text-xs font-black uppercase tracking-[0.15em] text-muted-foreground">{t(displayTitle)}</span>
                     </div>
 
                     <h3 className="mb-2 text-3xl font-black tracking-tight text-foreground md:text-4xl">{value}</h3>
@@ -63,7 +65,7 @@ export function KpiCard({
                         "bg-muted text-muted-foreground"
                     )}>
                         {changeType === "positive" ? "↑" : changeType === "negative" ? "↓" : "•"}
-                        {displayChange}
+                        {t(displayChange)}
                     </div>
                 </div>
 

@@ -189,7 +189,7 @@ describe("AddTenantModal", () => {
         expect(screen.getByText("Total Inception Settlement")).toBeDefined();
     });
 
-    it("validates that end date cannot be earlier than start date in Quick Add", () => {
+    it("defaults to an open-ended lease and only reveals the end date for a fixed term", () => {
         render(
             <AddTenantModal
                 isOpen={true}
@@ -199,6 +199,33 @@ describe("AddTenantModal", () => {
             />
         );
 
+        const openEnded = screen.getByRole("radio", { name: "Open-ended" });
+        const fixedTerm = screen.getByRole("radio", { name: "Fixed term" });
+        expect(openEnded.getAttribute("aria-checked")).toBe("true");
+        expect(fixedTerm.getAttribute("aria-checked")).toBe("false");
+        expect(screen.queryByLabelText("End Date")).toBeNull();
+
+        fireEvent.click(fixedTerm);
+        expect(fixedTerm.getAttribute("aria-checked")).toBe("true");
+        expect(screen.getByLabelText("End Date")).toBeDefined();
+        expect(screen.getByRole("button", { name: "1 Year" })).toBeDefined();
+
+        fireEvent.click(openEnded);
+        expect(screen.queryByLabelText("End Date")).toBeNull();
+    });
+
+    it("validates that end date cannot be earlier than start date for a fixed term in Quick Add", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="quick_add"
+            />
+        );
+
+        fireEvent.click(screen.getByRole("radio", { name: "Fixed term" }));
+
         const startDateInput = screen.getByLabelText("Start Date");
         const endDateInput = screen.getByLabelText("End Date");
 
@@ -206,6 +233,67 @@ describe("AddTenantModal", () => {
         fireEvent.change(endDateInput, { target: { value: "2026-07-31" } });
 
         expect(screen.getByText("End date must be after start date.")).toBeDefined();
+    });
+
+    it("submits an open-ended lease with no end date by default", async () => {
+        const fetchMock = vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ tempPassword: "temp-pass" }),
+        });
+        global.fetch = fetchMock;
+
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="quick_add"
+            />
+        );
+
+        fireEvent.change(screen.getByLabelText("Full Name"), { target: { value: "Maria Santos" } });
+        fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "maria@example.com" } });
+        fireEvent.change(screen.getByLabelText("Phone Number"), { target: { value: "09171234567" } });
+
+        fireEvent.click(screen.getByRole("button", { name: "Register Resident" }));
+
+        await waitFor(() => {
+            expect(fetchMock).toHaveBeenCalledWith("/api/landlord/tenants/manual", expect.objectContaining({ method: "POST" }));
+        });
+
+        const requestBody = JSON.parse(fetchMock.mock.calls[0][1].body);
+        expect(requestBody.termType).toBe("open_ended");
+        expect(requestBody.endDate).toBeNull();
+        expect(requestBody.startDate).toBeTruthy();
+    });
+
+    it("requires an end date when a fixed term is chosen", async () => {
+        const fetchMock = vi.fn();
+        global.fetch = fetchMock;
+
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="quick_add"
+            />
+        );
+
+        fireEvent.change(screen.getByLabelText("Full Name"), { target: { value: "Maria Santos" } });
+        fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "maria@example.com" } });
+        fireEvent.change(screen.getByLabelText("Phone Number"), { target: { value: "09171234567" } });
+        fireEvent.click(screen.getByRole("radio", { name: "Fixed term" }));
+
+        fireEvent.click(screen.getByRole("button", { name: "Register Resident" }));
+
+        expect(await screen.findByText("Please select an end date for the fixed term.")).toBeDefined();
+        expect(fetchMock).not.toHaveBeenCalled();
+
+        // Picking a duration preset fills the end date and clears the error.
+        fireEvent.click(screen.getByRole("button", { name: "1 Year" }));
+        expect(screen.queryByText("Please select an end date for the fixed term.")).toBeNull();
+        expect((screen.getByLabelText("End Date") as HTMLInputElement).value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
 
     it("allows configuring advance rent and security deposit directly and via presets", () => {
@@ -292,15 +380,22 @@ describe("AddTenantModal", () => {
         fireEvent.blur(emailInput);
         expect(screen.getByText("Please enter a valid email address.")).toBeDefined();
 
-        // Letters typed into phone are stripped; when blurred while empty, shows required message
+        // Letters typed into phone are dropped; when blurred while empty, shows required message
         fireEvent.change(phoneInput, { target: { value: "asxasaxas" } });
         fireEvent.blur(phoneInput);
-        expect(screen.getByText("Phone number is required.")).toBeDefined();
+        expect(screen.getByText("Please type a mobile number.")).toBeDefined();
 
-        // Insufficient digits
+        // "+63" is fixed in front; the box shows the rest grouped, without the leading 0
         fireEvent.change(phoneInput, { target: { value: "091234" } });
+        expect((phoneInput as HTMLInputElement).value).toBe("912 34");
         fireEvent.blur(phoneInput);
-        expect(screen.getByText("Please enter a valid phone number (10–15 digits).")).toBeDefined();
+        expect(screen.getByText("Type all 10 numbers after +63, like +63 917 123 4567.")).toBeDefined();
+
+        // A complete number clears the message
+        fireEvent.change(phoneInput, { target: { value: "9171234567" } });
+        expect((phoneInput as HTMLInputElement).value).toBe("917 123 4567");
+        fireEvent.blur(phoneInput);
+        expect(screen.queryByText("Type all 10 numbers after +63, like +63 917 123 4567.")).toBeNull();
     });
 
     it("does not accept digits in full name and strips them in real time", () => {

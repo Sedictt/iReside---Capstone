@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense, use, useMemo } from "react";
+import { validateSignature } from "@/lib/signature-validation";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { generateLeasePdf, exportLeaseDocumentElementToPdf } from "@/lib/lease-pdf";
@@ -9,6 +10,8 @@ import { CheckCircle2, AlertCircle, FileText, Shield, ArrowLeft, PenTool } from 
 import { useAppToast } from "@/hooks/useAppToast";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { T, useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 // Dynamic import for DigitalSigner to avoid SSR errors with pdfjs-dist
 const DigitalSigner = dynamic(
@@ -20,7 +23,9 @@ interface LeaseDetails {
   id: string;
   status: string;
   start_date: string;
-  end_date: string;
+  /** Null for open-ended (month-to-month) leases. */
+  end_date: string | null;
+  term_type?: string | null;
   monthly_rent: number;
   security_deposit: number;
   terms: any;
@@ -56,6 +61,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
   const token = searchParams?.get("token");
   
   const toast = useAppToast();
+  const { t } = useLanguageContext();
   const [lease, setLease] = useState<LeaseDetails | null>(null);
   const [leasePdf, setLeasePdf] = useState<Blob | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +74,8 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
       id: lease.id,
       status: lease.status,
       start_date: lease.start_date,
-      end_date: lease.end_date,
+      end_date: lease.end_date ?? null,
+      term_type: lease.term_type ?? null,
       monthly_rent: Number(lease.monthly_rent || 0),
       security_deposit: Number(lease.security_deposit || 0),
       terms: lease.terms,
@@ -117,7 +124,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
         const leaseData = await response.json();
         setLease(leaseData);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load lease");
+        setError(err instanceof Error ? tr(err.message) : tr("Failed to load lease"));
         setLoading(false);
       }
     };
@@ -175,7 +182,8 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
           pdfBlob = await generateLeasePdf({
             id: lease.id,
             startDate: formatFullDate(lease.start_date),
-            endDate: formatFullDate(lease.end_date),
+            endDate: lease.end_date ? formatFullDate(lease.end_date) : null,
+            termType: lease.term_type ?? null,
             monthlyRent: lease.monthly_rent,
             securityDeposit: lease.security_deposit,
             property: lease.unit.property,
@@ -190,7 +198,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
 
         setLeasePdf(pdfBlob);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to generate agreement document");
+        setError(err instanceof Error ? tr(err.message) : tr("Failed to generate agreement document"));
       } finally {
         setLoading(false);
       }
@@ -201,7 +209,14 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
 
   const handleSigned = async (signedBlob: Blob, signatureDataUrl?: string) => {
     if (!leaseId || !token || !signatureDataUrl) {
-      toast.error("Signature data is missing. Please try signing again.");
+      toast.error(t("Signature data is missing. Please try signing again."));
+      return;
+    }
+
+    // Same checks the sign API runs (PNG data URL, size, dimensions, not blank).
+    const signatureCheck = await validateSignature(signatureDataUrl);
+    if (!signatureCheck.valid) {
+      toast.error(t(signatureCheck.error || "Invalid signature. Please sign again."));
       return;
     }
 
@@ -244,7 +259,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
       }
 
       setSuccess(true);
-      toast.success("Lease countersigned and activated!");
+      toast.success(t("Lease countersigned and activated!"));
 
       // Redirect after delay
       setTimeout(() => {
@@ -252,7 +267,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
       }, 3000);
 
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to countersign lease");
+      toast.error(err instanceof Error ? t(err.message) : t("Failed to countersign lease"));
     }
   };
 
@@ -293,8 +308,8 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
               </div>
             </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-black tracking-tighter uppercase text-foreground italic">Validating Agreement</h2>
-              <p className="text-muted-foreground text-xs font-black uppercase tracking-[0.3em]">Preparing for Countersign</p>
+              <h2 className="text-2xl font-black tracking-tighter uppercase text-foreground italic">{t("Validating Agreement")}</h2>
+              <p className="text-muted-foreground text-xs font-black uppercase tracking-[0.3em]">{t("Preparing for Countersign")}</p>
             </div>
           </div>
         </div>
@@ -309,15 +324,15 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
               <AlertCircle className="size-12 text-red-500" />
             </div>
             <div className="space-y-2">
-              <h1 className="text-4xl font-black tracking-tighter text-foreground uppercase italic">Access Denied</h1>
-              <p className="text-muted-foreground font-medium leading-relaxed">{error}</p>
+              <h1 className="text-4xl font-black tracking-tighter text-foreground uppercase italic">{t("Access Denied")}</h1>
+              <p className="text-muted-foreground font-medium leading-relaxed">{t(error)}</p>
             </div>
             <button
               onClick={() => push("/landlord/dashboard")}
               className="group w-full bg-foreground text-background hover:bg-primary hover:text-primary-foreground px-8 py-5 rounded-2xl font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3"
             >
               <ArrowLeft className="size-5 group-hover:-translate-x-1 transition-transform" />
-              Return to Dashboard
+              {t("Return to Dashboard")}
             </button>
           </motion.div>
         </div>
@@ -332,27 +347,27 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
               <CheckCircle2 className="size-16 text-emerald-500 mx-auto" />
             </div>
             <div className="space-y-2">
-              <h1 className="text-4xl font-black tracking-tighter text-foreground uppercase italic">Lease Activated</h1>
+              <h1 className="text-4xl font-black tracking-tighter text-foreground uppercase italic">{t("Lease Activated")}</h1>
               <p className="text-muted-foreground font-medium leading-relaxed">
-                The agreement is now legally binding. Both parties have signed.
+                {t("The agreement is now legally binding. Both parties have signed.")}
               </p>
             </div>
             <div className="p-4 bg-muted/50 rounded-2xl border border-border flex items-center gap-4">
                <Shield className="size-8 text-primary shrink-0" />
                <div className="text-left">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Legal Enforcement</p>
-                  <p className="text-xs text-foreground font-medium">Digital signatures finalized and archived.</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Legal Enforcement")}</p>
+                  <p className="text-xs text-foreground font-medium">{t("Digital signatures finalized and archived.")}</p>
                </div>
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 animate-pulse">Redirecting to Dashboard...</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 animate-pulse">{t("Redirecting to Dashboard...")}</p>
           </motion.div>
         </div>
       ) : (!lease || !leasePdf) ? null : (
         <DigitalSigner 
             initialFile={leasePdf}
             onSigned={handleSigned}
-            title={`Countersign Lease: ${lease.tenant.full_name}`}
-            primaryActionLabel="Countersign & Activate"
+            title={t("Countersign Lease: {name}", { name: lease.tenant.full_name })}
+            primaryActionLabel={t("Countersign & Activate")}
         />
       )}
     </>
@@ -372,7 +387,7 @@ export default function LandlordLeaseSigningPage({
             <div className="absolute inset-0 border-4 border-primary/10 rounded-full" />
             <div className="absolute inset-0 border-4 border-t-primary rounded-full animate-spin" />
           </div>
-          <h2 className="text-xl font-black tracking-tighter uppercase text-foreground italic">Loading Environment</h2>
+          <h2 className="text-xl font-black tracking-tighter uppercase text-foreground italic"><T>Loading Environment</T></h2>
         </div>
       </div>
     }>

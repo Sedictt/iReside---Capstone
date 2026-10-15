@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { parseJsonBody } from "@/lib/validation/server";
+import { zUuid } from "@/lib/validation/zod-fields";
+import { messageUserActionSchema } from "@/lib/validation/schemas/operations.schema";
 
 type MessageUserAction = "archive" | "unarchive" | "block" | "unblock";
-
-type ActionBody = {
-    action?: MessageUserAction;
-};
-
-const isValidAction = (value: unknown): value is MessageUserAction => {
-    return value === "archive" || value === "unarchive" || value === "block" || value === "unblock";
-};
 
 const getStateForAction = (action: MessageUserAction) => {
     switch (action) {
@@ -41,15 +36,13 @@ export async function POST(
 
     const { targetUserId } = await context.params;
 
-    if (!targetUserId || targetUserId === user.id) {
+    if (!targetUserId || targetUserId === user.id || !zUuid().safeParse(targetUserId).success) {
         return NextResponse.json({ error: "Invalid target user." }, { status: 400 });
     }
 
-    const body = (await request.json().catch(() => null)) as ActionBody | null;
-
-    if (!body || !isValidAction(body.action)) {
-        return NextResponse.json({ error: "Invalid action." }, { status: 400 });
-    }
+    const parsed = await parseJsonBody(request, messageUserActionSchema);
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
 
     try {
         const patch = getStateForAction(body.action);

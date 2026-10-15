@@ -1114,7 +1114,8 @@ export async function recordUtilityReading(
                             monthly_rent: unitRecord.rent_amount || 0,
                             status: "draft",
                             start_date: payload.billingPeriodStart || new Date().toISOString().slice(0, 10),
-                            end_date: "2099-12-31"
+                            term_type: "open_ended",
+                            end_date: null,
                         })
                         .select("id, unit_id, landlord_id")
                         .single();

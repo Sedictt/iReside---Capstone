@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Sun, Moon, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface WizardShellProps {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ export function WizardShell({
   onLockedLogoClick,
   className,
 }: WizardShellProps) {
+  const { t } = useLanguageContext();
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground font-sans transition-colors duration-200">
       {/* Top Header Navigation */}
@@ -35,7 +37,7 @@ export function WizardShell({
             <button
               type="button"
               onClick={onLockedLogoClick}
-              aria-label="Setup must be completed first"
+              aria-label={t("Setup must be completed first")}
               className="flex items-center transition-transform hover:opacity-85 active:scale-95 shrink-0 focus-visible:ring-3 focus-visible:ring-primary focus-visible:outline-none rounded-lg cursor-not-allowed min-h-[48px] min-w-[48px]"
             >
               <Logo className="h-8 w-26 sm:h-9 sm:w-28" />
@@ -43,7 +45,7 @@ export function WizardShell({
           ) : (
             <Link
               href="/"
-              aria-label="Go to iReside home"
+              aria-label={t("Go to iReside home")}
               className="flex items-center transition-transform hover:opacity-85 active:scale-95 shrink-0 focus-visible:ring-3 focus-visible:ring-primary focus-visible:outline-none rounded-lg min-h-[48px] min-w-[48px]"
             >
               <Logo className="h-8 w-26 sm:h-9 sm:w-28" />
@@ -53,7 +55,7 @@ export function WizardShell({
             /
           </span>
           <span className="text-sm sm:text-base font-bold text-muted-foreground hidden sm:inline">
-            Setup Wizard
+            {t("Setup Wizard")}
           </span>
         </div>
 
@@ -62,18 +64,18 @@ export function WizardShell({
           <button
             type="button"
             onClick={() => onToggleMode(modePreference === "dark" ? "light" : "dark")}
-            aria-label={`Switch to ${modePreference === "dark" ? "light" : "dark"} appearance mode`}
+            aria-label={modePreference === "dark" ? t("Switch to light appearance mode") : t("Switch to dark appearance mode")}
             className="min-h-[44px] px-3.5 py-2 rounded-xl text-sm font-bold bg-muted/60 border border-border/80 hover:bg-muted text-foreground transition-all flex items-center gap-2 active:scale-95 focus-visible:ring-3 focus-visible:ring-primary focus-visible:outline-none cursor-pointer shrink-0"
           >
             {modePreference === "dark" ? (
               <>
                 <Sun className="size-4 text-amber-500 shrink-0" />
-                <span className="hidden sm:inline">Light Mode</span>
+                <span className="hidden sm:inline">{t("Light Mode")}</span>
               </>
             ) : (
               <>
                 <Moon className="size-4 text-muted-foreground shrink-0" />
-                <span className="hidden sm:inline">Dark Mode</span>
+                <span className="hidden sm:inline">{t("Dark Mode")}</span>
               </>
             )}
           </button>
@@ -93,7 +95,7 @@ export function WizardShell({
 
       {/* Accessible Footer with Safe Spacing */}
       <footer className="w-full border-t border-border/40 py-4 text-center text-xs text-muted-foreground select-none bg-background/50">
-        <p>© 2026 iReside Technologies. Secure property setup.</p>
+        <p>© 2026 iReside Technologies. {t("Secure property setup.")}</p>
       </footer>
     </div>
   );

@@ -14,7 +14,7 @@ import { z } from "zod";
 // ---------------------------------------------------------------------------
 
 /** Validates a UUID v4 string. */
-export const uuidSchema = z.uuid();
+export const uuidSchema = z.guid();
 
 /** Validates an email address. */
 export const emailSchema = z.email();

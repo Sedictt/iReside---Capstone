@@ -17,17 +17,24 @@ import {
 import { Logo } from "@/components/ui/Logo";
 import { useState, Suspense, useEffect, useRef } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { resetPasswordRequestSchema, otpVerifySchema } from "@/lib/validation/schemas/auth.schema";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { confirmMatchRule, emailRule, newPasswordRule, otpRule, PASSWORD_MAX_LENGTH } from "@/lib/validation/rules";
+import { securityKeyRule } from "@/lib/validation/schemas/account.schema";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
-import { formatSecurityKey, normalizeSecurityKey } from "@/lib/security/recovery-keys";
+import { formatSecurityKey } from "@/lib/security/recovery-keys";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { tr } from "@/hooks/useLanguage";
 
 type RecoveryMode = "EMAIL_OTP" | "SECURITY_KEY";
 type Step = "EMAIL" | "OTP" | "NEW_PASSWORD" | "SUCCESS" | "KEY_RESET" | "KEY_NEW_KEY";
 
 function ForgotPasswordContent() {
     const router = useRouter();
+    const { t } = useLanguageContext();
     const searchParams = useSearchParams();
     const queryEmail = searchParams.get("email") || "";
 
@@ -51,21 +58,33 @@ function ForgotPasswordContent() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [error, setError] = useState<string | null>(null);
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     const [mounted, setMounted] = useState(false);
 
     const otpInputRef = useRef<HTMLInputElement>(null);
 
-    const clearFieldError = (key: string) => {
-        if (fieldErrors[key]) {
-            setFieldErrors(prev => {
-                const next = { ...prev };
-                delete next[key];
-                return next;
-            });
-        }
+    // One validator for every step; each step validates only its own fields.
+    // New passwords follow the same policy as setup and settings.
+    const form = useFormValidation(
+        { email, otp, newPassword, confirmPassword, securityKey: securityKeyInput, newEmail, wantUpdateEmail },
+        {
+            email: (value) => emailRule(value),
+            otp: (value) => otpRule(value),
+            newPassword: (value) => newPasswordRule(value),
+            confirmPassword: (value, all) => confirmMatchRule(value, all.newPassword),
+            securityKey: (value) => securityKeyRule(value),
+            newEmail: (value, all) => (all.wantUpdateEmail ? emailRule(value, { label: "New email address" }) : undefined),
+        },
+    );
+    const tOpt = (message?: string) => (message ? t(message) : undefined);
+    const fieldErrors: Partial<Record<"email" | "otp" | "newPassword" | "confirmPassword" | "securityKey" | "newEmail", string>> = {
+        email: tOpt(form.errorFor("email")),
+        otp: tOpt(form.errorFor("otp")),
+        newPassword: tOpt(form.errorFor("newPassword")),
+        confirmPassword: tOpt(form.errorFor("confirmPassword")),
+        securityKey: tOpt(form.errorFor("securityKey")),
+        newEmail: tOpt(form.errorFor("newEmail")),
     };
 
     useEffect(() => {
@@ -98,18 +117,12 @@ function ForgotPasswordContent() {
     // Email OTP Flow: Send OTP
     // -------------------------------------------------------------
     const handleSendOtp = async (targetEmail: string) => {
+        if (loading) return;
         setError(null);
+        if (!form.validateFields(["email"])) return;
         setLoading(true);
 
         try {
-            const validation = resetPasswordRequestSchema.safeParse({ email: targetEmail });
-            if (!validation.success) {
-                const issue = validation.error.issues[0];
-                setError(issue ? issue.message : "Please enter a valid email address.");
-                setLoading(false);
-                return;
-            }
-
             const response = await fetch("/api/auth/otp/send", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -119,7 +132,8 @@ function ForgotPasswordContent() {
             const result = await response.json();
 
             if (!response.ok || result.error) {
-                setError(result.error || "Failed to send code. Please try again.");
+                form.setServerErrors(result.fieldErrors);
+                setError(tr(result.error || "Failed to send code. Please try again."));
                 return;
             }
 
@@ -141,13 +155,10 @@ function ForgotPasswordContent() {
         e.preventDefault();
         setError(null);
 
+        if (loading) return;
         const cleanOtp = otp.trim().replace(/\s+/g, "");
 
-        const validation = otpVerifySchema.safeParse({ email, otp: cleanOtp });
-        if (!validation.success) {
-            setError("Please enter the complete 6-digit code.");
-            return;
-        }
+        if (!form.validateFields(["otp"])) return;
 
         setLoading(true);
 
@@ -161,7 +172,8 @@ function ForgotPasswordContent() {
             const result = await response.json();
 
             if (!response.ok || result.error) {
-                setError(result.error || "Invalid or expired verification code.");
+                form.setServerErrors(result.fieldErrors);
+                setError(tr(result.error || "Invalid or expired verification code."));
                 return;
             }
 
@@ -180,21 +192,10 @@ function ForgotPasswordContent() {
     // -------------------------------------------------------------
     const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (loading) return;
         setError(null);
-        setFieldErrors({});
 
-        const newErrors: Record<string, string> = {};
-        if (newPassword.length < 6) {
-            newErrors.newPassword = "Password must be at least 6 characters long.";
-        }
-        if (newPassword !== confirmPassword) {
-            newErrors.confirmPassword = "Passwords do not match.";
-        }
-
-        if (Object.keys(newErrors).length > 0) {
-            setFieldErrors(newErrors);
-            return;
-        }
+        if (!form.validateFields(["newPassword", "confirmPassword"])) return;
 
         setLoading(true);
 
@@ -212,7 +213,8 @@ function ForgotPasswordContent() {
             const result = await response.json();
 
             if (!response.ok || result.error) {
-                setError(result.error || "Failed to reset password. Please try again.");
+                form.setServerErrors(result.fieldErrors);
+                setError(tr(result.error || "Failed to reset password. Please try again."));
                 return;
             }
 
@@ -230,31 +232,10 @@ function ForgotPasswordContent() {
     // -------------------------------------------------------------
     const handleSecurityKeyRecovery = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (loading) return;
         setError(null);
-        setFieldErrors({});
 
-        const newErrors: Record<string, string> = {};
-        const cleanKey = normalizeSecurityKey(securityKeyInput);
-        if (cleanKey.length < 16) {
-            newErrors.securityKey = "Please enter the complete 16-character security key.";
-        }
-
-        if (newPassword.length < 6) {
-            newErrors.newPassword = "Password must be at least 6 characters long.";
-        }
-
-        if (newPassword !== confirmPassword) {
-            newErrors.confirmPassword = "Passwords do not match.";
-        }
-
-        if (wantUpdateEmail && !newEmail.trim().includes("@")) {
-            newErrors.newEmail = "Please enter a valid new email address.";
-        }
-
-        if (Object.keys(newErrors).length > 0) {
-            setFieldErrors(newErrors);
-            return;
-        }
+        if (!form.validateFields(["email", "securityKey", "newPassword", "confirmPassword", "newEmail"])) return;
 
         setLoading(true);
 
@@ -273,13 +254,14 @@ function ForgotPasswordContent() {
             const result = await response.json();
 
             if (!response.ok || result.error) {
-                setError(result.error || "Failed to recover account. Please check your credentials.");
+                form.setServerErrors(result.fieldErrors);
+                setError(tr(result.error || "Failed to recover account. Please check your credentials."));
                 return;
             }
 
             setReplacementKey(result.newSecurityKey);
             setStep("KEY_NEW_KEY");
-            toast.success("Account recovered successfully!");
+            toast.success(t("Account recovered successfully!"));
         } catch (err) {
             console.error("[ForgotPassword] Security key recovery error:", err);
             setError("An unexpected error occurred. Please try again.");
@@ -309,8 +291,9 @@ function ForgotPasswordContent() {
                         className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5"
                     >
                         <ArrowLeft className="size-3.5" />
-                        Back to Login
+                        {t("Back to Login")}
                     </Link>
+                    <LanguageToggle variant="compact" />
                     <ThemeToggle className="rounded-xl border border-border bg-card/80" />
                 </div>
             </header>
@@ -335,7 +318,7 @@ function ForgotPasswordContent() {
                                 }`}
                             >
                                 <Mail className="size-3.5" />
-                                <span>Email Code</span>
+                                <span>{t("Email Code")}</span>
                             </button>
 
                             <button
@@ -352,7 +335,7 @@ function ForgotPasswordContent() {
                                 }`}
                             >
                                 <KeyRound className="size-3.5" />
-                                <span>Security Key</span>
+                                <span>{t("Security Key")}</span>
                             </button>
                         </div>
                     )}
@@ -365,17 +348,17 @@ function ForgotPasswordContent() {
                                     <Mail className="size-5" />
                                 </div>
                                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                    Forgot Password
+                                    {t("Forgot Password")}
                                 </h1>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Enter your email address and we'll send you a 6-digit verification code.
+                                    {t("Enter your email address and we'll send you a 6-digit verification code.")}
                                 </p>
                             </div>
 
                             {error && (
                                 <div role="alert" className="p-3 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
                                     <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                                    <p className="font-medium leading-relaxed">{error}</p>
+                                    <p className="font-medium leading-relaxed">{t(error)}</p>
                                 </div>
                             )}
 
@@ -385,20 +368,25 @@ function ForgotPasswordContent() {
                             }}>
                                 <div className="space-y-1.5">
                                     <label htmlFor="email" className="block text-xs font-medium text-foreground">
-                                        Email Address
+                                        {t("Email Address")}
                                     </label>
                                     <input
+                                        {...form.fieldProps("email")}
                                         id="email"
                                         name="email"
                                         type="email"
                                         required
-                                        maxLength={50}
+                                        maxLength={254}
                                         autoComplete="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="name@example.com"
-                                        className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        className={cn(
+                                            "h-11 w-full rounded-xl border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                            fieldErrors.email ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                        )}
                                     />
+                                    <FieldError id={form.errorId("email")} message={fieldErrors.email} />
                                 </div>
 
                                 <button
@@ -409,10 +397,10 @@ function ForgotPasswordContent() {
                                     {loading ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            <span>Sending code...</span>
+                                            <span>{t("Sending code...")}</span>
                                         </>
                                     ) : (
-                                        <span>Send verification code</span>
+                                        <span>{t("Send verification code")}</span>
                                     )}
                                 </button>
                             </form>
@@ -427,7 +415,7 @@ function ForgotPasswordContent() {
                                     }}
                                     className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium cursor-pointer"
                                 >
-                                    Lost access to your email? <span className="underline font-bold">Recover with Security Key</span>
+                                    {t("Lost access to your email?")} <span className="underline font-bold">{t("Recover with Security Key")}</span>
                                 </button>
                             </div>
                         </div>
@@ -441,39 +429,45 @@ function ForgotPasswordContent() {
                                     <KeyRound className="size-5" />
                                 </div>
                                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                    Enter 6-Digit Code
+                                    {t("Enter 6-Digit Code")}
                                 </h1>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    We sent a verification code to <span className="font-medium text-foreground">{email}</span>.
+                                    {t("We sent a verification code to")} <span className="font-medium text-foreground">{email}</span>.
                                 </p>
                             </div>
 
                             {error && (
                                 <div role="alert" className="p-3 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
                                     <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                                    <p className="font-medium leading-relaxed">{error}</p>
+                                    <p className="font-medium leading-relaxed">{t(error)}</p>
                                 </div>
                             )}
 
                             <form className="space-y-4" onSubmit={handleVerifyOtp}>
                                 <div className="space-y-1.5">
                                     <label htmlFor="otp" className="block text-xs font-medium text-foreground">
-                                        Verification Code
+                                        {t("Verification Code")}
                                     </label>
                                     <input
+                                        {...form.fieldProps("otp")}
                                         ref={otpInputRef}
                                         id="otp"
                                         name="otp"
                                         type="text"
                                         inputMode="numeric"
+                                        autoComplete="one-time-code"
                                         pattern="[0-9]*"
                                         maxLength={6}
                                         required
                                         value={otp}
-                                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                                         placeholder="123456"
-                                        className="h-12 w-full rounded-xl border border-border bg-background px-3 text-center text-xl font-mono font-bold tracking-[6px] text-foreground placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:font-normal placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        className={cn(
+                                            "h-12 w-full rounded-xl border bg-background px-3 text-center text-xl font-mono font-bold tracking-[6px] text-foreground placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:font-normal placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                            fieldErrors.otp ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                        )}
                                     />
+                                    <FieldError id={form.errorId("otp")} message={fieldErrors.otp} />
                                 </div>
 
                                 <button
@@ -484,10 +478,10 @@ function ForgotPasswordContent() {
                                     {loading ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            <span>Verifying...</span>
+                                            <span>{t("Verifying...")}</span>
                                         </>
                                     ) : (
-                                        <span>Verify Code</span>
+                                        <span>{t("Verify Code")}</span>
                                     )}
                                 </button>
                             </form>
@@ -502,7 +496,7 @@ function ForgotPasswordContent() {
                                     }}
                                     className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                 >
-                                    Use different email
+                                    {t("Use different email")}
                                 </button>
 
                                 <button
@@ -511,7 +505,7 @@ function ForgotPasswordContent() {
                                     onClick={() => handleSendOtp(email)}
                                     className="text-primary hover:underline font-medium disabled:text-muted-foreground/60 disabled:no-underline disabled:cursor-not-allowed cursor-pointer"
                                 >
-                                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+                                    {resendCooldown > 0 ? t("Resend in {seconds}s", { seconds: resendCooldown }) : t("Resend code")}
                                 </button>
                             </div>
                         </div>
@@ -525,39 +519,37 @@ function ForgotPasswordContent() {
                                     <KeyRound className="size-5" />
                                 </div>
                                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                    Set New Password
+                                    {t("Set New Password")}
                                 </h1>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Verification complete! Enter your new password below.
+                                    {t("Verification complete! Enter your new password below.")}
                                 </p>
                             </div>
 
                             {error && (
                                 <div role="alert" className="p-3 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
                                     <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                                    <p className="font-medium leading-relaxed">{error}</p>
+                                    <p className="font-medium leading-relaxed">{t(error)}</p>
                                 </div>
                             )}
 
                             <form className="space-y-4" onSubmit={handleResetPassword} noValidate>
                                 <div className="space-y-1.5">
                                     <label htmlFor="newPassword" className={cn("block text-xs font-semibold select-none transition-colors", fieldErrors.newPassword ? "text-red-600 dark:text-red-400" : "text-foreground/90")}>
-                                        New Password
+                                        {t("New Password")}
                                     </label>
                                     <div className="relative">
                                         <input
+                                            {...form.fieldProps("newPassword")}
                                             id="newPassword"
                                             name="newPassword"
                                             type={showNewPassword ? "text" : "password"}
                                             required
-                                            maxLength={16}
+                                            autoComplete="new-password"
+                                            maxLength={PASSWORD_MAX_LENGTH}
                                             value={newPassword}
-                                            onChange={(e) => {
-                                                setNewPassword(e.target.value);
-                                                clearFieldError("newPassword");
-                                            }}
+                                            onChange={(e) => setNewPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            aria-invalid={!!fieldErrors.newPassword}
                                             className={cn(
                                                 "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
                                                 fieldErrors.newPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
@@ -567,48 +559,38 @@ function ForgotPasswordContent() {
                                             type="button"
                                             onClick={() => setShowNewPassword(!showNewPassword)}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
-                                            aria-label={showNewPassword ? "Hide password" : "Show password"}
+                                            aria-label={showNewPassword ? t("Hide password") : t("Show password")}
                                             aria-pressed={showNewPassword}
                                         >
                                             {showNewPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
                                         </button>
                                     </div>
                                     {fieldErrors.newPassword ? (
-                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                        <p id={form.errorId("newPassword")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                             <AlertCircle className="size-3.5 shrink-0" />
                                             <span>{fieldErrors.newPassword}</span>
                                         </p>
                                     ) : (
-                                        <p className="text-[11px] text-muted-foreground">Minimum 6 characters</p>
+                                        <p className="text-[11px] text-muted-foreground">{t("At least 8 characters, with letters and a number or symbol")}</p>
                                     )}
                                 </div>
 
                                 <div className="space-y-1.5">
                                     <label htmlFor="confirmPassword" className={cn("block text-xs font-semibold select-none transition-colors", fieldErrors.confirmPassword ? "text-red-600 dark:text-red-400" : "text-foreground/90")}>
-                                        Confirm Password
+                                        {t("Confirm Password")}
                                     </label>
                                     <div className="relative">
                                         <input
+                                            {...form.fieldProps("confirmPassword")}
                                             id="confirmPassword"
                                             name="confirmPassword"
                                             type={showConfirmPassword ? "text" : "password"}
                                             required
-                                            maxLength={16}
+                                            autoComplete="new-password"
+                                            maxLength={PASSWORD_MAX_LENGTH}
                                             value={confirmPassword}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setConfirmPassword(val);
-                                                if (fieldErrors.confirmPassword) {
-                                                    clearFieldError("confirmPassword");
-                                                }
-                                            }}
-                                            onBlur={() => {
-                                                if (confirmPassword && newPassword && confirmPassword !== newPassword) {
-                                                    setFieldErrors(prev => ({ ...prev, confirmPassword: "Passwords do not match." }));
-                                                }
-                                            }}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            aria-invalid={!!fieldErrors.confirmPassword}
                                             className={cn(
                                                 "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
                                                 fieldErrors.confirmPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
@@ -618,14 +600,14 @@ function ForgotPasswordContent() {
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
-                                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                            aria-label={showConfirmPassword ? t("Hide password") : t("Show password")}
                                             aria-pressed={showConfirmPassword}
                                         >
                                             {showConfirmPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
                                         </button>
                                     </div>
                                     {fieldErrors.confirmPassword && (
-                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                        <p id={form.errorId("confirmPassword")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                             <AlertCircle className="size-3.5 shrink-0" />
                                             <span>{fieldErrors.confirmPassword}</span>
                                         </p>
@@ -634,16 +616,16 @@ function ForgotPasswordContent() {
 
                                 <button
                                     type="submit"
-                                    disabled={loading || newPassword.length < 6}
+                                    disabled={loading}
                                     className="w-full h-11 bg-primary text-primary-foreground font-semibold rounded-xl transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
                                 >
                                     {loading ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            <span>Saving password...</span>
+                                            <span>{t("Saving password...")}</span>
                                         </>
                                     ) : (
-                                        <span>Update Password</span>
+                                        <span>{t("Update Password")}</span>
                                     )}
                                 </button>
                             </form>
@@ -658,86 +640,91 @@ function ForgotPasswordContent() {
                                     <ShieldCheck className="size-5" />
                                 </div>
                                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                    Security Key Recovery
+                                    {t("Security Key Recovery")}
                                 </h1>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Use your single-use security key to verify your identity and regain access without needing your email inbox.
+                                    {t("Use your single-use security key to verify your identity and regain access without needing your email inbox.")}
                                 </p>
                             </div>
 
                             {error && (
                                 <div role="alert" className="p-3 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
                                     <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                                    <p className="font-medium leading-relaxed">{error}</p>
+                                    <p className="font-medium leading-relaxed">{t(error)}</p>
                                 </div>
                             )}
 
                             <form className="space-y-4" onSubmit={handleSecurityKeyRecovery} noValidate>
                                 <div className="space-y-1.5">
                                     <label htmlFor="sec-email" className="block text-xs font-semibold text-foreground">
-                                        Registered Email Address
+                                        {t("Registered Email Address")}
                                     </label>
                                     <input
+                                        {...form.fieldProps("email")}
                                         id="sec-email"
                                         type="email"
                                         required
-                                        maxLength={50}
+                                        maxLength={254}
+                                        autoComplete="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="name@example.com"
-                                        className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        className={cn(
+                                            "h-11 w-full rounded-xl border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                            fieldErrors.email ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                        )}
                                     />
-                                    <p className="text-[11px] text-muted-foreground">The email address associated with your iReside account.</p>
+                                    {fieldErrors.email ? (
+                                        <FieldError id={form.errorId("email")} message={fieldErrors.email} />
+                                    ) : (
+                                        <p className="text-[11px] text-muted-foreground">{t("The email address associated with your iReside account.")}</p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-1.5">
                                     <label htmlFor="sec-key" className={cn("block text-xs font-semibold transition-colors", fieldErrors.securityKey ? "text-red-600 dark:text-red-400" : "text-foreground")}>
-                                        Security Recovery Key
+                                        {t("Security Recovery Key")}
                                     </label>
                                     <input
+                                        {...form.fieldProps("securityKey")}
                                         id="sec-key"
                                         type="text"
                                         required
                                         maxLength={19}
+                                        autoComplete="off"
                                         value={securityKeyInput}
-                                        onChange={(e) => {
-                                            handleKeyInputChange(e.target.value);
-                                            clearFieldError("securityKey");
-                                        }}
+                                        onChange={(e) => handleKeyInputChange(e.target.value)}
                                         placeholder="XXXX-XXXX-XXXX-XXXX"
-                                        aria-invalid={!!fieldErrors.securityKey}
                                         className={cn(
                                             "h-11 w-full rounded-xl border bg-background px-3.5 text-center font-mono text-base font-bold tracking-wider text-foreground placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2 uppercase",
                                             fieldErrors.securityKey ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
                                         )}
                                     />
                                     {fieldErrors.securityKey ? (
-                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                        <p id={form.errorId("securityKey")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                             <AlertCircle className="size-3.5 shrink-0" />
                                             <span>{fieldErrors.securityKey}</span>
                                         </p>
                                     ) : (
-                                        <p className="text-[11px] text-muted-foreground">Your 16-character single-use security key.</p>
+                                        <p className="text-[11px] text-muted-foreground">{t("Your 16-character single-use security key.")}</p>
                                     )}
                                 </div>
 
                                 <div className="space-y-1.5 pt-1">
                                     <label htmlFor="sec-newPassword" className={cn("block text-xs font-semibold transition-colors", fieldErrors.newPassword ? "text-red-600 dark:text-red-400" : "text-foreground")}>
-                                        New Password
+                                        {t("New Password")}
                                     </label>
                                     <div className="relative">
                                         <input
+                                            {...form.fieldProps("newPassword")}
                                             id="sec-newPassword"
                                             type={showNewPassword ? "text" : "password"}
                                             required
-                                            maxLength={16}
+                                            autoComplete="new-password"
+                                            maxLength={PASSWORD_MAX_LENGTH}
                                             value={newPassword}
-                                            onChange={(e) => {
-                                                setNewPassword(e.target.value);
-                                                clearFieldError("newPassword");
-                                            }}
+                                            onChange={(e) => setNewPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            aria-invalid={!!fieldErrors.newPassword}
                                             className={cn(
                                                 "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
                                                 fieldErrors.newPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
@@ -752,40 +739,30 @@ function ForgotPasswordContent() {
                                         </button>
                                     </div>
                                     {fieldErrors.newPassword ? (
-                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                        <p id={form.errorId("newPassword")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                             <AlertCircle className="size-3.5 shrink-0" />
                                             <span>{fieldErrors.newPassword}</span>
                                         </p>
                                     ) : (
-                                        <p className="text-[11px] text-muted-foreground">Minimum 6 characters</p>
+                                        <p className="text-[11px] text-muted-foreground">{t("At least 8 characters, with letters and a number or symbol")}</p>
                                     )}
                                 </div>
 
                                 <div className="space-y-1.5">
                                     <label htmlFor="sec-confirmPassword" className={cn("block text-xs font-semibold transition-colors", fieldErrors.confirmPassword ? "text-red-600 dark:text-red-400" : "text-foreground")}>
-                                        Confirm New Password
+                                        {t("Confirm New Password")}
                                     </label>
                                     <div className="relative">
                                         <input
+                                            {...form.fieldProps("confirmPassword")}
                                             id="sec-confirmPassword"
                                             type={showConfirmPassword ? "text" : "password"}
                                             required
-                                            maxLength={16}
+                                            autoComplete="new-password"
+                                            maxLength={PASSWORD_MAX_LENGTH}
                                             value={confirmPassword}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setConfirmPassword(val);
-                                                if (fieldErrors.confirmPassword) {
-                                                    clearFieldError("confirmPassword");
-                                                }
-                                            }}
-                                            onBlur={() => {
-                                                if (confirmPassword && newPassword && confirmPassword !== newPassword) {
-                                                    setFieldErrors(prev => ({ ...prev, confirmPassword: "Passwords do not match." }));
-                                                }
-                                            }}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            aria-invalid={!!fieldErrors.confirmPassword}
                                             className={cn(
                                                 "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
                                                 fieldErrors.confirmPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
@@ -800,7 +777,7 @@ function ForgotPasswordContent() {
                                         </button>
                                     </div>
                                     {fieldErrors.confirmPassword && (
-                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                        <p id={form.errorId("confirmPassword")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                             <AlertCircle className="size-3.5 shrink-0" />
                                             <span>{fieldErrors.confirmPassword}</span>
                                         </p>
@@ -817,34 +794,31 @@ function ForgotPasswordContent() {
                                             className="size-4 rounded border-border text-primary focus:ring-primary/20 cursor-pointer"
                                         />
                                         <span className="text-xs font-semibold text-foreground">
-                                            I lost permanent access to this email and want to update my email address
+                                            {t("I lost permanent access to this email and want to update my email address")}
                                         </span>
                                     </label>
 
                                     {wantUpdateEmail && (
                                         <div className="space-y-1.5 pl-6 animate-in fade-in-50">
                                             <label htmlFor="newEmail" className={cn("block text-xs font-medium transition-colors", fieldErrors.newEmail ? "text-red-600 dark:text-red-400" : "text-foreground")}>
-                                                New Email Address
+                                                {t("New Email Address")}
                                             </label>
                                             <input
+                                                {...form.fieldProps("newEmail")}
                                                 id="newEmail"
                                                 type="email"
                                                 required={wantUpdateEmail}
-                                                maxLength={50}
+                                                maxLength={254}
                                                 value={newEmail}
-                                                onChange={(e) => {
-                                                    setNewEmail(e.target.value);
-                                                    clearFieldError("newEmail");
-                                                }}
+                                                onChange={(e) => setNewEmail(e.target.value)}
                                                 placeholder="new-email@example.com"
-                                                aria-invalid={!!fieldErrors.newEmail}
                                                 className={cn(
                                                     "h-11 w-full rounded-xl border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
                                                     fieldErrors.newEmail ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
                                                 )}
                                             />
                                             {fieldErrors.newEmail && (
-                                                <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                                <p id={form.errorId("newEmail")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                                     <AlertCircle className="size-3.5 shrink-0" />
                                                     <span>{fieldErrors.newEmail}</span>
                                                 </p>
@@ -855,16 +829,16 @@ function ForgotPasswordContent() {
 
                                 <button
                                     type="submit"
-                                    disabled={loading || securityKeyInput.replace(/[^a-zA-Z0-9]/g, "").length < 16 || newPassword.length < 6}
+                                    disabled={loading}
                                     className="w-full h-11 bg-primary text-primary-foreground font-semibold rounded-xl transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
                                 >
                                     {loading ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            <span>Verifying & Recovering...</span>
+                                            <span>{t("Verifying & Recovering...")}</span>
                                         </>
                                     ) : (
-                                        <span>Recover Account</span>
+                                        <span>{t("Recover Account")}</span>
                                     )}
                                 </button>
                             </form>
@@ -879,10 +853,10 @@ function ForgotPasswordContent() {
                                     <CheckCircle2 className="size-6" />
                                 </div>
                                 <h1 className="text-xl font-bold tracking-tight text-foreground">
-                                    Account Recovered Successfully
+                                    {t("Account Recovered Successfully")}
                                 </h1>
                                 <p className="text-xs text-muted-foreground">
-                                    Your password has been reset. As your previous security key was consumed, your new single-use security key has been generated.
+                                    {t("Your password has been reset. As your previous security key was consumed, your new single-use security key has been generated.")}
                                 </p>
                             </div>
 
@@ -890,8 +864,8 @@ function ForgotPasswordContent() {
                                 securityKey={replacementKey}
                                 isAcknowledged={isReplacementAcknowledged}
                                 onToggleAcknowledge={setIsReplacementAcknowledged}
-                                title="Your New Security Key"
-                                description="Save this new key immediately. It replaces your consumed key and will not be displayed again."
+                                title={t("Your New Security Key")}
+                                description={t("Save this new key immediately. It replaces your consumed key and will not be displayed again.")}
                                 accountEmail={wantUpdateEmail ? newEmail : email}
                             />
 
@@ -899,12 +873,12 @@ function ForgotPasswordContent() {
                                 type="button"
                                 disabled={!isReplacementAcknowledged}
                                 onClick={() => {
-                                    toast.success("Account recovery complete. Please sign in with your new credentials.");
+                                    toast.success(t("Account recovery complete. Please sign in with your new credentials."));
                                     router.push("/login");
                                 }}
                                 className="w-full h-11 bg-primary text-primary-foreground font-semibold rounded-xl text-sm transition-colors hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                             >
-                                <span>Proceed to Sign In</span>
+                                <span>{t("Proceed to Sign In")}</span>
                                 <ArrowRight className="size-4" />
                             </button>
                         </div>
@@ -919,10 +893,10 @@ function ForgotPasswordContent() {
 
                             <div className="space-y-1.5">
                                 <h1 className="text-xl font-bold tracking-tight text-foreground">
-                                    Password Reset Complete
+                                    {t("Password Reset Complete")}
                                 </h1>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Your password has been updated. You can now sign in with your new credentials.
+                                    {t("Your password has been updated. You can now sign in with your new credentials.")}
                                 </p>
                             </div>
 
@@ -931,7 +905,7 @@ function ForgotPasswordContent() {
                                     href="/login"
                                     className="w-full h-11 bg-primary text-primary-foreground font-semibold rounded-xl text-sm transition-colors hover:bg-primary/90 flex items-center justify-center gap-2"
                                 >
-                                    <span>Sign In Now</span>
+                                    <span>{t("Sign In Now")}</span>
                                     <ArrowRight className="size-4" />
                                 </Link>
                             </div>
@@ -944,9 +918,9 @@ function ForgotPasswordContent() {
             <footer className="w-full max-w-lg mx-auto py-6 flex items-center justify-between text-xs text-muted-foreground/70">
                 <p>&copy; {new Date().getFullYear()} iReside</p>
                 <div className="flex items-center gap-4">
-                    <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-                    <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-                    <Link href="/help" className="hover:text-foreground transition-colors">Help</Link>
+                    <Link href="/privacy" className="hover:text-foreground transition-colors">{t("Privacy")}</Link>
+                    <Link href="/terms" className="hover:text-foreground transition-colors">{t("Terms")}</Link>
+                    <Link href="/help" className="hover:text-foreground transition-colors">{t("Help")}</Link>
                 </div>
             </footer>
         </div>

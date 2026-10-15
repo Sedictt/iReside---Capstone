@@ -42,6 +42,7 @@ import { cn } from "@/lib/utils";
 import { useQuickActions } from "@/hooks/useQuickActions";
 import { SortableActionCard } from "./SortableActionCard";
 import type { QuickActionId } from "@/lib/landlord/quick-actions";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type CommandCenterProps = {
     overdueCount: number;
@@ -96,6 +97,7 @@ export function CommandCenter({
     onOpenNearDuePayments,
     onOpenInvites,
 }: CommandCenterProps) {
+    const { t } = useLanguageContext();
     const {
         config,
         displayedActions,
@@ -172,45 +174,49 @@ export function CommandCenter({
         overdueCount > 0
             ? {
                 id: "overdue",
-                title: "Collect overdue rent",
-                detail: `${overdueCount} overdue payment${overdueCount === 1 ? "" : "s"} need follow-up.`,
+                title: t("Collect overdue rent"),
+                detail: overdueCount === 1
+                    ? t("{count} overdue payment needs follow-up.", { count: overdueCount })
+                    : t("{count} overdue payments need follow-up.", { count: overdueCount }),
                 href: onOpenOverduePayments ? undefined : "/landlord/invoices?tab=invoices&status=overdue",
                 onClick: onOpenOverduePayments,
-                cta: onOpenOverduePayments ? "Review overdue" : "Open invoices",
+                cta: onOpenOverduePayments ? t("Review overdue") : t("Open invoices"),
                 urgency: "high",
             }
             : {
                 id: "health",
-                title: "System check: Healthy",
-                detail: "Every account is up to date. Excellent operations.",
+                title: t("System check: Healthy"),
+                detail: t("Every account is up to date. Excellent operations."),
                 href: "/landlord/invoices?tab=invoices",
-                cta: "Review ledger",
+                cta: t("Review ledger"),
                 urgency: "low",
             },
         vacantUnitsCount > 0
             ? {
                 id: "vacancy",
-                title: "Optimize occupancy",
-                detail: `${vacantUnitsCount} unit${vacantUnitsCount === 1 ? "" : "s"} are awaiting new residents.`,
+                title: t("Optimize occupancy"),
+                detail: vacantUnitsCount === 1
+                    ? t("{count} unit is awaiting new residents.", { count: vacantUnitsCount })
+                    : t("{count} units are awaiting new residents.", { count: vacantUnitsCount }),
                 href: onOpenVacantUnits ? undefined : "/landlord/properties",
                 onClick: onOpenVacantUnits,
-                cta: onOpenVacantUnits ? "Review vacant units" : "Open properties",
+                cta: onOpenVacantUnits ? t("Review vacant units") : t("Open properties"),
                 urgency: "medium",
             }
             : {
                 id: "occupancy",
-                title: "Full occupancy reached",
-                detail: "Maximize revenue by maintaining current satisfaction.",
+                title: t("Full occupancy reached"),
+                detail: t("Maximize revenue by maintaining current satisfaction."),
                 href: "/landlord/unit-map",
-                cta: "View unit map",
+                cta: t("View unit map"),
                 urgency: "low",
             },
         {
             id: "utility-billing",
-            title: "Record Monthly Submeters",
-            detail: "Record water and electric readings to post utility charges to invoices.",
+            title: t("Record Monthly Submeters"),
+            detail: t("Record water and electric readings to post utility charges to invoices."),
             href: "/landlord/utility-billing",
-            cta: "Record submeters",
+            cta: t("Record submeters"),
             urgency: "low",
         },
     ];
@@ -229,9 +235,9 @@ export function CommandCenter({
                         <ShieldCheck className="size-6 sm:size-7" />
                     </div>
                     <div className="min-w-0">
-                        <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground text-balance">Intelligence Hub</h2>
+                        <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground text-balance">{t("Intelligence Hub")}</h2>
                         <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 leading-relaxed max-w-prose text-pretty">
-                            Orchestrating your property ecosystem from one dashboard.
+                            {t("Orchestrating your property ecosystem from one dashboard.")}
                         </p>
                     </div>
                 </div>
@@ -243,7 +249,7 @@ export function CommandCenter({
                             <>
                                 <stat.icon className="size-4 opacity-80 transition-opacity group-hover:opacity-100 shrink-0" />
                                 <div className="flex flex-col text-left min-w-0">
-                                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">{stat.label}</span>
+                                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">{t(stat.label)}</span>
                                     {stat.isLoading ? (
                                         <div className="h-4 w-8 rounded bg-muted animate-pulse mt-1" />
                                     ) : (
@@ -266,7 +272,7 @@ export function CommandCenter({
                                     type="button"
                                     onClick={stat.onClick}
                                     className={cardClass}
-                                    title={`View ${stat.label} details`}
+                                    title={t("View {label} details", { label: t(stat.label) })}
                                 >
                                     {content}
                                 </button>
@@ -297,17 +303,17 @@ export function CommandCenter({
                             <div className="flex items-center gap-2.5">
                                 <span className="h-1.5 w-4 rounded-full bg-primary" />
                                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/90">
-                                    Operations Center
+                                    {t("Operations Center")}
                                 </h3>
                                 {isCustomizing && (
                                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
-                                        Customizing
+                                        {t("Customizing")}
                                     </span>
                                 )}
                             </div>
                             {isCustomizing ? (
                                 <p className="text-[11px] text-muted-foreground font-medium mt-1">
-                                    Drag cards to rearrange &bull; Tap eye icon to hide &bull; Click any item below to restore
+                                    {t("Drag cards to rearrange • Tap eye icon to hide • Click any item below to restore")}
                                 </p>
                             ) : null}
                         </div>
@@ -326,9 +332,9 @@ export function CommandCenter({
                                                     ? "bg-background text-foreground shadow-xs font-bold"
                                                     : "text-muted-foreground hover:text-foreground"
                                             )}
-                                            title="Sort actions in your custom drag-and-drop order"
+                                            title={t("Sort actions in your custom drag-and-drop order")}
                                         >
-                                            Custom
+                                            {t("Custom")}
                                         </button>
                                         <button
                                             type="button"
@@ -339,10 +345,10 @@ export function CommandCenter({
                                                     ? "bg-background text-foreground shadow-xs font-bold"
                                                     : "text-muted-foreground hover:text-foreground"
                                             )}
-                                            title="Sort actions dynamically by your usage frequency"
+                                            title={t("Sort actions dynamically by your usage frequency")}
                                         >
                                             <TrendingUp className="size-2.5 text-amber-500" />
-                                            Frequent
+                                            {t("Frequent")}
                                         </button>
                                     </div>
 
@@ -351,10 +357,10 @@ export function CommandCenter({
                                         type="button"
                                         onClick={startCustomizing}
                                         className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg border border-border/60 hover:bg-muted/60 text-foreground transition-all shadow-xs active:scale-95"
-                                        title="Customize grid layout and hidden actions"
+                                        title={t("Customize grid layout and hidden actions")}
                                     >
                                         <SlidersHorizontal className="size-3 text-muted-foreground" />
-                                        <span>Customize</span>
+                                        <span>{t("Customize")}</span>
                                     </button>
                                 </>
                             ) : (
@@ -364,19 +370,19 @@ export function CommandCenter({
                                         type="button"
                                         onClick={resetToDefaults}
                                         className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all border border-transparent hover:border-border/40 active:scale-95"
-                                        title="Reset to factory layout"
+                                        title={t("Reset to factory layout")}
                                     >
                                         <RotateCcw className="size-3" />
-                                        <span>Reset</span>
+                                        <span>{t("Reset")}</span>
                                     </button>
                                     <button
                                         type="button"
                                         onClick={finishCustomizing}
                                         className="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-bold rounded-lg bg-foreground text-background dark:bg-primary dark:text-primary-foreground hover:opacity-90 transition-all shadow-sm active:scale-95"
-                                        title="Save and finish customization"
+                                        title={t("Save and finish customization")}
                                     >
                                         <Check className="size-3" />
-                                        <span>Done</span>
+                                        <span>{t("Done")}</span>
                                     </button>
                                 </>
                             )}
@@ -413,7 +419,7 @@ export function CommandCenter({
                                 <div className="flex items-center gap-2">
                                     <EyeOff className="size-3.5 text-muted-foreground" />
                                     <h4 className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
-                                        Hidden Actions
+                                        {t("Hidden Actions")}
                                     </h4>
                                     <span className="flex items-center justify-center size-4.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-muted text-muted-foreground">
                                         {hiddenActions.length}
@@ -423,10 +429,10 @@ export function CommandCenter({
                                     type="button"
                                     onClick={restoreAll}
                                     className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline hover:opacity-85 transition-all cursor-pointer"
-                                    title="Restore all hidden actions to the grid"
+                                    title={t("Restore all hidden actions to the grid")}
                                 >
                                     <RotateCcw className="size-3" />
-                                    <span>Restore all to grid</span>
+                                    <span>{t("Restore all to grid")}</span>
                                 </button>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
@@ -440,7 +446,7 @@ export function CommandCenter({
                                             "neumorphic-extruded hover:shadow-md hover:scale-[1.01] active:scale-98",
                                             "dark:bento-glass-card dark:hover:bg-white/[0.04]"
                                         )}
-                                        title={`Restore ${action.label} to grid`}
+                                        title={t("Restore {label} to grid", { label: t(action.label) })}
                                     >
                                         <div className="flex items-center gap-2.5 min-w-0">
                                             <div className={cn(
@@ -451,12 +457,12 @@ export function CommandCenter({
                                                 <action.icon className="size-3.5" />
                                             </div>
                                             <span className="text-xs font-bold text-foreground/90 truncate">
-                                                {action.label}
+                                                {t(action.label)}
                                             </span>
                                         </div>
                                         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-primary opacity-80 group-hover:opacity-100 transition-opacity shrink-0">
                                             <Plus className="size-3.5" />
-                                            Restore
+                                            {t("Restore")}
                                         </span>
                                     </button>
                                 ))}
@@ -472,7 +478,7 @@ export function CommandCenter({
                 )}>
                     <h3 className="mb-5 sm:mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">
                         <span className="h-1 w-4 rounded-full bg-amber-500" />
-                        Next Priorities
+                        {t("Next Priorities")}
                     </h3>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
@@ -486,7 +492,7 @@ export function CommandCenter({
                                 </div>
                                 <div className="mb-2 flex items-center justify-between relative z-10">
                                     <span className={cn("rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-widest", urgencyStyles[move.urgency])}>
-                                        {move.urgency} Priority
+                                        {t(move.urgency === "high" ? "High Priority" : move.urgency === "medium" ? "Medium Priority" : "Low Priority")}
                                     </span>
                                 </div>
                                 <h4 className="text-sm font-black text-foreground relative z-10 text-balance">{move.title}</h4>

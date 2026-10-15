@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import {
     X,
     Clock,
@@ -21,6 +22,14 @@ import {
 
 type MaintenanceStatus = "Pending" | "Assigned" | "In Progress" | "Resolved";
 type Priority = "Critical" | "High" | "Medium" | "Low";
+
+// English display labels for the priority badge; translated at render.
+const PRIORITY_LABELS: Record<Priority, string> = {
+    Critical: "Critical Priority",
+    High: "High Priority",
+    Medium: "Medium Priority",
+    Low: "Low Priority",
+};
 
 interface MaintenanceRequest {
     id: string;
@@ -50,9 +59,13 @@ interface TenantMaintenanceModalProps {
 }
 
 export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateRequest }: TenantMaintenanceModalProps) {
+    const { t } = useLanguageContext();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     if (!isOpen || !request) return null;
+
+    // Keep the contractor name styled: split the translated sentence around its placeholder.
+    const [thirdPartyBefore, thirdPartyAfter = ""] = t("A third-party professional ({name}) has been assigned.").split("{name}");
 
     const nextImage = () => {
         if (request.images && currentImageIndex < request.images.length - 1) {
@@ -80,7 +93,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
             <button 
                 className="absolute inset-0 cursor-default" 
                 onClick={onClose}
-                aria-label="Close maintenance detail"
+                aria-label={t("Close maintenance detail")}
             />
 
             <div className="relative w-full max-w-5xl rounded-3xl flex flex-col md:flex-row overflow-hidden max-h-[90vh] animate-in zoom-in-95 duration-300 neumorphic-panel">
@@ -92,7 +105,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                             <>
                                 <Image
                                     src={request.images[currentImageIndex]}
-                                    alt={`Image ${currentImageIndex + 1}`}
+                                    alt={t("Image {number}", { number: currentImageIndex + 1 })}
                                     fill
                                     sizes="(max-width: 768px) 100vw, 50vw"
                                     className="object-cover"
@@ -102,6 +115,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                         <button
                                             onClick={(e) => { e.stopPropagation(); prevImage(); }}
                                             disabled={currentImageIndex === 0}
+                                            aria-label={t("Previous image")}
                                             className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors disabled:opacity-0 backdrop-blur-md"
                                         >
                                             <ChevronLeft className="size-5" />
@@ -109,6 +123,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                         <button
                                             onClick={(e) => { e.stopPropagation(); nextImage(); }}
                                             disabled={currentImageIndex === request.images.length - 1}
+                                            aria-label={t("Next image")}
                                             className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors disabled:opacity-0 backdrop-blur-md"
                                         >
                                             <ChevronRight className="size-5" />
@@ -130,7 +145,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                         ) : (
                             <div className="flex flex-col items-center justify-center text-muted-foreground/50">
                                 <ImageIcon className="size-16 mb-4 opacity-20" />
-                                <p className="text-sm font-black">No images provided</p>
+                                <p className="text-sm font-black">{t("No images provided")}</p>
                             </div>
                         )}
 
@@ -143,7 +158,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                 request.priority === "Medium" ? "bg-blue-500/90 text-white border-blue-400" :
                                 "bg-neutral-800/90 text-neutral-300 border-neutral-600"
                             )}>
-                                {request.priority} Priority
+                                {PRIORITY_LABELS[request.priority] ? t(PRIORITY_LABELS[request.priority]) : `${request.priority} Priority`}
                             </span>
                             <div className="px-3 py-2 rounded-xl flex flex-col gap-1 w-fit neumorphic-panel">
                                 <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -154,7 +169,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                 </div>
                                 <div className="flex items-center gap-1.5 text-foreground">
                                     <span className="text-sm font-black truncate max-w-[150px]">
-                                        Unit {request.unit}
+                                        {t("Unit {unit}", { unit: request.unit })}
                                     </span>
                                 </div>
                             </div>
@@ -169,7 +184,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                         <div>
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2 py-1 rounded-md neumorphic-inset">
-                                    ID: {request.id.split('-')[0]}
+                                    {t("ID: {id}", { id: request.id.split('-')[0] })}
                                 </span>
                                 <span className="flex items-center gap-1 text-[10px] font-black text-muted-foreground uppercase">
                                     <Clock className="size-3" />
@@ -186,7 +201,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                         <button
                             onClick={onClose}
                             className="p-2 rounded-full transition-colors shrink-0 neumorphic-extruded text-muted-foreground hover:text-foreground hover:-translate-y-1"
-                            aria-label="Close Modal"
+                            aria-label={t("Close Modal")}
                         >
                             <X className="size-5 text-muted-foreground" />
                         </button>
@@ -197,7 +212,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                         <div className="absolute top-0 inset-x-0 h-12 bg-gradient-to-b from-background to-transparent pointer-events-none z-10" />
                         
                         <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-6 pl-2">
-                            Repair Status Timeline
+                            {t("Repair Status Timeline")}
                         </h3>
                         
                         <div className="relative space-y-4 before:absolute before:inset-0 before:ml-[19px] before:-translate-x-px before:h-full before:w-0.5 before:bg-border/60">
@@ -214,8 +229,8 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                     "p-4 rounded-2xl transition-all duration-500",
                                     currentStep === 1 ? "neumorphic-panel" : "neumorphic-inset opacity-70"
                                 )}>
-                                    <h4 className={cn("text-sm font-black tracking-tight", currentStep === 1 ? "text-primary" : "text-foreground")}>Request Submitted</h4>
-                                    <p className="text-xs font-medium text-muted-foreground mt-1 leading-relaxed">Your request was successfully sent to your landlord.</p>
+                                    <h4 className={cn("text-sm font-black tracking-tight", currentStep === 1 ? "text-primary" : "text-foreground")}>{t("Request Submitted")}</h4>
+                                    <p className="text-xs font-medium text-muted-foreground mt-1 leading-relaxed">{t("Your request was successfully sent to your landlord.")}</p>
                                 </div>
                             </div>
 
@@ -237,17 +252,17 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                     )}>
                                         <h4 className={cn("text-sm font-black tracking-tight", currentStep >= 2 ? "text-primary" : "text-foreground")}>
                                             {request.selfRepairDecision === "approved" 
-                                                ? "Self-Repair Approved" 
+                                                ? t("Self-Repair Approved")
                                                 : request.selfRepairDecision === "rejected"
-                                                ? "Self-Repair Denied"
-                                                : "Self-Repair Pending Review"}
+                                                ? t("Self-Repair Denied")
+                                                : t("Self-Repair Pending Review")}
                                         </h4>
                                         <p className="text-xs font-medium text-muted-foreground mt-1 leading-relaxed">
                                             {request.selfRepairDecision === "approved"
-                                                ? "The landlord approved your self-repair request." 
+                                                ? t("The landlord approved your self-repair request.")
                                                 : request.selfRepairDecision === "rejected"
-                                                ? "The landlord denied the self-repair request."
-                                                : "The landlord is reviewing your request."}
+                                                ? t("The landlord denied the self-repair request.")
+                                                : t("The landlord is reviewing your request.")}
                                         </p>
 
                                         {request.selfRepairDecision === "approved" && currentStep === 2 && (
@@ -255,7 +270,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                 {/* Update Repair Progress */}
                                                 <div className="mt-5 rounded-2xl p-4 animate-in fade-in slide-in-from-top-2 neumorphic-inset">
                                                     <h5 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">
-                                                        Update Repair Progress
+                                                        {t("Update Repair Progress")}
                                                     </h5>
                                                     
                                                     <div className="mt-6 p-1.5 rounded-[24px] grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-4 duration-500 neumorphic-panel">
@@ -274,7 +289,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}>
                                                                 <Wrench className="size-5" />
                                                             </div>
-                                                            <span className="text-[9px] font-black uppercase tracking-widest">Repairing</span>
+                                                            <span className="text-[9px] font-black uppercase tracking-widest">{t("Repairing")}</span>
                                                             {request.tenantRepairStatus === "repairing" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="size-2.5" />
@@ -296,7 +311,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}>
                                                                 <CheckCircle2 className="size-5" />
                                                             </div>
-                                                            <span className="text-[9px] font-black uppercase tracking-widest">Done</span>
+                                                            <span className="text-[9px] font-black uppercase tracking-widest">{t("Done")}</span>
                                                             {request.tenantRepairStatus === "done" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="size-2.5" />
@@ -305,7 +320,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                         </button>
                                                     </div>
                                                     {request.tenantRepairStatus === "done" && (
-                                                        <p className="text-[10px] text-muted-foreground mt-3 text-center animate-in fade-in">Waiting for landlord to request a photo or resolve the ticket.</p>
+                                                        <p className="text-[10px] text-muted-foreground mt-3 text-center animate-in fade-in">{t("Waiting for landlord to request a photo or resolve the ticket.")}</p>
                                                     )}
                                                 </div>
 
@@ -333,7 +348,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                     "text-xs font-black uppercase tracking-widest",
                                                                     request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"
                                                                 )}>
-                                                                    {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? "Photo Uploaded" : "Action Required"}
+                                                                    {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? t("Photo Uploaded") : t("Action Required")}
                                                                 </h5>
                                                             </div>
                                                             
@@ -342,16 +357,16 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                     <div className="flex gap-2">
                                                                         {request.tenantProvidedPhotos.map((img, i) => (
                                                                             <div key={img} className="relative size-16 rounded-lg overflow-hidden border border-border shadow-sm">
-                                                                                <Image src={img} alt={`Proof ${i}`} fill sizes="64px" className="object-cover" />
+                                                                                <Image src={img} alt={t("Proof {number}", { number: i })} fill sizes="64px" className="object-cover" />
                                                                             </div>
                                                                         ))}
                                                                     </div>
-                                                                    <p className="text-[10px] text-emerald-700/80 dark:text-emerald-300/80 font-medium">The landlord will review the photo to resolve the request.</p>
+                                                                    <p className="text-[10px] text-emerald-700/80 dark:text-emerald-300/80 font-medium">{t("The landlord will review the photo to resolve the request.")}</p>
                                                                 </div>
                                                             ) : (
                                                                 <div className="animate-in fade-in">
                                                                     <p className="text-xs font-medium text-amber-700/80 dark:text-amber-300/80 mb-4 leading-relaxed">
-                                                                        Please upload a photo proof of the completed repair to finalize this request.
+                                                                        {t("Please upload a photo proof of the completed repair to finalize this request.")}
                                                                     </p>
                                                                     <button 
                                                                         onClick={() => {
@@ -365,7 +380,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                         className="w-full sm:w-auto px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-md shadow-amber-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                                                                     >
                                                                         <Camera className="size-4" />
-                                                                        Upload Photo
+                                                                        {t("Upload Photo")}
                                                                     </button>
                                                                 </div>
                                                             )}
@@ -395,17 +410,17 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                         currentStep < 2 || !request.repairMethod || currentStep === 3 ? "opacity-70" : "opacity-100"
                                     )}>
                                         <h4 className={cn("text-sm font-black tracking-tight", currentStep >= 2 && request.repairMethod ? "text-cyan-600 dark:text-cyan-500" : "text-foreground")}>
-                                            {request.repairMethod === "landlord" ? "Landlord Repair" : request.repairMethod === "third_party" ? "Third-Party Repair" : "Repair Pending Assignment"}
+                                            {request.repairMethod === "landlord" ? t("Landlord Repair") : request.repairMethod === "third_party" ? t("Third-Party Repair") : t("Repair Pending Assignment")}
                                         </h4>
                                         <p className="text-xs font-medium text-muted-foreground mt-1 leading-relaxed">
                                             {request.repairMethod === "landlord" ? (
-                                                "The landlord will personally handle this repair."
+                                                t("The landlord will personally handle this repair.")
                                             ) : request.repairMethod === "third_party" ? (
                                                 <>
-                                                    A third-party professional (<span className="text-foreground font-black">{request.thirdPartyName || "Contractor"}</span>) has been assigned.
+                                                    {thirdPartyBefore}<span className="text-foreground font-black">{request.thirdPartyName || t("Contractor")}</span>{thirdPartyAfter}
                                                 </>
                                             ) : (
-                                                "The landlord is assigning a repair method."
+                                                t("The landlord is assigning a repair method.")
                                             )}
                                         </p>
 
@@ -414,7 +429,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                 {/* Update Repair Progress for Third-Party */}
                                                 <div className="mt-5 rounded-2xl p-4 animate-in fade-in slide-in-from-top-2 neumorphic-inset">
                                                     <h5 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">
-                                                        Update Repair Progress
+                                                        {t("Update Repair Progress")}
                                                     </h5>
                                                     
                                                     <div className="mt-6 p-1.5 rounded-[24px] grid grid-cols-1 sm:grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-4 duration-500 neumorphic-panel">
@@ -433,7 +448,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}>
                                                                 <UserRound className="size-5" />
                                                             </div>
-                                                            <span className="text-[9px] font-black uppercase tracking-widest">Arrived</span>
+                                                            <span className="text-[9px] font-black uppercase tracking-widest">{t("Arrived")}</span>
                                                             {request.tenantRepairStatus === "personnel_arrived" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="size-2.5" />
@@ -455,7 +470,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}>
                                                                 <Wrench className="size-5" />
                                                             </div>
-                                                            <span className="text-[9px] font-black uppercase tracking-widest">Repairing</span>
+                                                            <span className="text-[9px] font-black uppercase tracking-widest">{t("Repairing")}</span>
                                                             {request.tenantRepairStatus === "repairing" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="size-2.5" />
@@ -477,7 +492,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}>
                                                                 <CheckCircle2 className="size-5" />
                                                             </div>
-                                                            <span className="text-[9px] font-black uppercase tracking-widest">Done</span>
+                                                            <span className="text-[9px] font-black uppercase tracking-widest">{t("Done")}</span>
                                                             {request.tenantRepairStatus === "done" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="size-2.5" />
@@ -486,7 +501,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                         </button>
                                                     </div>
                                                     {request.tenantRepairStatus === "done" && (
-                                                        <p className="text-[10px] text-muted-foreground mt-3 text-center animate-in fade-in">Please upload a photo of the completed repair for landlord verification.</p>
+                                                        <p className="text-[10px] text-muted-foreground mt-3 text-center animate-in fade-in">{t("Please upload a photo of the completed repair for landlord verification.")}</p>
                                                     )}
                                                 </div>
 
@@ -514,7 +529,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                     "text-xs font-black uppercase tracking-widest",
                                                                     request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"
                                                                 )}>
-                                                                    {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? "Photo Uploaded" : "Action Required"}
+                                                                    {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? t("Photo Uploaded") : t("Action Required")}
                                                                 </h5>
                                                             </div>
                                                             
@@ -523,16 +538,16 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                     <div className="flex gap-2">
                                                                         {request.tenantProvidedPhotos.map((img, i) => (
                                                                             <div key={img} className="relative size-16 rounded-lg overflow-hidden border border-border shadow-sm">
-                                                                                <Image src={img} alt={`Proof ${i}`} fill sizes="64px" className="object-cover" />
+                                                                                <Image src={img} alt={t("Proof {number}", { number: i })} fill sizes="64px" className="object-cover" />
                                                                             </div>
                                                                         ))}
                                                                     </div>
-                                                                    <p className="text-[10px] text-emerald-700/80 dark:text-emerald-300/80 font-medium">The landlord will review the photo to verify the repair.</p>
+                                                                    <p className="text-[10px] text-emerald-700/80 dark:text-emerald-300/80 font-medium">{t("The landlord will review the photo to verify the repair.")}</p>
                                                                 </div>
                                                             ) : (
                                                                 <div className="animate-in fade-in">
                                                                     <p className="text-xs font-medium text-amber-700/80 dark:text-amber-300/80 mb-4 leading-relaxed">
-                                                                        Please upload a photo proof of the completed repair so the landlord can verify the third-party work.
+                                                                        {t("Please upload a photo proof of the completed repair so the landlord can verify the third-party work.")}
                                                                     </p>
                                                                     <button 
                                                                         onClick={() => {
@@ -546,7 +561,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                         className="w-full sm:w-auto px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-md shadow-amber-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                                                                     >
                                                                         <Camera className="size-4" />
-                                                                        Upload Photo
+                                                                        {t("Upload Photo")}
                                                                     </button>
                                                                 </div>
                                                             )}
@@ -572,9 +587,9 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                     currentStep === 3 ? "bg-emerald-500/5 border-emerald-500/20 shadow-sm ring-1 ring-emerald-500/20" : "bg-transparent border-transparent hover:bg-muted/50",
                                     currentStep < 3 ? "opacity-70" : "opacity-100"
                                 )}>
-                                    <h4 className={cn("text-sm font-black tracking-tight", currentStep === 3 ? "text-emerald-600 dark:text-emerald-500" : "text-foreground")}>Resolved</h4>
+                                    <h4 className={cn("text-sm font-black tracking-tight", currentStep === 3 ? "text-emerald-600 dark:text-emerald-500" : "text-foreground")}>{t("Resolved")}</h4>
                                     <p className="text-xs font-medium text-muted-foreground mt-1 leading-relaxed">
-                                        The maintenance request has been completed and closed.
+                                        {t("The maintenance request has been completed and closed.")}
                                     </p>
                                 </div>
                             </div>

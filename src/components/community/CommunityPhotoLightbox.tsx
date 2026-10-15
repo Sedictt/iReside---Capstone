@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { m as motion, AnimatePresence } from "framer-motion"
 import { X, ChevronLeft, ChevronRight, Maximize2, Download } from "lucide-react"
+import { useLanguageContext } from "@/context/LanguageContext"
 
 interface CommunityPhotoLightboxProps {
     photos: { id: string; url: string }[]
@@ -12,6 +13,7 @@ interface CommunityPhotoLightboxProps {
 }
 
 export function CommunityPhotoLightbox({ photos, initialIndex, onClose }: CommunityPhotoLightboxProps) {
+    const { t } = useLanguageContext()
     const [currentIndex, setCurrentIndex] = useState(initialIndex)
 
     // Handle keyboard navigation
@@ -39,14 +41,14 @@ export function CommunityPhotoLightbox({ photos, initialIndex, onClose }: Commun
                     <button 
                         onClick={() => window.open(photos[currentIndex].url, '_blank')}
                         className="p-2.5 rounded-full bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-all border border-white/5"
-                        title="Download"
+                        title={t("Download")}
                     >
                         <Download className="size-5" />
                     </button>
                     <button 
                         onClick={onClose}
                         className="p-2.5 rounded-full bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-all border border-white/5"
-                        title="Close"
+                        title={t("Close")}
                     >
                         <X className="size-5" />
                     </button>
@@ -58,7 +60,7 @@ export function CommunityPhotoLightbox({ photos, initialIndex, onClose }: Commun
                 <div className="relative max-h-full w-full flex items-center justify-center">
                     <Image 
                         src={photos[currentIndex].url} 
-                        alt={`Photo ${currentIndex + 1}`}
+                        alt={t("Photo {number}", { number: currentIndex + 1 })}
                         fill
                         className="rounded-2xl shadow-2xl object-contain ring-1 ring-white/10"
                         sizes="(max-width: 768px) 100vw, 80vw"
@@ -69,12 +71,14 @@ export function CommunityPhotoLightbox({ photos, initialIndex, onClose }: Commun
                     <>
                         <button 
                             onClick={handlePrev}
+                            aria-label={t("Previous photo")}
                             className="absolute left-6 md:left-12 p-4 rounded-full bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-all border border-white/5 group"
                         >
                             <ChevronLeft className="size-8 group-hover:-translate-x-0.5 transition-transform" />
                         </button>
                         <button 
                             onClick={handleNext}
+                            aria-label={t("Next photo")}
                             className="absolute right-6 md:right-12 p-4 rounded-full bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-all border border-white/5 group"
                         >
                             <ChevronRight className="size-8 group-hover:translate-x-0.5 transition-transform" />
@@ -96,7 +100,7 @@ export function CommunityPhotoLightbox({ photos, initialIndex, onClose }: Commun
                                 : 'border-transparent opacity-40 hover:opacity-80'
                             }`}
                         >
-                            <Image src={photo.url} alt={`Thumbnail ${index + 1}`} fill className="object-cover" />
+                            <Image src={photo.url} alt={t("Thumbnail {number}", { number: index + 1 })} fill className="object-cover" />
                         </button>
                     ))}
                 </div>

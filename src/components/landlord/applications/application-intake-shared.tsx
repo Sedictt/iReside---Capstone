@@ -8,11 +8,14 @@ import {
     isUnitOccupied,
     isUnitOngoing,
     isUnitAvailable,
-    getUnitOptionLabel,
     type FormErrorKey,
     type WalkInFormData,
     type WalkInUnit,
 } from "@/lib/application-intake";
+import { todayIsoDate } from "@/lib/validation/rules";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
+import type { TranslationParams } from "@/lib/i18n";
 import {
     AlertCircle,
     Briefcase,
@@ -44,8 +47,18 @@ export {
     type WalkInUnit,
 } from "@/lib/application-intake";
 
-const DATE_MIN = new Date().toISOString().split("T")[0];
+const DATE_MIN = todayIsoDate();
 const DATE_MAX = "2099-12-31";
+
+export type Translate = (phrase: string, params?: TranslationParams) => string;
+
+/** Translated variant of getUnitOptionLabel for display in the unit picker. */
+export function translatedUnitOptionLabel(unit: WalkInUnit, includePropertyName: boolean, t: Translate): string {
+    const prefix = includePropertyName ? `${unit.name} — ${unit.property_name}` : unit.name;
+    if (isUnitOccupied(unit)) return t("{unit} • (Occupied — Unavailable)", { unit: prefix });
+    if (isUnitOngoing(unit)) return t("{unit} • (On-going — Unavailable)", { unit: prefix });
+    return t("{unit} — ₱{rent}/mo", { unit: prefix, rent: unit.rent_amount.toLocaleString() });
+}
 
 interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
     icon: ElementType;
@@ -54,9 +67,12 @@ interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
     id: string;
     nextFieldId?: string;
     blockNumbers?: boolean;
+    /** Makes this a phone field (fixed +63, PH mobile number); gets "" or "+63…". */
+    onPhoneChange?: (value: string) => void;
 }
 
-function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, blockNumbers, ...props }: GlassInputProps) {
+function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, blockNumbers, onPhoneChange, ...props }: GlassInputProps) {
+    const { t } = useLanguageContext();
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" && nextFieldId) {
             e.preventDefault();
@@ -84,7 +100,7 @@ function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, bloc
                     htmlFor={id}
                     className="ml-1 cursor-pointer text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 group-focus-within:text-primary"
                 >
-                    {label}
+                    {t(label)}
                 </label>
             )}
             <div className="relative isolate">
@@ -92,17 +108,32 @@ function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, bloc
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-all duration-500 transform group-focus-within:rotate-[5deg] group-focus-within:scale-110 group-focus-within:text-primary">
                     <Icon size={18} strokeWidth={1.5} />
                 </div>
-                <input maxLength={resolvedMaxLength}
-                    {...props}
-                    id={id}
-                    onKeyDown={handleKeyDown}
-                    className={cn(
-                        "h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground",
-                        "focus-visible:ring-0"
-                    )}
-                />
+                {onPhoneChange ? (
+                    <PhoneNumberInput
+                        id={id}
+                        value={typeof props.value === "string" ? props.value : ""}
+                        onValueChange={onPhoneChange}
+                        onBlur={props.onBlur}
+                        aria-invalid={error ? true : undefined}
+                        aria-describedby={error ? `${id}-error` : undefined}
+                        onKeyDown={handleKeyDown}
+                        className="h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground focus-visible:ring-0"
+                    />
+                ) : (
+                    <input maxLength={resolvedMaxLength}
+                        {...props}
+                        id={id}
+                        aria-invalid={error ? true : undefined}
+                        aria-describedby={error ? `${id}-error` : undefined}
+                        onKeyDown={handleKeyDown}
+                        className={cn(
+                            "h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground",
+                            "focus-visible:ring-0"
+                        )}
+                    />
+                )}
             </div>
-            {error && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{error}</p>}
+            {error && <p id={`${id}-error`} role="alert" className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{t(error)}</p>}
         </div>
     );
 }
@@ -154,6 +185,7 @@ export function ApplicationIdentityStep({
     onFieldChange,
     onValidateUnit,
 }: SharedStepProps) {
+    const { t } = useLanguageContext();
     const [unitSearchQuery, setUnitSearchQuery] = useState("");
     const [selectedPropertyFilter, setSelectedPropertyFilter] = useState("all");
     const [availabilityFilter, setAvailabilityFilter] = useState<"available" | "ongoing" | "all">("available");
@@ -246,10 +278,10 @@ export function ApplicationIdentityStep({
                             <div className="flex items-center gap-3 text-primary">
                                 <MapPin size={18} strokeWidth={2.5} />
                                 <label htmlFor="unit-select" className="cursor-pointer text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground">
-                                    Select Unit
+                                    {t("Select Unit")}
                                 </label>
                                 <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-black tracking-wider text-primary">
-                                    {filteredUnits.length} {filteredUnits.length === 1 ? "Unit" : "Units"}
+                                    {filteredUnits.length === 1 ? t("{count} Unit", { count: filteredUnits.length }) : t("{count} Units", { count: filteredUnits.length })}
                                 </span>
                             </div>
 
@@ -265,7 +297,7 @@ export function ApplicationIdentityStep({
                                                 : "text-muted-foreground hover:text-foreground"
                                         )}
                                     >
-                                        Available ({availableCount})
+                                        {t("Available ({count})", { count: availableCount })}
                                     </button>
                                     <button
                                         type="button"
@@ -277,7 +309,7 @@ export function ApplicationIdentityStep({
                                                 : "text-muted-foreground hover:text-foreground"
                                         )}
                                     >
-                                        On-going ({ongoingCount})
+                                        {t("On-going ({count})", { count: ongoingCount })}
                                     </button>
                                     <button
                                         type="button"
@@ -289,7 +321,7 @@ export function ApplicationIdentityStep({
                                                 : "text-muted-foreground hover:text-foreground"
                                         )}
                                     >
-                                        All ({units.length})
+                                        {t("All ({count})", { count: units.length })}
                                     </button>
                                 </div>
                             )}
@@ -304,7 +336,7 @@ export function ApplicationIdentityStep({
                                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                                     <input maxLength={60}
                                         type="text"
-                                        placeholder="Filter unit by name or number..."
+                                        placeholder={t("Filter unit by name or number...")}
                                         value={unitSearchQuery}
                                         onChange={(e) => setUnitSearchQuery(e.target.value)}
                                         className="w-full h-11 rounded-2xl border border-border/80 bg-card/70 pl-10 pr-8 text-xs font-semibold text-foreground placeholder:text-muted-foreground/70 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 dark:bg-zinc-900/70"
@@ -314,7 +346,7 @@ export function ApplicationIdentityStep({
                                             type="button"
                                             onClick={() => setUnitSearchQuery("")}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded-full hover:bg-muted"
-                                            aria-label="Clear unit search"
+                                            aria-label={t("Clear unit search")}
                                         >
                                             <X size={13} />
                                         </button>
@@ -330,7 +362,7 @@ export function ApplicationIdentityStep({
                                             className="w-full h-11 appearance-none cursor-pointer rounded-2xl border border-border/80 bg-card/70 pl-10 pr-8 text-xs font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 dark:bg-zinc-900/70"
                                         >
                                             <option value="all" className="bg-card dark:bg-zinc-900 text-foreground py-2">
-                                                All Properties ({units.length})
+                                                {t("All Properties ({count})", { count: units.length })}
                                             </option>
                                             {propertyOptions.map((p) => (
                                                 <option key={p.id} value={p.id} className="bg-card dark:bg-zinc-900 text-foreground py-2">
@@ -364,7 +396,7 @@ export function ApplicationIdentityStep({
                                     )}
                                 >
                                     <option value="" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100 text-sm">
-                                        {filteredUnits.length > 0 ? "Select Target Unit..." : "No units match your filter..."}
+                                        {filteredUnits.length > 0 ? t("Select Target Unit...") : t("No units match your filter...")}
                                     </option>
                                     {propertyOptions.length > 1 && selectedPropertyFilter === "all" ? (
                                         groupedFilteredUnits.map(([propName, groupUnits]) => (
@@ -388,7 +420,7 @@ export function ApplicationIdentityStep({
                                                                 isUnavailable && "line-through text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-zinc-950 font-normal"
                                                             )}
                                                         >
-                                                            {getUnitOptionLabel(u, false)}
+                                                            {translatedUnitOptionLabel(u, false, t)}
                                                         </option>
                                                     );
                                                 })}
@@ -410,7 +442,7 @@ export function ApplicationIdentityStep({
                                                         isUnavailable && "line-through text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-zinc-950 font-normal"
                                                     )}
                                                 >
-                                                    {getUnitOptionLabel(u, true)}
+                                                    {translatedUnitOptionLabel(u, true, t)}
                                                 </option>
                                             );
                                         })
@@ -422,7 +454,7 @@ export function ApplicationIdentityStep({
 
                         {filteredUnits.length === 0 && (
                             <div className="flex items-center justify-between rounded-2xl bg-muted/40 px-4 py-3 text-xs text-muted-foreground dark:bg-zinc-900/60 border border-border/40">
-                                <span>No units match your current search or filter criteria.</span>
+                                <span>{t("No units match your current search or filter criteria.")}</span>
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -432,28 +464,28 @@ export function ApplicationIdentityStep({
                                     }}
                                     className="font-bold text-primary hover:underline"
                                 >
-                                    Reset filters
+                                    {t("Reset filters")}
                                 </button>
                             </div>
                         )}
 
-                        {formErrors.unit && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{formErrors.unit}</p>}
+                        {formErrors.unit && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{t(formErrors.unit)}</p>}
                         {currentUnit && (
                             <div className="space-y-3">
                                 <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex justify-between items-center px-4 py-3 bg-primary/5 border border-primary/20 rounded-2xl">
-                                    <span className="text-[10px] font-black uppercase text-primary tracking-widest">Monthly Rent</span>
+                                    <span className="text-[10px] font-black uppercase text-primary tracking-widest">{t("Monthly Rent")}</span>
                                     <span className="text-lg font-black italic text-foreground">₱{currentUnit.rent_amount.toLocaleString()}</span>
                                 </motion.div>
                                 {isUnitOccupied(currentUnit) && (
                                     <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs font-bold text-amber-600 dark:text-amber-400">
                                         <AlertCircle size={16} className="shrink-0" />
-                                        <span>This unit is currently occupied and unavailable for new tenant applications.</span>
+                                        <span>{t("This unit is currently occupied and unavailable for new tenant applications.")}</span>
                                     </motion.div>
                                 )}
                                 {isUnitOngoing(currentUnit) && (
                                     <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs font-bold text-amber-600 dark:text-amber-400">
                                         <AlertCircle size={16} className="shrink-0" />
-                                        <span>This unit currently has an ongoing application under processing and is unavailable for new applications.</span>
+                                        <span>{t("This unit currently has an ongoing application under processing and is unavailable for new applications.")}</span>
                                     </motion.div>
                                 )}
                             </div>
@@ -464,7 +496,7 @@ export function ApplicationIdentityStep({
                 <section className="space-y-6">
                     <div className="flex items-center gap-4 text-blue-400">
                         <User size={18} strokeWidth={2.5} />
-                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Applicant Information</h3>
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">{t("Applicant Information")}</h3>
                     </div>
                     <GlassInput
                         id="applicant-name"
@@ -494,21 +526,17 @@ export function ApplicationIdentityStep({
                         <GlassInput
                             id="applicant-phone"
                             icon={Phone}
-                            label="Phone Number"
-                            type="tel"
-                            inputMode="tel"
-                            maxLength={11}
-                            placeholder="09171234567"
+                            label="Mobile Number"
                             value={formData.applicant_phone}
                             error={formErrors.applicant_phone}
                             nextFieldId="move-in-date"
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => onFieldChange("applicant_phone", e.target.value.replace(/\s/g, ""), ["applicant_phone"])}
+                            onPhoneChange={(value) => onFieldChange("applicant_phone", value, ["applicant_phone"])}
                         />
                     </div>
 
                     <div className="space-y-2.5 group">
                         <label htmlFor="move-in-date" className="ml-1 cursor-pointer text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 group-focus-within:text-primary">
-                            Move-in Date
+                            {t("Move-in Date")}
                         </label>
                         <div className="relative isolate">
                             <div className="absolute inset-0 -z-10 rounded-2xl border border-border bg-card/90 transition-all duration-300 group-hover:bg-card group-focus-within:border-primary/50 group-focus-within:ring-4 group-focus-within:ring-primary/20" />
@@ -522,17 +550,19 @@ export function ApplicationIdentityStep({
                                 min={DATE_MIN}
                                 max={DATE_MAX}
                                 onChange={(e) => onFieldChange("move_in_date", e.target.value, ["move_in_date"])}
+                                aria-invalid={formErrors.move_in_date ? true : undefined}
+                                aria-describedby={formErrors.move_in_date ? "move-in-date-error" : undefined}
                                 className="h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground focus-visible:ring-0 [color-scheme:light] dark:[color-scheme:dark]"
                             />
                         </div>
-                        {formErrors.move_in_date && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{formErrors.move_in_date}</p>}
+                        {formErrors.move_in_date && <p id="move-in-date-error" role="alert" className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{t(formErrors.move_in_date)}</p>}
                     </div>
                 </section>
 
                 <section className="space-y-6">
                     <div className="flex items-center gap-4 text-red-400">
                         <Phone size={18} strokeWidth={2.5} />
-                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Emergency Contact</h3>
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">{t("Emergency Contact")}</h3>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <GlassInput
@@ -551,14 +581,10 @@ export function ApplicationIdentityStep({
                         <GlassInput
                             id="emergency-contact-phone"
                             icon={Phone}
-                            label="Contact Number"
-                            type="tel"
-                            inputMode="tel"
-                            maxLength={11}
-                            placeholder="09171234567"
+                            label="Mobile Number"
                             value={formData.emergency_contact_phone}
                             error={formErrors.emergency_contact_phone}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => onFieldChange("emergency_contact_phone", e.target.value.replace(/\s/g, ""), ["emergency_contact_phone"])}
+                            onPhoneChange={(value) => onFieldChange("emergency_contact_phone", value, ["emergency_contact_phone"])}
                         />
                     </div>
                 </section>
@@ -574,12 +600,13 @@ export function ApplicationProfileStep({
     messageLabel = "Additional Notes",
     messagePlaceholder = "Add internal notes about the applicant's character, urgent requests, or specific unit adjustments here...",
 }: SharedStepProps) {
+    const { t } = useLanguageContext();
     return (
         <div className="space-y-10 max-w-3xl">
             <section className="space-y-8">
                 <div className="flex items-center gap-4 text-primary">
                     <Wallet size={18} strokeWidth={2.5} />
-                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Financial Details</h3>
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">{t("Financial Details")}</h3>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -647,14 +674,14 @@ export function ApplicationProfileStep({
                 <div className="flex items-center gap-4 text-muted-foreground">
                     <FileCheck size={18} strokeWidth={2.5} />
                     <label htmlFor="additional-notes" className="cursor-pointer text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground">
-                        {messageLabel}
+                        {t(messageLabel)}
                     </label>
                 </div>
                 <div className="relative isolate">
                     <div className="absolute inset-0 -z-10 rounded-[2rem] border border-border bg-card/90 transition-all duration-300 hover:bg-card" />
                     <textarea
                         id="additional-notes"
-                        placeholder={messagePlaceholder}
+                        placeholder={t(messagePlaceholder)}
                         maxLength={1000}
                         className={cn(
                             "min-h-[180px] w-full resize-none bg-transparent p-7 text-sm font-medium leading-relaxed text-foreground outline-none transition-all placeholder:text-muted-foreground",
@@ -664,7 +691,7 @@ export function ApplicationProfileStep({
                         onChange={(e) => onFieldChange("message", e.target.value, ["message"])}
                     />
                 </div>
-                {formErrors.message && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{formErrors.message}</p>}
+                {formErrors.message && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{t(formErrors.message)}</p>}
             </section>
         </div>
     );
@@ -678,9 +705,10 @@ export function applyLiveFieldValidation(params: {
     setFormErrors: Dispatch<SetStateAction<Partial<Record<FormErrorKey, string>>>>;
     validateKeys: FormErrorKey[];
     requireUnit?: boolean;
+    allowPastMoveIn?: boolean;
 }) {
-    const { nextFormData, step, selectedUnit, setTouchedFields, setFormErrors, validateKeys, requireUnit } = params;
-    const liveErrors = validateFormStep(step, selectedUnit, nextFormData, { requireUnit });
+    const { nextFormData, step, selectedUnit, setTouchedFields, setFormErrors, validateKeys, requireUnit, allowPastMoveIn } = params;
+    const liveErrors = validateFormStep(step, selectedUnit, nextFormData, { requireUnit, allowPastMoveIn });
 
     startTransition(() => {
         setTouchedFields((prev) => {

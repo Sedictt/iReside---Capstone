@@ -7,10 +7,15 @@ const getDashboardPathForRole = (role: string) => {
   return '/landlord/dashboard'
 }
 
+// Only same-site relative paths may be used as a post-login destination;
+// anything else (e.g. "@evil.com", "//evil.com", "https://...") is ignored.
+const safeNextPath = (value: string | null) =>
+  value && /^\/(?![/\\])[^\s\\]*$/.test(value) && value.length <= 512 ? value : null
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next')
+  const next = safeNextPath(searchParams.get('next'))
   const type = searchParams.get('type')
   
   if (code) {

@@ -3,6 +3,7 @@
 import React from "react";
 import { ArrowRight, ArrowLeft, CheckCircle2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface UtilityTourStep {
     id: number;
@@ -57,6 +58,7 @@ export function UtilityBillingTourSpotlight({
     onClose,
     onCompleteStep,
 }: UtilityBillingTourSpotlightProps) {
+    const { t } = useLanguageContext();
     if (!isOpen) return null;
 
     // Defense-in-depth: Never render the tour spotlight card if the utility onboarding modal is open
@@ -86,14 +88,14 @@ export function UtilityBillingTourSpotlight({
                             {step.id}
                         </span>
                         <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">
-                            Tour: Step {step.id} of {TOUR_STEPS.length}
+                            {t("Tour: Step {step} of {total}", { step: step.id, total: TOUR_STEPS.length })}
                         </span>
                     </div>
                     <button
                         type="button"
                         onClick={onClose}
                         className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-                        aria-label="Exit tour"
+                        aria-label={t("Exit tour")}
                     >
                         <X className="size-4" />
                     </button>
@@ -106,24 +108,24 @@ export function UtilityBillingTourSpotlight({
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                             <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
                         </span>
-                        <span className="truncate">Highlighted: {step.targetElementLabel}</span>
+                        <span className="truncate">{t("Highlighted: {target}", { target: t(step.targetElementLabel) })}</span>
                     </div>
                 )}
 
                 {/* Content */}
                 <div className="space-y-1.5">
                     <h3 id="utility-tour-title" className="text-base font-bold text-foreground tracking-tight">
-                        {step.title}
+                        {t(step.title)}
                     </h3>
                     <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        {step.description}
+                        {t(step.description)}
                     </p>
                 </div>
 
                 {step.tip && (
                     <div className="rounded-xl bg-primary/5 border border-primary/15 p-3 text-xs text-muted-foreground leading-snug">
-                        <span className="font-bold text-primary">Note: </span>
-                        {step.tip}
+                        <span className="font-bold text-primary">{t("Note:")} </span>
+                        {t(step.tip)}
                     </div>
                 )}
 
@@ -139,7 +141,7 @@ export function UtilityBillingTourSpotlight({
                         )}
                     >
                         <ArrowLeft className="size-3.5" />
-                        <span>Back</span>
+                        <span>{t("Back")}</span>
                     </button>
 
                     <div className="flex items-center gap-2">
@@ -149,7 +151,7 @@ export function UtilityBillingTourSpotlight({
                                 onClick={onNext}
                                 className="h-10 sm:h-11 px-5 rounded-xl bg-primary text-primary-foreground text-xs sm:text-sm font-bold flex items-center gap-2 hover:bg-primary/90 transition-all cursor-pointer shadow-xs active:scale-95"
                             >
-                                <span>Next</span>
+                                <span>{t("Next")}</span>
                                 <ArrowRight className="size-3.5" />
                             </button>
                         ) : (
@@ -159,7 +161,8 @@ export function UtilityBillingTourSpotlight({
                                 className="h-10 sm:h-11 px-5 rounded-xl bg-primary text-primary-foreground text-xs sm:text-sm font-bold flex items-center gap-2 hover:bg-primary/90 transition-all cursor-pointer shadow-md shadow-primary/25 active:scale-95"
                             >
                                 <CheckCircle2 className="size-4" />
-                                <span>Complete Step</span>
+                                <span>{t("Complete Step")}</span>
+
                             </button>
                         )}
                     </div>

@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { MaintenanceRequestModal } from "@/components/landlord/maintenance/MaintenanceRequestModal";
 import type { MaintenanceRequest } from "@/components/landlord/maintenance/MaintenanceDashboard";
 import { AnimatedFilterPills } from "@/components/ui/AnimatedFilterPills";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface PropertyMaintenanceModalProps {
     isOpen: boolean;
@@ -40,6 +41,7 @@ export function PropertyMaintenanceModal({
     propertyName,
     propertyImage,
 }: PropertyMaintenanceModalProps) {
+    const { t } = useLanguageContext();
     const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -139,11 +141,11 @@ export function PropertyMaintenanceModal({
                                             {propertyName}
                                         </h3>
                                         <span className="shrink-0 rounded-full bg-amber-400/10 border border-amber-400/20 px-2.5 py-0.5 text-[10px] font-black text-amber-400 uppercase tracking-wider">
-                                            {activeCount} Active {activeCount === 1 ? "Ticket" : "Tickets"}
+                                            {activeCount === 1 ? t("{count} Active Ticket", { count: activeCount }) : t("{count} Active Tickets", { count: activeCount })}
                                         </span>
                                     </div>
                                     <p className="text-xs text-neutral-400 font-medium truncate mt-0.5">
-                                        Maintenance & Service Requests
+                                        {t("Maintenance & Service Requests")}
                                     </p>
                                 </div>
                             </div>
@@ -153,11 +155,12 @@ export function PropertyMaintenanceModal({
                                     href="/landlord/maintenance"
                                     className="hidden sm:flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-white/10 transition-all"
                                 >
-                                    <span>Dashboard</span>
+                                    <span>{t("Dashboard")}</span>
                                     <ExternalLink className="size-3.5" />
                                 </Link>
                                 <button
                                     onClick={onClose}
+                                    aria-label={t("Close")}
                                     className="flex size-9 items-center justify-center rounded-xl bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white transition-all active:scale-95"
                                 >
                                     <X className="size-5" />
@@ -171,7 +174,7 @@ export function PropertyMaintenanceModal({
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-neutral-500" />
                                 <input maxLength={60}
                                     type="text"
-                                    placeholder="Search tickets by title, description, unit, tenant..."
+                                    placeholder={t("Search tickets by title, description, unit, tenant...")}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full rounded-2xl border border-white/10 bg-white/5 pl-11 pr-4 py-2.5 text-xs font-medium text-white placeholder:text-neutral-500 outline-none focus:border-amber-400/50"
@@ -181,7 +184,12 @@ export function PropertyMaintenanceModal({
                             <AnimatedFilterPills
                                 variant="amber"
                                 size="sm"
-                                options={["all", "pending", "in progress", "resolved"]}
+                                options={[
+                                    { id: "all", label: t("All") },
+                                    { id: "pending", label: t("Pending") },
+                                    { id: "in progress", label: t("In Progress") },
+                                    { id: "resolved", label: t("Resolved") },
+                                ]}
                                 activeId={statusFilter}
                                 onChange={(tab) => setStatusFilter(tab)}
                                 layoutGroupId="property-maintenance-filter-pills"
@@ -194,7 +202,7 @@ export function PropertyMaintenanceModal({
                                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                                     <Loader2 className="size-8 text-amber-400 animate-spin" />
                                     <p className="text-xs font-black uppercase tracking-widest text-neutral-500">
-                                        Loading Maintenance Tickets…
+                                        {t("Loading Maintenance Tickets…")}
                                     </p>
                                 </div>
                             ) : filteredRequests.length === 0 ? (
@@ -202,18 +210,18 @@ export function PropertyMaintenanceModal({
                                     <div className="size-14 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-neutral-500 mb-4">
                                         <Wrench className="size-6" />
                                     </div>
-                                    <h4 className="text-base font-black text-white">No Maintenance Tickets</h4>
+                                    <h4 className="text-base font-black text-white">{t("No Maintenance Tickets")}</h4>
                                     <p className="text-xs text-neutral-400 max-w-sm mt-1 mb-6">
                                         {searchQuery
-                                            ? "No requests matched your filter criteria."
-                                            : "There are currently no active maintenance issues reported for this property."}
+                                            ? t("No requests matched your filter criteria.")
+                                            : t("There are currently no active maintenance issues reported for this property.")}
                                     </p>
                                     <Link
                                         href="/landlord/maintenance"
                                         className="flex items-center gap-2 rounded-2xl bg-amber-400 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-black transition-all hover:scale-105 active:scale-95 shadow-lg shadow-amber-400/20"
                                     >
                                         <Wrench className="size-4" />
-                                        <span>Open Maintenance Dashboard</span>
+                                        <span>{t("Open Maintenance Dashboard")}</span>
                                     </Link>
                                 </div>
                             ) : (
@@ -228,7 +236,7 @@ export function PropertyMaintenanceModal({
                                                     <div className="min-w-0 flex-1">
                                                         <div className="flex items-center gap-2 flex-wrap mb-1">
                                                             <span className="rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-black text-primary">
-                                                                {req.unit || "General"}
+                                                                {req.unit || t("General")}
                                                             </span>
                                                             <span
                                                                 className={cn(
@@ -242,7 +250,7 @@ export function PropertyMaintenanceModal({
                                                                         : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
                                                                 )}
                                                             >
-                                                                {req.priority}
+                                                                {t(req.priority)}
                                                             </span>
                                                             <span
                                                                 className={cn(
@@ -254,7 +262,7 @@ export function PropertyMaintenanceModal({
                                                                         : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                                                                 )}
                                                             >
-                                                                {req.status}
+                                                                {t(req.status)}
                                                             </span>
                                                         </div>
                                                         <h4 className="text-sm font-black text-white truncate group-hover:text-amber-400 transition-colors">
@@ -303,7 +311,7 @@ export function PropertyMaintenanceModal({
                                                         onClick={() => setSelectedRequest(req)}
                                                         className="rounded-lg bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-neutral-200 hover:bg-white/10 hover:text-white transition-all active:scale-95"
                                                     >
-                                                        Details
+                                                        {t("Details")}
                                                     </button>
                                                 </div>
                                             </div>

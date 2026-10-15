@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { ArrowUpRight, X, TrendingUp, Users, DollarSign, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface FeaturedPropertyCardProps {
     propertyName?: string;
@@ -26,6 +27,7 @@ export function FeaturedPropertyCard({
     momGrowth = "+12.4%",
     occupancyRate = "100%",
 }: FeaturedPropertyCardProps) {
+    const { t } = useLanguageContext();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     return (
@@ -56,13 +58,13 @@ export function FeaturedPropertyCard({
                 <div className="flex justify-between items-start z-20 relative">
                     <div>
                         <p className="text-sm font-black tracking-wider text-white/90 mb-1 uppercase drop-shadow-md">
-                            {simplifiedMode ? "Your Best House" : "Best Performing Property"}
+                            {simplifiedMode ? t("Your Best House") : t("Best Performing Property")}
                         </p>
                         <h3 className="text-3xl font-black leading-tight max-w-[250px] text-white drop-shadow-lg">
                             {propertyName}
                         </h3>
                     </div>
-                    <button className="flex size-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white transition-all hover:bg-white hover:text-black shadow-lg border border-white/20">
+                    <button aria-label={t("View details")} className="flex size-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white transition-all hover:bg-white hover:text-black shadow-lg border border-white/20">
                         <ArrowUpRight className="size-5" />
                     </button>
                 </div>
@@ -72,13 +74,13 @@ export function FeaturedPropertyCard({
                     <div className="flex gap-8 backdrop-blur-sm bg-black/20 p-4 rounded-2xl border border-white/10 inline-flex">
                         <div>
                             <p className="text-xs font-black text-white/70 uppercase tracking-wide">
-                                {simplifiedMode ? "Money Made" : "Total Revenue"}
+                                {simplifiedMode ? t("Money Made") : t("Total Revenue")}
                             </p>
                             <p className="text-2xl font-black tracking-tight mt-0.5">{totalSales}</p>
                         </div>
                         <div>
                             <p className="text-xs font-black text-white/70 uppercase tracking-wide">
-                                {simplifiedMode ? "People Looking" : "Total Views"}
+                                {simplifiedMode ? t("People Looking") : t("Total Views")}
                             </p>
                             <p className="text-2xl font-black tracking-tight mt-0.5">{totalViews}</p>
                         </div>
@@ -97,8 +99,9 @@ export function FeaturedPropertyCard({
                         role="button"
                     />
                     <div className="relative z-10 w-full max-w-md animate-in rounded-3xl border border-border bg-card p-6 shadow-2xl duration-200 fade-in zoom-in-95">
-                        <button 
+                        <button
                             onClick={() => setIsModalOpen(false)}
+                            aria-label={t("Close")}
                             className="absolute right-4 top-4 rounded-full bg-muted/60 p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
                             <X className="size-5" />
@@ -106,11 +109,11 @@ export function FeaturedPropertyCard({
                         
                         <div className="mb-6">
                             <span className="mb-3 inline-block rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-black text-emerald-700 dark:text-emerald-400">
-                                {simplifiedMode ? "Best Performing" : "Top Asset MTD"}
+                                {simplifiedMode ? t("Best Performing") : t("Top Asset MTD")}
                             </span>
                             <h2 className="mb-1 text-2xl font-black text-foreground">{propertyName}</h2>
                             <p className="text-sm text-muted-foreground">
-                                {simplifiedMode ? "Here is why this is your best house this month." : "Performance overview for your top property."}
+                                {simplifiedMode ? t("Here is why this is your best house this month.") : t("Performance overview for your top property.")}
                             </p>
                         </div>
 
@@ -120,7 +123,7 @@ export function FeaturedPropertyCard({
                                     <DollarSign className="size-6" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">{simplifiedMode ? "Money Made (Total)" : "Gross Revenue"}</p>
+                                    <p className="text-sm text-muted-foreground">{simplifiedMode ? t("Money Made (Total)") : t("Gross Revenue")}</p>
                                     <p className="text-xl font-black text-foreground">{totalSales}</p>
                                 </div>
                             </div>
@@ -130,7 +133,7 @@ export function FeaturedPropertyCard({
                                     <TrendingUp className="size-6" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">{simplifiedMode ? "Growth" : "MoM Growth"}</p>
+                                    <p className="text-sm text-muted-foreground">{simplifiedMode ? t("Growth") : t("MoM Growth")}</p>
                                     <p className="text-xl font-black text-foreground">{momGrowth}</p>
                                 </div>
                             </div>
@@ -140,7 +143,7 @@ export function FeaturedPropertyCard({
                                     <Users className="size-6" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Occupancy</p>
+                                    <p className="text-sm text-muted-foreground">{t("Occupancy")}</p>
                                     <p className="text-xl font-black text-foreground">{occupancyRate}</p>
                                 </div>
                             </div>
@@ -150,7 +153,7 @@ export function FeaturedPropertyCard({
                                     <Activity className="size-6" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">{simplifiedMode ? "People Looking" : "Profile Views"}</p>
+                                    <p className="text-sm text-muted-foreground">{simplifiedMode ? t("People Looking") : t("Profile Views")}</p>
                                     <p className="text-xl font-black text-foreground">{totalViews}</p>
                                 </div>
                             </div>
@@ -160,7 +163,7 @@ export function FeaturedPropertyCard({
                             onClick={() => setIsModalOpen(false)}
                             className="mt-6 w-full rounded-xl bg-foreground py-3 font-black text-background transition-colors hover:opacity-90"
                         >
-                            Close
+                            {t("Close")}
                         </button>
                     </div>
                 </div>

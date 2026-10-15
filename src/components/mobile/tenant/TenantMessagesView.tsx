@@ -32,8 +32,15 @@ import {
     type ConversationMessage 
 } from '@/lib/messages/client';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
+import { useLanguageContext } from '@/context/LanguageContext';
 
 const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80';
+
+const ROLE_LABELS: Record<string, string> = {
+    landlord: 'Landlord',
+    tenant: 'Tenant',
+    admin: 'Admin',
+};
 
 interface PendingAttachment {
     id: string;
@@ -44,6 +51,7 @@ interface PendingAttachment {
 
 export function TenantMessagesView() {
     const { profile } = useAuth();
+    const { t, locale } = useLanguageContext();
     const [viewMode, setViewMode] = useState<'chat' | 'broadcasts'>('chat');
     const [conversations, setConversations] = useState<ConversationSummary[]>([]);
     const [activeConversation, setActiveConversation] = useState<ConversationSummary | null>(null);
@@ -189,7 +197,7 @@ export function TenantMessagesView() {
     // If an active chat thread is opened
     if (activeConversation && mounted) {
         const otherParticipant = activeConversation.otherParticipants?.[0];
-        const landlordName = otherParticipant?.fullName || 'Property Manager';
+        const landlordName = otherParticipant?.fullName || t('Property Manager');
         const landlordAvatar = otherParticipant?.avatarUrl || FALLBACK_AVATAR;
 
         return createPortal(
@@ -201,7 +209,7 @@ export function TenantMessagesView() {
                             type="button"
                             onClick={() => setActiveConversation(null)}
                             className="p-1.5 -ml-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground active:scale-95 transition-all cursor-pointer"
-                            aria-label="Back to conversations"
+                            aria-label={t('Back to conversations')}
                         >
                             <ArrowLeft className="size-5" />
                         </button>
@@ -211,7 +219,7 @@ export function TenantMessagesView() {
                         <div className="min-w-0">
                             <h3 className="text-xs font-bold text-foreground truncate">{landlordName}</h3>
                             <span className="text-[10px] text-muted-foreground capitalize truncate block">
-                                {otherParticipant?.role || 'Property Management'}
+                                {otherParticipant?.role ? t(ROLE_LABELS[otherParticipant.role] ?? otherParticipant.role) : t('Property Management')}
                             </span>
                         </div>
                     </div>
@@ -226,9 +234,9 @@ export function TenantMessagesView() {
                     ) : messages.length === 0 ? (
                         <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/50 p-6 text-center shadow-xs my-6">
                             <MessageSquare className="size-7 text-muted-foreground/50 mx-auto mb-1.5" />
-                            <h4 className="text-xs font-bold text-foreground">Direct Message Thread</h4>
+                            <h4 className="text-xs font-bold text-foreground">{t('Direct Message Thread')}</h4>
                             <p className="text-[11px] text-muted-foreground mt-0.5">
-                                Send a message below to contact your landlord directly.
+                                {t('Send a message below to contact your landlord directly.')}
                             </p>
                         </div>
                     ) : (
@@ -254,7 +262,7 @@ export function TenantMessagesView() {
                                             <div className="mb-2">
                                                 {/\.(jpg|jpeg|png|gif|webp)$/i.test(msg.fileUrl) || msg.fileMimeType?.startsWith('image/') ? (
                                                     <div className="relative size-44 rounded-xl overflow-hidden border border-white/20 bg-black/10">
-                                                        <Image src={msg.fileUrl} alt={msg.fileName || 'Attachment'} fill sizes="176px" className="object-cover" />
+                                                        <Image src={msg.fileUrl} alt={msg.fileName || t('Attachment')} fill sizes="176px" className="object-cover" />
                                                     </div>
                                                 ) : (
                                                     <a
@@ -264,7 +272,7 @@ export function TenantMessagesView() {
                                                         className="flex items-center gap-2 p-2 rounded-xl bg-black/10 dark:bg-white/10 text-inherit hover:underline"
                                                     >
                                                         <Paperclip className="size-3.5 shrink-0" />
-                                                        <span className="truncate text-xs">{msg.fileName || 'View attachment'}</span>
+                                                        <span className="truncate text-xs">{msg.fileName || t('View attachment')}</span>
                                                     </a>
                                                 )}
                                             </div>
@@ -273,7 +281,7 @@ export function TenantMessagesView() {
                                     </div>
                                     <span className="text-[9px] text-muted-foreground mt-1 px-1">
                                         {msg.createdAt
-                                            ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                            ? new Date(msg.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
                                             : ''}
                                     </span>
                                 </div>
@@ -300,7 +308,7 @@ export function TenantMessagesView() {
                                     type="button"
                                     onClick={() => removeAttachment(att.id)}
                                     className="p-1 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                    aria-label="Remove attachment"
+                                    aria-label={t('Remove attachment')}
                                 >
                                     <X className="size-3" />
                                 </button>
@@ -337,8 +345,8 @@ export function TenantMessagesView() {
                         type="button"
                         onClick={() => cameraInputRef.current?.click()}
                         className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-95 transition-all cursor-pointer shrink-0"
-                        title="Take Photo"
-                        aria-label="Take Photo"
+                        title={t('Take Photo')}
+                        aria-label={t('Take Photo')}
                     >
                         <Camera className="size-4 text-primary" />
                     </button>
@@ -348,8 +356,8 @@ export function TenantMessagesView() {
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-95 transition-all cursor-pointer shrink-0"
-                        title="Attach File"
-                        aria-label="Attach File"
+                        title={t('Attach File')}
+                        aria-label={t('Attach File')}
                     >
                         <Paperclip className="size-4" />
                     </button>
@@ -357,7 +365,7 @@ export function TenantMessagesView() {
                     {/* Text Input */}
                     <input
                         type="text"
-                        placeholder="Message your landlord…"
+                        placeholder={t('Message your landlord…')}
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
                         className="flex-1 bg-background border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
@@ -368,7 +376,7 @@ export function TenantMessagesView() {
                         type="submit"
                         disabled={(!messageInput.trim() && pendingAttachments.length === 0) || sending}
                         className="p-2 rounded-xl bg-primary text-primary-foreground hover:brightness-105 active:scale-95 transition-all disabled:opacity-40 shadow-xs cursor-pointer shrink-0"
-                        aria-label="Send message"
+                        aria-label={t('Send message')}
                     >
                         <Send className="size-4" />
                     </button>
@@ -393,7 +401,7 @@ export function TenantMessagesView() {
                     )}
                 >
                     <MessageSquare className="size-3.5" />
-                    <span>Direct Chats</span>
+                    <span>{t('Direct Chats')}</span>
                 </button>
 
                 <button
@@ -406,7 +414,7 @@ export function TenantMessagesView() {
                     )}
                 >
                     <Megaphone className="size-3.5" />
-                    <span>Noticeboard</span>
+                    <span>{t('Noticeboard')}</span>
                 </button>
             </div>
 
@@ -418,7 +426,7 @@ export function TenantMessagesView() {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
                             <input
                                 type="text"
-                                placeholder="Search conversations…"
+                                placeholder={t('Search conversations…')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 rounded-xl pl-9 pr-8 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
@@ -428,7 +436,7 @@ export function TenantMessagesView() {
                                     type="button"
                                     onClick={() => setSearchQuery('')}
                                     className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
-                                    aria-label="Clear search"
+                                    aria-label={t('Clear search')}
                                 >
                                     <X className="size-3.5" />
                                 </button>
@@ -439,25 +447,25 @@ export function TenantMessagesView() {
                         {loadingConversations ? (
                             <div className="py-12 flex flex-col items-center justify-center gap-2">
                                 <div className="size-6 rounded-full border-2 border-muted border-t-primary animate-spin" />
-                                <span className="text-xs text-muted-foreground">Loading conversations…</span>
+                                <span className="text-xs text-muted-foreground">{t('Loading conversations…')}</span>
                             </div>
                         ) : filteredConversations.length === 0 ? (
                             <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/50 p-8 text-center flex flex-col items-center justify-center shadow-xs my-2">
                                 <MessageSquare className="size-8 text-muted-foreground/50 mb-2" />
-                                <h4 className="text-xs font-bold text-foreground">No message threads yet</h4>
+                                <h4 className="text-xs font-bold text-foreground">{t('No message threads yet')}</h4>
                                 <p className="text-[11px] text-muted-foreground mt-0.5 max-w-xs leading-relaxed">
-                                    When your landlord or property management contacts you, your conversations will appear here.
+                                    {t('When your landlord or property management contacts you, your conversations will appear here.')}
                                 </p>
                             </div>
                         ) : (
                             <div className="flex flex-col gap-2">
                                 {filteredConversations.map((conv) => {
                                     const otherParticipant = conv.otherParticipants?.[0];
-                                    const name = otherParticipant?.fullName || 'Property Manager';
+                                    const name = otherParticipant?.fullName || t('Property Manager');
                                     const avatar = otherParticipant?.avatarUrl || FALLBACK_AVATAR;
-                                    const lastMsg = conv.lastMessage?.content || 'No messages yet';
+                                    const lastMsg = conv.lastMessage?.content || t('No messages yet');
                                     const time = conv.lastMessage?.createdAt 
-                                        ? new Date(conv.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                                        ? new Date(conv.lastMessage.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) 
                                         : '';
 
                                     return (
@@ -474,7 +482,7 @@ export function TenantMessagesView() {
                                                     <div className="flex items-center gap-1.5">
                                                         <h4 className="text-xs font-bold text-foreground truncate">{name}</h4>
                                                         <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-tight bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded-md">
-                                                            {otherParticipant?.role || 'Landlord'}
+                                                            {t(ROLE_LABELS[otherParticipant?.role ?? 'landlord'] ?? otherParticipant?.role ?? 'Landlord')}
                                                         </span>
                                                     </div>
                                                     <p className="text-[11px] text-muted-foreground truncate mt-0.5 max-w-[210px]">
@@ -504,9 +512,9 @@ export function TenantMessagesView() {
                         {announcements.length === 0 ? (
                             <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/50 p-6 text-center shadow-xs">
                                 <Megaphone className="size-8 text-muted-foreground/50 mx-auto mb-2" />
-                                <h4 className="text-xs font-bold text-foreground">No Building Notices</h4>
+                                <h4 className="text-xs font-bold text-foreground">{t('No Building Notices')}</h4>
                                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                                    Announcements from your landlord will appear here.
+                                    {t('Announcements from your landlord will appear here.')}
                                 </p>
                             </div>
                         ) : (
@@ -519,7 +527,7 @@ export function TenantMessagesView() {
                                         <h4 className="text-xs font-bold text-foreground truncate">{ann.title}</h4>
                                         <span className="text-[9px] text-muted-foreground flex items-center gap-1 shrink-0">
                                             <Calendar className="size-3" />
-                                            {new Date(ann.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                            {new Date(ann.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
                                         </span>
                                     </div>
                                     <p className="text-[11px] text-muted-foreground leading-relaxed">

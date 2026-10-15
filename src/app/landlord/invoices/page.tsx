@@ -14,6 +14,7 @@ import type { InvoiceListItem } from "@/lib/billing/server";
 import { formatPhpCurrency, getInvoiceFilterCategory, getInvoiceDisplayStatus } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { Skeleton } from "@/components/ui/Skeleton";
 
@@ -27,6 +28,7 @@ interface ExpenseItem {
 
 export default function InvoicesPage() {
   const { selectedPropertyId } = useProperty();
+  const { t, locale } = useLanguageContext();
   const searchParams = useSearchParams();
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
@@ -73,7 +75,7 @@ export default function InvoicesPage() {
       setExpenses(expensesPayload.expenses ?? []);
       setMetrics(invoicePayload.metrics ?? { totalOutstanding: 0, overdueAmount: 0, collectedLast30Days: 0, totalInvoices: 0 });
     } catch {
-      setMessage("Unable to load billing operations.");
+      setMessage(t("Unable to load billing operations."));
     } finally {
       setLoading(false);
     }
@@ -231,10 +233,10 @@ export default function InvoicesPage() {
         <div>
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-primary shadow-sm backdrop-blur-md">
             <FileText className="size-3.5" />
-            Financial Center
+            {t("Financial Center")}
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Finance Hub</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Manage your unified ledger, track expenses, and oversee rent invoices.</p>
+          <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">{t("Finance Hub")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("Manage your unified ledger, track expenses, and oversee rent invoices.")}</p>
         </div>
         <div className="flex items-center gap-3">
           <Link
@@ -242,7 +244,7 @@ export default function InvoicesPage() {
             className="group inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2.5 text-sm font-semibold text-foreground shadow-sm backdrop-blur-md transition-all hover:border-amber-500/40 hover:text-amber-500 active:scale-95"
           >
             <Zap className="size-4 text-amber-500" />
-            Record Submeters
+            {t("Record Submeters")}
           </Link>
           <button
             type="button"
@@ -253,7 +255,7 @@ export default function InvoicesPage() {
             className="group inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95"
           >
             <Plus className="size-4" />
-            Issue Invoice
+            {t("Issue Invoice")}
           </button>
         </div>
       </div>
@@ -264,9 +266,9 @@ export default function InvoicesPage() {
           const netCashFlow = metrics.collectedLast30Days - totalExpenses;
           return (
             <>
-              <HeroStat label="Net Cash Flow (30d)" value={formatPhpCurrency(netCashFlow)} highlight={netCashFlow >= 0 ? "text-emerald-500" : "text-rose-500"} loading={loading} />
-              <HeroStat label="Collected (30d)" value={formatPhpCurrency(metrics.collectedLast30Days)} highlight="text-primary" loading={loading} />
-              <HeroStat label="Total Expenses" value={formatPhpCurrency(totalExpenses)} highlight="text-amber-500" loading={loading} />
+              <HeroStat label={t("Net Cash Flow (30d)")} value={formatPhpCurrency(netCashFlow)} highlight={netCashFlow >= 0 ? "text-emerald-500" : "text-rose-500"} loading={loading} />
+              <HeroStat label={t("Collected (30d)")} value={formatPhpCurrency(metrics.collectedLast30Days)} highlight="text-primary" loading={loading} />
+              <HeroStat label={t("Total Expenses")} value={formatPhpCurrency(totalExpenses)} highlight="text-amber-500" loading={loading} />
             </>
           );
         })()}
@@ -276,7 +278,7 @@ export default function InvoicesPage() {
 
       <div className="flex items-center gap-2 overflow-x-auto border-b border-border/50 pb-px">
         <Tooltip
-          content="Combined chronological timeline of all collected rent payments and recorded property expenses."
+          content={t("Combined chronological timeline of all collected rent payments and recorded property expenses.")}
           side="top"
         >
           <button
@@ -288,12 +290,12 @@ export default function InvoicesPage() {
                 : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
             )}
           >
-            Unified Ledger
+            {t("Unified Ledger")}
           </button>
         </Tooltip>
 
         <Tooltip
-          content="Track, filter, and review monthly rent dues, verify GCash payment proofs, and manage overdue tenant bills."
+          content={t("Track, filter, and review monthly rent dues, verify GCash payment proofs, and manage overdue tenant bills.")}
           side="top"
         >
           <button
@@ -305,12 +307,12 @@ export default function InvoicesPage() {
                 : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
             )}
           >
-            Invoices
+            {t("Invoices")}
           </button>
         </Tooltip>
 
         <Tooltip
-          content="Log operational costs such as building repairs, maintenance, utility bills, and contractor fees."
+          content={t("Log operational costs such as building repairs, maintenance, utility bills, and contractor fees.")}
           side="top"
         >
           <button
@@ -322,7 +324,7 @@ export default function InvoicesPage() {
                 : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
             )}
           >
-            Expenses
+            {t("Expenses")}
           </button>
         </Tooltip>
       </div>
@@ -333,8 +335,8 @@ export default function InvoicesPage() {
             {/* Header Title & Search */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Ledger</p>
-                <h2 className="mt-1 text-2xl font-black text-foreground lg:text-3xl">Issued Invoices</h2>
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">{t("Ledger")}</p>
+                <h2 className="mt-1 text-2xl font-black text-foreground lg:text-3xl">{t("Issued Invoices")}</h2>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <div className="relative w-full sm:w-72">
@@ -342,7 +344,7 @@ export default function InvoicesPage() {
                   <input maxLength={60}
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search tenant, unit, or invoice..."
+                    placeholder={t("Search tenant, unit, or invoice...")}
                     className="w-full rounded-xl border border-border/50 bg-background/60 py-2.5 pl-10 pr-4 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-primary/10 hover:bg-background shadow-sm"
                   />
                 </div>
@@ -352,7 +354,7 @@ export default function InvoicesPage() {
                   className="group inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-black text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95 whitespace-nowrap"
                 >
                   <Plus className="size-3.5" />
-                  Issue Invoice
+                  {t("Issue Invoice")}
                 </button>
               </div>
             </div>
@@ -371,7 +373,7 @@ export default function InvoicesPage() {
                       : "text-muted-foreground hover:text-foreground hover:bg-background/50"
                   )}
                 >
-                  <span>All</span>
+                  <span>{t("All")}</span>
                   <span className={cn(
                     "text-[10px] px-1.5 py-0.5 rounded-md font-mono",
                     filterStatus === "all" ? "bg-primary/15 text-primary font-bold" : "bg-muted text-muted-foreground"
@@ -391,7 +393,7 @@ export default function InvoicesPage() {
                   )}
                 >
                   <AlertCircle className="size-3.5 shrink-0" />
-                  <span>Overdue</span>
+                  <span>{t("Overdue")}</span>
                   {invoiceCounts.overdue > 0 && (
                     <span className={cn(
                       "text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold",
@@ -413,7 +415,7 @@ export default function InvoicesPage() {
                   )}
                 >
                   <Clock className="size-3.5 shrink-0" />
-                  <span>Needs Verification</span>
+                  <span>{t("Needs Verification")}</span>
                   {invoiceCounts.underReview > 0 && (
                     <span className={cn(
                       "text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold",
@@ -434,7 +436,7 @@ export default function InvoicesPage() {
                       : "text-muted-foreground hover:text-foreground hover:bg-background/50"
                   )}
                 >
-                  <span>Awaiting</span>
+                  <span>{t("Awaiting")}</span>
                   <span className={cn(
                     "text-[10px] px-1.5 py-0.5 rounded-md font-mono",
                     filterStatus === "pending" ? "bg-muted-foreground/20 text-foreground font-bold" : "bg-muted text-muted-foreground"
@@ -454,7 +456,7 @@ export default function InvoicesPage() {
                   )}
                 >
                   <CheckCircle2 className="size-3.5 shrink-0" />
-                  <span>Paid</span>
+                  <span>{t("Paid")}</span>
                   <span className={cn(
                     "text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold",
                     filterStatus === "paid" || filterStatus === "paid_all" ? "bg-white/20 text-white" : "bg-emerald-500/20 text-emerald-400"
@@ -471,9 +473,9 @@ export default function InvoicesPage() {
                   onChange={(e) => setFilterMethod(e.target.value)}
                   className="rounded-xl border border-border/50 bg-background/60 px-3 py-1.5 text-xs font-medium text-foreground outline-none transition-all hover:bg-background hover:border-border focus:border-primary/50 shadow-sm"
                 >
-                  <option value="all">All Methods</option>
+                  <option value="all">{t("All Methods")}</option>
                   <option value="gcash">GCash</option>
-                  <option value="in_person">Cash / In-Person</option>
+                  <option value="in_person">{t("Cash / In-Person")}</option>
                 </select>
 
                 <select
@@ -481,18 +483,18 @@ export default function InvoicesPage() {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="rounded-xl border border-border/50 bg-background/60 px-3 py-1.5 text-xs font-medium text-foreground outline-none transition-all hover:bg-background hover:border-border focus:border-primary/50 shadow-sm"
                 >
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                  <option value="tenant_az">Tenant (A-Z)</option>
-                  <option value="highest_amount">Highest Amount</option>
-                  <option value="lowest_amount">Lowest Amount</option>
+                  <option value="newest">{t("Newest First")}</option>
+                  <option value="oldest">{t("Oldest First")}</option>
+                  <option value="tenant_az">{t("Tenant (A-Z)")}</option>
+                  <option value="highest_amount">{t("Highest Amount")}</option>
+                  <option value="lowest_amount">{t("Lowest Amount")}</option>
                 </select>
               </div>
             </div>
           </div>
 
         <div className="custom-scrollbar space-y-5 overflow-y-auto pr-2">
-          {loading && <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border/50 bg-background/50 py-16 text-muted-foreground"><LoadingSpinner size="md" className="mb-4 text-primary" /><p className="text-sm font-black uppercase tracking-widest text-foreground">Loading invoices...</p></div>}
+          {loading && <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border/50 bg-background/50 py-16 text-muted-foreground"><LoadingSpinner size="md" className="mb-4 text-primary" /><p className="text-sm font-black uppercase tracking-widest text-foreground">{t("Loading invoices...")}</p></div>}
           {!loading && processedInvoices.map((invoice) => (
             <button key={invoice.id} onClick={() => setSelectedInvoiceId(invoice.id)} className="group w-full rounded-[2rem] border border-border/50 bg-background/80 p-6 shadow-sm backdrop-blur-md transition-all hover:scale-[1.01] hover:border-primary/30 hover:bg-card hover:shadow-md md:p-8">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -505,20 +507,20 @@ export default function InvoicesPage() {
                           return (
                             <span className={cn("inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] shadow-sm", config.classes)}>
                               <div className="mr-1.5 size-1 rounded-full bg-current animate-pulse" />
-                              {config.label}
+                              {t(config.label)}
                             </span>
                           );
                         })()}
                         {invoice.proofStatus === "submitted" && (
                           <span className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-blue-500 shadow-sm">
                             <span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                            Proof Attached
+                            {t("Proof Attached")}
                           </span>
                         )}
                         {invoice.hasRefundRequest && (
                           <span className="relative overflow-hidden rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-amber-500 shadow-sm">
                             <span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                            Refund Details Sent
+                            {t("Refund Details Sent")}
                           </span>
                         )}
                       </div>
@@ -536,20 +538,20 @@ export default function InvoicesPage() {
                       </span>
                       <div className="h-4 w-[1px] bg-border/40 hidden sm:block" />
                       <span className="rounded-md bg-surface-2 px-2 py-0.5 text-[11px] border border-white/5">
-                        Unit {invoice.unit}
+                        {t("Unit {unit}", { unit: invoice.unit })}
                       </span>
                     </div>
                   </div>
                   
                   <div className="flex flex-wrap items-center gap-8 lg:gap-12 xl:shrink-0">
-                    <LedgerMetric label="Total Payable" value={formatPhpCurrency(invoice.amount)} />
-                    <LedgerMetric label="Remaining" value={formatPhpCurrency(invoice.balanceRemaining)} highlight={invoice.balanceRemaining > 0 && invoice.status !== "paid"} />
-                    <LedgerMetric label="Due Date" value={invoice.dueDate} />
+                    <LedgerMetric label={t("Total Payable")} value={formatPhpCurrency(invoice.amount)} />
+                    <LedgerMetric label={t("Remaining")} value={formatPhpCurrency(invoice.balanceRemaining)} highlight={invoice.balanceRemaining > 0 && invoice.status !== "paid"} />
+                    <LedgerMetric label={t("Due Date")} value={invoice.dueDate} />
                   </div>
                 </div>
             </button>
           ))}
-          {!loading && processedInvoices.length === 0 && <div className="rounded-[2rem] border border-border/50 bg-background/50 p-12 text-center text-sm font-medium text-muted-foreground shadow-inner">No matching invoices found.</div>}
+          {!loading && processedInvoices.length === 0 && <div className="rounded-[2rem] border border-border/50 bg-background/50 p-12 text-center text-sm font-medium text-muted-foreground shadow-inner">{t("No matching invoices found.")}</div>}
         </div>
       </div>
       )}
@@ -560,23 +562,23 @@ export default function InvoicesPage() {
           <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.25em] text-primary">Overview</p>
-                <h2 id="ledger-overview-heading" className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Financial Ledger</h2>
+                <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.25em] text-primary">{t("Overview")}</p>
+                <h2 id="ledger-overview-heading" className="mt-2 text-2xl font-black text-foreground lg:text-3xl">{t("Financial Ledger")}</h2>
               </div>
               <button 
                 type="button"
                 onClick={handleExportCSV}
                 className="group inline-flex items-center gap-2.5 rounded-full px-6 py-3 text-xs sm:text-sm font-black transition-all neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary text-muted-foreground hover:text-foreground"
-                aria-label="Export ledger data as CSV format"
+                aria-label={t("Export ledger data as CSV format")}
               >
                 <Download className="size-4 text-primary" aria-hidden="true" />
-                Export Ledger (CSV)
+                {t("Export Ledger (CSV)")}
               </button>
             </div>
           </div>
           <div className="rounded-[2.5rem] neumorphic-inset p-4 sm:p-6 md:p-8 custom-scrollbar overflow-y-auto max-h-[500px] space-y-4">
             {loading ? (
-              <div className="space-y-4 sm:space-y-5" aria-label="Loading ledger entries">
+              <div className="space-y-4 sm:space-y-5" aria-label={t("Loading ledger entries")}>
                 {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="flex items-center justify-between rounded-2xl neumorphic-extruded p-4 sm:p-5">
                     <div className="flex items-center gap-3 sm:gap-4 shrink-0 min-w-0 pr-4">
@@ -595,23 +597,23 @@ export default function InvoicesPage() {
                   <div className="mx-auto flex size-16 items-center justify-center rounded-2xl neumorphic-inset-card text-primary mb-5 transition-transform hover:rotate-3">
                     <FileText className="size-8" aria-hidden="true" />
                   </div>
-                  <p className="text-lg font-black text-foreground">No entries yet.</p>
-                  <p className="mt-2 text-xs sm:text-sm max-w-md mx-auto">Your timeline of paid invoices and recorded expenses will appear here.</p>
+                  <p className="text-lg font-black text-foreground">{t("No entries yet.")}</p>
+                  <p className="mt-2 text-xs sm:text-sm max-w-md mx-auto">{t("Your timeline of paid invoices and recorded expenses will appear here.")}</p>
                 </div>
             ) : (
-                <div className="space-y-4 sm:space-y-5" role="feed" aria-label="Ledger entries timeline">
-                    {[...expenses.map(expense => ({ id: expense.id, type: 'expense' as const, date: new Date(expense.date_incurred), amount: expense.amount, label: expense.category, desc: expense.description })), ...invoices.filter(invoice => invoice.status === 'paid' || invoice.status === 'receipted' || invoice.status === 'confirmed').map(invoice => ({ id: invoice.id, type: 'income' as const, date: new Date(invoice.issuedDate), amount: invoice.amount, label: `Rent Payment`, desc: `Invoice ${invoice.invoiceNumber}` }))]
+                <div className="space-y-4 sm:space-y-5" role="feed" aria-label={t("Ledger entries timeline")}>
+                    {[...expenses.map(expense => ({ id: expense.id, type: 'expense' as const, date: new Date(expense.date_incurred), amount: expense.amount, label: expense.category, desc: expense.description })), ...invoices.filter(invoice => invoice.status === 'paid' || invoice.status === 'receipted' || invoice.status === 'confirmed').map(invoice => ({ id: invoice.id, type: 'income' as const, date: new Date(invoice.issuedDate), amount: invoice.amount, label: `Rent Payment`, desc: t("Invoice {number}", { number: invoice.invoiceNumber }) }))]
                     .sort((a, b) => b.date.getTime() - a.date.getTime())
                     .map((ledgerEntry) => (
-                        <div key={`${ledgerEntry.type}-${ledgerEntry.id}`} className="group flex items-center justify-between rounded-2xl neumorphic-extruded p-4 sm:p-5 transition-all hover:scale-[1.01]" role="article" aria-label={`${ledgerEntry.type === 'income' ? 'Income' : 'Expense'} entry: ${ledgerEntry.label} for PHP ${ledgerEntry.amount}`}>
+                        <div key={`${ledgerEntry.type}-${ledgerEntry.id}`} className="group flex items-center justify-between rounded-2xl neumorphic-extruded p-4 sm:p-5 transition-all hover:scale-[1.01]" role="article" aria-label={t(ledgerEntry.type === 'income' ? "Income entry: {label} for PHP {amount}" : "Expense entry: {label} for PHP {amount}", { label: t(ledgerEntry.label), amount: ledgerEntry.amount })}>
                             <div className="flex items-center gap-3 sm:gap-4 shrink-0 min-w-0 pr-4">
                                 <div className={cn("flex size-10 sm:size-12 shrink-0 items-center justify-center rounded-xl neumorphic-inset-card shadow-inner transition-transform group-hover:scale-110", ledgerEntry.type === 'income' ? 'text-emerald-500' : 'text-rose-500')} aria-hidden="true">
                                     {ledgerEntry.type === 'income' ? <Plus className="size-5 sm:size-6" /> : <Filter className="size-5 sm:size-6" />}
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-xs sm:text-sm font-black text-foreground capitalize truncate group-hover:text-primary transition-colors">{ledgerEntry.label}</p>
+                                    <p className="text-xs sm:text-sm font-black text-foreground capitalize truncate group-hover:text-primary transition-colors">{t(ledgerEntry.label)}</p>
                                     <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5 truncate" suppressHydrationWarning>
-                                      {ledgerEntry.desc} ? <span suppressHydrationWarning>{ledgerEntry.date.toLocaleDateString()}</span>
+                                      {ledgerEntry.desc} ? <span suppressHydrationWarning>{ledgerEntry.date.toLocaleDateString(locale)}</span>
                                     </p>
                                 </div>
                             </div>
@@ -631,15 +633,15 @@ export default function InvoicesPage() {
           <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Outflow</p>
-                <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Expense Log</h2>
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">{t("Outflow")}</p>
+                <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">{t("Expense Log")}</h2>
               </div>
               <button 
                 onClick={() => setIsExpenseModalOpen(true)}
                 className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-black text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95"
               >
                 <Plus className="size-4" />
-                Record Expense
+                {t("Record Expense")}
               </button>
             </div>
           </div>
@@ -664,8 +666,8 @@ export default function InvoicesPage() {
                   <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-4">
                     <Filter className="size-8" />
                   </div>
-                  <p className="text-lg font-black text-foreground">No expenses recorded yet.</p>
-                  <p className="mt-2 max-w-md mx-auto">Click &quot;Record Expense&quot; to log maintenance costs, utility bills you cover, and property taxes to keep your accounting accurate.</p>
+                  <p className="text-lg font-black text-foreground">{t("No expenses recorded yet.")}</p>
+                  <p className="mt-2 max-w-md mx-auto">{t("Click \"Record Expense\" to log maintenance costs, utility bills you cover, and property taxes to keep your accounting accurate.")}</p>
                 </div>
             ) : (
                 expenses.map(expense => (
@@ -675,9 +677,10 @@ export default function InvoicesPage() {
                                 <Filter className="size-5" />
                             </div>
                             <div suppressHydrationWarning>
-                                <p className="text-sm font-black text-foreground capitalize">{expense.category}</p>
+                                <p className="text-sm font-black text-foreground capitalize">{t(expense.category)}</p>
                                 <p className="text-xs text-muted-foreground">{expense.description}</p>
-                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">Incurred: <ClientOnlyDate date={expense.date_incurred} /></p>
+                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">{t("Incurred:")} <ClientOnlyDate
+ date={expense.date_incurred} /></p>
                             </div>
                         </div>
                         <div className="text-right">

@@ -1,7 +1,9 @@
 "use client";
 
 import { PageLoader } from "@/components/ui/LoadingSpinner";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export default function LandlordLoading() {
-    return <PageLoader message="Loading" />;
+    const { t } = useLanguageContext();
+    return <PageLoader message={t("Loading")} />;
 }

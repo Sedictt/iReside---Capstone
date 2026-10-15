@@ -1,17 +1,28 @@
 import { NextResponse } from "next/server";
 import { TwoFactorService } from "@/lib/services/auth/two-factor.service";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseJsonBody } from "@/lib/validation/server";
+import { twoFactorVerifyLoginSchema } from "@/lib/validation/schemas/account.schema";
+import {
+    TWO_FACTOR_PENDING_COOKIE,
+    TWO_FACTOR_VERIFIED_COOKIE,
+    createTwoFactorVerifiedCookieValue,
+    twoFactorVerifiedCookieOptions,
+} from "@/lib/security/two-factor-cookie";
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const { userId, otp } = body;
+        const parsed = await parseJsonBody(request, twoFactorVerifyLoginSchema);
+        if (!parsed.ok) return parsed.response;
+        const { userId, otp } = parsed.data;
 
-        if (!userId || typeof userId !== "string") {
-            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
-        }
-
-        if (!otp || typeof otp !== "string") {
-            return NextResponse.json({ error: "Verification code is required" }, { status: 400 });
+        // The verified cookie is bound to a user id, so it may only be issued
+        // for the user who is actually signed in on this browser. The device is
+        // not verified yet, so pending 2FA must be allowed for this endpoint.
+        const authContext = await requireAuthenticatedUser(request, { allowPendingTwoFactor: true });
+        if (!("userId" in authContext)) return authContext as Response;
+        if (authContext.userId !== userId) {
+            return NextResponse.json({ error: "You can only verify your own sign-in." }, { status: 403 });
         }
 
         const twoFactorService = new TwoFactorService();
@@ -34,7 +45,7 @@ export async function POST(request: Request) {
         });
 
         // Clear the pending 2FA cookie now that verification is complete
-        response.cookies.set("ireside_2fa_pending", "", {
+        response.cookies.set(TWO_FACTOR_PENDING_COOKIE, "", {
             path: "/",
             httpOnly: true,
             sameSite: "lax",
@@ -42,20 +53,19 @@ export async function POST(request: Request) {
             expires: new Date(0),
         });
 
-        // Issue verified 2FA cookie for this user session
-        response.cookies.set("ireside_2fa_verified", userId, {
-            path: "/",
-            httpOnly: true,
-            sameSite: "lax",
-            maxAge: 60 * 60 * 24 * 7, // 7 days
-            secure: process.env.NODE_ENV === "production",
-        });
+        // Issue the signed verified-device cookie for this user. The signature is
+        // what the middleware and API guard check; a bare user id is rejected.
+        response.cookies.set(
+            TWO_FACTOR_VERIFIED_COOKIE,
+            await createTwoFactorVerifiedCookieValue(userId),
+            twoFactorVerifiedCookieOptions(),
+        );
 
         return response;
     } catch (err: any) {
         console.error("[2FA Verify Login] Error:", err);
         return NextResponse.json(
-            { error: err.message || "Failed to verify two-factor code" },
+            { error: "Failed to verify two-factor code" },
             { status: 500 }
         );
     }

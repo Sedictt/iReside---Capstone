@@ -4,6 +4,17 @@ import { useState } from "react";
 import { Facebook, Twitter, Linkedin, Instagram, Globe, Save, X, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { validateSocialHandleOrUrl } from "@/lib/validation/landlord-settings";
+
+const socialRule = (platform: "facebook" | "twitter" | "linkedin" | "instagram", value: string) => {
+    const check = validateSocialHandleOrUrl(platform, value);
+    return check.isValid ? undefined : check.error;
+};
+
+const SOCIAL_URL_MAX_LENGTH = 255;
 
 type Socials = {
     facebook?: string;
@@ -19,19 +30,41 @@ type SocialLinksEditorProps = {
 };
 
 export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorProps) {
+    const { t } = useLanguageContext();
     const [isEditing, setIsEditing] = useState(false);
     const [socials, setSocials] = useState<Socials>(initialSocials);
     const [isSaving, setIsSaving] = useState(false);
 
+    // Same rule as the settings form and profile API: an http(s) link or a plain handle.
+    const form = useFormValidation(
+        {
+            facebook: socials.facebook ?? "",
+            twitter: socials.twitter ?? "",
+            linkedin: socials.linkedin ?? "",
+            instagram: socials.instagram ?? "",
+        },
+        {
+            facebook: (value) => socialRule("facebook", value),
+            twitter: (value) => socialRule("twitter", value),
+            linkedin: (value) => socialRule("linkedin", value),
+            instagram: (value) => socialRule("instagram", value),
+        },
+    );
+
     const handleSave = async () => {
+        if (isSaving) return;
+        if (!form.validateAll()) return;
         setIsSaving(true);
         try {
-            await onSave(socials);
+            const trimmed = Object.fromEntries(
+                Object.entries(socials).map(([key, value]) => [key, typeof value === "string" ? value.trim() : value]),
+            ) as Socials;
+            await onSave(trimmed);
             setIsEditing(false);
-            toast.success("Social links updated");
+            toast.success(t("Social links updated"));
         } catch (error) {
             console.error(error);
-            toast.error("Failed to update social links");
+            toast.error(t("Failed to update social links"));
         } finally {
             setIsSaving(false);
         }
@@ -66,14 +99,14 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                         </a>
                     )}
                     {!socials.facebook && !socials.twitter && !socials.linkedin && !socials.instagram && (
-                        <p className="text-xs text-muted-foreground italic">No social links added yet</p>
+                        <p className="text-xs text-muted-foreground italic">{t("No social links added yet")}</p>
                     )}
                 </div>
                 <button 
                     onClick={() => setIsEditing(true)}
                     className="text-[10px] font-black tracking-widest uppercase px-4 py-2 rounded-full neumorphic-extruded text-muted-foreground hover:text-foreground transition-all cursor-pointer"
                 >
-                    Edit Socials
+                    {t("Edit Socials")}
                 </button>
             </div>
         );
@@ -82,8 +115,8 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
     return (
         <div className="neumorphic-inset border border-border/50 rounded-3xl p-6 w-full max-w-sm animate-in fade-in zoom-in duration-300 bg-background/50">
             <div className="flex items-center justify-between mb-6">
-                <h4 className="text-xs font-black tracking-widest uppercase text-foreground">Edit Social Links</h4>
-                <button onClick={() => setIsEditing(false)} className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                <h4 className="text-xs font-black tracking-widest uppercase text-foreground">{t("Edit Social Links")}</h4>
+                <button onClick={() => setIsEditing(false)} className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer" aria-label={t("Close")}>
                     <X size={18} />
                 </button>
             </div>
@@ -93,53 +126,65 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                     <label htmlFor="facebook-url" className="text-[9px] font-black tracking-widest text-muted-foreground uppercase flex items-center gap-2">
                         <Facebook size={12} className="text-[#1877F2]" /> Facebook URL
                     </label>
-                    <input maxLength={120} 
+                    <input maxLength={SOCIAL_URL_MAX_LENGTH}
+                        {...form.fieldProps("facebook")}
                         id="facebook-url"
                         type="url" 
+                        inputMode="url"
                         value={socials.facebook || ""} 
                         onChange={(e) => updateSocial("facebook", e.target.value)}
                         placeholder="https://facebook.com/..."
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                        className={cn("w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors", form.errorFor("facebook") && fieldErrorClass)}
                     />
+                    <FieldError id={form.errorId("facebook")} message={form.errorFor("facebook")} />
                 </div>
                 <div className="space-y-1.5">
                     <label htmlFor="twitter-url" className="text-[9px] font-black tracking-widest text-muted-foreground uppercase flex items-center gap-2">
                         <Twitter size={12} className="text-[#1DA1F2]" /> Twitter URL
                     </label>
-                    <input maxLength={120} 
+                    <input maxLength={SOCIAL_URL_MAX_LENGTH}
+                        {...form.fieldProps("twitter")}
                         id="twitter-url"
                         type="url" 
+                        inputMode="url"
                         value={socials.twitter || ""} 
                         onChange={(e) => updateSocial("twitter", e.target.value)}
                         placeholder="https://twitter.com/..."
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                        className={cn("w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors", form.errorFor("twitter") && fieldErrorClass)}
                     />
+                    <FieldError id={form.errorId("twitter")} message={form.errorFor("twitter")} />
                 </div>
                 <div className="space-y-1.5">
                     <label htmlFor="linkedin-url" className="text-[9px] font-black tracking-widest text-muted-foreground uppercase flex items-center gap-2">
                         <Linkedin size={12} className="text-[#0A66C2]" /> LinkedIn URL
                     </label>
-                    <input maxLength={120} 
+                    <input maxLength={SOCIAL_URL_MAX_LENGTH}
+                        {...form.fieldProps("linkedin")}
                         id="linkedin-url"
                         type="url" 
+                        inputMode="url"
                         value={socials.linkedin || ""} 
                         onChange={(e) => updateSocial("linkedin", e.target.value)}
                         placeholder="https://linkedin.com/in/..."
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                        className={cn("w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors", form.errorFor("linkedin") && fieldErrorClass)}
                     />
+                    <FieldError id={form.errorId("linkedin")} message={form.errorFor("linkedin")} />
                 </div>
                 <div className="space-y-1.5">
                     <label htmlFor="instagram-url" className="text-[9px] font-black tracking-widest text-muted-foreground uppercase flex items-center gap-2">
                         <Instagram size={12} className="text-[#E4405F]" /> Instagram URL
                     </label>
-                    <input maxLength={120} 
+                    <input maxLength={SOCIAL_URL_MAX_LENGTH}
+                        {...form.fieldProps("instagram")}
                         id="instagram-url"
                         type="url" 
+                        inputMode="url"
                         value={socials.instagram || ""} 
                         onChange={(e) => updateSocial("instagram", e.target.value)}
                         placeholder="https://instagram.com/..."
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                        className={cn("w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors", form.errorFor("instagram") && fieldErrorClass)}
                     />
+                    <FieldError id={form.errorId("instagram")} message={form.errorFor("instagram")} />
                 </div>
             </div>
 
@@ -148,7 +193,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                 disabled={isSaving}
                 className="w-full flex items-center justify-center gap-2 neumorphic-primary py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all disabled:opacity-50 cursor-pointer"
             >
-                {isSaving ? "Saving..." : <><Save size={14} /> Save Social Links</>}
+                {isSaving ? t("Saving...") : <><Save size={14} /> {t("Save Social Links")}</>}
             </button>
         </div>
     );

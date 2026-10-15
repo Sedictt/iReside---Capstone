@@ -23,10 +23,54 @@ import { TenantInviteManager } from "@/components/landlord/applications/TenantIn
 import { QrCode, X, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import {
+    formatLeaseDate,
+    formatTenure,
+    formatTenureShort,
+    leaseEndState,
+    leaseProgressPercent,
+    tenureSinceLabel,
+} from "@/lib/lease-term";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 const EMPTY_ARRAY: any[] = [];
 const EMPTY_OBJECT = Object.freeze({});
+
+/** English display titles for layout presets (translated at render). */
+const STRUCTURE_TYPE_LABELS: Record<string, string> = {
+    elevator: "Elevator",
+    stairwell: "Stairwell",
+    facility: "Facility",
+};
+
+const STRUCTURE_VARIANT_LABELS: Record<string, string> = {
+    straight: "Straight",
+    "l-shape": "L-Shape",
+    "u-shape": "U-Shape",
+    spiral: "Spiral",
+    "function-room": "Function Room",
+    studio: "Studio",
+};
+
+const MAINTENANCE_STATUS_LABELS: Record<string, string> = {
+    open: "Open",
+    pending: "Pending",
+    assigned: "Assigned",
+    in_progress: "In Progress",
+    completed: "Completed",
+    resolved: "Resolved",
+    closed: "Completed",
+    cancelled: "Cancelled",
+};
+
+const PRESET_TITLES: Record<string, string> = {
+    "double-loaded": "Double Loaded",
+    "single-loaded": "Single Loaded",
+    "u-shape": "U-Shape",
+    "l-shape": "L-Shape",
+};
 
 import { 
     Unit, DbUnit, FloorConfig, Corridor, FloorId, FloorLayout, 
@@ -57,6 +101,9 @@ import { LeasePreviewModal } from "./components/LeasePreviewModal";
 import { VisualPlannerSkeleton } from "./components/VisualPlannerSkeleton";
 import { CanvasQuickMessenger } from "./components/CanvasQuickMessenger";
 import { MapSetupWizard } from "./MapSetupWizard";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { PROPERTY_LIMITS, unitAreaSqmRule, unitBathsRule, unitBedsRule } from "@/lib/validation/schemas/properties.schema";
 import { TenantMapNotReady } from "@/components/tenant/TenantMapNotReady";
 import { MaintenanceRequestModal } from "@/components/landlord/maintenance/MaintenanceRequestModal";
 import type { MaintenanceRequest } from "@/components/landlord/maintenance/MaintenanceDashboard";
@@ -78,6 +125,7 @@ const ComplaintModal = ({
     unit: Unit | null;
     isDark: boolean;
 }) => {
+    const { t } = useLanguageContext();
     const [complaintType, setComplaintType] = useState<string>("");
     const [customComplaint, setCustomComplaint] = useState("");
     const [attachment, setAttachment] = useState<File | null>(null);
@@ -124,7 +172,7 @@ const ComplaintModal = ({
                         onClick={onClose}
                         role="button"
                         tabIndex={0}
-                        aria-label="Close modal"
+                        aria-label={t("Close modal")}
                         onKeyDown={(e) => e.key === 'Enter' && onClose()}
                     />
                     <motion.div 
@@ -134,7 +182,7 @@ const ComplaintModal = ({
                         className={`relative w-full max-w-lg flex flex-col rounded-[2.5rem] border border-border bg-card shadow-[0_32px_80px_-20px_rgba(0,0,0,0.5)] overflow-hidden`}
                     >
                         <div className="absolute right-6 top-6 z-10">
-                            <button onClick={onClose} className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground">
+                            <button onClick={onClose} aria-label={t("Close")} className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground">
                                 <X className="size-6" />
                             </button>
                         </div>
@@ -146,9 +194,9 @@ const ComplaintModal = ({
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-black tracking-tight text-foreground">
-                                        Submit a Complaint
+                                        {t("Submit a Complaint")}
                                     </h2>
-                                    <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Unit {unit.name}</p>
+                                    <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">{t("Unit {name}", { name: unit.name })}</p>
                                 </div>
                             </div>
 
@@ -161,13 +209,13 @@ const ComplaintModal = ({
                                     <div className="size-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
                                         <span className="material-icons-round text-5xl">check_circle</span>
                                     </div>
-                                    <h3 className="text-xl font-black text-foreground mb-2">Complaint Received</h3>
-                                    <p className="text-muted-foreground">Thank you for your report. Our team will investigate this matter immediately.</p>
+                                    <h3 className="text-xl font-black text-foreground mb-2">{t("Complaint Received")}</h3>
+                                    <p className="text-muted-foreground">{t("Thank you for your report. Our team will investigate this matter immediately.")}</p>
                                 </motion.div>
                             ) : (
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="space-y-3">
-                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Nature of Complaint</label>
+                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">{t("Nature of Complaint")}</label>
                                         <div className="grid grid-cols-2 gap-3">
                                             {predefinedComplaints.map((type) => (
                                                 <button
@@ -180,7 +228,7 @@ const ComplaintModal = ({
                                                             : 'border-border bg-muted/30 text-muted-foreground hover:border-neutral-400'
                                                     }`}
                                                 >
-                                                    {type}
+                                                    {t(type)}
                                                 </button>
                                             ))}
                                         </div>
@@ -193,7 +241,7 @@ const ComplaintModal = ({
                                             className="space-y-3"
                                         >
                                             <div className="flex items-center justify-between ml-1">
-                                                <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Details</label>
+                                                <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Details")}</label>
                                                 <span className="text-[10px] font-medium text-muted-foreground/70 select-none">
                                                     {customComplaint.length} / 500
                                                 </span>
@@ -203,14 +251,14 @@ const ComplaintModal = ({
                                                 maxLength={500}
                                                 value={customComplaint}
                                                 onChange={(e) => setCustomComplaint(e.target.value)}
-                                                placeholder="Please describe the issue in detail…"
+                                                placeholder={t("Please describe the issue in detail…")}
                                                 className="w-full min-h-[120px] rounded-2xl border border-border bg-muted/20 px-5 py-4 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
                                             />
                                         </motion.div>
                                     )}
 
                                     <div className="space-y-3">
-                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Evidence / Photos</label>
+                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">{t("Evidence / Photos")}</label>
                                         <div 
                                             className={`relative group cursor-pointer rounded-2xl border-2 border-dashed transition-all p-8 flex flex-col items-center justify-center gap-3 ${
                                                 attachment ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-primary/30 hover:bg-muted/30'
@@ -218,7 +266,7 @@ const ComplaintModal = ({
                                             onClick={() => document.getElementById('photo-upload')?.click()}
                                             role="button"
                                             tabIndex={0}
-                                            aria-label="Upload photo"
+                                            aria-label={t("Upload photo")}
                                             onKeyDown={(e) => e.key === 'Enter' && document.getElementById('photo-upload')?.click()}
                                         >
                                             <input 
@@ -229,7 +277,7 @@ const ComplaintModal = ({
                                                 onChange={(e) => {
                                                     const file = handleMediaSelection(e, {
                                                         preset: "image",
-                                                        notify: (msg, desc) => toast.error(msg, { description: desc }),
+                                                        notify: (msg, desc) => toast.error(tr(msg), { description: desc }),
                                                     });
                                                     setAttachment(file);
                                                 }}
@@ -242,7 +290,7 @@ const ComplaintModal = ({
                                                     <div className="text-center">
                                                         <p className="text-sm font-black text-foreground">{attachment.name}</p>
                                                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">
-                                                            {(attachment.size / 1024 / 1024).toFixed(2)} MB &bull; Click to change
+                                                            {t("{size} MB • Click to change", { size: (attachment.size / 1024 / 1024).toFixed(2) })}
                                                         </p>
                                                     </div>
                                                 </>
@@ -252,8 +300,8 @@ const ComplaintModal = ({
                                                         <span className="material-icons-round text-2xl">add_a_photo</span>
                                                     </div>
                                                     <div className="text-center">
-                                                        <p className="text-sm font-black text-foreground">Upload Evidence</p>
-                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">JPG, PNG up to 10MB</p>
+                                                        <p className="text-sm font-black text-foreground">{t("Upload Evidence")}</p>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">{t("JPG, PNG up to 10MB")}</p>
                                                     </div>
                                                 </>
                                             )}
@@ -268,11 +316,11 @@ const ComplaintModal = ({
                                         {isSubmitting ? (
                                             <>
                                                 <span className="material-icons-round animate-spin">refresh</span>
-                                                Processing…
+                                                {t("Processing…")}
                                             </>
                                         ) : (
                                             <>
-                                                Submit Complaint
+                                                {t("Submit Complaint")}
                                                 <span className="material-icons-round">send</span>
                                             </>
                                         )}
@@ -307,6 +355,7 @@ export default function VisualBuilder({
     showBackButton?: boolean;
     currentUnitId?: string;
 } = {}) {
+    const { t, locale } = useLanguageContext();
     const router = useRouter();
     const { back } = router;
     const propertyContext = useOptionalProperty();
@@ -785,7 +834,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 });
                 if (!res.ok) {
                     const err = (await res.json()) as { error?: string };
-                    throw new Error(err.error ?? "Failed to load unit map");
+                    throw new Error(err.error ?? tr("Failed to load unit map"));
                 }
                 const data = await res.json() as {
                     floorConfigs: FloorConfig[];
@@ -808,7 +857,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 }
             } catch (err) {
                 if ((err as Error).name === "AbortError") return;
-                setMapLoadError((err as Error).message);
+                setMapLoadError(tr((err as Error).message));
             } finally {
                 if (!controller.signal.aborted) setIsLoadingMap(false);
             }
@@ -1002,7 +1051,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         setTransferSuccess(false);
                     }, 2000);
                 } else {
-                    setTransferError(data.error || "Failed to submit request");
+                    setTransferError(tr(data.error || t("Failed to submit request")));
                 }
             } else {
                 setTransferSuccess(true);
@@ -1012,7 +1061,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 }, 2000);
             }
         } catch (err) {
-            setTransferError("An error occurred. Please try again.");
+            setTransferError(t("An error occurred. Please try again."));
         } finally {
             setIsSubmittingTransfer(false);
         }
@@ -1109,7 +1158,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 setShowQuickMessages(prev => {
                     const next = !prev;
                     try { window.localStorage.setItem("ireside.visualPlanner.showQuickMessages", String(next)); } catch {}
-                    toast.info(next ? "Canvas Quick Messages Enabled" : "Canvas Quick Messages Disabled");
+                    toast.info(next ? tr("Canvas Quick Messages Enabled") : tr("Canvas Quick Messages Disabled"));
                     return next;
                 });
             }
@@ -2236,12 +2285,12 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const getCanvasItemLabel = (item: SelectedCanvasItem) => {
         if (item.kind === "unit") {
-            return units.find(unit => unit.id === item.id)?.name ?? "Unit";
+            return units.find(unit => unit.id === item.id)?.name ?? t("Unit");
         }
         if (item.kind === "corridor") {
-            return corridors.find(corridor => corridor.id === item.id)?.label ?? "Corridor";
+            return t(corridors.find(corridor => corridor.id === item.id)?.label ?? "Corridor");
         }
-        return structures.find(structure => structure.id === item.id)?.label ?? "Structure";
+        return t(structures.find(structure => structure.id === item.id)?.label ?? "Structure");
     };
 
     const triggerDeleteToast = () => {
@@ -3009,7 +3058,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
         handleFit();
         isUndoingRef.current = false;
-        toast.success(`Applied ${presetType.replace("-", " ")} preset layout across all floors!`);
+        toast.success(t("Applied {preset} preset layout across all floors!", { preset: t(PRESET_TITLES[presetType] ?? presetType) }));
         scheduleExploreModalAfterDelay(3000);
     };
 
@@ -3064,7 +3113,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             } catch {}
         }
         void propertyContext?.refreshProperties();
-        toast.info("You can continue customizing your layout. Next up in onboarding is configuring your billing and utility rates.");
+        toast.info(t("You can continue customizing your layout. Next up in onboarding is configuring your billing and utility rates."));
     };
 
     const handleChooseManualLayout = () => {
@@ -3083,7 +3132,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         }
         void propertyContext?.refreshProperties();
         setIsSidebarVisible(true);
-        toast.info("Manual layout active. Drag units and add stairs or corridors from the sidebar.");
+        toast.info(t("Manual layout active. Drag units and add stairs or corridors from the sidebar."));
     };
 
     const confirmApplyPreset = (presetType: "double-loaded" | "u-shape" | "l-shape" | "single-loaded") => {
@@ -3678,11 +3727,11 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         if (mode === "view" && selectedUnit) {
             const req: MaintenanceRequest = {
                 id: selectedUnit.dbId ? `MR-${selectedUnit.dbId.slice(0, 8).toUpperCase()}` : `MR-${selectedUnit.id.toUpperCase()}`,
-                title: selectedUnit.maintenanceTitle || selectedUnit.details || "In-Unit Repair",
-                description: selectedUnit.maintenanceDescription || `Maintenance issue reported for Unit ${selectedUnit.name}.`,
-                property: selectedProperty?.name || "Property",
+                title: selectedUnit.maintenanceTitle || selectedUnit.details || tr("In-Unit Repair"),
+                description: selectedUnit.maintenanceDescription || tr("Maintenance issue reported for Unit {name}.", { name: selectedUnit.name }),
+                property: selectedProperty?.name || tr("Property"),
                 unit: selectedUnit.name,
-                tenant: selectedUnit.tenant || "Resident",
+                tenant: selectedUnit.tenant || tr("Resident"),
                 tenantAvatar: selectedUnit.tenantAvatarUrl || null,
                 tenantAvatarBgColor: selectedUnit.tenantAvatarBgColor || "bg-primary",
                 priority: "High",
@@ -3701,7 +3750,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         config: { areaSqm: number; bedrooms: number; baths: number },
         applyToAll: boolean
     ): Promise<{ success: boolean; error?: string }> => {
-        if (!selectedUnit) return { success: false, error: "No unit selected" };
+        if (!selectedUnit) return { success: false, error: tr("No unit selected") };
 
         const targetUnitId = selectedUnit.id;
         const targetDbId = selectedUnit.dbId ?? selectedUnit.id;
@@ -3842,7 +3891,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
-                throw new Error(data.error || "Failed to save unit configuration");
+                throw new Error(data.error || tr("Failed to save unit configuration"));
             }
 
             // Real-time broadcast to keep all devices/tabs synced
@@ -3876,7 +3925,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     window.localStorage.setItem(cacheKey, prevCache);
                 } catch {}
             }
-            return { success: false, error: err.message || "Failed to save configuration" };
+            return { success: false, error: err.message || tr("Failed to save configuration") };
         }
     }, [selectedUnit, units, floorLayouts, dbUnits, unplacedDbUnits, selectedPropertyId, demoMode]);
 
@@ -3889,7 +3938,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             <div className="flex flex-col h-full">
                 <MapSetupWizard
                     propertyId={selectedPropertyId}
-                    propertyName={selectedProperty?.name ?? "Your Property"}
+                    propertyName={selectedProperty?.name ?? t("Your Property")}
                     initialUnits={dbUnits}
                     initialFloorConfigs={floorConfigs}
                     onSetupComplete={() => {
@@ -3961,16 +4010,16 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     </div>
                     <div className={`mx-2 h-6 w-px ${isDark ? 'bg-zinc-700' : 'bg-zinc-300'}`}></div>
                     <div>
-                        <h1 className={`text-sm font-black ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{activePropertyName || "All Properties"}</h1>
+                        <h1 className={`text-sm font-black ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{activePropertyName || t("All Properties")}</h1>
                         <div className={`flex items-center gap-1 text-xs ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                             <span className="size-1.5 rounded-full bg-green-500"></span>
-                            <span>All systems operational</span>
+                            <span>{t("All systems operational")}</span>
                         </div>
                     </div>
                     {readOnly && (
                         <div className="flex items-center gap-1.5 ml-3 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
                             <span className="material-icons-round text-emerald-400 text-[14px]">visibility</span>
-                                <span className={`text-xs font-black tracking-wide ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>View Only</span>
+                                <span className={`text-xs font-black tracking-wide ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>{t("View Only")}</span>
                         </div>
                     )}
                 </div>
@@ -3978,11 +4027,11 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     {!readOnly && selectedPropertyId !== "all" && unplacedDbUnits.length > 0 && (
                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 animate-pulse">
                             <span className="material-icons-round text-amber-500 text-[16px]">warning</span>
-                            <span className="text-[11px] font-black text-amber-500 uppercase tracking-tighter">{unplacedDbUnits.length} Unplaced Units</span>
+                            <span className="text-[11px] font-black text-amber-500 uppercase tracking-tighter">{t("{count} Unplaced Units", { count: unplacedDbUnits.length })}</span>
                         </div>
                     )}
                         <div className={`${isDark ? 'bg-background-dark/90 border-zinc-700 shadow-none' : 'bg-background/90 border-border shadow-sm'} p-1 rounded-xl border flex items-center backdrop-blur-sm`}>
-                            <div className={`flex items-center pl-2 pr-1 border-r hidden sm:flex ${isDark ? 'border-zinc-700' : 'border-border'}`} title="Current Level">
+                            <div className={`flex items-center pl-2 pr-1 border-r hidden sm:flex ${isDark ? 'border-zinc-700' : 'border-border'}`} title={t("Current Level")}>
                                 <span className={`material-icons-round text-[18px] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>layers</span>
                         </div>
                         
@@ -4016,7 +4065,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         }
                                     }}
                                     className={`border border-primary text-sm font-black px-2 py-1 rounded w-[120px] md:w-[150px] focus:outline-none ${isDark ? 'bg-background-dark text-zinc-100' : 'bg-card text-zinc-800'}`}
-                                    placeholder="Floor Name"
+                                    placeholder={t("Floor Name")}
                                     autoFocus
                                 />
                             </div>
@@ -4051,9 +4100,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                      saveStatus === "waiting" ? "pending" :
                                      saveStatus === "saving" ? "sync" : "check_circle"}
                                 </span>
-                                {saveStatus === "idle" ? "All Changes Saved" :
-                                 saveStatus === "waiting" ? "Changes Pending…" :
-                                 saveStatus === "saving" ? "Auto-saving…" : "Saved to Cloud"}
+                                {saveStatus === "idle" ? t("All Changes Saved") :
+                                 saveStatus === "waiting" ? t("Changes Pending…") :
+                                 saveStatus === "saving" ? t("Auto-saving…") : t("Saved to Cloud")}
                             </div>
                         </>
                     )}
@@ -4117,16 +4166,16 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 <div className={`absolute inset-0 opacity-20 ${sidebarBlockGhost.isValid ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center p-2 z-20">
                                                     <div className={`size-2 rounded-full mb-2 ${sidebarBlockGhost.isValid ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`}></div>
-                                                    <h4 className={`font-black text-xs drop-shadow-md ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{sidebarBlockGhost.label}</h4>
-                                                    <span className={`text-[9px] font-black uppercase mt-1 tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-700 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-700 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? 'Preview' : 'Blocked'}</span>
+                                                    <h4 className={`font-black text-xs drop-shadow-md ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t(sidebarBlockGhost.label)}</h4>
+                                                    <span className={`text-[9px] font-black uppercase mt-1 tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-700 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-700 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? t('Preview') : t('Blocked')}</span>
                                                 </div>
                                             </div>
                                         ) : sidebarBlockGhost.blockType === "corridor" ? (
                                             <div className={`w-full h-full border-y flex items-center justify-center rounded-[1px] ${sidebarBlockGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/15 border-red-400/80'}`}>
                                                 <div className={`absolute inset-0 opacity-15 pointer-events-none ${isDark ? 'bg-neutral-700/50' : 'bg-zinc-200/50'}`}></div>
                                                 <div className="relative z-10 flex flex-col items-center justify-center">
-                                                    <span className={`text-xs font-black uppercase tracking-[0.5em] ${sidebarBlockGhost.isValid ? 'text-emerald-300' : 'text-red-300'}`}>{sidebarBlockGhost.label}</span>
-                                                    <span className={`mt-1 text-[9px] font-black uppercase tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-700 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-700 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? 'Preview' : 'Blocked'}</span>
+                                                    <span className={`text-xs font-black uppercase tracking-[0.5em] ${sidebarBlockGhost.isValid ? 'text-emerald-300' : 'text-red-300'}`}>{t(sidebarBlockGhost.label)}</span>
+                                                    <span className={`mt-1 text-[9px] font-black uppercase tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-700 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-700 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? t('Preview') : t('Blocked')}</span>
                                                 </div>
                                             </div>
                                         ) : sidebarBlockGhost.blockType === "elevator" ? (
@@ -4134,7 +4183,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 <div className={`border-2 w-full h-full m-2 flex items-center justify-center relative ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}>
                                                     <span className={`material-icons-round ${sidebarBlockGhost.isValid ? 'text-emerald-400' : 'text-red-400'}`}>elevator</span>
                                                 </div>
-                                                <span className={`absolute bottom-1 text-[9px] font-black uppercase tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-300 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-300 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? 'Preview' : 'Blocked'}</span>
+                                                <span className={`absolute bottom-1 text-[9px] font-black uppercase tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-300 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-300 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? t('Preview') : t('Blocked')}</span>
                                             </div>
                                         ) : (
                                             <div className={`w-full h-full border rounded-sm relative overflow-hidden ${sidebarBlockGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/20 border-red-400/80'}`}>
@@ -4217,7 +4266,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     )}
                                                 </div>
                                                 <div className={`absolute inset-0 opacity-20 ${sidebarBlockGhost.isValid ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
-                                                <span className={`absolute top-1 right-1 text-[9px] font-black uppercase tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-300 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-300 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? 'Preview' : 'Blocked'}</span>
+                                                <span className={`absolute top-1 right-1 text-[9px] font-black uppercase tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-300 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-300 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? t('Preview') : t('Blocked')}</span>
                                             </div>
                                         )}
                                     </div>
@@ -4265,7 +4314,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             ></div>
                                             <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
                                             <div className="absolute inset-0 flex items-center justify-center z-20 overflow-hidden">
-                                                <span className={`text-xs font-black uppercase tracking-[0.4em] px-2 ${isDark ? 'text-zinc-300' : 'text-zinc-500'} ${corridor.h > corridor.w ? '-rotate-90 whitespace-nowrap' : 'whitespace-nowrap'}`}>{corridor.label}</span>
+                                                <span className={`text-xs font-black uppercase tracking-[0.4em] px-2 ${isDark ? 'text-zinc-300' : 'text-zinc-500'} ${corridor.h > corridor.w ? '-rotate-90 whitespace-nowrap' : 'whitespace-nowrap'}`}>{t(corridor.label)}</span>
                                             </div>
 
                                             {!readOnly && selectedItem?.kind === "corridor" && selectedItem.id === corridor.id && (
@@ -4319,7 +4368,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 <div className={`pointer-events-none absolute inset-0 rounded-[1px] ${dragPlacement.isValid ? 'bg-emerald-500/12' : 'bg-red-500/18'}`}></div>
                                                 {(!dragPlacement.isValid || dragPlacement.isMagnetic) && (
                                                     <span className={`pointer-events-none absolute left-2 top-2 z-40 rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${dragPlacement.isValid ? 'border border-emerald-400/40 bg-emerald-500/15 text-emerald-300' : 'border border-red-400/40 bg-red-500/15 text-red-300'}`}>
-                                                        {dragPlacement.isValid ? 'Snap' : 'Blocked'}
+                                                        {dragPlacement.isValid ? t('Snap') : t('Blocked')}
                                                     </span>
                                                 )}
                                             </>
@@ -4368,7 +4417,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
                                                 <div className={`absolute bottom-[6px] left-1/2 -translate-x-1/2 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>
                                                     <span className="material-icons-round text-[12px]">elevator</span>
-                                                    <span>Elevator</span>
+                                                    <span>{t("Elevator")}</span>
                                                 </div>
                                             </div>
                                         ) : (
@@ -4469,7 +4518,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                             <div className={`absolute inset-[4px] border border-dashed ${isDark ? 'border-neutral-600' : 'border-zinc-300'}`}></div>
                                                             <div className="flex flex-col items-center gap-1 z-20">
                                                                 <span className={`material-icons-round text-2xl ${isDark ? 'text-neutral-400' : 'text-zinc-400'}`}>{structure.variant === "function-room" ? "meeting_room" : "fitness_center"}</span>
-                                                                <span className={`text-[10px] uppercase font-black text-center leading-tight px-2 ${isDark ? 'text-neutral-300' : 'text-zinc-500'}`}>{structure.label}</span>
+                                                                <span className={`text-[10px] uppercase font-black text-center leading-tight px-2 ${isDark ? 'text-neutral-300' : 'text-zinc-500'}`}>{t(structure.label)}</span>
                                                             </div>
                                                             <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
                                                         </div>
@@ -4479,7 +4528,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                             <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
                                                             <div className="absolute inset-[4px] border border-zinc-300"></div>
                                                             <div className="absolute inset-0 flex items-center justify-center">
-                                                                <span className={`text-[10px] uppercase ${isDark ? 'text-neutral-400' : 'text-zinc-400'}`}>Stairwell</span>
+                                                                <span className={`text-[10px] uppercase ${isDark ? 'text-neutral-400' : 'text-zinc-400'}`}>{t("Stairwell")}</span>
                                                             </div>
                                                             <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
                                                         </div>
@@ -4492,7 +4541,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 <div className={`pointer-events-none absolute inset-0 rounded-[1px] ${dragPlacement.isValid ? 'bg-emerald-500/12' : 'bg-red-500/18'}`}></div>
                                                 {(!dragPlacement.isValid || dragPlacement.isMagnetic) && (
                                                     <span className={`pointer-events-none absolute left-2 top-2 z-40 rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${dragPlacement.isValid ? 'border border-emerald-400/40 bg-emerald-500/15 text-emerald-300' : 'border border-red-400/40 bg-red-500/15 text-red-300'}`}>
-                                                        {dragPlacement.isValid ? 'Snap' : 'Blocked'}
+                                                        {dragPlacement.isValid ? t('Snap') : t('Blocked')}
                                                     </span>
                                                 )}
                                             </>
@@ -4665,7 +4714,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                     : 'border-primary/50 bg-primary/10 text-primary shadow-sm'
                                                             }`}>
                                                                 <span className="material-icons-round text-[11px]">home</span>
-                                                                Your Unit
+                                                                {t("Your Unit")}
                                                             </span>
                                                         ) : (
                                                             <>
@@ -4674,28 +4723,28 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                         isFiltered
                                                                             ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
                                                                             : (isDark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-400/60 bg-emerald-100/90 text-emerald-800')
-                                                                    }`}>Vacant</span>
+                                                                    }`}>{t("Vacant")}</span>
                                                                 )}
                                                                 {unit.status === 'occupied' && (
                                                                     <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
                                                                         isFiltered
                                                                             ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
                                                                             : (isDark ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' : 'border-blue-400/60 bg-blue-100/90 text-blue-800')
-                                                                    }`}>Occupied</span>
+                                                                    }`}>{t("Occupied")}</span>
                                                                 )}
                                                                 {unit.status === 'maintenance' && (
                                                                     <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
                                                                         isFiltered
                                                                             ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
                                                                             : (isDark ? 'border-red-500/30 bg-red-500/10 text-red-400' : 'border-red-400/60 bg-red-100/90 text-red-800')
-                                                                    }`}>Maint</span>
+                                                                    }`}>{t("Maint")}</span>
                                                                 )}
                                                                 {unit.status === 'neardue' && (
                                                                     <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
                                                                         isFiltered
                                                                             ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
                                                                             : (isDark ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' : 'border-amber-400/60 bg-amber-100/90 text-amber-800')
-                                                                    }`}>Near Due</span>
+                                                                    }`}>{t("Near Due")}</span>
                                                                 )}
                                                             </>
                                                         )}
@@ -4708,7 +4757,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         <div className={`pointer-events-none absolute inset-0 rounded-[1px] ${dragPlacement.isValid ? 'bg-emerald-500/12' : 'bg-red-500/18'}`}></div>
                                                         {(!dragPlacement.isValid || dragPlacement.isMagnetic) && (
                                                             <span className={`pointer-events-none absolute left-2 top-2 z-40 rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${dragPlacement.isValid ? 'border border-emerald-400/40 bg-emerald-500/15 text-emerald-300' : 'border border-red-400/40 bg-red-500/15 text-red-300'}`}>
-                                                                {dragPlacement.isValid ? 'Snap' : 'Blocked'}
+                                                                {dragPlacement.isValid ? t('Snap') : t('Blocked')}
                                                             </span>
                                                         )}
                                                     </>
@@ -4735,7 +4784,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         onPointerDown={(e) => {
                                                             e.stopPropagation();
                                                         }}
-                                                        title={`View note for ${unit.name}`}
+                                                        title={t("View note for {name}", { name: unit.name })}
+                                                        aria-label={t("View note for {name}", { name: unit.name })}
                                                         className="absolute top-2 right-2 z-30 flex size-6 items-center justify-center transition-transform hover:scale-115 active:scale-95"
                                                     >
                                                         <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-full">
@@ -4773,7 +4823,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         onPointerDown={(e) => {
                                                             e.stopPropagation();
                                                         }}
-                                                        title={`Quick message with ${unit.tenant} (${unit.name})`}
+                                                        title={t("Quick message with {tenant} ({unit})", { tenant: unit.tenant ?? "", unit: unit.name })}
+                                                        aria-label={t("Quick message with {tenant} ({unit})", { tenant: unit.tenant ?? "", unit: unit.name })}
                                                         className={`absolute top-2 left-2 z-30 flex size-6 items-center justify-center rounded-full border transition-transform hover:scale-115 active:scale-95 ${
                                                             floatingChatUnitId === unit.id
                                                                 ? "bg-primary text-white border-white dark:border-zinc-900 ring-2 ring-primary/40"
@@ -4790,7 +4841,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         <CanvasQuickMessenger
                                                             unitId={unit.id}
                                                             unitName={unit.name}
-                                                            tenantName={unit.tenant || "Resident"}
+                                                            tenantName={unit.tenant || t("Resident")}
                                                             unitY={unit.y}
                                                             primaryColor={primaryColor}
                                                             onClose={() => setFloatingChatUnitId(null)}
@@ -4822,7 +4873,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                         <span className="material-icons-round text-xs">sticky_note_2</span>
                                                                     </div>
                                                                     <p className="text-[11px] font-black tracking-tight text-zinc-900 dark:text-white">
-                                                                        Note • {unit.name}
+                                                                        {t("Note • {name}", { name: unit.name })}
                                                                     </p>
                                                                 </div>
                                                                 <button
@@ -4832,6 +4883,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                         setFloatingNoteUnitId(null);
                                                                     }}
                                                                     className="flex size-6 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-200/50 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                                                                    title={t("Close note")}
+                                                                    aria-label={t("Close note")}
                                                                 >
                                                                     <span className="material-icons-round text-sm">close</span>
                                                                 </button>
@@ -4844,7 +4897,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
                                                             {/* Footer */}
                                                             <div className="mt-3 flex items-center justify-between border-t border-amber-200/40 pt-2 dark:border-white/5">
-                                                                <span className="text-[9px] font-black uppercase tracking-wider text-amber-600/70 dark:text-amber-400/60">Pinned Note</span>
+                                                                <span className="text-[9px] font-black uppercase tracking-wider text-amber-600/70 dark:text-amber-400/60">{t("Pinned Note")}</span>
                                                                 <button
                                                                     type="button"
                                                                     onClick={(e) => {
@@ -4856,7 +4909,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                     className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary hover:underline"
                                                                 >
                                                                     <span className="material-icons-round text-xs">edit</span>
-                                                                    Edit Full Note
+                                                                    {t("Edit Full Note")}
                                                                 </button>
                                                             </div>
                                                         </motion.div>
@@ -4924,12 +4977,12 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     }`}>
                                         <div className="flex items-center gap-4 px-1 py-0.5">
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Live Units</span>
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("Live Units")}</span>
                                                 <span className="font-mono text-base font-bold leading-none mt-1">{units.filter(u => statusFilters.includes(u.status)).length}</span>
                                             </div>
                                             <div className={`h-7 w-px ${isDark ? 'bg-white/10' : 'bg-border'}`} />
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Floor Area</span>
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("Floor Area")}</span>
                                                 <span className="font-mono text-base font-bold leading-none mt-1">
                                                     {totalArea.toLocaleString()} <span className="text-[11px] font-normal text-muted-foreground">sqft</span>
                                                 </span>
@@ -4952,42 +5005,42 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             <button 
                                                 onClick={() => toggleStatusFilter("vacant")}
                                                 className={`flex items-center gap-2 group transition-all hover:scale-105 ${statusFilters.includes("vacant") ? 'opacity-100' : 'opacity-40'}`}
-                                                title="Filter available units"
+                                                title={t("Filter available units")}
                                             >
                                                 <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("vacant") ? 'bg-emerald-500 border-emerald-500 shadow-sm' : 'bg-transparent border-muted-foreground/40'}`}>
                                                     {statusFilters.includes("vacant") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
-                                                <span className="text-xs font-bold">Available</span>
+                                                <span className="text-xs font-bold">{t("Available")}</span>
                                             </button>
                                             <button 
                                                 onClick={() => toggleStatusFilter("occupied")}
                                                 className={`flex items-center gap-2 group transition-all hover:scale-105 ${statusFilters.includes("occupied") ? 'opacity-100' : 'opacity-40'}`}
-                                                title="Filter occupied units"
+                                                title={t("Filter occupied units")}
                                             >
                                                 <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("occupied") ? 'bg-blue-500 border-blue-500 shadow-sm' : 'bg-transparent border-muted-foreground/40'}`}>
                                                     {statusFilters.includes("occupied") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
-                                                <span className="text-xs font-bold">Occupied</span>
+                                                <span className="text-xs font-bold">{t("Occupied")}</span>
                                             </button>
                                             <button 
                                                 onClick={() => toggleStatusFilter("maintenance")}
                                                 className={`flex items-center gap-2 group transition-all hover:scale-105 ${statusFilters.includes("maintenance") ? 'opacity-100' : 'opacity-40'}`}
-                                                title="Filter units in maintenance"
+                                                title={t("Filter units in maintenance")}
                                             >
                                                 <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("maintenance") ? 'bg-rose-500 border-rose-500 shadow-sm' : 'bg-transparent border-muted-foreground/40'}`}>
                                                     {statusFilters.includes("maintenance") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
-                                                <span className="text-xs font-bold">Maintenance</span>
+                                                <span className="text-xs font-bold">{t("Maintenance")}</span>
                                             </button>
                                             <button 
                                                 onClick={() => toggleStatusFilter("neardue")}
                                                 className={`flex items-center gap-2 group transition-all hover:scale-105 ${statusFilters.includes("neardue") ? 'opacity-100' : 'opacity-40'}`}
-                                                title="Filter near-due units"
+                                                title={t("Filter near-due units")}
                                             >
                                                 <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("neardue") ? 'bg-amber-500 border-amber-500 shadow-sm' : 'bg-transparent border-muted-foreground/40'}`}>
                                                     {statusFilters.includes("neardue") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
-                                                <span className="text-xs font-bold">Near Due</span>
+                                                <span className="text-xs font-bold">{t("Near Due")}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -5011,15 +5064,15 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             }`}>
                                                 <span className="flex items-center gap-1.5">
                                                     <span className="material-icons-round text-sm opacity-70">map</span>
-                                                    <span>Floor Overview</span>
+                                                    <span>{t("Floor Overview")}</span>
                                                 </span>
                                                 <button
                                                     onClick={() => setIsMinimapVisible(false)}
                                                     className={`p-0.5 rounded-md transition-colors ${
                                                         isDark ? 'hover:bg-white/10 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900'
                                                     }`}
-                                                    title="Minimize overview map"
-                                                    aria-label="Minimize overview map"
+                                                    title={t("Minimize overview map")}
+                                                    aria-label={t("Minimize overview map")}
                                                 >
                                                     <span className="material-icons-round text-sm">close</span>
                                                 </button>
@@ -5115,14 +5168,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             <button
                                                 onClick={() => {
                                                     setIsLayoutLocked(false);
-                                                    toast.success("Layout editing unlocked");
+                                                    toast.success(t("Layout editing unlocked"));
                                                 }}
                                                 className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-bold shadow-lg backdrop-blur-xl hover:bg-amber-500/25 transition-all active:scale-95 animate-pulse"
-                                                title="Layout is locked. Click to unlock room dragging."
-                                                aria-label="Layout is locked. Click to unlock room dragging."
+                                                title={t("Layout is locked. Click to unlock room dragging.")}
+                                                aria-label={t("Layout is locked. Click to unlock room dragging.")}
                                             >
                                                 <span className="material-icons-round text-base">lock</span>
-                                                <span>Layout Locked</span>
+                                                <span>{t("Layout Locked")}</span>
                                             </button>
                                         )}
 
@@ -5136,8 +5189,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 className={`size-10 rounded-xl flex items-center justify-center transition-all ${
                                                     isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95'
                                                 }`} 
-                                                title="Zoom Out"
-                                                aria-label="Zoom out"
+                                                title={t("Zoom Out")}
+                                                aria-label={t("Zoom out")}
                                             >
                                                 <span className="material-icons-round text-xl font-bold">remove</span>
                                             </button>
@@ -5148,8 +5201,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 className={`h-10 px-2 rounded-xl flex items-center justify-center font-bold text-xs tabular-nums transition-all ${
                                                     isDark ? 'text-white/90 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-800 hover:text-zinc-950 hover:bg-muted active:scale-95'
                                                 }`}
-                                                title="Click to center floor plan"
-                                                aria-label="Reset zoom and center floor plan view"
+                                                title={t("Click to center floor plan")}
+                                                aria-label={t("Reset zoom and center floor plan view")}
                                             >
                                                 {Math.round(scale * 100)}%
                                             </button>
@@ -5160,8 +5213,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 className={`size-10 rounded-xl flex items-center justify-center transition-all ${
                                                     isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95'
                                                 }`} 
-                                                title="Zoom In"
-                                                aria-label="Zoom in"
+                                                title={t("Zoom In")}
+                                                aria-label={t("Zoom in")}
                                             >
                                                 <span className="material-icons-round text-xl font-bold">add</span>
                                             </button>
@@ -5175,8 +5228,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 className={`size-10 rounded-xl flex items-center justify-center transition-all ${
                                                     isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95'
                                                 }`} 
-                                                title="Center Floor Plan (Fit to Screen)"
-                                                aria-label="Center floor plan view"
+                                                title={t("Center Floor Plan (Fit to Screen)")}
+                                                aria-label={t("Center floor plan view")}
                                             >
                                                 <span className="material-icons-round text-xl">fit_screen</span>
                                             </button>
@@ -5191,8 +5244,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                             ? (isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95')
                                                             : (isDark ? 'text-white/20 cursor-not-allowed' : 'text-zinc-300 dark:text-zinc-600 cursor-not-allowed')
                                                     }`}
-                                                    title={undoAvailable ? "Undo last move (Ctrl+Z)" : "Nothing to undo"}
-                                                    aria-label="Undo last action"
+                                                    title={undoAvailable ? t("Undo last move (Ctrl+Z)") : t("Nothing to undo")}
+                                                    aria-label={t("Undo last action")}
                                                 >
                                                     <span className="material-icons-round text-xl">undo</span>
                                                 </button>
@@ -5206,8 +5259,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         ? 'bg-primary text-white shadow-md' 
                                                         : (isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95')
                                                 }`}
-                                                title={isCanvasFullscreen ? "Exit Fullscreen" : "Fullscreen View"}
-                                                aria-label={isCanvasFullscreen ? "Exit full screen view" : "View floor plan in full screen"}
+                                                title={isCanvasFullscreen ? t("Exit Fullscreen") : t("Fullscreen View")}
+                                                aria-label={isCanvasFullscreen ? t("Exit full screen view") : t("View floor plan in full screen")}
                                             >
                                                 <span className="material-icons-round text-xl">{isCanvasFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>
                                             </button>
@@ -5219,8 +5272,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     className={`size-10 rounded-xl flex items-center justify-center transition-all ${
                                                         isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95'
                                                     }`}
-                                                    title="Show Floor Overview Map"
-                                                    aria-label="Show floor overview map"
+                                                    title={t("Show Floor Overview Map")}
+                                                    aria-label={t("Show floor overview map")}
                                                 >
                                                     <span className="material-icons-round text-xl">map</span>
                                                 </button>
@@ -5238,8 +5291,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                             ? 'bg-primary text-white shadow-md' 
                                                             : (isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95')
                                                     }`}
-                                                    title="Map & View Options"
-                                                    aria-label="Map and view options"
+                                                    title={t("Map & View Options")}
+                                                    aria-label={t("Map and view options")}
                                                 >
                                                     <span className="material-icons-round text-xl">tune</span>
                                                 </button>
@@ -5250,8 +5303,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         isDark ? 'bg-zinc-900/98 border-white/10 text-white' : 'bg-card/98 border-border/80 text-foreground'
                                                     }`}>
                                                         <div className="px-2 py-1.5 border-b border-border/40 dark:border-white/10 mb-2">
-                                                            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">View & Tools</h4>
-                                                            <p className="text-[11px] text-muted-foreground mt-0.5">Adjust map display and controls</p>
+                                                            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">{t("View & Tools")}</h4>
+                                                            <p className="text-[11px] text-muted-foreground mt-0.5">{t("Adjust map display and controls")}</p>
                                                         </div>
 
                                                         <div className="space-y-1">
@@ -5260,7 +5313,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                 onClick={() => {
                                                                     const next = !isLayoutLocked;
                                                                     setIsLayoutLocked(next);
-                                                                    toast.info(next ? "Layout locked. Room dragging is disabled." : "Layout unlocked. Rooms can now be moved.");
+                                                                    toast.info(next ? t("Layout locked. Room dragging is disabled.") : t("Layout unlocked. Rooms can now be moved."));
                                                                 }}
                                                                 className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all ${
                                                                     isDark ? 'hover:bg-white/10' : 'hover:bg-muted'
@@ -5271,8 +5324,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                         {isLayoutLocked ? 'lock' : 'lock_open'}
                                                                     </span>
                                                                     <div>
-                                                                        <div className="text-xs font-bold">Lock Room Dragging</div>
-                                                                        <div className="text-[10px] text-muted-foreground">Prevent accidental room moves</div>
+                                                                        <div className="text-xs font-bold">{t("Lock Room Dragging")}</div>
+                                                                        <div className="text-[10px] text-muted-foreground">{t("Prevent accidental room moves")}</div>
                                                                     </div>
                                                                 </div>
                                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -5280,7 +5333,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                         ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold' 
                                                                         : (isDark ? 'bg-white/5 text-zinc-400' : 'bg-zinc-100 text-zinc-500')
                                                                 }`}>
-                                                                    {isLayoutLocked ? 'ON' : 'OFF'}
+                                                                    {isLayoutLocked ? t('ON') : t('OFF')}
                                                                 </span>
                                                             </button>
 
@@ -5294,8 +5347,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                 <div className="flex items-center gap-2.5">
                                                                     <span className="material-icons-round text-lg opacity-60">map</span>
                                                                     <div>
-                                                                        <div className="text-xs font-bold">Floor Overview Map</div>
-                                                                        <div className="text-[10px] text-muted-foreground">Show corner mini-map</div>
+                                                                        <div className="text-xs font-bold">{t("Floor Overview Map")}</div>
+                                                                        <div className="text-[10px] text-muted-foreground">{t("Show corner mini-map")}</div>
                                                                     </div>
                                                                 </div>
                                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -5303,7 +5356,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                         ? 'bg-primary/15 text-primary' 
                                                                         : (isDark ? 'bg-white/5 text-zinc-400' : 'bg-zinc-100 text-zinc-500')
                                                                 }`}>
-                                                                    {isMinimapVisible ? 'ON' : 'OFF'}
+                                                                    {isMinimapVisible ? t('ON') : t('OFF')}
                                                                 </span>
                                                             </button>
 
@@ -5313,7 +5366,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                     const next = !showQuickMessages;
                                                                     setShowQuickMessages(next);
                                                                     try { window.localStorage.setItem("ireside.visualPlanner.showQuickMessages", String(next)); } catch {}
-                                                                    toast.info(next ? "Tenant message badges enabled" : "Tenant message badges disabled");
+                                                                    toast.info(next ? t("Tenant message badges enabled") : t("Tenant message badges disabled"));
                                                                 }}
                                                                 className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all ${
                                                                     isDark ? 'hover:bg-white/10' : 'hover:bg-muted'
@@ -5322,8 +5375,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                 <div className="flex items-center gap-2.5">
                                                                     <span className="material-icons-round text-lg opacity-60">chat</span>
                                                                     <div>
-                                                                        <div className="text-xs font-bold">Tenant Note Badges</div>
-                                                                        <div className="text-[10px] text-muted-foreground">Show message bubbles on rooms</div>
+                                                                        <div className="text-xs font-bold">{t("Tenant Note Badges")}</div>
+                                                                        <div className="text-[10px] text-muted-foreground">{t("Show message bubbles on rooms")}</div>
                                                                     </div>
                                                                 </div>
                                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -5331,7 +5384,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                         ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400' 
                                                                         : (isDark ? 'bg-white/5 text-zinc-400' : 'bg-zinc-100 text-zinc-500')
                                                                 }`}>
-                                                                    {showQuickMessages ? 'ON' : 'OFF'}
+                                                                    {showQuickMessages ? t('ON') : t('OFF')}
                                                                 </span>
                                                             </button>
 
@@ -5345,8 +5398,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                 <div className="flex items-center gap-2.5">
                                                                     <span className="material-icons-round text-lg opacity-60">view_sidebar</span>
                                                                     <div>
-                                                                        <div className="text-xs font-bold">Building Blocks Sidebar</div>
-                                                                        <div className="text-[10px] text-muted-foreground">Show room library panel</div>
+                                                                        <div className="text-xs font-bold">{t("Building Blocks Sidebar")}</div>
+                                                                        <div className="text-[10px] text-muted-foreground">{t("Show room library panel")}</div>
                                                                     </div>
                                                                 </div>
                                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -5354,7 +5407,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                         ? 'bg-primary/15 text-primary' 
                                                                         : (isDark ? 'bg-white/5 text-zinc-400' : 'bg-zinc-100 text-zinc-500')
                                                                 }`}>
-                                                                    {isSidebarVisible ? 'ON' : 'OFF'}
+                                                                    {isSidebarVisible ? t('ON') : t('OFF')}
                                                                 </span>
                                                             </button>
 
@@ -5371,8 +5424,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                 >
                                                                     <span className="material-icons-round text-lg opacity-60">help_outline</span>
                                                                     <div>
-                                                                        <div className="text-xs font-bold">Keyboard Shortcuts & Tips</div>
-                                                                        <div className="text-[10px] text-muted-foreground">View keyboard shortcuts guide</div>
+                                                                        <div className="text-xs font-bold">{t("Keyboard Shortcuts & Tips")}</div>
+                                                                        <div className="text-[10px] text-muted-foreground">{t("View keyboard shortcuts guide")}</div>
                                                                     </div>
                                                                 </button>
                                                             </div>
@@ -5408,7 +5461,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     const val = e.target.value;
                                                     setCorridors(prev => prev.map(c => c.id === selectedItem.id ? { ...c, label: val } : c));
                                                 }}
-                                                placeholder="Corridor Name"
+                                                placeholder={t("Corridor Name")}
                                                 className={`bg-transparent border-none outline-none text-xs font-black uppercase tracking-wider w-36 ${isDark ? 'text-white' : 'text-zinc-800'}`}
                                             />
                                         </div>
@@ -5416,10 +5469,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         <button
                                             onClick={() => rotateSelectedItem(selectedItem)}
                                             className={`flex items-center gap-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
-                                            title="Rotate (R)"
+                                            title={t("Rotate (R)")}
                                         >
                                             <span className="material-icons-round text-lg">rotate_right</span>
-                                            Rotate <span className="text-[9px] opacity-50 ml-1">(R)</span>
+                                            {t("Rotate")} <span className="text-[9px] opacity-50 ml-1">(R)</span>
                                         </button>
                                     </>
                                 ) : (
@@ -5427,27 +5480,27 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         <button
                                             onClick={() => flipSelectedItem('x')}
                                             className={`flex items-center gap-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all whitespace-nowrap ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
-                                            title="Flip Horizontal (X)"
+                                            title={t("Flip Horizontal (X)")}
                                         >
                                             <span className="material-icons-round text-lg">flip</span>
-                                            Flip H <span className="text-[9px] opacity-50 ml-1">(X)</span>
+                                            {t("Flip H")} <span className="text-[9px] opacity-50 ml-1">(X)</span>
                                         </button>
                                         <button
                                             onClick={() => flipSelectedItem('y')}
                                             className={`flex items-center gap-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all whitespace-nowrap ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
-                                            title="Flip Vertical (Y)"
+                                            title={t("Flip Vertical (Y)")}
                                         >
                                             <span className="material-icons-round text-lg rotate-90">flip</span>
-                                            Flip V <span className="text-[9px] opacity-50 ml-1">(Y)</span>
+                                            {t("Flip V")} <span className="text-[9px] opacity-50 ml-1">(Y)</span>
                                         </button>
                                         <div className={`w-px h-5 mx-1 my-auto ${isDark ? 'bg-white/10' : 'bg-zinc-200'}`} />
                                         <button
                                             onClick={() => rotateSelectedItem(selectedItem)}
                                             className={`flex items-center gap-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all whitespace-nowrap ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
-                                            title="Rotate (R)"
+                                            title={t("Rotate (R)")}
                                         >
                                             <span className="material-icons-round text-lg">rotate_right</span>
-                                            Rotate <span className="text-[9px] opacity-50 ml-1">(R)</span>
+                                            {t("Rotate")} <span className="text-[9px] opacity-50 ml-1">(R)</span>
                                         </button>
                                     </>
                                 )}
@@ -5468,7 +5521,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 onClick={() => setShowHotkeys(false)}
                                 role="button"
                                 tabIndex={0}
-                                aria-label="Close shortcuts panel"
+                                aria-label={t("Close shortcuts panel")}
                                 onKeyDown={(e) => e.key === 'Enter' && setShowHotkeys(false)}
                             >
                                 <motion.div
@@ -5485,13 +5538,15 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     <span className="material-icons-round">keyboard</span>
                                                 </div>
                                                 <div>
-                                                    <h2 className="text-xl font-bold text-white tracking-tight">Keyboard Shortcuts & Guide</h2>
-                                                    <p className="text-xs text-white/50 font-medium mt-0.5">Quick keyboard controls and planner tips</p>
+                                                    <h2 className="text-xl font-bold text-white tracking-tight">{t("Keyboard Shortcuts & Guide")}</h2>
+                                                    <p className="text-xs text-white/50 font-medium mt-0.5">{t("Quick keyboard controls and planner tips")}</p>
                                                 </div>
                                             </div>
                                             <button 
                                                 onClick={() => setShowHotkeys(false)}
                                                 className="size-10 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+                                                title={t("Close shortcuts")}
+                                                aria-label={t("Close shortcuts")}
                                             >
                                                 <span className="material-icons-round">close</span>
                                             </button>
@@ -5500,25 +5555,25 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
                                     <div className="p-8 grid grid-cols-1 gap-6">
                                         <div className="space-y-4">
-                                            <h3 className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] px-1">Viewport Modes</h3>
+                                            <h3 className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] px-1">{t("Viewport Modes")}</h3>
                                             <div className="grid grid-cols-2 gap-4">
-                                                <HotkeyItem label="Toggle Fullscreen" shortcut="F" />
-                                                <HotkeyItem label="Toggle HUD Overlay" shortcut="H" />
-                                                <HotkeyItem label="Toggle Sidebar" shortcut="S" />
-                                                <HotkeyItem label="Lock/Unlock Layout" shortcut="L" />
-                                                <HotkeyItem label="Quick Help" shortcut="?" />
+                                                <HotkeyItem label={t("Toggle Fullscreen")} shortcut="F" />
+                                                <HotkeyItem label={t("Toggle HUD Overlay")} shortcut="H" />
+                                                <HotkeyItem label={t("Toggle Sidebar")} shortcut="S" />
+                                                <HotkeyItem label={t("Lock/Unlock Layout")} shortcut="L" />
+                                                <HotkeyItem label={t("Quick Help")} shortcut="?" />
                                             </div>
                                         </div>
 
                                         <div className="space-y-4">
-                                            <h3 className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] px-1">Editor Actions</h3>
+                                            <h3 className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] px-1">{t("Editor Actions")}</h3>
                                             <div className="grid grid-cols-2 gap-4">
-                                                <HotkeyItem label="Undo Last Action" shortcut="Ctrl + Z" />
-                                                <HotkeyItem label="Delete Selection" shortcut="Delete / Backspace" />
-                                                <HotkeyItem label="Flip Horiz / Vert" shortcut="X / Y" />
-                                                <HotkeyItem label="Rotate Item" shortcut="R" />
-                                                <HotkeyItem label="Zoom In/Out" shortcut="Scroll Wheel" />
-                                                <HotkeyItem label="Pan Viewport" shortcut="Hold Middle Mouse" />
+                                                <HotkeyItem label={t("Undo Last Action")} shortcut="Ctrl + Z" />
+                                                <HotkeyItem label={t("Delete Selection")} shortcut={t("Delete / Backspace")} />
+                                                <HotkeyItem label={t("Flip Horiz / Vert")} shortcut="X / Y" />
+                                                <HotkeyItem label={t("Rotate Item")} shortcut="R" />
+                                                <HotkeyItem label={t("Zoom In/Out")} shortcut={t("Scroll Wheel")} />
+                                                <HotkeyItem label={t("Pan Viewport")} shortcut={t("Hold Middle Mouse")} />
                                             </div>
                                         </div>
                                     </div>
@@ -5533,13 +5588,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
                     {showOverlapToast && (
                         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg border border-red-500/20 bg-red-50 text-red-700 text-sm font-medium shadow-lg pointer-events-none">
-                            Units overlap
+                            {t("Units overlap")}
                         </div>
                     )}
 
                     {showDeleteToast && (
                         <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg border border-emerald-500/20 bg-emerald-50 text-emerald-700 text-sm font-medium shadow-lg pointer-events-none">
-                            Item deleted
+                            {t("Item deleted")}
                         </div>
                     )}
 
@@ -5558,12 +5613,12 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/55 backdrop-blur-sm p-4">
                             <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-2xl">
                                 <div className="p-5">
-                                    <h3 className="text-sm font-black text-zinc-900">Confirm deletion</h3>
+                                    <h3 className="text-sm font-black text-zinc-900">{t("Confirm deletion")}</h3>
                                     <p className="mt-2 text-xs text-zinc-600">
-                                        Delete {getCanvasItemLabel(pendingDelete.item)}?
+                                        {t("Delete {name}?", { name: getCanvasItemLabel(pendingDelete.item) })}
                                     </p>
                                     <p className="mt-1 text-[11px] text-zinc-500">
-                                        {pendingDelete.source === "trash" ? "You dropped this item near the trash." : "You used keyboard delete."}
+                                        {pendingDelete.source === "trash" ? t("You dropped this item near the trash.") : t("You used keyboard delete.")}
                                     </p>
                                 </div>
                                 <div className="flex items-center justify-end gap-2 border-t border-border p-3">
@@ -5571,13 +5626,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         onClick={cancelDeleteItem}
                                         className="rounded-md border border-border bg-muted px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-200"
                                     >
-                                        Cancel
+                                        {t("Cancel")}
                                     </button>
                                     <button
                                         onClick={confirmDeleteItem}
                                         className="rounded-md border border-red-500/30 bg-red-50 px-3 py-1.5 text-xs font-black text-red-700 hover:bg-red-100"
                                     >
-                                        Delete
+                                        {t("Delete")}
                                     </button>
                                 </div>
                             </div>
@@ -5595,11 +5650,11 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     <div className="flex size-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-6">
                                         <span className="material-icons-round text-3xl">ink_eraser</span>
                                     </div>
-                                    <h3 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>Clear entire floor?</h3>
+                                    <h3 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>{t("Clear entire floor?")}</h3>
                                     <p className={`mt-3 text-sm leading-relaxed ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                                        This will remove all units, corridors, and structures from <span className="font-black text-primary">{floorLayouts[activeFloor]?.name || getFloorDisplayLabel(activeFloor)}</span>. 
+                                        {t("This will remove all units, corridors, and structures from")} <span className="font-black text-primary">{floorLayouts[activeFloor]?.name || getFloorDisplayLabel(activeFloor)}</span>. 
                                         <br/><br/>
-                                        <span className="italic text-xs opacity-80">Don&apos;t worry: Units will be returned to your &quot;Unplaced&quot; library and won&apos;t be deleted from the property.</span>
+                                        <span className="italic text-xs opacity-80">{t("Don't worry: Units will be returned to your \"Unplaced\" library and won't be deleted from the property.")}</span>
                                     </p>
                                 </div>
                                 <div className={`flex items-center justify-end gap-3 px-8 py-6 border-t ${isDark ? 'border-zinc-800 bg-zinc-950/50' : 'border-zinc-100 bg-zinc-50/50'}`}>
@@ -5607,7 +5662,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         onClick={() => setPendingClearFloor(false)}
                                         className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${isDark ? 'text-zinc-400 hover:bg-white/5 hover:text-white' : 'text-zinc-500 hover:bg-black/5 hover:text-zinc-900'}`}
                                     >
-                                        Cancel
+                                        {t("Cancel")}
                                     </button>
                                     <button
                                         onClick={() => {
@@ -5616,7 +5671,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         }}
                                         className="px-6 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-black shadow-lg shadow-rose-500/25 hover:bg-rose-600 transition-all active:scale-95"
                                     >
-                                        Clear Floor
+                                        {t("Clear Floor")}
                                     </button>
                                 </div>
                             </motion.div>
@@ -5635,11 +5690,11 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     <div className={`mb-6 flex size-16 items-center justify-center rounded-2xl ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
                                         <span className="material-icons-round text-3xl">dashboard_customize</span>
                                     </div>
-                                    <h3 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>Apply Layout Preset?</h3>
+                                    <h3 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>{t("Apply Layout Preset?")}</h3>
                                     <p className={`mt-3 text-sm leading-relaxed ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                                        Applying a preset will clear your current floor plan on <span className="font-black text-primary">{floorLayouts[activeFloor]?.name || getFloorDisplayLabel(activeFloor)}</span> and generate a new layout.
+                                        {t("Applying a preset will clear your current floor plan on")} <span className="font-black text-primary">{floorLayouts[activeFloor]?.name || getFloorDisplayLabel(activeFloor)}</span> {t("and generate a new layout.")}
                                         <br/><br/>
-                                        <span className="italic text-xs opacity-80">Any placed units will be returned to your &quot;Unplaced&quot; library and automatically used to fill the preset.</span>
+                                        <span className="italic text-xs opacity-80">{t("Any placed units will be returned to your \"Unplaced\" library and automatically used to fill the preset.")}</span>
                                     </p>
                                 </div>
                                 <div className={`flex items-center justify-end gap-3 px-8 py-6 border-t ${isDark ? 'border-zinc-800 bg-zinc-950/50' : 'border-zinc-100 bg-zinc-50/50'}`}>
@@ -5647,13 +5702,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         onClick={() => setPresetConfirm({ isOpen: false, presetType: null })}
                                         className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${isDark ? 'text-zinc-400 hover:bg-white/5 hover:text-white' : 'text-zinc-500 hover:bg-black/5 hover:text-zinc-900'}`}
                                     >
-                                        Cancel
+                                        {t("Cancel")}
                                     </button>
                                     <button
                                         onClick={() => confirmApplyPreset(presetConfirm.presetType!)}
                                         className="px-6 py-2.5 rounded-xl bg-amber-500 text-amber-950 text-sm font-black shadow-lg shadow-amber-500/25 hover:bg-amber-400 transition-all active:scale-95"
                                     >
-                                        Apply Preset
+                                        {t("Apply Preset")}
                                     </button>
                                 </div>
                             </motion.div>
@@ -5844,7 +5899,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         onClick={() => setIsInviteModalOpen(false)}
                         role="button"
                         tabIndex={0}
-                        aria-label="Close modal"
+                        aria-label={t("Close modal")}
                         onKeyDown={(e) => e.key === 'Enter' && setIsInviteModalOpen(false)}
                     />
                             <motion.div 
@@ -5856,6 +5911,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 <div className="absolute right-6 top-6 z-[130]">
                                     <button
                                         onClick={() => setIsInviteModalOpen(false)}
+                                        aria-label={t("Close")}
                                         className="rounded-full bg-white/10 p-2 text-white/50 backdrop-blur-xl transition-all hover:bg-white/20 hover:text-white"
                                     >
                                         <X className="size-6" />
@@ -5893,6 +5949,7 @@ const StructureDetailsPanel = ({
     onDelete: () => void;
     onClose: () => void;
 }) => {
+    const { t } = useLanguageContext();
     return (
         <div className="relative flex h-full flex-col overflow-hidden border-l border-white/10 bg-zinc-50/50 font-sans text-foreground shadow-2xl backdrop-blur-xl dark:bg-[#0a0a0a]/90">
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent z-30" />
@@ -5902,15 +5959,17 @@ const StructureDetailsPanel = ({
                         whileHover={{ scale: 1.05, rotate: 90 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={onClose}
+                        title={t("Close panel")}
+                        aria-label={t("Close panel")}
                         className="flex size-9 items-center justify-center rounded-full border border-white/40 bg-white/20 text-zinc-900 shadow-lg shadow-black/5 backdrop-blur-md transition-all hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-zinc-100 dark:hover:bg-black/60"
                     >
                         <span className="material-icons-round text-lg">close</span>
                     </motion.button>
                 </div>
                 <div className="absolute bottom-8 left-8 right-8 z-20">
-                    <h1 className="text-[2rem] font-black leading-tight text-white capitalize">{structure.label}</h1>
+                    <h1 className="text-[2rem] font-black leading-tight text-white capitalize">{t(structure.label)}</h1>
                     <p className="text-[11px] font-black text-zinc-400 uppercase tracking-widest mt-1">
-                        {structure.type} {structure.variant ? `â€¢ ${structure.variant}` : ''}
+                        {t(STRUCTURE_TYPE_LABELS[structure.type] ?? structure.type)} {structure.variant ? `• ${t(STRUCTURE_VARIANT_LABELS[structure.variant] ?? structure.variant)}` : ''}
                     </p>
                 </div>
             </div>
@@ -5922,7 +5981,7 @@ const StructureDetailsPanel = ({
                     className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 font-black uppercase tracking-widest text-xs rounded-xl transition-all flex items-center justify-center gap-2"
                 >
                     <span className="material-icons-round text-sm">delete</span>
-                    Remove Structure
+                    {t("Remove Structure")}
                 </button>
             </div>
         </div>
@@ -5961,6 +6020,7 @@ const UnitDetailsPanel = ({
     onOpenMaintenance?: (mode: "view" | "create") => void;
     onOpenServiceLogs?: () => void;
 }) => {
+    const { t, locale, language } = useLanguageContext();
     const [tenantActionMenu, setTenantActionMenu] = useState<TenantActionMenuState>({ isOpen: false });
     const [quickActionError, setQuickActionError] = useState<string | null>(null);
     const [pendingQuickAction, setPendingQuickAction] = useState<QuickActionType | null>(null);
@@ -5985,16 +6045,25 @@ const UnitDetailsPanel = ({
     const unitAreaSqm = unit.areaSqm ?? Math.round(unitAreaSqftByType[unit.type] * 0.092903);
 
     const beds = unit.bedrooms !== undefined ? unit.bedrooms : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 3 : 0);
-    const baths = unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2.5 : 1);
-    const unitLayoutLabel = unit.type === 'Studio' && beds === 0 ? `Studio - ${baths} Bath` : `${beds} Bed - ${baths} Bath`;
+    const baths = unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2 : 1);
+    const unitLayoutLabel = unit.type === 'Studio' && beds === 0 ? t("Studio - {baths} Bath", { baths }) : t("{beds} Bed - {baths} Bath", { beds, baths });
 
     const initialBedrooms = unit.bedrooms !== undefined ? unit.bedrooms : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 3 : 0);
-    const initialBaths = unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2.5 : 1);
+    const initialBaths = unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2 : 1);
     const initialAreaSqm = unit.areaSqm !== undefined ? unit.areaSqm : unitAreaSqm;
 
     const [draftAreaSqm, setDraftAreaSqm] = useState<number | string>(initialAreaSqm);
     const [draftBedrooms, setDraftBedrooms] = useState<number | string>(initialBedrooms);
     const [draftBaths, setDraftBaths] = useState<number | string>(initialBaths);
+    // Same rules as POST /api/landlord/unit-map/config (units.beds/baths/sqft are integer columns).
+    const configForm = useFormValidation(
+        { areaSqm: draftAreaSqm, bedrooms: draftBedrooms, baths: draftBaths },
+        {
+            areaSqm: (value) => unitAreaSqmRule(value),
+            bedrooms: (value) => unitBedsRule(value),
+            baths: (value) => unitBathsRule(value),
+        }
+    );
 
     const [isAskingApplyToAll, setIsAskingApplyToAll] = useState(false);
     const [isSavingConfig, setIsSavingConfig] = useState(false);
@@ -6004,7 +6073,7 @@ const UnitDetailsPanel = ({
     useEffect(() => {
         setDraftAreaSqm(unit.areaSqm !== undefined ? unit.areaSqm : unitAreaSqm);
         setDraftBedrooms(unit.bedrooms !== undefined ? unit.bedrooms : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 3 : 0));
-        setDraftBaths(unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2.5 : 1));
+        setDraftBaths(unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2 : 1));
         setIsAskingApplyToAll(false);
     }, [unit.id, unit.areaSqm, unit.bedrooms, unit.baths, unit.type, unitAreaSqm]);
 
@@ -6018,6 +6087,11 @@ const UnitDetailsPanel = ({
         numDraftBaths !== initialBaths;
 
     const handleExecuteSave = async (applyToAll: boolean) => {
+        if (isSavingConfig) return;
+        if (!configForm.validateAll()) {
+            setIsAskingApplyToAll(false);
+            return;
+        }
         const areaSqmVal = Math.max(0, numDraftAreaSqm);
         const bedroomsVal = Math.max(0, Math.round(numDraftBedrooms));
         const bathsVal = Math.max(0, numDraftBaths);
@@ -6037,8 +6111,8 @@ const UnitDetailsPanel = ({
                     setConfigFeedback({
                         type: "success",
                         message: applyToAll
-                            ? "Applied configuration to all units!"
-                            : `Configuration saved for ${unit.name}!`,
+                            ? t("Applied configuration to all units!")
+                            : t("Configuration saved for {name}!", { name: unit.name }),
                     });
                     setTimeout(() => {
                         setConfigFeedback((prev) => (prev?.type === "success" ? null : prev));
@@ -6046,20 +6120,20 @@ const UnitDetailsPanel = ({
                 } else {
                     setConfigFeedback({
                         type: "error",
-                        message: res.error || "Failed to save configuration.",
+                        message: res.error || t("Failed to save configuration."),
                     });
                 }
             } else {
                 onUpdate({ areaSqm: areaSqmVal, bedrooms: bedroomsVal, baths: bathsVal });
                 setConfigFeedback({
                     type: "success",
-                    message: "Configuration updated.",
+                    message: t("Configuration updated."),
                 });
             }
         } catch (err: any) {
             setConfigFeedback({
                 type: "error",
-                message: err?.message || "An unexpected error occurred.",
+                message: err?.message || t("An unexpected error occurred."),
             });
         } finally {
             setIsSavingConfig(false);
@@ -6077,28 +6151,35 @@ const UnitDetailsPanel = ({
 
     const currentStatus = statusConfig[unit.status] || statusConfig.vacant;
 
-    // Helper to calculate days remaining
-    const getDaysRemaining = () => {
-        if (!unit.leaseEnd) return null;
-        const end = new Date(unit.leaseEnd).getTime();
-        const diff = end - nowMs;
-        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-        return days;
-    };
-
-    const daysRemaining = getDaysRemaining();
-    const leaseHeadline = daysRemaining === null
-        ? "No lease date"
-        : daysRemaining < 0
-            ? `Overdue by ${Math.abs(daysRemaining)} day${Math.abs(daysRemaining) === 1 ? "" : "s"}`
-            : `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left`;
-    const leaseMilestoneText = daysRemaining === null
-        ? "Awaiting active lease agreement in database."
-        : daysRemaining <= 7
-            ? "Milestone: lease action needed this week."
-            : daysRemaining <= 30
-                ? "Milestone: schedule tenant follow-up this month."
-                : "Milestone: healthy lease runway.";
+    // Open-ended leases have no countdown: they show tenure instead. Only dated terms count down.
+    const unitLeaseTerm = { term_type: unit.leaseTermType, end_date: unit.leaseEnd, start_date: unit.leaseStart };
+    const hasLeaseRecord = Boolean(unit.leaseStart || unit.leaseEnd);
+    const unitTermState = leaseEndState(unitLeaseTerm, new Date(nowMs));
+    const daysRemaining = unitTermState.daysLeft;
+    const leaseHeadline = !hasLeaseRecord
+        ? t("No lease on file")
+        : unitTermState.kind === "open_ended"
+            ? t("Open-ended · {tenure}", { tenure: formatTenure(unit.leaseStart, new Date(nowMs), language) || t("month-to-month") })
+            : unitTermState.kind === "moving_out"
+                ? unitTermState.daysLeft === 0
+                    ? t("Moving out today")
+                    : t(unitTermState.daysLeft === 1 ? "Moving out in {count} day" : "Moving out in {count} days", { count: unitTermState.daysLeft ?? 0 })
+                : unitTermState.kind === "ended"
+                    ? t("Ended {date}", { date: formatLeaseDate(unitTermState.endDate, undefined, language) })
+                    : t(unitTermState.daysLeft === 1 ? "{count} day left" : "{count} days left", { count: unitTermState.daysLeft ?? 0 });
+    const leaseMilestoneText = !hasLeaseRecord
+        ? t("Awaiting active lease agreement in database.")
+        : unitTermState.kind === "open_ended"
+            ? t("Month-to-month: the tenancy continues while rent is paid.")
+            : unitTermState.kind === "moving_out"
+                ? t("Milestone: prepare the move-out inspection and deposit settlement.")
+                : unitTermState.kind === "ended"
+                    ? t("Milestone: close out or renew this lease.")
+                    : daysRemaining !== null && daysRemaining <= 7
+                        ? t("Milestone: lease action needed this week.")
+                        : daysRemaining !== null && daysRemaining <= 30
+                            ? t("Milestone: schedule tenant follow-up this month.")
+                            : t("Milestone: healthy lease runway.");
     const maintenanceOpenedDate = (() => {
         if (!unit.maintenanceDate) return null;
         const parsed = new Date(unit.maintenanceDate);
@@ -6156,7 +6237,7 @@ const UnitDetailsPanel = ({
         }
 
         if (!guard.allowed || !guard.nextStatus) {
-            setQuickActionError(guard.reason || "This action is currently unavailable.");
+            setQuickActionError(tr(guard.reason || t("This action is currently unavailable.")));
             return;
         }
 
@@ -6167,7 +6248,7 @@ const UnitDetailsPanel = ({
     const handleQuickAction = (action: QuickActionType) => {
         const guard = evaluateQuickAction(unit, action);
         if (!guard.allowed) {
-            setQuickActionError(guard.reason || "This action is currently unavailable.");
+            setQuickActionError(tr(guard.reason || t("This action is currently unavailable.")));
             return;
         }
 
@@ -6207,12 +6288,14 @@ const UnitDetailsPanel = ({
                         }`}
                     >
                         <span className="material-icons-round mr-1.5 text-sm">sticky_note_2</span>
-                        VIEW NOTES
+                        {t("VIEW NOTES")}
                     </motion.button>
                     <motion.button
                         whileHover={{ scale: 1.05, rotate: 90 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={onClose}
+                        title={t("Close details panel")}
+                        aria-label={t("Close details panel")}
                         className="flex size-9 items-center justify-center rounded-full border border-white/40 bg-white/20 text-zinc-900 shadow-lg shadow-black/5 backdrop-blur-md transition-all hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-zinc-100 dark:hover:bg-black/60"
                     >
                         <span className="material-icons-round text-lg">close</span>
@@ -6226,7 +6309,7 @@ const UnitDetailsPanel = ({
                         animate={{ opacity: 1, y: 0 }}
                         className="mb-1 flex items-center gap-2"
                     >
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary dark:text-primary-400">UNIT {unit.id}</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary dark:text-primary-400">{t("UNIT {id}", { id: unit.id })}</span>
                         <div className="size-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
                         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{unit.type}</span>
                     </motion.div>
@@ -6247,7 +6330,7 @@ const UnitDetailsPanel = ({
                                 unit.status === 'maintenance' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
                                 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
                             }`} />
-                            <span className="text-[11px] font-black tracking-wide text-zinc-800 dark:text-zinc-100 uppercase">{currentStatus.label}</span>
+                            <span className="text-[11px] font-black tracking-wide text-zinc-800 dark:text-zinc-100 uppercase">{t(currentStatus.label)}</span>
                         </div>
                         <div className="flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40">
                             <span className="material-icons-round text-[16px] text-cyan-400">aspect_ratio</span>
@@ -6267,67 +6350,73 @@ const UnitDetailsPanel = ({
                     {/* Residence Configuration (Always Editable) */}
                     <section className="space-y-4">
                         <div className="flex items-center justify-between px-1">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400">RESIDENCE CONFIGURATION</h3>
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400">{t("RESIDENCE CONFIGURATION")}</h3>
                             {hasConfigChanges && !isAskingApplyToAll && !isSavingConfig && (
                                 <span className="flex items-center gap-1.5 text-[10px] font-bold text-amber-500 dark:text-amber-400">
                                     <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                    Unsaved
+                                    {t("Unsaved")}
                                 </span>
                             )}
                         </div>
 
                         <div className="space-y-4 rounded-[24px] border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/5 dark:bg-zinc-900/40">
                             <div>
-                                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">Area (sqm)</label>
+                                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">{t("Area (sqm)")}</label>
                                 <input
+                                    {...configForm.fieldProps("areaSqm")}
                                     type="number"
                                     min="0"
-                                    max="9999"
+                                    max={PROPERTY_LIMITS.maxAreaSqm}
                                     step="1"
+                                    inputMode="numeric"
                                     disabled={isSavingConfig}
                                     value={draftAreaSqm}
                                     onChange={(e) => {
-                                        const num = e.target.value === "" ? "" : String(Math.min(9999, Math.max(0, parseInt(e.target.value) || 0)));
-                                        setDraftAreaSqm(num);
+                                        setDraftAreaSqm(e.target.value);
                                         if (configFeedback) setConfigFeedback(null);
                                     }}
-                                    className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
+                                    className={`mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50 ${configForm.errorFor("areaSqm") ? "border-rose-500 dark:border-rose-500" : ""}`}
                                 />
+                                <FieldError id={configForm.errorId("areaSqm")} message={configForm.errorFor("areaSqm")} />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">Bedrooms</label>
+                                    <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">{t("Bedrooms")}</label>
                                     <input
+                                        {...configForm.fieldProps("bedrooms")}
                                         type="number"
                                         min="0"
-                                        max="99"
+                                        max={PROPERTY_LIMITS.maxBeds}
                                         step="1"
+                                        inputMode="numeric"
                                         disabled={isSavingConfig}
                                         value={draftBedrooms}
                                         onChange={(e) => {
-                                            const num = e.target.value === "" ? "" : String(Math.min(99, Math.max(0, parseInt(e.target.value) || 0)));
-                                            setDraftBedrooms(num);
+                                            setDraftBedrooms(e.target.value);
                                             if (configFeedback) setConfigFeedback(null);
                                         }}
-                                        className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
+                                        className={`mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50 ${configForm.errorFor("bedrooms") ? "border-rose-500 dark:border-rose-500" : ""}`}
                                     />
+                                    <FieldError id={configForm.errorId("bedrooms")} message={configForm.errorFor("bedrooms")} />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">Baths</label>
+                                    <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">{t("Baths")}</label>
                                     <input
+                                        {...configForm.fieldProps("baths")}
                                         type="number"
                                         min="0"
-                                        max="99"
-                                        step="0.5"
+                                        max={PROPERTY_LIMITS.maxBaths}
+                                        step="1"
+                                        inputMode="numeric"
                                         disabled={isSavingConfig}
                                         value={draftBaths}
                                         onChange={(e) => {
-                                            const num = e.target.value === "" ? "" : String(Math.min(99, Math.max(0, parseFloat(e.target.value) || 0)));
-                                            setDraftBaths(num);
+                                            setDraftBaths(e.target.value);
                                             if (configFeedback) setConfigFeedback(null);
                                         }}
-                                        className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
+                                        className={`mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50 ${configForm.errorFor("baths") ? "border-rose-500 dark:border-rose-500" : ""}`}
                                     />
+                                    <FieldError id={configForm.errorId("baths")} message={configForm.errorFor("baths")} />
                                 </div>
                             </div>
 
@@ -6336,11 +6425,13 @@ const UnitDetailsPanel = ({
                                 <div className="flex items-center gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/60">
                                     <button
                                         type="button"
-                                        onClick={() => setIsAskingApplyToAll(true)}
+                                        onClick={() => {
+                                            if (configForm.validateAll()) setIsAskingApplyToAll(true);
+                                        }}
                                         className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-primary text-white text-xs font-black uppercase tracking-wider transition-all hover:bg-primary/90 active:scale-95 shadow-md shadow-primary/20"
                                     >
                                         <span className="material-icons-round text-base">save</span>
-                                        Save Changes
+                                        {t("Save Changes")}
                                     </button>
                                     <button
                                         type="button"
@@ -6349,11 +6440,12 @@ const UnitDetailsPanel = ({
                                             setDraftBedrooms(initialBedrooms);
                                             setDraftBaths(initialBaths);
                                             setIsAskingApplyToAll(false);
+                                            configForm.reset();
                                         }}
                                         className="py-2.5 px-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-black uppercase tracking-wider transition-all active:scale-95"
-                                        title="Reset to current values"
+                                        title={t("Reset to current values")}
                                     >
-                                        Reset
+                                        {t("Reset")}
                                     </button>
                                 </div>
                             )}
@@ -6364,9 +6456,9 @@ const UnitDetailsPanel = ({
                                     <div className="flex items-start gap-2.5">
                                         <span className="material-icons-round text-primary text-lg mt-0.5">help_outline</span>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-black text-zinc-900 dark:text-zinc-100">Apply to all units?</p>
+                                            <p className="text-xs font-black text-zinc-900 dark:text-zinc-100">{t("Apply to all units?")}</p>
                                             <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5 leading-relaxed">
-                                                Would you like to apply this new configuration ({draftAreaSqm} sqm &middot; {draftBedrooms} bed &middot; {draftBaths} bath) to all units in this property, or only <span className="font-bold text-zinc-900 dark:text-zinc-200">{unit.name}</span>?
+                                                {t("Would you like to apply this new configuration ({area} sqm · {beds} bed · {baths} bath) to all units in this property, or only", { area: draftAreaSqm, beds: draftBedrooms, baths: draftBaths })} <span className="font-bold text-zinc-900 dark:text-zinc-200">{unit.name}</span> {t("only?")}
                                             </p>
                                         </div>
                                     </div>
@@ -6378,7 +6470,7 @@ const UnitDetailsPanel = ({
                                             className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-750 text-zinc-900 dark:text-zinc-100 text-[11px] font-black uppercase tracking-wider transition-all shadow-sm active:scale-95"
                                         >
                                             <span className="material-icons-round text-sm text-zinc-500">meeting_room</span>
-                                            This Unit Only
+                                            {t("This Unit Only")}
                                         </button>
                                         <button
                                             type="button"
@@ -6386,7 +6478,7 @@ const UnitDetailsPanel = ({
                                             className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-black uppercase tracking-wider transition-all shadow-md shadow-primary/20 active:scale-95"
                                         >
                                             <span className="material-icons-round text-sm">done_all</span>
-                                            All Units
+                                            {t("All Units")}
                                         </button>
                                     </div>
 
@@ -6395,7 +6487,7 @@ const UnitDetailsPanel = ({
                                         onClick={() => setIsAskingApplyToAll(false)}
                                         className="w-full text-center text-[10px] font-black text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-wider py-0.5"
                                     >
-                                        Cancel
+                                        {t("Cancel")}
                                     </button>
                                 </div>
                             )}
@@ -6406,10 +6498,10 @@ const UnitDetailsPanel = ({
                                     <span className="material-icons-round animate-spin text-primary text-lg">sync</span>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xs font-black text-primary truncate">
-                                            {savingScope === "all" ? "Applying to all units..." : `Saving configuration for ${unit.name}...`}
+                                            {savingScope === "all" ? t("Applying to all units...") : t("Saving configuration for {name}...", { name: unit.name })}
                                         </p>
                                         <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                                            Updating database and canvas layout
+                                            {t("Updating database and canvas layout")}
                                         </p>
                                     </div>
                                 </div>
@@ -6429,6 +6521,8 @@ const UnitDetailsPanel = ({
                                     <button
                                         type="button"
                                         onClick={() => setConfigFeedback(null)}
+                                        title={t("Dismiss message")}
+                                        aria-label={t("Dismiss message")}
                                         className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
                                     >
                                         <span className="material-icons-round text-sm">close</span>
@@ -6442,9 +6536,9 @@ const UnitDetailsPanel = ({
                     {unit.status !== 'vacant' && (
                         <section className="relative">
                         <div className="mb-4 flex items-center justify-between px-1">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">RESIDENT PROFILE</h3>
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">{t("RESIDENT PROFILE")}</h3>
                             {unit.status === 'occupied' && (
-                                <div className="flex h-5 items-center rounded-full bg-primary/10 px-2 text-[9px] font-black uppercase text-primary">Lease Holder</div>
+                                <div className="flex h-5 items-center rounded-full bg-primary/10 px-2 text-[9px] font-black uppercase text-primary">{t("Lease Holder")}</div>
                             )}
                         </div>
                         
@@ -6464,14 +6558,14 @@ const UnitDetailsPanel = ({
                                                 {unit.tenantAvatarUrl ? (
                                                     <Image
                                                         src={unit.tenantAvatarUrl}
-                                                        alt="Tenant"
+                                                        alt={t("Tenant")}
                                                         fill
                                                         className="object-cover"
                                                     />
                                                 ) : (
                                                     <Image
                                                         src={getSystemAvatarUrl(unit.tenant)}
-                                                        alt="Tenant"
+                                                        alt={t("Tenant")}
                                                         fill
                                                         className="object-cover"
                                                     />
@@ -6481,9 +6575,9 @@ const UnitDetailsPanel = ({
                                         </div>
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-xl font-black tracking-tight text-zinc-900 dark:text-white">{unit.tenant || "VACANT UNIT"}</p>
+                                        <p className="text-xl font-black tracking-tight text-zinc-900 dark:text-white">{unit.tenant || t("VACANT UNIT")}</p>
                                         <div className="mt-1 flex items-center gap-2">
-                                            <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{unit.tenant ? "Active Tenant" : "Ready for Move-in"}</span>
+                                            <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{unit.tenant ? t("Active Tenant") : t("Ready for Move-in")}</span>
                                             <div className="size-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
                                             <span className="text-[11px] font-black text-primary tracking-wide">ID-{unit.id.slice(0, 5).toUpperCase()}</span>
                                         </div>
@@ -6509,7 +6603,7 @@ const UnitDetailsPanel = ({
                                             <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
                                                 <span className="material-icons-round text-base">chat_bubble</span>
                                             </div>
-                                            Message Resident
+                                            {t("Message Resident")}
                                         </Link>
                                         {canViewTenantProfile ? (
                                             <Link
@@ -6519,17 +6613,17 @@ const UnitDetailsPanel = ({
                                                 <div className="flex size-8 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
                                                     <span className="material-icons-round text-base">person</span>
                                                 </div>
-                                                Access Portfolio
+                                                {t("Access Portfolio")}
                                             </Link>
                                         ) : (
                                             <div
-                                                title="No tenant identity available for this unit yet."
+                                                title={t("No tenant identity available for this unit yet.")}
                                                 className="flex w-full cursor-not-allowed items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-zinc-400 dark:text-zinc-600"
                                             >
                                                 <div className="flex size-8 items-center justify-center rounded-xl bg-zinc-100 text-zinc-300 dark:bg-white/5">
                                                     <span className="material-icons-round text-base">person_off</span>
                                                 </div>
-                                                Access Portfolio
+                                                {t("Access Portfolio")}
                                             </div>
                                         )}
                                     </motion.div>
@@ -6550,19 +6644,19 @@ const UnitDetailsPanel = ({
                                 <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                     <span className="material-icons-round text-2xl">person_add</span>
                                 </div>
-                                START WALK-IN APPLICATION
+                                {t("START WALK-IN APPLICATION")}
                             </motion.button>
 
                             <div className="group relative overflow-hidden rounded-[32px] border border-primary/20 bg-primary/5 p-6 shadow-xl shadow-primary/5 dark:bg-primary-950/20">
                                 <div className="absolute -right-4 -top-4 size-24 rounded-full bg-primary/10 blur-2xl transition-all group-hover:bg-primary/20" />
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary dark:text-primary">INVITE RESIDENT</h3>
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary dark:text-primary">{t("INVITE RESIDENT")}</h3>
                                     <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-white">
                                         <span className="material-icons-round text-lg">qr_code_2</span>
                                     </div>
                                 </div>
                                 <p className="text-[11px] font-black leading-relaxed text-primary/70 dark:text-primary/70 mb-4">
-                                    Share this unit&apos;s unique application link with prospective tenants to start their digital journey.
+                                    {t("Share this unit's unique application link with prospective tenants to start their digital journey.")}
                                 </p>
                                 <div className="flex flex-col gap-2">
                                     <button 
@@ -6570,7 +6664,7 @@ const UnitDetailsPanel = ({
                                         className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-primary text-white text-[10px] font-black uppercase tracking-widest transition-all hover:bg-primary/90 active:scale-95 shadow-lg shadow-primary/20"
                                     >
                                         <span className="material-icons-round text-sm">qr_code_2</span>
-                                        Generate Invite Link
+                                        {t("Generate Invite Link")}
                                     </button>
                                 </div>
                             </div>
@@ -6593,22 +6687,22 @@ const UnitDetailsPanel = ({
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">ACTIVE REPAIR</h3>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">{t("ACTIVE REPAIR")}</h3>
                                             <button 
                                                 type="button"
                                                 onClick={() => onOpenMaintenance ? onOpenMaintenance("view") : (window.location.href = `/landlord/maintenance?unitId=${unit.id}`)}
                                                 className="text-[9px] font-black text-rose-600 hover:underline dark:text-rose-400 cursor-pointer"
                                             >
-                                                DETAILS
+                                                {t("DETAILS")}
                                             </button>
                                         </div>
                                         <p className="mt-2 text-lg font-black leading-tight text-zinc-900 dark:text-white line-clamp-2">
-                                            {unit.maintenanceTitle || unit.details?.trim() || "Unspecified Repair"}
+                                            {unit.maintenanceTitle || unit.details?.trim() || t("Unspecified Repair")}
                                         </p>
                                         <div className="mt-3 flex items-center gap-2">
-                                            <span className="text-[11px] font-black text-rose-500/80">Reported {maintenanceOpenedDate ? maintenanceOpenedDate.toLocaleDateString() : "recently"}</span>
+                                            <span className="text-[11px] font-black text-rose-500/80">{maintenanceOpenedDate ? t("Reported {date}", { date: maintenanceOpenedDate.toLocaleDateString(locale) }) : t("Reported recently")}</span>
                                             <div className="size-1 rounded-full bg-rose-300 dark:bg-rose-700" />
-                                            <span className="text-[11px] font-black text-rose-500/80">Status: {unit.maintenanceStatus?.toUpperCase() || "OPEN"}</span>
+                                            <span className="text-[11px] font-black text-rose-500/80">{t("Status: {status}", { status: t(MAINTENANCE_STATUS_LABELS[unit.maintenanceStatus ?? "open"] ?? unit.maintenanceStatus ?? "Open").toUpperCase() })}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -6619,7 +6713,7 @@ const UnitDetailsPanel = ({
                         {(unit.status === 'occupied' || unit.status === 'neardue') && (
                             <div className="group relative overflow-hidden rounded-[32px] border border-zinc-200 bg-white p-8 shadow-xl shadow-zinc-200/20 dark:border-white/5 dark:bg-zinc-900/40 dark:shadow-none">
                                 <div className="flex items-center justify-between mb-8">
-                                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">LEASE ANALYTICS</h3>
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">{t("LEASE ANALYTICS")}</h3>
                                     {onOpenLease && (
                                         <button
                                             type="button"
@@ -6627,29 +6721,27 @@ const UnitDetailsPanel = ({
                                             className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary hover:underline"
                                         >
                                             <span className="material-icons-round text-xs">visibility</span>
-                                            View Lease
+                                            {t("View Lease")}
                                         </button>
                                     )}
                                 </div>
                                 
                                 <div className="flex flex-col items-center">
                                     {(() => {
-                                        const startMs = unit.leaseStart ? new Date(unit.leaseStart).getTime() : null;
-                                        const endMs = unit.leaseEnd ? new Date(unit.leaseEnd).getTime() : null;
-                                        const hasValidDates = Boolean(startMs && endMs && !isNaN(startMs) && !isNaN(endMs));
-
-                                        let percentElapsed = 0;
-                                        let daysLeft: number | null = null;
-
-                                        if (hasValidDates && startMs && endMs) {
-                                            const total = Math.max(1, endMs - startMs);
-                                            const elapsed = nowMs - startMs;
-                                            percentElapsed = Math.min(100, Math.max(0, (elapsed / total) * 100));
-                                            daysLeft = Math.ceil((endMs - nowMs) / (1000 * 60 * 60 * 24));
-                                        }
+                                        // Dated terms draw an elapsed arc; open-ended leases draw a full, neutral arc with tenure.
+                                        const termNow = new Date(nowMs);
+                                        const arcState = leaseEndState(unitLeaseTerm, termNow);
+                                        const isOpenEndedArc = arcState.kind === "open_ended";
+                                        const percentElapsed = leaseProgressPercent(unitLeaseTerm, termNow);
+                                        const daysLeft = arcState.daysLeft;
+                                        const tenureShort = unit.leaseStart ? formatTenureShort(unit.leaseStart, termNow, language) : "";
 
                                         const arcPerimeter = 251.327; // pi * 80
-                                        const activeProgress = hasValidDates ? Math.min(1, Math.max(0, percentElapsed / 100)) : 0;
+                                        const activeProgress = isOpenEndedArc
+                                            ? (unit.leaseStart ? 1 : 0)
+                                            : percentElapsed !== null
+                                                ? Math.min(1, Math.max(0, percentElapsed / 100))
+                                                : 0;
                                         const strokeOffset = arcPerimeter * (1 - activeProgress);
 
                                         const knobAngle = Math.PI - (activeProgress * Math.PI);
@@ -6679,42 +6771,68 @@ const UnitDetailsPanel = ({
                                                             animate={{ strokeDashoffset: strokeOffset }}
                                                             d="M 20 100 A 80 80 0 0 1 180 100"
                                                             fill="none"
-                                                            stroke={`url(#leaseGradient-${unit.id})`}
+                                                            stroke={isOpenEndedArc ? "currentColor" : `url(#leaseGradient-${unit.id})`}
                                                             strokeWidth="10"
                                                             strokeLinecap="round"
                                                             strokeDasharray={arcPerimeter}
                                                             transition={{ duration: 1.2, ease: "easeOut" }}
+                                                            className={isOpenEndedArc ? "text-zinc-300 dark:text-white/20" : undefined}
                                                         />
-                                                        <motion.circle
-                                                            initial={{ cx: 20, cy: 100 }}
-                                                            animate={{ cx: knobX, cy: knobY }}
-                                                            transition={{ duration: 1.2, ease: "easeOut" }}
-                                                            r="6"
-                                                            fill={primaryColor}
-                                                            stroke="#ffffff"
-                                                            strokeWidth="2"
-                                                        />
+                                                        {!isOpenEndedArc && (
+                                                            <motion.circle
+                                                                initial={{ cx: 20, cy: 100 }}
+                                                                animate={{ cx: knobX, cy: knobY }}
+                                                                transition={{ duration: 1.2, ease: "easeOut" }}
+                                                                r="6"
+                                                                fill={primaryColor}
+                                                                stroke="#ffffff"
+                                                                strokeWidth="2"
+                                                            />
+                                                        )}
                                                     </svg>
-                                                    
+
                                                     <div className="absolute inset-x-0 bottom-0 flex flex-col items-center text-center">
-                                                        <p className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white" style={{ color: daysLeft !== null && daysLeft <= 14 ? undefined : primaryColor }}>
-                                                            {daysLeft !== null ? `${Math.abs(daysLeft)}` : "--"}
-                                                        </p>
-                                                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                                                            DAYS {daysLeft !== null && daysLeft < 0 ? "OVERDUE" : "REMAINING"}
-                                                        </p>
+                                                        {isOpenEndedArc ? (
+                                                            <>
+                                                                <p className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white" style={{ color: primaryColor }}>
+                                                                    {tenureShort || "--"}
+                                                                </p>
+                                                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                                                    {t("Open-ended")}
+                                                                </p>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <p className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white" style={{ color: daysLeft !== null && daysLeft <= 14 ? undefined : primaryColor }}>
+                                                                    {daysLeft !== null ? `${Math.max(0, daysLeft)}` : "--"}
+                                                                </p>
+                                                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                                                    {arcState.kind === "ended"
+                                                                        ? t("Term Ended")
+                                                                        : arcState.kind === "moving_out"
+                                                                            ? t("Days to Move-out")
+                                                                            : t("Days Remaining")}
+                                                                </p>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
 
                                                 <div className="mt-8 flex w-full items-center justify-between gap-4">
                                                     <div className="flex-1 space-y-1">
-                                                        <p className="text-[10px] font-black text-zinc-400">Lease Commenced</p>
+                                                        <p className="text-[10px] font-black text-zinc-400">{t("Lease Commenced")}</p>
                                                         <p className="text-xs font-black text-zinc-800 dark:text-zinc-100">{unit.leaseStart ? <ClientOnlyDate date={unit.leaseStart} format={{ month: 'short', day: 'numeric', year: 'numeric' }} /> : "--"}</p>
                                                     </div>
                                                     <div className="h-8 w-px bg-zinc-100 dark:bg-white/5" />
                                                     <div className="flex-1 text-right space-y-1">
-                                                        <p className="text-[10px] font-black text-zinc-400">Renewal Window</p>
-                                                        <p className="text-xs font-black text-zinc-800 dark:text-zinc-100">{unit.leaseEnd ? <ClientOnlyDate date={unit.leaseEnd} format={{ month: 'short', day: 'numeric', year: 'numeric' }} /> : "--"}</p>
+                                                        <p className="text-[10px] font-black text-zinc-400">
+                                                            {arcState.kind === "moving_out" ? t("Move-out Date") : arcState.kind === "open_ended" ? t("Lease Term") : t("Renewal Window")}
+                                                        </p>
+                                                        <p className="text-xs font-black text-zinc-800 dark:text-zinc-100">
+                                                            {arcState.kind === "open_ended"
+                                                                ? (unit.leaseStart ? tenureSinceLabel(unit.leaseStart, language) : t("Open-ended"))
+                                                                : <ClientOnlyDate date={arcState.endDate} format={{ month: 'short', day: 'numeric', year: 'numeric' }} />}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </>
@@ -6738,7 +6856,7 @@ const UnitDetailsPanel = ({
 
                     {/* Recent Activity / Status */}
                     <section className="space-y-4">
-                        <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">RECENT ACTIVITY</h3>
+                        <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">{t("RECENT ACTIVITY")}</h3>
                         
                         <div className="grid grid-cols-1 gap-3">
                             {unit.applicationCount && unit.applicationCount > 0 ? (
@@ -6747,10 +6865,10 @@ const UnitDetailsPanel = ({
                                         <span className="material-icons-round text-xl">assignment_ind</span>
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-xs font-black text-zinc-900 dark:text-white">{unit.applicationCount} Pending Application{unit.applicationCount === 1 ? "" : "s"}</p>
-                                        <p className="text-[10px] font-black text-zinc-500">Awaiting landlord review</p>
+                                        <p className="text-xs font-black text-zinc-900 dark:text-white">{t(unit.applicationCount === 1 ? "{count} Pending Application" : "{count} Pending Applications", { count: unit.applicationCount })}</p>
+                                        <p className="text-[10px] font-black text-zinc-500">{t("Awaiting landlord review")}</p>
                                     </div>
-                                    <Link href={`/landlord/applications?unitId=${unit.id}`} className="text-[10px] font-black text-primary hover:underline">VIEW ALL</Link>
+                                    <Link href={`/landlord/applications?unitId=${unit.id}`} className="text-[10px] font-black text-primary hover:underline">{t("VIEW ALL")}</Link>
                                 </div>
                             ) : null}
 
@@ -6762,8 +6880,8 @@ const UnitDetailsPanel = ({
                                     <span className="material-icons-round text-xl">history</span>
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-black text-zinc-900 dark:text-white">Full Unit History</p>
-                                    <p className="text-[10px] font-black text-zinc-500">View past leases & maintenance</p>
+                                    <p className="text-xs font-black text-zinc-900 dark:text-white">{t("Full Unit History")}</p>
+                                    <p className="text-[10px] font-black text-zinc-500">{t("View past leases & maintenance")}</p>
                                 </div>
                                 <span className="material-icons-round text-zinc-400 text-sm">chevron_right</span>
                             </div>
@@ -6772,7 +6890,7 @@ const UnitDetailsPanel = ({
 
                     {/* Command Center Quick Actions */}
                     <section className="rounded-[32px] border border-zinc-200 bg-zinc-900 p-6 shadow-2xl dark:border-white/5">
-                        <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">COMMAND CENTER</h3>
+                        <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">{t("COMMAND CENTER")}</h3>
                         <div className="grid grid-cols-2 gap-3">
                             {quickActions.map((action) => (
                                 <motion.button
@@ -6786,7 +6904,7 @@ const UnitDetailsPanel = ({
                                     <div className="flex size-10 items-center justify-center rounded-xl bg-white/10">
                                         <span className="material-icons-round text-xl">{QUICK_ACTION_META[action].icon}</span>
                                     </div>
-                                    {QUICK_ACTION_META[action].label.toUpperCase()}
+                                    {t(QUICK_ACTION_META[action].label).toUpperCase()}
                                 </motion.button>
                             ))}
                         </div>
@@ -6801,9 +6919,9 @@ const UnitDetailsPanel = ({
             {pendingQuickAction && (
                 <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/45 p-6">
                     <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl">
-                        <h4 className="text-sm font-black text-zinc-900 dark:text-zinc-100">Confirm Status Change</h4>
+                        <h4 className="text-sm font-black text-zinc-900 dark:text-zinc-100">{t("Confirm Status Change")}</h4>
                         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
-                            {evaluateQuickAction(unit, pendingQuickAction).confirmMessage || "Are you sure you want to continue?"}
+                            {evaluateQuickAction(unit, pendingQuickAction).confirmMessage || t("Are you sure you want to continue?")}
                         </p>
                         <div className="mt-4 flex items-center justify-end gap-2">
                             <button
@@ -6811,7 +6929,7 @@ const UnitDetailsPanel = ({
                                 onClick={() => setPendingQuickAction(null)}
                                 className="rounded-lg border border-zinc-300 px-3 py-2 text-xs font-black text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
                             >
-                                Cancel
+                                {t("Cancel")}
                             </button>
                             <button
                                 type="button"
@@ -6822,7 +6940,7 @@ const UnitDetailsPanel = ({
                                 }}
                                 className="rounded-lg bg-rose-600 px-3 py-2 text-xs font-black text-white transition-colors hover:bg-rose-500"
                             >
-                                Confirm
+                                {t("Confirm")}
                             </button>
                         </div>
                     </div>
@@ -6836,7 +6954,7 @@ const UnitDetailsPanel = ({
                     className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl transition-all font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2"
                 >
                     <span className="material-icons-round text-sm">delete</span>
-                    Remove Unit
+                    {t("Remove Unit")}
                 </button>
             </div>
         </div>
@@ -6856,6 +6974,7 @@ const UnitNotesPanel = ({
     value: string;
     onChange: (nextValue: string) => void;
 }) => {
+    const { t } = useLanguageContext();
     const noteLength = value.trim().length;
 
     return (
@@ -6865,12 +6984,13 @@ const UnitNotesPanel = ({
                     type="button"
                     onClick={onToggle}
                     className="group relative flex w-[52px] items-center justify-center border-r border-border bg-gradient-to-b from-surface-0 to-surface-1 text-zinc-600 transition-colors hover:from-surface-1 hover:to-surface-2 dark:from-zinc-900 dark:to-zinc-950 dark:text-zinc-300 dark:hover:from-zinc-800 dark:hover:to-zinc-900"
-                    title={isOpen ? "Collapse notes" : "Open notes"}
+                    title={isOpen ? t("Collapse notes") : t("Open notes")}
+                    aria-label={isOpen ? t("Collapse notes") : t("Open notes")}
                 >
                     <div className="flex flex-col items-center gap-2">
                         <span className="material-icons-round text-lg">{isOpen ? "chevron_right" : "sticky_note_2"}</span>
                         {!isOpen && (
-                            <span className="rotate-180 text-[10px] font-black uppercase tracking-[0.2em] [writing-mode:vertical-rl]">Notes</span>
+                            <span className="rotate-180 text-[10px] font-black uppercase tracking-[0.2em] [writing-mode:vertical-rl]">{t("Notes")}</span>
                         )}
                     </div>
                 </button>
@@ -6881,12 +7001,12 @@ const UnitNotesPanel = ({
                                 <div>
                                     <h3 className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] text-primary-400">
                                         <span className="material-icons-round text-base">sticky_note_2</span>
-                                        Unit Notes
+                                        {t("Unit Notes")}
                                     </h3>
-                                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Private note for this unit. Autosaves locally.</p>
+                                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{t("Private note for this unit. Autosaves locally.")}</p>
                                 </div>
                                 <span className="rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-                                    Auto
+                                    {t("Auto")}
                                 </span>
                             </div>
                         </div>
@@ -6894,12 +7014,12 @@ const UnitNotesPanel = ({
                             maxLength={500}
                             value={value}
                             onChange={(event) => onChange(event.target.value)}
-                            placeholder="Add reminders, follow-ups, or move-in prep details…"
+                            placeholder={t("Add reminders, follow-ups, or move-in prep details…")}
                             className="mt-3 h-full min-h-[220px] resize-none rounded-2xl border border-zinc-300 bg-white/95 px-4 py-4 text-sm leading-relaxed text-zinc-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
                         />
                         <div className="mt-2 flex items-center justify-between px-1">
-                            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Tip: Use short action-oriented notes.</p>
-                            <p className="text-[11px] font-black text-zinc-500 dark:text-zinc-400">{noteLength} / 500 chars</p>
+                            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{t("Tip: Use short action-oriented notes.")}</p>
+                            <p className="text-[11px] font-black text-zinc-500 dark:text-zinc-400">{t("{count} / 500 chars", { count: noteLength })}</p>
                         </div>
                     </div>
                 )}
@@ -6932,14 +7052,15 @@ export const SidebarBlockLibrary = ({
     activeFloorItemCount: number;
     onApplyPreset: (presetType: "double-loaded" | "u-shape" | "l-shape" | "single-loaded") => void;
 }) => {
+    const { t } = useLanguageContext();
     const handleSidebarBlockDragEnd = onDragEnd;
 
     return (
         <div className="flex flex-col h-full">
             {unplacedUnits.length > 0 && (
                 <div className={`shrink-0 border-b px-4 py-3 ${isDark ? 'border-zinc-800 bg-amber-500/5' : 'border-amber-200 bg-amber-50'}`}>
-                    <p className={`text-xs font-black uppercase tracking-wider mb-2 ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>Unplaced Units ({unplacedUnits.length})</p>
-                    <p className={`text-[11px] mb-2 ${isDark ? 'text-neutral-500' : 'text-zinc-500'}`}>Drag these onto the canvas to place them.</p>
+                    <p className={`text-xs font-black uppercase tracking-wider mb-2 ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>{t("Unplaced Units ({count})", { count: unplacedUnits.length })}</p>
+                    <p className={`text-[11px] mb-2 ${isDark ? 'text-neutral-500' : 'text-zinc-500'}`}>{t("Drag these onto the canvas to place them.")}</p>
                     <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
                         {unplacedUnits.map(u => {
                             const blockType = u.beds === 0 ? "studio" : u.beds === 2 ? "2br" : u.beds >= 3 ? "3br" : "1br";
@@ -6962,23 +7083,23 @@ export const SidebarBlockLibrary = ({
             )}
             <div className={`p-4 border-b ${isDark ? 'border-zinc-800' : 'border-border'}`}>
                 <div className="mb-3">
-                    <h2 className={`text-xs font-black uppercase tracking-wider ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Building Blocks</h2>
+                    <h2 className={`text-xs font-black uppercase tracking-wider ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>{t("Building Blocks")}</h2>
                     <p className={`mt-0.5 text-[11px] leading-relaxed ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                        Drag units or add stairs and corridors to design your floor plan.
+                        {t("Drag units or add stairs and corridors to design your floor plan.")}
                     </p>
                 </div>
                 <div className="relative">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                         <span className="material-icons-round text-zinc-400 text-lg">search</span>
                     </span>
-                    <input maxLength={60} className={`w-full rounded-lg border pl-10 pr-3 py-2 text-sm placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary ${isDark ? 'border-zinc-700 bg-background-dark text-zinc-200' : 'border-border bg-zinc-50 text-zinc-700'}`} placeholder="Search components…" type="text" />
+                    <input maxLength={60} className={`w-full rounded-lg border pl-10 pr-3 py-2 text-sm placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary ${isDark ? 'border-zinc-700 bg-background-dark text-zinc-200' : 'border-border bg-zinc-50 text-zinc-700'}`} placeholder={t("Search components…")} type="text" />
                 </div>
             </div>
             <div className={`flex-1 overflow-y-auto p-4 space-y-6 ${styles['scrollbarHide'] || ''}`}>
                 <div>
                     <h3 className={`mb-3 flex items-center gap-2 text-sm font-black ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">dashboard_customize</span>
-                        Layout Presets
+                        {t("Layout Presets")}
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <button
@@ -6987,8 +7108,8 @@ export const SidebarBlockLibrary = ({
                         >
                             <span className="material-icons-round text-2xl text-zinc-400 group-hover:text-primary transition-colors">view_week</span>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Double Loaded</p>
-                                <p className="text-[10px] text-zinc-500">Central corridor</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("Double Loaded")}</p>
+                                <p className="text-[10px] text-zinc-500">{t("Central corridor")}</p>
                             </div>
                         </button>
                         <button
@@ -6997,8 +7118,8 @@ export const SidebarBlockLibrary = ({
                         >
                             <span className="material-icons-round text-2xl text-zinc-400 group-hover:text-primary transition-colors">view_quilt</span>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>U-Shape</p>
-                                <p className="text-[10px] text-zinc-500">Courtyard style</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("U-Shape")}</p>
+                                <p className="text-[10px] text-zinc-500">{t("Courtyard style")}</p>
                             </div>
                         </button>
                         <button
@@ -7007,8 +7128,8 @@ export const SidebarBlockLibrary = ({
                         >
                             <span className="material-icons-round text-2xl text-zinc-400 group-hover:text-primary transition-colors">filter_none</span>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>L-Shape</p>
-                                <p className="text-[10px] text-zinc-500">Corner layout</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("L-Shape")}</p>
+                                <p className="text-[10px] text-zinc-500">{t("Corner layout")}</p>
                             </div>
                         </button>
                         <button
@@ -7017,8 +7138,8 @@ export const SidebarBlockLibrary = ({
                         >
                             <span className="material-icons-round text-2xl text-zinc-400 group-hover:text-primary transition-colors">vertical_split</span>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Single Loaded</p>
-                                <p className="text-[10px] text-zinc-500">One side units</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("Single Loaded")}</p>
+                                <p className="text-[10px] text-zinc-500">{t("One side units")}</p>
                             </div>
                         </button>
                     </div>
@@ -7028,7 +7149,7 @@ export const SidebarBlockLibrary = ({
                     <div>
                         <h3 className={`mb-3 flex items-center gap-2 text-sm font-black ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                             <span className="material-icons-round text-primary text-sm">bedroom_parent</span>
-                            Living Units
+                            {t("Living Units")}
                         </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div
@@ -7039,7 +7160,7 @@ export const SidebarBlockLibrary = ({
                         >
                             <div className={`h-8 w-10 rounded transition-colors group-hover:border-primary/50 group-hover:bg-primary/10 ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-300 bg-zinc-200'}`}></div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Studio</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("Studio")}</p>
                                 <p className="text-[10px] text-zinc-500">400 sqft</p>
                             </div>
                         </div>
@@ -7051,7 +7172,7 @@ export const SidebarBlockLibrary = ({
                         >
                             <div className={`flex h-8 w-12 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-300 bg-zinc-200'}`}><div className={`w-1/2 ${isDark ? 'border-r border-neutral-400' : 'border-r border-zinc-400'}`}></div></div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>1 BR Std</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("1 BR Std")}</p>
                                 <p className="text-[10px] text-zinc-500">650 sqft</p>
                             </div>
                         </div>
@@ -7063,7 +7184,7 @@ export const SidebarBlockLibrary = ({
                         >
                             <div className={`relative h-10 w-12 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-300 bg-zinc-200'}`}><div className="absolute inset-0 grid grid-cols-2 grid-rows-1"><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-zinc-400'}`}></div></div></div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>2 BR Corner</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("2 BR Corner")}</p>
                                 <p className="text-[10px] text-zinc-500">950 sqft</p>
                             </div>
                         </div>
@@ -7075,7 +7196,7 @@ export const SidebarBlockLibrary = ({
                         >
                             <div className={`relative h-10 w-14 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-300 bg-zinc-200'}`}><div className="absolute inset-0 grid grid-cols-3 grid-rows-1"><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-zinc-400'}`}></div><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-zinc-400'}`}></div></div></div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>3 BR Suite</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("3 BR Suite")}</p>
                                 <p className="text-[10px] text-zinc-500">1200 sqft</p>
                             </div>
                         </div>
@@ -7085,7 +7206,7 @@ export const SidebarBlockLibrary = ({
                 <div>
                     <h3 className={`mb-3 flex items-center gap-2 text-sm font-black ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">architecture</span>
-                        Structural
+                        {t("Structural")}
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div
@@ -7095,7 +7216,7 @@ export const SidebarBlockLibrary = ({
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
                             <div className={`h-8 w-14 rounded-[1px] border-y ${isDark ? 'border-neutral-500 bg-neutral-700' : 'border-zinc-500 bg-zinc-100'}`} />
-                            <div className="text-center"><p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Corridor</p></div>
+                            <div className="text-center"><p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("Corridor")}</p></div>
                         </div>
                         <div
                             className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
@@ -7106,7 +7227,7 @@ export const SidebarBlockLibrary = ({
                             <div className={`flex size-8 items-center justify-center rounded ${isDark ? 'bg-neutral-700' : 'bg-zinc-200'}`}>
                                 <span className={`material-icons-round text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>elevator</span>
                             </div>
-                            <div className="text-center"><p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Elevator</p></div>
+                            <div className="text-center"><p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("Elevator")}</p></div>
                         </div>
                     </div>
                 </div>
@@ -7114,7 +7235,7 @@ export const SidebarBlockLibrary = ({
                 <div>
                     <h3 className={`mb-3 flex items-center gap-2 text-sm font-black ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">stairs</span>
-                        Stairwells
+                        {t("Stairwells")}
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div
@@ -7127,7 +7248,7 @@ export const SidebarBlockLibrary = ({
                                 {[...Array(6)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-zinc-400'}`}></div>)}
                             </div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Straight</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("Straight")}</p>
                             </div>
                         </div>
                         <div
@@ -7146,7 +7267,7 @@ export const SidebarBlockLibrary = ({
                                 </div>
                             </div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>L-Shape</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("L-Shape")}</p>
                             </div>
                         </div>
                         <div
@@ -7166,7 +7287,7 @@ export const SidebarBlockLibrary = ({
                                 </div>
                             </div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>U-Shape</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("U-Shape")}</p>
                             </div>
                         </div>
                         <div
@@ -7182,7 +7303,7 @@ export const SidebarBlockLibrary = ({
                                 ))}
                             </div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Spiral</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("Spiral")}</p>
                             </div>
                         </div>
                     </div>
@@ -7191,7 +7312,7 @@ export const SidebarBlockLibrary = ({
                 <div className="pt-4 mt-4 border-t border-border">
                     <h3 className={`mb-3 flex items-center gap-2 text-sm font-black ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">meeting_room</span>
-                        Facilities
+                        {t("Facilities")}
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div
@@ -7204,7 +7325,7 @@ export const SidebarBlockLibrary = ({
                                 <span className={`material-icons-round text-lg ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>meeting_room</span>
                             </div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Function Rm</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("Function Rm")}</p>
                             </div>
                         </div>
                         <div
@@ -7217,7 +7338,7 @@ export const SidebarBlockLibrary = ({
                                 <span className={`material-icons-round text-lg ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>fitness_center</span>
                             </div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Studio</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("Studio")}</p>
                             </div>
                         </div>
                     </div>
@@ -7226,7 +7347,7 @@ export const SidebarBlockLibrary = ({
                 <div className="pt-4 mt-4 border-t border-border pb-10">
                     <h3 className={`mb-3 flex items-center gap-2 text-sm font-black ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">construction</span>
-                        Canvas Tools
+                        {t("Canvas Tools")}
                     </h3>
                     <div className="space-y-2">
                         <button
@@ -7242,8 +7363,8 @@ export const SidebarBlockLibrary = ({
                                 <span className="material-icons-round text-xl">layers_clear</span>
                             </div>
                             <div className="flex-1">
-                                <p className="text-sm font-black leading-tight">Clear Entire Floor</p>
-                                <p className="text-[10px] opacity-70">Resets the current level canvas</p>
+                                <p className="text-sm font-black leading-tight">{t("Clear Entire Floor")}</p>
+                                <p className="text-[10px] opacity-70">{t("Resets the current level canvas")}</p>
                             </div>
                         </button>
                     </div>

@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureLandlordProductTourState } from "@/lib/landlord-product-tour";
+import { z } from "zod";
+import { parseJsonBody } from "@/lib/validation/server";
+
+/** Only the quest-board display preferences are client-writable; progress keys (completed steps, setup deferrals) are not. */
+const metadataPatchSchema = z
+    .object({
+        show_completed_quests: z.boolean().optional(),
+        quest_board_hidden: z.boolean().optional(),
+    })
+    .strict();
 
 export async function PATCH(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
@@ -10,8 +20,11 @@ export async function PATCH(request: Request) {
 
     const adminClient = createAdminClient();
 
+    const parsed = await parseJsonBody(request, metadataPatchSchema);
+    if (!parsed.ok) return parsed.response;
+    const metadataUpdates = parsed.data;
+
     try {
-        const metadataUpdates = await request.json();
         const state = await ensureLandlordProductTourState(adminClient as any, userId);
 
         const { data, error } = await adminClient

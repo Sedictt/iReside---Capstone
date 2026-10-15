@@ -141,3 +141,9 @@ output/*.apk
 # Scratch
 scratch/
 iris-3d-model/
+
+# Generated UAT/showcase video artifacts (regenerable from output/uat-video-src)
+output/*.mp4
+output/*.srt
+output/*-script.md
+output/uat-video-src/

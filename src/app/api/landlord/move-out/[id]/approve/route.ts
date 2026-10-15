@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseWithSchema } from "@/lib/validation/server";
+import { isId, moveOutApproveSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 /**
  * PUT /api/landlord/move-out/[id]/approve
@@ -15,6 +17,10 @@ export async function PUT(
   const authContext = await requireAuthenticatedUser(request);
   if (!("userId" in authContext)) return authContext as Response;
   const { userId, supabase } = authContext;
+
+  if (!isId(id)) {
+    return NextResponse.json({ error: "Move-out request not found" }, { status: 404 });
+  }
 
   try {
 
@@ -42,13 +48,15 @@ export async function PUT(
       );
     }
 
-    let body;
+    let rawBody: unknown = {};
     try {
-      body = await request.json();
+      rawBody = await request.json();
     } catch {
-      body = {};
+      rawBody = {};
     }
-    const { inspection_date } = body;
+    const parsed = parseWithSchema(moveOutApproveSchema, rawBody ?? {});
+    if (!parsed.ok) return parsed.response;
+    const inspection_date = parsed.data.inspection_date ?? null;
 
     // Update move-out request
     const updatePayload = {
@@ -73,14 +81,20 @@ export async function PUT(
       );
     }
 
-    // Update lease end_date to the requested move-out date
-    const { error: leaseError } = await supabase
-      .from("leases")
-      .update({ end_date: moveOutRequest.requested_date })
-      .eq("id", moveOutRequest.lease_id);
+    // Update lease end_date to the requested move-out date — only when it keeps
+    // end_date > start_date (DB constraint lease_dates_valid).
+    const leaseStart: string | undefined = moveOutRequest.lease?.start_date;
+    if (!leaseStart || String(moveOutRequest.requested_date) > String(leaseStart)) {
+      const { error: leaseError } = await supabase
+        .from("leases")
+        .update({ end_date: moveOutRequest.requested_date })
+        .eq("id", moveOutRequest.lease_id);
 
-    if (leaseError) {
-      console.error("[landlord-move-out-approve] Lease update error:", leaseError);
+      if (leaseError) {
+        console.error("[landlord-move-out-approve] Lease update error:", leaseError);
+      }
+    } else {
+      console.warn("[landlord-move-out-approve] Skipped lease end_date update: requested date is not after lease start.");
     }
 
     // Notify tenant

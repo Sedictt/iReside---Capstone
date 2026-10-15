@@ -3,7 +3,9 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { PropertyService } from "@/lib/services/property";
 import { PropertyNotFoundError } from "@/lib/services/property/property.errors";
-import { generateUnitName, NumberingStyle } from "@/lib/unit-naming";
+import { generateUnitName } from "@/lib/unit-naming";
+import { databaseErrorResponse, parseJsonBody, parseWithSchema } from "@/lib/validation/server";
+import { propertyIdSchema, propertyUpdateSchema } from "@/lib/validation/schemas/properties.schema";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +22,8 @@ export async function GET(
     if (!propertyId) {
         return NextResponse.json({ error: "Property id is required." }, { status: 400 });
     }
+    const idCheck = parseWithSchema(propertyIdSchema, propertyId);
+    if (!idCheck.ok) return idCheck.response;
 
     try {
         const propertyService = new PropertyService(supabase);
@@ -75,9 +79,13 @@ export async function PUT(
     if (!propertyId) {
         return NextResponse.json({ error: "Property id is required." }, { status: 400 });
     }
+    const idCheck = parseWithSchema(propertyIdSchema, propertyId);
+    if (!idCheck.ok) return idCheck.response;
+
+    const parsed = await parseJsonBody(request, propertyUpdateSchema);
+    if (!parsed.ok) return parsed.response;
 
     try {
-        const body = await request.json();
         const {
             name,
             address,
@@ -96,7 +104,7 @@ export async function PUT(
             unit_prefix,
             numbering_style,
             starting_number,
-        } = body;
+        } = parsed.data;
 
         // Verify property belongs to landlord
         const { data: existingProp, error: checkError } = await supabase
@@ -117,37 +125,37 @@ export async function PUT(
             .eq("property_id", propertyId);
 
         const currentUnitCount = existingUnits?.length || 0;
-        const requestedUnits = parseInt(String(total_units || 1), 10) || 1;
+        const requestedUnits = total_units;
         const finalTotalUnits = Math.max(requestedUnits, currentUnitCount);
 
         const updatePayload: Record<string, any> = {
-            type: type || "apartment",
+            type,
             total_units: finalTotalUnits,
-            total_floors: parseInt(String(total_floors || 1), 10) || 1,
-            base_rent_amount: parseFloat(String(base_rent_amount || 0)) || 0,
+            total_floors,
+            base_rent_amount,
             description: description ?? "",
-            amenities: Array.isArray(amenities) ? amenities : [],
-            house_rules: Array.isArray(house_rules) ? house_rules : [],
-            images: Array.isArray(images) ? images : [],
+            amenities,
+            house_rules,
+            images,
             updated_at: new Date().toISOString(),
         };
 
-        if (name && typeof name === "string" && name.trim()) {
-            updatePayload.name = name.trim();
+        if (name) {
+            updatePayload.name = name;
         }
-        if (address && typeof address === "string" && address.trim()) {
-            updatePayload.address = address.trim();
+        if (address) {
+            updatePayload.address = address;
         }
 
         if (contract_mode === "generate") {
             updatePayload.contract_template = {
                 answers: {
-                    rent: String(base_rent_amount || 0),
-                    occupancy_limit: String(occupancy_limit || 5),
-                    utility_split_method: utility_billing || "fixed_charge",
-                    utilities: Array.isArray(amenities) ? amenities : [],
+                    rent: String(base_rent_amount),
+                    occupancy_limit: String(occupancy_limit),
+                    utility_split_method: utility_billing,
+                    utilities: amenities,
                 },
-                customClauses: (Array.isArray(house_rules) ? house_rules : []).map((rule: string, idx: number) => ({
+                customClauses: house_rules.map((rule: string, idx: number) => ({
                     id: idx,
                     title: "Building Rule",
                     description: rule,
@@ -171,7 +179,7 @@ export async function PUT(
 
         if (updateError) {
             console.error("Failed to update property:", updateError);
-            return NextResponse.json({ error: `Failed to update property: ${updateError.message}` }, { status: 500 });
+            return databaseErrorResponse(updateError, "Failed to update property.");
         }
 
         // Sync Environment Policy
@@ -185,8 +193,8 @@ export async function PUT(
         await (admin as any).from("property_environment_policies").upsert(
             {
                 property_id: propertyId,
-                environment_mode: type || "apartment",
-                max_occupants_per_unit: parseInt(String(occupancy_limit || 5), 10) || 5,
+                environment_mode: type,
+                max_occupants_per_unit: occupancy_limit,
                 utility_policy_mode: mapping.mode,
                 utility_split_method: mapping.split,
                 needs_review: false,
@@ -197,15 +205,15 @@ export async function PUT(
 
         // Sync Units & Floor Configs
         const targetUnits = finalTotalUnits;
-        const targetFloors = parseInt(String(total_floors || 1), 10) || 1;
-        const targetRent = parseFloat(String(base_rent_amount || 0)) || 0;
-        const propType = type || "apartment";
+        const targetFloors = total_floors;
+        const targetRent = base_rent_amount;
+        const propType = type;
 
         if (targetUnits > currentUnitCount) {
             const unitsPerFloor = Math.max(1, Math.ceil(targetUnits / targetFloors));
             const prefix = unit_prefix || (propType === "dormitory" ? "Room" : propType === "boarding_house" ? "Room" : "Unit");
-            const style: NumberingStyle = numbering_style || "floor_based";
-            const startNum = starting_number || 101;
+            const style = numbering_style;
+            const startNum = starting_number;
 
             const floorCounters: Record<number, number> = {};
             for (const u of existingUnits || []) {
@@ -213,17 +221,27 @@ export async function PUT(
                 floorCounters[f] = (floorCounters[f] || 0) + 1;
             }
 
+            // Unit names are unique within a property: skip any generated name already in use.
+            const usedNames = new Set<string>(
+                (existingUnits || []).map((u: { name: string | null }) => (u.name ?? "").trim().toLowerCase())
+            );
+            let sequentialOffset = 0;
+
             const unitsToCreate = Array.from({ length: targetUnits - currentUnitCount }, (_, idx) => {
                 const overallIndex = currentUnitCount + idx;
                 const floorNumber = targetFloors === 1 ? 1 : Math.min(targetFloors, Math.floor(overallIndex / unitsPerFloor) + 1);
-                floorCounters[floorNumber] = (floorCounters[floorNumber] || 0) + 1;
-                const unitIndexOnFloor = floorCounters[floorNumber];
-
-                const unitName = generateUnitName(overallIndex, floorNumber, unitIndexOnFloor, {
-                    prefix,
-                    numberingStyle: style,
-                    startingNumber: startNum,
-                });
+                let unitName = "";
+                for (let attempt = 0; attempt < 1000; attempt++) {
+                    floorCounters[floorNumber] = (floorCounters[floorNumber] || 0) + 1;
+                    unitName = generateUnitName(overallIndex + sequentialOffset, floorNumber, floorCounters[floorNumber], {
+                        prefix,
+                        numberingStyle: style,
+                        startingNumber: startNum,
+                    });
+                    if (!usedNames.has(unitName.toLowerCase())) break;
+                    sequentialOffset++;
+                }
+                usedNames.add(unitName.toLowerCase());
 
                 return {
                     property_id: propertyId,
@@ -272,7 +290,7 @@ export async function PUT(
     } catch (error) {
         console.error("Failed to update property:", error);
         return NextResponse.json(
-            { error: error instanceof Error ? error.message : "Failed to update property." },
+            { error: "Failed to update property." },
             { status: 500 }
         );
     }

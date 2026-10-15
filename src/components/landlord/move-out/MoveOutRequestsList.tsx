@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useReducer } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import {
  Search,
  Filter,
@@ -41,6 +42,7 @@ interface MoveOutRequest {
 
 export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview = false }: { onSelect: (request: MoveOutRequest) => void, initialFilter?: MoveOutStatus | "all", preview?: boolean }) {
  const { selectedPropertyId } = useProperty();
+ const { t, locale } = useLanguageContext();
  
  type RequestsState = { requests: MoveOutRequest[]; loading: boolean; error: string | null };
  type Action =
@@ -104,7 +106,9 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
  lease: {
  id: "lease-1",
  start_date: new Date(Date.now() - 86400000 * 300).toISOString(),
- end_date: new Date(Date.now() + 86400000 * 60).toISOString(),
+ // Open-ended (month-to-month) lease: no end date until the move-out is approved.
+ end_date: null,
+ term_type: "open_ended",
  monthly_rent: 25000,
  security_deposit: 50000,
  unit: { name: "Unit 402", property: { id: "p1", name: "Emerald Heights", address: "123 Skyline Ave, Metro Manila" } },
@@ -128,6 +132,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
  id: "lease-2",
  start_date: new Date(Date.now() - 86400000 * 400).toISOString(),
  end_date: new Date(Date.now() + 86400000 * 15).toISOString(),
+ term_type: "fixed",
  monthly_rent: 18000,
  security_deposit: 36000,
  unit: { name: "Studio 12B", property: { id: "p2", name: "The Grand Atrium", address: "456 Central Blvd, Quezon City" } },
@@ -151,6 +156,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
  id: "lease-3",
  start_date: new Date(Date.now() - 86400000 * 730).toISOString(),
  end_date: new Date(Date.now() - 86400000 * 2).toISOString(),
+ term_type: "fixed",
  monthly_rent: 30000,
  security_deposit: 60000,
  unit: { name: "Suite 901", property: { id: "p1", name: "Emerald Heights", address: "123 Skyline Ave, Metro Manila" } },
@@ -238,7 +244,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
  ];
 
  const formatDate = (dateStr: string) => {
- return new Date(dateStr).toLocaleDateString("en-US", {
+ return new Date(dateStr).toLocaleDateString(locale, {
  month: "short",
  day: "numeric",
  year: "numeric",
@@ -260,7 +266,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
  : "text-muted-foreground hover:neumorphic-inset/40 hover:text-foreground"
  )}
  >
- {tab.label}
+ {t(tab.label)}
  <span className={cn(
  "rounded-lg px-1.5 py-0.5 text-[9px]",
  activeFilter === tab.value ? "neumorphic-primary " : "neumorphic-inset text-muted-foreground"
@@ -275,7 +281,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
  <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
  <input maxLength={60}
  type="text"
- placeholder="Search by tenant, unit, or property..."
+ placeholder={t("Search by tenant, unit, or property...")}
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
  className="h-11 w-full rounded-2xl neumorphic-panel/50 pl-10 pr-4 text-xs font-black text-foreground focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all"
@@ -291,17 +297,17 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
  ) : error ? (
  <div className="flex h-64 flex-col items-center justify-center rounded-[2rem] border border-red-500/10 bg-red-500/5 p-8 text-center">
  <AlertCircle className="mb-4 size-12 text-red-500/50" />
- <h3 className="text-lg font-black text-foreground">Error Loading Requests</h3>
- <p className="text-sm font-medium text-muted-foreground">{error}</p>
+ <h3 className="text-lg font-black text-foreground">{t("Error Loading Requests")}</h3>
+ <p className="text-sm font-medium text-muted-foreground">{t(error)}</p>
  </div>
  ) : filteredRequests.length === 0 ? (
  <div className="flex h-64 flex-col items-center justify-center rounded-[2.5rem] border border-dashed border-border neumorphic-inset p-12 text-center">
  <Inbox className="mb-4 size-12 text-muted-foreground/30" />
- <h3 className="text-xl font-black text-foreground">No Requests Found</h3>
+ <h3 className="text-xl font-black text-foreground">{t("No Requests Found")}</h3>
  <p className="text-sm font-medium text-muted-foreground">
  {searchQuery || activeFilter !== "all" 
- ? "No requests match your current filters."
- : "There are currently no move-out requests."}
+ ? t("No requests match your current filters.")
+ : t("There are currently no move-out requests.")}
  </p>
  </div>
  ) : (
@@ -322,7 +328,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
  <MoveOutStatusBadge status={moveOutRequest.status} />
  <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground">
  <Home className="size-5" />
- Requested: {formatDate(moveOutRequest.requested_date)}
+ {t("Requested: {date}", { date: formatDate(moveOutRequest.requested_date) })}
  </div>
  </div>
 
@@ -351,9 +357,9 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
  </div>
 
  <div className="hidden flex-1 flex-col gap-1 lg:flex">
- <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Reason</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("Reason")}</span>
  <p className="text-xs font-medium text-foreground line-clamp-1 italic">
- &quot;{moveOutRequest.reason || "No reason provided"}&quot;
+ &quot;{moveOutRequest.reason || t("No reason provided")}&quot;
  </p>
  </div>
 

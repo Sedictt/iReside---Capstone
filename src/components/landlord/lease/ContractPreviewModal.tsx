@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { m as motion } from "framer-motion";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 import {
     ContractHeader,
@@ -19,6 +20,16 @@ import {
     Check,
 } from "lucide-react";
 import type { InvitePaymentTerms } from "@/lib/tenant-invite-payment-terms";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import type { LeaseFormValues } from "./components/LeaseFormFields";
+import {
+    advanceAmountRule,
+    leaseStartDateRule,
+    leaseTermEndDateRule,
+    monthlyRentRule,
+    securityDepositRule,
+} from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { DEFAULT_LEASE_TERM_TYPE, type LeaseTermType } from "@/lib/lease-term";
 
 type ContractTemplateLike = Record<string, unknown>;
 
@@ -70,14 +81,6 @@ const DEPOSIT_TEMPLATE_KEYS = [
 
 function isoDateToday() {
     return new Date().toISOString().split("T")[0];
-}
-
-function addOneYear(isoDate: string) {
-    const base = new Date(isoDate);
-    if (Number.isNaN(base.getTime())) return isoDateToday();
-    const next = new Date(base);
-    next.setFullYear(next.getFullYear() + 1);
-    return next.toISOString().split("T")[0];
 }
 
 function parseAmount(value: unknown, monthlyRent: number): number | null {
@@ -151,7 +154,9 @@ export function ContractPreviewModal({
     contractData,
     onSuccess,
 }: ContractPreviewModalProps) {
+    const { t, locale } = useLanguageContext();
     const [leaseStart, setLeaseStart] = useState("");
+    const [termType, setTermType] = useState<LeaseTermType>(DEFAULT_LEASE_TERM_TYPE);
     const [leaseEnd, setLeaseEnd] = useState("");
     const [monthlyRent, setMonthlyRent] = useState(0);
     const [securityDeposit, setSecurityDeposit] = useState(0);
@@ -194,7 +199,9 @@ export function ContractPreviewModal({
         }
 
         setLeaseStart(initialStart);
-        setLeaseEnd(addOneYear(initialStart));
+        // Open-ended (month-to-month) is the default; an end date is only set for fixed terms.
+        setTermType(DEFAULT_LEASE_TERM_TYPE);
+        setLeaseEnd("");
         setMonthlyRent(initialRent);
         setAdvanceAmount(initialAdvance);
         setSecurityDeposit(initialDeposit);
@@ -204,12 +211,24 @@ export function ContractPreviewModal({
         setResult(null);
     }, [contractData, isOpen]);
 
-    useEffect(() => {
-        if (!leaseStart) return;
-        setLeaseEnd(addOneYear(leaseStart));
-    }, [leaseStart]);
+    const handleTermTypeChange = (next: LeaseTermType) => {
+        setTermType(next);
+        if (next !== "fixed") setLeaseEnd("");
+    };
 
     const isFinalApproval = contractData?.application_status === "payment_pending";
+
+    // Same rules as the actions API (lease_data / payment amounts).
+    const leaseForm = useFormValidation<LeaseFormValues>(
+        { leaseStart, termType, leaseEnd, monthlyRent, advanceAmount, securityDeposit },
+        {
+            leaseStart: (value) => leaseStartDateRule(value),
+            leaseEnd: (value, all) => leaseTermEndDateRule(all.termType, value, all.leaseStart),
+            monthlyRent: (value) => monthlyRentRule(value),
+            advanceAmount: (value) => advanceAmountRule(value),
+            securityDeposit: (value) => securityDepositRule(value),
+        }
+    );
 
     const canSubmit = useMemo(() => {
         if (isFinalApproval) {
@@ -229,6 +248,7 @@ export function ContractPreviewModal({
 
     const handleFinalize = async () => {
         if (!contractData || !canSubmit) return;
+        if (!isFinalApproval && !leaseForm.validateAll()) return;
         setSubmitting(true);
         setError(null);
 
@@ -240,7 +260,8 @@ export function ContractPreviewModal({
                     status: isFinalApproval ? "approved" : "payment_pending",
                     lease_data: {
                         start_date: leaseStart,
-                        end_date: leaseEnd,
+                        term_type: termType,
+                        end_date: termType === "fixed" ? leaseEnd : null,
                         monthly_rent: monthlyRent,
                         security_deposit: securityDeposit,
                         terms: {
@@ -268,13 +289,25 @@ export function ContractPreviewModal({
                 }),
             });
 
-            const payload = (await response.json()) as ApprovalResult;
+            const payload = (await response.json().catch(() => ({}))) as ApprovalResult & { fieldErrors?: Record<string, string> };
             if (!response.ok) {
+                if (payload.fieldErrors) {
+                    const fe = payload.fieldErrors;
+                    const mapped: Record<string, string> = {};
+                    if (fe["lease_data.start_date"]) mapped.leaseStart = fe["lease_data.start_date"];
+                    if (fe["lease_data.end_date"]) mapped.leaseEnd = fe["lease_data.end_date"];
+                    if (fe["lease_data.monthly_rent"]) mapped.monthlyRent = fe["lease_data.monthly_rent"];
+                    if (fe["advance_payment.amount"]) mapped.advanceAmount = fe["advance_payment.amount"];
+                    if (fe["lease_data.security_deposit"] || fe["security_deposit_payment.amount"]) {
+                        mapped.securityDeposit = fe["lease_data.security_deposit"] || fe["security_deposit_payment.amount"];
+                    }
+                    leaseForm.setServerErrors(mapped);
+                }
                 throw new Error(
                     payload.error ||
                         (isFinalApproval
-                            ? "Failed to finalize approval."
-                            : "Failed to request payment submissions.")
+                            ? t("Failed to finalize approval.")
+                            : t("Failed to request payment submissions."))
                 );
             }
 
@@ -284,7 +317,7 @@ export function ContractPreviewModal({
             setError(
                 submissionError instanceof Error
                     ? submissionError.message
-                    : "Unable to finalize approval right now."
+                    : t("Unable to finalize approval right now.")
             );
         } finally {
             setSubmitting(false);
@@ -323,23 +356,23 @@ export function ContractPreviewModal({
                                     <CheckCircle2 className="size-8 text-emerald-400" />
                                 </div>
                                 <h3 className="text-2xl font-black text-white mb-2">
-                                    {result.status === "approved" ? "Approval Complete" : "Payment Request Sent"}
+                                    {result.status === "approved" ? t("Approval Complete") : t("Payment Request Sent")}
                                 </h3>
                                 <p className="text-neutral-400 text-sm max-w-md mx-auto">
                                     {result.status === "approved"
-                                        ? "Tenant approval has been finalized after payment confirmation."
-                                        : `Prospect payment portal link has been generated and emailed to ${contractData.applicant_email}.`}
+                                        ? t("Tenant approval has been finalized after payment confirmation.")
+                                        : t("Prospect payment portal link has been generated and emailed to {email}.", { email: contractData.applicant_email })}
                                 </p>
                                 {result.payment_pending_expires_at && (
                                     <p className="mt-2 text-xs text-amber-300">
-                                        Portal deadline: <ClientOnlyDate date={result.payment_pending_expires_at} locale="en-PH" format={{ dateStyle: 'full', timeStyle: 'short' }} />
+                                        {t("Portal deadline:")} <ClientOnlyDate date={result.payment_pending_expires_at} locale={locale} format={{ dateStyle: 'full', timeStyle: 'short' }} />
                                     </p>
                                 )}
                                 {result.payment_portal_url && (
                                     <div className="mt-5 space-y-2 text-left bg-white/5 border border-white/10 rounded-2xl p-4">
                                         <div className="flex items-center justify-between">
                                             <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                                                Payment Portal Link
+                                                {t("Payment Portal Link")}
                                             </span>
                                             <a
                                                 href={result.payment_portal_url}
@@ -347,7 +380,7 @@ export function ContractPreviewModal({
                                                 rel="noreferrer"
                                                 className="text-[11px] font-bold text-primary hover:underline"
                                             >
-                                                Open in Tab →
+                                                {t("Open in Tab →")}
                                             </a>
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -366,11 +399,11 @@ export function ContractPreviewModal({
                                                 className="flex items-center gap-1.5 rounded-xl bg-white/10 hover:bg-white/20 px-3.5 py-2 text-xs font-bold text-white transition-colors cursor-pointer"
                                             >
                                                 {copiedLink ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
-                                                <span>{copiedLink ? "Copied" : "Copy"}</span>
+                                                <span>{copiedLink ? t("Copied") : t("Copy")}</span>
                                             </button>
                                         </div>
                                         <p className="text-[10px] text-muted-foreground">
-                                            You can share this link directly with the applicant if they cannot check their email right now.
+                                            {t("You can share this link directly with the applicant if they cannot check their email right now.")}
                                         </p>
                                     </div>
                                 )}
@@ -379,7 +412,7 @@ export function ContractPreviewModal({
                                 onClick={onClose}
                                 className="w-full h-12 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-medium transition-colors"
                             >
-                                Close
+                                {t("Close")}
                             </button>
                         </div>
                     ) : (
@@ -393,21 +426,25 @@ export function ContractPreviewModal({
 
                             {contractData.invite_payment_terms && (
                                 <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium">
-                                    <span>Move-in payment terms were pre-filled from this applicant&apos;s invite link. You can adjust amounts if needed.</span>
+                                    <span>{t("Move-in payment terms were pre-filled from this applicant's invite link. You can adjust amounts if needed.")}</span>
                                 </div>
                             )}
 
                             <LeaseFormFields
                                 leaseStart={leaseStart}
+                                termType={termType}
                                 leaseEnd={leaseEnd}
                                 monthlyRent={monthlyRent}
                                 advanceAmount={advanceAmount}
                                 securityDeposit={securityDeposit}
                                 isFinalApproval={isFinalApproval}
                                 onLeaseStartChange={setLeaseStart}
+                                onTermTypeChange={handleTermTypeChange}
+                                onLeaseEndChange={setLeaseEnd}
                                 onMonthlyRentChange={setMonthlyRent}
                                 onAdvanceAmountChange={setAdvanceAmount}
                                 onSecurityDepositChange={setSecurityDeposit}
+                                form={isFinalApproval ? undefined : leaseForm}
                             />
 
                             <PolicyConfirmation

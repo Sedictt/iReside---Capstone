@@ -20,6 +20,8 @@ import { cn } from "@/lib/utils";
 import type { ConversationSummary } from "@/lib/messages/client";
 import { useProperty } from "@/context/PropertyContext";
 import { AnimatedFilterPills, type FilterPillItem } from "@/components/ui/AnimatedFilterPills";
+import { EXPIRING_URGENT_DAYS, OPEN_ENDED_NOTICE_DAYS, formatLeaseDate, isFixedTerm, leaseEndState } from "@/lib/lease-term";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 // --- Types ---
 
@@ -39,9 +41,23 @@ type TenantItem = {
     name: string;
     property: string;
     unit: string;
+    leaseStart?: string | null;
+    /** Null for open-ended leases until a move-out date is agreed. */
     leaseEnd: string | null;
+    /** Lease term type; the API may expose it under any of these keys. */
+    leaseTermType?: string | null;
+    term_type?: string | null;
+    termType?: string | null;
+    lease_term?: string | null;
     onboardingStatus: "pending" | "in_progress" | "completed" | "not_started";
 };
+
+/** Normalise a tenant row into the shape the lease-term helpers understand. */
+const tenantLeaseTerm = (tenant: TenantItem) => ({
+    term_type: tenant.leaseTermType ?? tenant.term_type ?? tenant.termType ?? tenant.lease_term ?? null,
+    end_date: tenant.leaseEnd,
+    start_date: tenant.leaseStart ?? null,
+});
 
 type ApplicationItem = {
     id: string;
@@ -84,8 +100,8 @@ const kindIconMap = {
     message: MessageSquareMore,
 } as const;
 
-const formatDateLabel = (iso: string) =>
-    new Date(iso).toLocaleDateString("en-US", {
+const formatDateLabel = (iso: string, locale: string) =>
+    new Date(iso).toLocaleDateString(locale, {
         month: "short",
         day: "numeric",
         year: "numeric"
@@ -94,6 +110,7 @@ const formatDateLabel = (iso: string) =>
 // --- Sub-components ---
 
 function ActionFilteredEmptyState({ onReset }: { onReset: () => void }) {
+    const { t } = useLanguageContext();
     return (
         <m.div
             initial={{ opacity: 0, scale: 0.96 }}
@@ -104,9 +121,9 @@ function ActionFilteredEmptyState({ onReset }: { onReset: () => void }) {
             <div className="mb-4 inline-flex size-14 sm:size-16 items-center justify-center rounded-2xl neumorphic-extruded text-primary">
                 <Filter className="size-6 sm:size-7" />
             </div>
-            <h3 className="text-base sm:text-lg font-black text-foreground text-balance">No Matching Attention Items</h3>
+            <h3 className="text-base sm:text-lg font-black text-foreground text-balance">{t("No Matching Attention Items")}</h3>
             <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground max-w-sm mx-auto text-pretty">
-                No items match your active filter criteria. Clear filters to view all pending tasks.
+                {t("No items match your active filter criteria. Clear filters to view all pending tasks.")}
             </p>
             <button
                 type="button"
@@ -114,7 +131,7 @@ function ActionFilteredEmptyState({ onReset }: { onReset: () => void }) {
                 className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl min-h-[44px] neumorphic-primary px-5 py-2.5 text-xs font-black text-primary-foreground transition-all hover:brightness-110 active:scale-95"
             >
                 <RotateCcw className="size-3.5" />
-                Reset All Filters
+                {t("Reset All Filters")}
             </button>
         </m.div>
     );
@@ -122,6 +139,7 @@ function ActionFilteredEmptyState({ onReset }: { onReset: () => void }) {
 
 function ActionItemCard({ action }: { action: ActionItem }) {
     const Icon = kindIconMap[action.kind];
+    const { t } = useLanguageContext();
 
     return (
         <m.div 
@@ -150,7 +168,7 @@ function ActionItemCard({ action }: { action: ActionItem }) {
                                 "rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-widest", 
                                 toneClasses[action.tone]
                             )}>
-                                {action.badgeLabel ?? action.tone}
+                                {t(action.badgeLabel ?? action.tone)}
                             </span>
                         </div>
                         <p className="text-xs sm:text-sm font-medium text-muted-foreground leading-relaxed text-pretty">
@@ -176,6 +194,7 @@ function ActionItemCard({ action }: { action: ActionItem }) {
 }
 
 function ActionEmptyState() {
+    const { t } = useLanguageContext();
     return (
         <m.div 
             initial={{ opacity: 0, scale: 0.95 }}
@@ -185,9 +204,9 @@ function ActionEmptyState() {
             <div className="mb-6 inline-flex size-20 items-center justify-center rounded-2xl neumorphic-extruded text-primary">
                 <ShieldCheck className="size-10" />
             </div>
-            <h3 className="text-xl font-black text-foreground text-balance">All Caught Up</h3>
+            <h3 className="text-xl font-black text-foreground text-balance">{t("All Caught Up")}</h3>
             <p className="mt-2 text-sm font-medium text-muted-foreground max-w-sm mx-auto text-pretty">
-                No urgent tasks right now. Everything that needs action is already handled.
+                {t("No urgent tasks right now. Everything that needs action is already handled.")}
             </p>
         </m.div>
     );
@@ -237,6 +256,7 @@ function actionRequiredReducer(state: ActionRequiredState, action: ActionRequire
 
 export function ActionRequired() {
     const { selectedPropertyId } = useProperty();
+    const { t, locale, language } = useLanguageContext();
     
     const [state, dispatch] = useReducer(actionRequiredReducer, {
         maintenance: [],
@@ -345,47 +365,72 @@ export function ActionRequired() {
 
                 rawActions.push({
                     id: `maintenance-${request.id}`,
-                    title: isCritical 
-                        ? "Emergency Repair Required" 
-                        : isHigh 
-                        ? "Urgent Maintenance Ticket" 
-                        : "Routine Maintenance",
-                    detail: `${request.tenant}: ${request.title} at ${request.property}`,
-                    meta: `Reported ${formatDateLabel(request.reportedAt)}`,
+                    title: isCritical
+                        ? t("Emergency Repair Required")
+                        : isHigh
+                        ? t("Urgent Maintenance Ticket")
+                        : t("Routine Maintenance"),
+                    detail: t("{tenant}: {issue} at {property}", { tenant: request.tenant, issue: request.title, property: request.property }),
+                    meta: t("Reported {date}", { date: formatDateLabel(request.reportedAt, locale) }),
                     href: `/landlord/maintenance?id=${request.id}`,
-                    cta: "Dispatch Tech",
+                    cta: t("Dispatch Tech"),
                     tone: isCritical ? "critical" : isHigh ? "high" : "medium",
                     badgeLabel: isCritical ? "Critical SLA" : isHigh ? "High Priority" : "Standard",
                     kind: "maintenance",
                 });
             });
 
-        // 2. Lease Expirations (Time-to-deadline thresholds)
+        // 2. Lease end dates. Only fixed terms expire; open-ended leases never get a
+        //    renewal nudge, but an approved move-out within the notice window is surfaced.
         state.tenants
-            .filter((tenant) => tenant.leaseEnd)
-            .map((tenant) => {
-                const target = new Date(tenant.leaseEnd as string);
-                target.setHours(0, 0, 0, 0);
-                const daysUntil = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                return { tenant, daysUntil };
-            })
-            .filter(({ daysUntil }) => daysUntil <= 30)
-            .sort((left, right) => left.daysUntil - right.daysUntil)
+            .map((tenant) => ({ tenant, term: tenantLeaseTerm(tenant), endState: leaseEndState(tenantLeaseTerm(tenant), now) }))
+            .filter(({ endState }) => endState.kind !== "open_ended" && endState.daysLeft <= EXPIRING_URGENT_DAYS)
+            .sort((left, right) => (left.endState.daysLeft ?? 0) - (right.endState.daysLeft ?? 0))
             .slice(0, 10)
-            .forEach(({ tenant, daysUntil }) => {
+            .forEach(({ tenant, term, endState }) => {
+                if (endState.kind === "open_ended") return;
+                const daysUntil = endState.daysLeft;
                 const isImminent = daysUntil <= 7;
 
+                if (endState.kind === "moving_out" || (endState.kind === "ended" && !isFixedTerm(term))) {
+                    // Open-ended lease with an agreed move-out date.
+                    if (daysUntil > OPEN_ENDED_NOTICE_DAYS) return;
+                    rawActions.push({
+                        id: `lease-${tenant.id}`,
+                        title: daysUntil < 0 ? t("Move-out Date Passed") : daysUntil === 0 ? t("Move-out Today") : t("Move-out Coming Up"),
+                        detail: t("{name} in {unit} ({property})", { name: tenant.name, unit: tenant.unit, property: tenant.property }),
+                        meta: daysUntil < 0
+                            ? t("Move-out was {date}", { date: formatLeaseDate(endState.endDate, undefined, language) })
+                            : daysUntil === 0
+                            ? t("Moving out today")
+                            : daysUntil === 1
+                            ? t("{count} day until move-out ({date})", { count: daysUntil, date: formatLeaseDate(endState.endDate, undefined, language) })
+                            : t("{count} days until move-out ({date})", { count: daysUntil, date: formatLeaseDate(endState.endDate, undefined, language) }),
+                        href: `/landlord/move-out?tenantId=${tenant.id}`,
+                        cta: t("Prepare Move-out"),
+                        tone: isImminent ? "high" : "medium",
+                        badgeLabel: daysUntil < 0 ? "Follow Up" : isImminent ? "This Week" : "Scheduled",
+                        kind: "lease",
+                    });
+                    return;
+                }
+
+                // Fixed term ending (or ended) within the urgent window.
                 rawActions.push({
                     id: `lease-${tenant.id}`,
-                    title: daysUntil <= 0 
-                        ? "Lease Term Expired" 
-                        : isImminent 
-                        ? "Imminent Lease Expiry" 
-                        : "Lease Renewal Window",
-                    detail: `${tenant.name} in ${tenant.unit} (${tenant.property})`,
-                    meta: daysUntil <= 0 ? "Expired today" : `${daysUntil} days remaining`,
+                    title: daysUntil <= 0
+                        ? t("Lease Term Expired")
+                        : isImminent
+                        ? t("Imminent Lease Expiry")
+                        : t("Lease Renewal Window"),
+                    detail: t("{name} in {unit} ({property})", { name: tenant.name, unit: tenant.unit, property: tenant.property }),
+                    meta: daysUntil < 0
+                        ? t("Ended {date}", { date: formatLeaseDate(endState.endDate, undefined, language) })
+                        : daysUntil === 0
+                        ? t("Expires today")
+                        : t("{count} days remaining", { count: daysUntil }),
                     href: `/landlord/tenants?tab=renewals&tenantId=${tenant.id}`,
-                    cta: "Send Renewal",
+                    cta: t("Send Renewal"),
                     tone: isImminent ? "high" : "medium",
                     badgeLabel: daysUntil <= 0 ? "Expired" : isImminent ? "Expiring Soon" : "Renewal Due",
                     kind: "lease",
@@ -399,11 +444,11 @@ export function ActionRequired() {
             .forEach((app) => {
                 rawActions.push({
                     id: `application-${app.id}`,
-                    title: "Applicant Verification",
-                    detail: `${app.applicant.name}: Application for ${app.unitNumber} (${app.propertyName})`,
-                    meta: "Document Verification",
+                    title: t("Applicant Verification"),
+                    detail: t("{name}: Application for {unit} ({property})", { name: app.applicant.name, unit: app.unitNumber, property: app.propertyName }),
+                    meta: t("Document Verification"),
                     href: `/landlord/applications?id=${app.id}`,
-                    cta: "Verify Docs",
+                    cta: t("Verify Docs"),
                     tone: "medium",
                     badgeLabel: "Review Needed",
                     kind: "onboarding",
@@ -421,18 +466,18 @@ export function ActionRequired() {
                 rawActions.push({
                     id: `onboarding-${tenant.id}`,
                     title: isPendingReview
-                        ? "Resident Document Verification"
+                        ? t("Resident Document Verification")
                         : isNotStarted
-                        ? "Resident Setup Required"
-                        : "Resident Onboarding Active",
+                        ? t("Resident Setup Required")
+                        : t("Resident Onboarding Active"),
                     detail: isNotStarted
-                        ? `${tenant.name} (${tenant.unit}): Move-in setup has not been initiated.`
+                        ? t("{name} ({unit}): Move-in setup has not been initiated.", { name: tenant.name, unit: tenant.unit })
                         : isPendingReview
-                        ? `${tenant.name} (${tenant.unit}): Onboarding details submitted for review.`
-                        : `${tenant.name} (${tenant.unit}): Move-in onboarding currently in progress.`,
-                    meta: isPendingReview ? "Pending Approval" : isNotStarted ? "Setup Needed" : "In Progress",
+                        ? t("{name} ({unit}): Onboarding details submitted for review.", { name: tenant.name, unit: tenant.unit })
+                        : t("{name} ({unit}): Move-in onboarding currently in progress.", { name: tenant.name, unit: tenant.unit }),
+                    meta: isPendingReview ? t("Pending Approval") : isNotStarted ? t("Setup Needed") : t("In Progress"),
                     href: `/landlord/tenants?view=profile&tenantId=${tenant.id}&search=${encodeURIComponent(tenant.name)}`,
-                    cta: isPendingReview ? "Review Resident" : "View Resident",
+                    cta: isPendingReview ? t("Review Resident") : t("View Resident"),
                     tone: "medium",
                     badgeLabel: isPendingReview ? "Approval Needed" : isNotStarted ? "Setup Pending" : "In Progress",
                     kind: "onboarding",
@@ -447,11 +492,13 @@ export function ActionRequired() {
                 const other = conversation.otherParticipants[0];
                 rawActions.push({
                     id: `message-${conversation.id}`,
-                    title: "Resident Inquiry",
-                    detail: `${other?.fullName ?? "Resident"}: "${conversation.lastMessage?.content?.slice(0, 40) ?? ""}..."`,
-                    meta: `${conversation.unreadCount} unread response${conversation.unreadCount > 1 ? "s" : ""}`,
+                    title: t("Resident Inquiry"),
+                    detail: `${other?.fullName ?? t("Resident")}: "${conversation.lastMessage?.content?.slice(0, 40) ?? ""}..."`,
+                    meta: conversation.unreadCount > 1
+                        ? t("{count} unread responses", { count: conversation.unreadCount })
+                        : t("{count} unread response", { count: conversation.unreadCount }),
                     href: `/landlord/messages?conversation=${conversation.id}`,
-                    cta: "Enter Chat",
+                    cta: t("Enter Chat"),
                     tone: "medium",
                     badgeLabel: "Unread",
                     kind: "message",
@@ -473,7 +520,7 @@ export function ActionRequired() {
         };
 
         return { allActions: sorted, counts: calculatedCounts };
-    }, [state.conversations, state.maintenance, state.tenants, state.applications, state.mounted]);
+    }, [state.conversations, state.maintenance, state.tenants, state.applications, state.mounted, t, locale]);
 
     const filteredActions = useMemo(() => {
         let list = allActions;
@@ -500,30 +547,30 @@ export function ActionRequired() {
     const filterOptions: FilterPillItem<ActionCategoryFilter>[] = [
         { 
             id: "all", 
-            label: "All", 
+            label: t("All"), 
             badge: counts.all > 0 ? counts.all : undefined 
         },
         { 
             id: "onboarding", 
-            label: "Move-In", 
+            label: t("Move-In"), 
             icon: <ClipboardCheck className="size-3.5" />, 
             badge: counts.onboarding > 0 ? counts.onboarding : undefined 
         },
         { 
             id: "maintenance", 
-            label: "Maintenance", 
+            label: t("Maintenance"), 
             icon: <Wrench className="size-3.5" />, 
             badge: counts.maintenance > 0 ? counts.maintenance : undefined 
         },
         { 
             id: "lease", 
-            label: "Renewals", 
+            label: t("Renewals"), 
             icon: <AlertTriangle className="size-3.5" />, 
             badge: counts.lease > 0 ? counts.lease : undefined 
         },
         { 
             id: "message", 
-            label: "Messages", 
+            label: t("Messages"), 
             icon: <MessageSquareMore className="size-3.5" />, 
             badge: counts.message > 0 ? counts.message : undefined 
         },
@@ -540,16 +587,16 @@ export function ActionRequired() {
                         </div>
                         <div>
                             <div className="flex items-center gap-2.5">
-                                <h2 className="text-lg sm:text-2xl font-black tracking-tight text-foreground text-balance">Needs Your Attention</h2>
+                                <h2 className="text-lg sm:text-2xl font-black tracking-tight text-foreground text-balance">{t("Needs Your Attention")}</h2>
                                 {counts.urgent > 0 && (
                                     <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20 tabular-nums">
                                         <span className="size-1.5 rounded-full bg-red-500 animate-pulse" />
-                                        {counts.urgent} Urgent
+                                        {t("{count} Urgent", { count: counts.urgent })}
                                     </span>
                                 )}
                             </div>
                             <p className="hidden sm:block text-sm font-medium text-muted-foreground/80 max-w-prose text-pretty">
-                                Action items requiring your immediate review or follow-up.
+                                {t("Action items requiring your immediate review or follow-up.")}
                             </p>
                         </div>
                     </div>
@@ -579,7 +626,7 @@ export function ActionRequired() {
                             )}
                         >
                             <Zap className={cn("size-3.5 transition-colors", urgentOnly ? "fill-red-400 text-red-400" : "text-muted-foreground group-hover:text-amber-400")} />
-                            <span>Urgent Only</span>
+                            <span>{t("Urgent Only")}</span>
                             {counts.urgent > 0 && (
                                 <span className={cn(
                                     "rounded-full px-1.5 py-0.2 text-[9px] font-black tabular-nums",
@@ -598,7 +645,7 @@ export function ActionRequired() {
                             className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 min-h-[36px] text-xs font-bold text-muted-foreground hover:text-primary transition-colors hover:neumorphic-inset"
                         >
                             <RotateCcw className="size-3" />
-                            <span>Reset Filter</span>
+                            <span>{t("Reset Filter")}</span>
                         </button>
                     )}
                 </div>
@@ -624,7 +671,7 @@ export function ActionRequired() {
                             animate={{ opacity: 1 }}
                             className="rounded-3xl border border-red-500/30 neumorphic-inset p-6 text-center"
                         >
-                            <p className="text-sm font-black text-red-500">{state.error}</p>
+                            <p className="text-sm font-black text-red-500">{t(state.error)}</p>
                         </m.div>
                     ) : allActions.length === 0 ? (
                         <ActionEmptyState />

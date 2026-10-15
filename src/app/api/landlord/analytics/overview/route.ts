@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseSearchParams } from "@/lib/validation/server";
+import { analyticsOverviewQuerySchema } from "@/lib/validation/schemas/operations.schema";
+import { isFixedTerm, isLeaseActiveOnDate, leaseEndDate } from "@/lib/lease-term";
 
 type ChangeType = "positive" | "negative" | "neutral";
 
@@ -46,7 +49,9 @@ type LeaseRow = {
     tenant_id: string;
     status: string;
     start_date: string;
-    end_date: string;
+    /** NULL for open-ended leases until a move-out is agreed. */
+    end_date: string | null;
+    term_type: string | null;
     monthly_rent: number;
 };
 
@@ -149,14 +154,8 @@ const buildSnapshotPoints = (start: Date, end: Date, count: number) => {
     });
 };
 
-const isLeaseActiveOn = (lease: LeaseRow, referenceDate: Date) => {
-    if (lease.status !== "active") return false;
-    const leaseStart = startOfDay(parseDateOnly(lease.start_date));
-    const leaseEnd = endOfDay(parseDateOnly(lease.end_date));
-    const ref = endOfDay(referenceDate);
-
-    return leaseStart <= ref && leaseEnd >= ref;
-};
+// An open-ended lease (no end date) counts as active for as long as its status is active.
+const isLeaseActiveOn = (lease: LeaseRow, referenceDate: Date) => isLeaseActiveOnDate(lease, referenceDate);
 
 const activeLeaseSnapshot = (leases: LeaseRow[], referenceDate: Date) => leases.filter((lease) => isLeaseActiveOn(lease, referenceDate));
 
@@ -222,9 +221,12 @@ const countRenewalsWithin = (leases: LeaseRow[], referenceDate: Date, windowDays
     const from = startOfDay(referenceDate);
     const to = endOfDay(addDays(referenceDate, windowDays));
 
+    // Only fixed-term leases renew; open-ended leases never reach a renewal window.
     return leases.filter((lease) => {
-        if (lease.status !== "active") return false;
-        const leaseEnd = parseDateOnly(lease.end_date);
+        if (lease.status !== "active" || !isFixedTerm(lease)) return false;
+        const endIso = leaseEndDate(lease);
+        if (!endIso) return false;
+        const leaseEnd = parseDateOnly(endIso);
         return leaseEnd >= from && leaseEnd <= to;
     }).length;
 };
@@ -343,10 +345,12 @@ export async function GET(request: Request) {
     const { userId, supabase } = authContext;
 
     const { searchParams } = new URL(request.url);
+    const parsedQuery = parseSearchParams(searchParams, analyticsOverviewQuerySchema);
+    if (!parsedQuery.ok) return parsedQuery.response;
 
-    const requestedEnd = searchParams.get("end");
-    const requestedStart = searchParams.get("start");
-    const propertyId = searchParams.get("propertyId");
+    const requestedEnd = parsedQuery.data.end;
+    const requestedStart = parsedQuery.data.start;
+    const propertyId = parsedQuery.data.propertyId;
 
     const defaultEnd = startOfDay(new Date());
     const defaultStart = addDays(defaultEnd, -29);
@@ -377,7 +381,7 @@ export async function GET(request: Request) {
     const [leasesRes, propertiesRes, paymentsRes, maintenanceRes] = await Promise.all([
         supabase
             .from("leases")
-            .select("id, unit_id, tenant_id, status, start_date, end_date, monthly_rent")
+            .select("id, unit_id, tenant_id, status, start_date, end_date, term_type, monthly_rent")
             .eq("landlord_id", userId),
         propertiesQuery,
         supabase

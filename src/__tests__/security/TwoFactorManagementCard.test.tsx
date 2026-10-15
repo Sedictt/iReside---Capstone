@@ -31,8 +31,8 @@ describe("TwoFactorManagementCard Component", () => {
         );
 
         await waitFor(() => {
-            expect(screen.getByText("Two-Factor Authentication")).toBeDefined();
-            expect(screen.getByText("Enable Two-Factor Authentication")).toBeDefined();
+            expect(screen.getByText("2-step sign-in")).toBeDefined();
+            expect(screen.getByText("Turn on 2-step sign-in")).toBeDefined();
         });
     });
 
@@ -53,7 +53,7 @@ describe("TwoFactorManagementCard Component", () => {
         );
 
         await waitFor(() => {
-            expect(screen.getByText("Enable Two-Factor Authentication")).toBeDefined();
+            expect(screen.getByText("Turn on 2-step sign-in")).toBeDefined();
         });
 
         // 2. Click Enable -> triggers send-otp
@@ -62,10 +62,10 @@ describe("TwoFactorManagementCard Component", () => {
             json: async () => ({ success: true, email: "te***t@example.com" }),
         });
 
-        fireEvent.click(screen.getByText("Enable Two-Factor Authentication"));
+        fireEvent.click(screen.getByText("Turn on 2-step sign-in"));
 
         await waitFor(() => {
-            expect(screen.getByText("Verification Required")).toBeDefined();
+            expect(screen.getByText("Check your email")).toBeDefined();
             expect(screen.getByPlaceholderText("000000")).toBeDefined();
         });
 
@@ -79,11 +79,11 @@ describe("TwoFactorManagementCard Component", () => {
             json: async () => ({ success: true, email: "tenant@example.com" }),
         });
 
-        const verifyButton = screen.getByText("Verify & Enable 2FA");
+        const verifyButton = screen.getByText("Finish turning it on");
         fireEvent.click(verifyButton);
 
         await waitFor(() => {
-            expect(screen.getByText("Two-Factor Authentication is Active")).toBeDefined();
+            expect(screen.getByText("2-step sign-in is on")).toBeDefined();
             expect(mockOnStatusChange).toHaveBeenCalledWith(true);
         });
     });
@@ -105,12 +105,12 @@ describe("TwoFactorManagementCard Component", () => {
         );
 
         await waitFor(() => {
-            expect(screen.getByText("Two-Factor Authentication is Active")).toBeDefined();
-            expect(screen.getByText("Disable Protection")).toBeDefined();
+            expect(screen.getByText("2-step sign-in is on")).toBeDefined();
+            expect(screen.getByText("To turn it off, type your password first.")).toBeDefined();
         });
 
         // Enter password
-        const passwordInput = screen.getByPlaceholderText("Enter current password");
+        const passwordInput = screen.getByPlaceholderText("Your password");
         fireEvent.change(passwordInput, { target: { value: "mypassword123" } });
 
         // Click Disable 2FA
@@ -119,11 +119,11 @@ describe("TwoFactorManagementCard Component", () => {
             json: async () => ({ success: true, message: "Disabled" }),
         });
 
-        const disableBtn = screen.getByText("Disable 2FA");
+        const disableBtn = screen.getByRole("button", { name: "Turn off 2-step sign-in" });
         fireEvent.click(disableBtn);
 
         await waitFor(() => {
-            expect(screen.getByText("Enable Two-Factor Authentication")).toBeDefined();
+            expect(screen.getByText("Turn on 2-step sign-in")).toBeDefined();
             expect(mockOnStatusChange).toHaveBeenCalledWith(false);
         });
     });

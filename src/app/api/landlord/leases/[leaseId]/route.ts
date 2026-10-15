@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { verifySigningToken } from "@/lib/jwt";
@@ -15,6 +16,9 @@ export async function GET(
   context: { params: Promise<{ leaseId: string }> }
 ) {
   const { leaseId } = await context.params;
+  if (!isId(leaseId)) {
+    return NextResponse.json({ error: "Lease not found" }, { status: 404 });
+  }
   const supabase = await createClient();
 
   try {

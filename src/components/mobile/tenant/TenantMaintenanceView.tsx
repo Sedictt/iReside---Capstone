@@ -22,6 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 import { triggerHaptic } from '@/lib/haptics';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
+import { useLanguageContext } from '@/context/LanguageContext';
 
 interface MaintenanceRequest {
     id: string;
@@ -46,7 +47,22 @@ const CATEGORIES = [
     'Other'
 ];
 
+const PRIORITY_LABELS: Record<string, string> = {
+    low: 'Low',
+    medium: 'Medium',
+    high: 'High',
+    urgent: 'Urgent',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+    pending: 'Pending',
+    in_progress: 'In Progress',
+    resolved: 'Resolved',
+    cancelled: 'Cancelled',
+};
+
 export function TenantMaintenanceView() {
+    const { t, locale } = useLanguageContext();
     const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'open' | 'in_progress' | 'resolved'>('open');
@@ -120,7 +136,7 @@ export function TenantMaintenanceView() {
         e.preventDefault();
         if (!title.trim() || !description.trim()) {
             triggerHaptic('warning');
-            setToast({ type: 'error', message: 'Please provide both title and description.' });
+            setToast({ type: 'error', message: t('Please provide both title and description.') });
             return;
         }
 
@@ -144,11 +160,11 @@ export function TenantMaintenanceView() {
 
             if (!res.ok) {
                 const errJson = await res.json().catch(() => ({}));
-                throw new Error(errJson.error || 'Failed to submit request.');
+                throw new Error(errJson.error || t('Failed to submit request.'));
             }
 
             triggerHaptic('success');
-            setToast({ type: 'success', message: 'Maintenance request submitted! Management will review shortly.' });
+            setToast({ type: 'success', message: t('Maintenance request submitted! Management will review shortly.') });
             setShowNewModal(false);
             setTitle('');
             setDescription('');
@@ -157,7 +173,7 @@ export function TenantMaintenanceView() {
             fetchRequests();
         } catch (err: any) {
             triggerHaptic('error');
-            setToast({ type: 'error', message: err?.message || 'Submission error.' });
+            setToast({ type: 'error', message: err?.message || t('Submission error.') });
         } finally {
             setSubmitting(false);
         }
@@ -170,10 +186,10 @@ export function TenantMaintenanceView() {
                 <div className="px-4 pt-2.5 flex items-center justify-between">
                     <div>
                         <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                            Service Requests
+                            {t('Service Requests')}
                         </h3>
                         <p className="text-[11px] text-muted-foreground">
-                            Track repairs and request property fixes
+                            {t('Track repairs and request property fixes')}
                         </p>
                     </div>
 
@@ -182,7 +198,7 @@ export function TenantMaintenanceView() {
                         className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 shadow-xs hover:brightness-105 active:scale-95 transition-all shrink-0"
                     >
                         <Plus className="size-3.5" />
-                        <span>New Request</span>
+                        <span>{t('New Request')}</span>
                     </button>
                 </div>
 
@@ -195,7 +211,7 @@ export function TenantMaintenanceView() {
                             : "bg-red-500/15 border border-red-500/30 text-red-400"
                     )}>
                         <span>{toast.message}</span>
-                        <button onClick={() => setToast(null)} className="p-1">
+                        <button onClick={() => setToast(null)} className="p-1" aria-label={t('Dismiss')}>
                             <X className="size-3.5" />
                         </button>
                     </div>
@@ -212,7 +228,7 @@ export function TenantMaintenanceView() {
                                 : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
                         )}
                     >
-                        Pending / Open
+                        {t('Pending / Open')}
                     </button>
                     <button
                         onClick={() => setFilter('in_progress')}
@@ -223,7 +239,7 @@ export function TenantMaintenanceView() {
                                 : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
                         )}
                     >
-                        In Progress
+                        {t('In Progress')}
                     </button>
                     <button
                         onClick={() => setFilter('resolved')}
@@ -234,7 +250,7 @@ export function TenantMaintenanceView() {
                                 : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
                         )}
                     >
-                        Resolved
+                        {t('Resolved')}
                     </button>
                     <button
                         onClick={() => setFilter('all')}
@@ -245,7 +261,7 @@ export function TenantMaintenanceView() {
                                 : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
                         )}
                     >
-                        All
+                        {t('All')}
                     </button>
                 </div>
 
@@ -254,16 +270,16 @@ export function TenantMaintenanceView() {
                     {loading ? (
                         <div className="py-12 flex flex-col items-center justify-center gap-2">
                             <div className="w-8 h-8 rounded-full border-2 border-muted border-t-primary animate-spin" />
-                            <span className="text-xs text-muted-foreground">Loading maintenance tickets…</span>
+                            <span className="text-xs text-muted-foreground">{t('Loading maintenance tickets…')}</span>
                         </div>
                     ) : filteredRequests.length === 0 ? (
                         <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/50 p-6 text-center flex flex-col items-center justify-center shadow-xs">
                             <Wrench className="size-8 text-muted-foreground/50 mb-2" />
-                            <h4 className="text-xs font-bold text-foreground">No requests found</h4>
+                            <h4 className="text-xs font-bold text-foreground">{t('No requests found')}</h4>
                             <p className="text-[11px] text-muted-foreground mt-0.5 max-w-xs">
                                 {filter === 'open' 
-                                    ? 'Everything in your residence is in good working order!' 
-                                    : 'No requests match the selected filter.'}
+                                    ? t('Everything in your residence is in good working order!') 
+                                    : t('No requests match the selected filter.')}
                             </p>
                         </div>
                     ) : (
@@ -281,13 +297,13 @@ export function TenantMaintenanceView() {
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-1.5 mb-1">
                                                 <span className="px-2 py-0.5 rounded-md bg-muted text-foreground text-[9px] font-bold">
-                                                    {req.category}
+                                                    {t(req.category)}
                                                 </span>
                                                 <span className={cn(
                                                     "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-tight",
                                                     isUrgent ? "bg-red-500/15 text-red-500" : "bg-blue-500/15 text-blue-500"
                                                 )}>
-                                                    {req.priority}
+                                                    {t(PRIORITY_LABELS[req.priority] ?? req.priority)}
                                                 </span>
                                             </div>
                                             <h4 className="text-xs font-bold text-foreground">{req.title}</h4>
@@ -299,7 +315,7 @@ export function TenantMaintenanceView() {
                                             req.status === 'in_progress' && "bg-blue-500/15 text-blue-400",
                                             req.status === 'pending' && "bg-amber-500/15 text-amber-500"
                                         )}>
-                                            {req.status === 'in_progress' ? 'In Progress' : req.status}
+                                            {t(STATUS_LABELS[req.status] ?? req.status)}
                                         </span>
                                     </div>
 
@@ -319,9 +335,9 @@ export function TenantMaintenanceView() {
                                                     key={i}
                                                     onClick={() => setLightboxUrl(imgUrl)}
                                                     className="relative size-14 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-black/40 shrink-0 hover:opacity-80 active:scale-95 transition-all"
-                                                    aria-label="Inspect issue photo"
+                                                    aria-label={t('Inspect issue photo')}
                                                 >
-                                                    <Image src={imgUrl} alt="Issue photo" fill sizes="56px" className="object-cover" />
+                                                    <Image src={imgUrl} alt={t('Issue photo')} fill sizes="56px" className="object-cover" />
                                                 </button>
                                             ))}
                                         </div>
@@ -331,14 +347,14 @@ export function TenantMaintenanceView() {
                                     <div className="pt-2 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-2">
                                         <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                                             <Calendar className="size-3" />
-                                            {new Date(req.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                            {new Date(req.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
                                         </span>
 
                                         <button
                                             onClick={() => setExpandedId(isExpanded ? null : req.id)}
                                             className="text-[10px] font-bold text-primary flex items-center gap-0.5 hover:underline"
                                         >
-                                            <span>{isExpanded ? 'Less' : 'Details'}</span>
+                                            <span>{isExpanded ? t('Less') : t('Details')}</span>
                                             {isExpanded ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
                                         </button>
                                     </div>
@@ -363,13 +379,13 @@ export function TenantMaintenanceView() {
                     >
                         <div className="flex items-center justify-between pb-2 border-b border-border">
                             <div>
-                                <h3 className="text-sm font-black text-foreground">New Maintenance Request</h3>
-                                <p className="text-[10px] text-muted-foreground">Submit a repair issue for your residence</p>
+                                <h3 className="text-sm font-black text-foreground">{t('New Maintenance Request')}</h3>
+                                <p className="text-[10px] text-muted-foreground">{t('Submit a repair issue for your residence')}</p>
                             </div>
                             <button
                                 onClick={() => setShowNewModal(false)}
                                 className="p-1.5 rounded-full hover:bg-muted text-muted-foreground"
-                                aria-label="Close modal"
+                                aria-label={t('Close modal')}
                             >
                                 <X className="size-4" />
                             </button>
@@ -378,11 +394,11 @@ export function TenantMaintenanceView() {
                         <form onSubmit={handleCreateRequest} className="flex flex-col gap-3">
                             <div>
                                 <label className="text-[11px] font-bold text-foreground block mb-1">
-                                    Issue Title <span className="text-red-500">*</span>
+                                    {t('Issue Title')} <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="e.g. Leaking kitchen faucet"
+                                    placeholder={t('e.g. Leaking kitchen faucet')}
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     required
@@ -393,7 +409,7 @@ export function TenantMaintenanceView() {
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
                                     <label className="text-[11px] font-bold text-foreground block mb-1">
-                                        Category
+                                        {t('Category')}
                                     </label>
                                     <select
                                         value={category}
@@ -401,35 +417,35 @@ export function TenantMaintenanceView() {
                                         className="w-full px-2.5 py-2 text-xs bg-background border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
                                     >
                                         {CATEGORIES.map((c) => (
-                                            <option key={c} value={c}>{c}</option>
+                                            <option key={c} value={c}>{t(c)}</option>
                                         ))}
                                     </select>
                                 </div>
 
                                 <div>
                                     <label className="text-[11px] font-bold text-foreground block mb-1">
-                                        Priority
+                                        {t('Priority')}
                                     </label>
                                     <select
                                         value={priority}
                                         onChange={(e) => setPriority(e.target.value as any)}
                                         className="w-full px-2.5 py-2 text-xs bg-background border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
                                     >
-                                        <option value="low">Low (Standard)</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="high">High</option>
-                                        <option value="urgent">Urgent</option>
+                                        <option value="low">{t('Low (Standard)')}</option>
+                                        <option value="medium">{t('Medium')}</option>
+                                        <option value="high">{t('High')}</option>
+                                        <option value="urgent">{t('Urgent')}</option>
                                     </select>
                                 </div>
                             </div>
 
                             <div>
                                 <label className="text-[11px] font-bold text-foreground block mb-1">
-                                    Detailed Description <span className="text-red-500">*</span>
+                                    {t('Detailed Description')} <span className="text-red-500">*</span>
                                 </label>
                                 <textarea
                                     rows={3}
-                                    placeholder="Please describe where and when the issue occurs…"
+                                    placeholder={t('Please describe where and when the issue occurs…')}
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     required
@@ -439,25 +455,25 @@ export function TenantMaintenanceView() {
 
                             <div>
                                 <label className="text-[11px] font-bold text-foreground block mb-1">
-                                    Attach Photo (Optional)
+                                    {t('Attach Photo (Optional)')}
                                 </label>
                                 {selectedPhoto ? (
                                     <div className="relative rounded-xl border border-border p-2 bg-muted/20 flex items-center justify-between gap-3">
                                         <div className="flex items-center gap-2.5 min-w-0">
                                             <div className="relative size-14 rounded-lg overflow-hidden border border-border shrink-0 bg-background">
-                                                <Image src={selectedPhoto} alt="Issue photo preview" fill sizes="56px" className="object-cover" />
+                                                <Image src={selectedPhoto} alt={t('Issue photo preview')} fill sizes="56px" className="object-cover" />
                                             </div>
                                             <div className="flex flex-col min-w-0 text-left">
-                                                <span className="text-xs font-bold text-foreground">Photo Attached</span>
-                                                <span className="text-[10px] text-muted-foreground">Tap remove to clear</span>
+                                                <span className="text-xs font-bold text-foreground">{t('Photo Attached')}</span>
+                                                <span className="text-[10px] text-muted-foreground">{t('Tap remove to clear')}</span>
                                             </div>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={handleClearPhoto}
                                             className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 active:scale-95 transition-all text-xs font-bold shrink-0"
-                                            title="Remove photo"
-                                            aria-label="Remove photo"
+                                            title={t('Remove photo')}
+                                            aria-label={t('Remove photo')}
                                         >
                                             <X className="size-4" />
                                         </button>
@@ -467,8 +483,8 @@ export function TenantMaintenanceView() {
                                         {/* Direct Camera Capture */}
                                         <label className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl border-2 border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 cursor-pointer active:scale-[0.98] transition-all text-center">
                                             <Camera className="size-4 text-primary" />
-                                            <span className="text-xs font-bold text-foreground">Take Photo</span>
-                                            <span className="text-[9px] text-muted-foreground">Open Camera</span>
+                                            <span className="text-xs font-bold text-foreground">{t('Take Photo')}</span>
+                                            <span className="text-[9px] text-muted-foreground">{t('Open Camera')}</span>
                                             <input
                                                 ref={cameraInputRef}
                                                 type="file"
@@ -482,8 +498,8 @@ export function TenantMaintenanceView() {
                                         {/* Gallery Upload */}
                                         <label className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl border-2 border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 cursor-pointer active:scale-[0.98] transition-all text-center">
                                             <Upload className="size-4 text-muted-foreground" />
-                                            <span className="text-xs font-bold text-foreground">Photo Gallery</span>
-                                            <span className="text-[9px] text-muted-foreground">Choose from files</span>
+                                            <span className="text-xs font-bold text-foreground">{t('Photo Gallery')}</span>
+                                            <span className="text-[9px] text-muted-foreground">{t('Choose from files')}</span>
                                             <input
                                                 ref={fileInputRef}
                                                 type="file"
@@ -501,7 +517,7 @@ export function TenantMaintenanceView() {
                                 disabled={submitting}
                                 className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs hover:brightness-105 active:scale-[0.98] transition-all disabled:opacity-50 mt-1"
                             >
-                                {submitting ? 'Submitting…' : 'Submit Maintenance Request'}
+                                {submitting ? t('Submitting…') : t('Submit Maintenance Request')}
                             </button>
                         </form>
                     </div>
@@ -516,13 +532,13 @@ export function TenantMaintenanceView() {
                         <button
                             onClick={() => setLightboxUrl(null)}
                             className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20"
-                            aria-label="Close photo"
+                            aria-label={t('Close photo')}
                         >
                             <X className="size-4" />
                         </button>
                     </div>
                     <div className="flex-1 relative my-3 flex items-center justify-center overflow-hidden rounded-xl">
-                        <Image src={lightboxUrl} alt="Enlarged issue" fill sizes="100vw" className="object-contain" />
+                        <Image src={lightboxUrl} alt={t('Enlarged issue')} fill sizes="100vw" className="object-contain" />
                     </div>
                 </div>,
                 document.body

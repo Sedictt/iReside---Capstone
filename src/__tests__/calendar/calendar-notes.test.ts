@@ -81,7 +81,7 @@ describe("useCalendarNotes Hook", () => {
         });
 
         expect(addResult.success).toBe(false);
-        expect(addResult.error).toContain("Title is required");
+        expect(addResult.error).toContain("title is required");
         expect(result.current.notes).toHaveLength(0);
     });
 

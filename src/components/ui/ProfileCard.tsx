@@ -21,15 +21,39 @@ import { Profile } from "@/types";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
 import { DEFAULT_AVATAR_URL, getSafeAvatarBgColor } from "@/lib/constants";
+import { isFixedTerm, leaseTermLabel, termLengthMonths } from "@/lib/lease-term";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface LeaseData {
     unitName: string | null;
     propertyName: string | null;
     rawUnitName: string | null;
     status: string | null;
-    termMonths: number | null;
+    /** "12 Month Term" for fixed terms, "Open-ended" otherwise. */
+    termLabel: string | null;
+    /** Null for open-ended (month-to-month) leases. */
     expiryDate: string | null;
     monthlyRent: number | null;
+}
+
+/** "12 Month Term" for a fixed term with dates; "Open-ended" for month-to-month leases. */
+function describeLeaseTerm(lease: { start_date?: string | null; end_date?: string | null; term_type?: string | null }): string {
+    if (isFixedTerm(lease)) {
+        const months = termLengthMonths(lease.start_date, lease.end_date);
+        return months !== null && months > 0 ? `${months} Month Term` : leaseTermLabel(lease);
+    }
+    return leaseTermLabel(lease);
+}
+
+type Translate = (phrase: string, params?: Record<string, string | number>) => string;
+
+/** Translates the English term label produced by describeLeaseTerm at render time. */
+function translateTermLabel(label: string, t: Translate): string {
+    const months = /^(\d+) Month Term$/.exec(label);
+    if (months) return t("{months} Month Term", { months: months[1] });
+    const dated = /^(Moving out|Ends) (.+)$/.exec(label);
+    if (dated) return t(dated[1] === "Ends" ? "Ends {date}" : "Moving out {date}", { date: dated[2] });
+    return t(label);
 }
 
 interface LandlordData {
@@ -47,6 +71,7 @@ export function ProfileCard() {
         openDetailModal 
     } = useProfileCard();
     const { user: authUser } = useAuth();
+    const { t } = useLanguageContext();
     const { push } = useRouter();
     const pathname = usePathname();
     const isLandlordPortal = pathname?.startsWith('/landlord');
@@ -115,6 +140,7 @@ export function ProfileCard() {
                         status,
                         start_date,
                         end_date,
+                        term_type,
                         monthly_rent,
                         unit_id,
                         units (
@@ -149,10 +175,8 @@ export function ProfileCard() {
                         propertyName,
                         rawUnitName: unitName,
                         status: activeLease.status || "—",
-                        termMonths: activeLease.start_date && activeLease.end_date
-                            ? Math.round((new Date(activeLease.end_date).getTime() - new Date(activeLease.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30))
-                            : null,
-                        expiryDate: activeLease.end_date,
+                        termLabel: describeLeaseTerm(activeLease),
+                        expiryDate: activeLease.end_date ?? null,
                         monthlyRent: activeLease.monthly_rent,
                     });
                     return;
@@ -162,7 +186,7 @@ export function ProfileCard() {
                 if (!isCancelled && (!leases || leases.length === 0 || leaseErr)) {
                     const { data: directLeases } = await supabase
                         .from('leases')
-                        .select('id, status, start_date, end_date, monthly_rent, unit_id')
+                        .select('id, status, start_date, end_date, term_type, monthly_rent, unit_id')
                         .eq('tenant_id', userId)
                         .order('start_date', { ascending: false });
 
@@ -204,10 +228,8 @@ export function ProfileCard() {
                             propertyName,
                             rawUnitName: unitName,
                             status: activeLease.status || "—",
-                            termMonths: activeLease.start_date && activeLease.end_date
-                                ? Math.round((new Date(activeLease.end_date).getTime() - new Date(activeLease.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30))
-                                : null,
-                            expiryDate: activeLease.end_date,
+                            termLabel: describeLeaseTerm(activeLease),
+                            expiryDate: activeLease.end_date ?? null,
                             monthlyRent: activeLease.monthly_rent,
                         });
                         return;
@@ -359,6 +381,13 @@ export function ProfileCard() {
 
     const isLandlord = profile?.role === 'landlord';
 
+    // Unit label is composed at render time so "Unit" follows the active language.
+    const unitLabel = leaseData?.propertyName && leaseData.rawUnitName
+        ? `${leaseData.propertyName} • ${t("Unit {name}", { name: leaseData.rawUnitName })}`
+        : leaseData?.rawUnitName
+            ? t("Unit {name}", { name: leaseData.rawUnitName })
+            : leaseData?.propertyName || t("Assigned Unit");
+
     const getStatusColor = (status?: string | null) => {
         switch (status?.toLowerCase()) {
             case 'active':
@@ -416,7 +445,7 @@ export function ProfileCard() {
                                         {(profile?.avatar_url || DEFAULT_AVATAR_URL) && !imageError ? (
                                             <Image 
                                                 src={profile?.avatar_url || DEFAULT_AVATAR_URL} 
-                                                alt={profile?.full_name || "User"} 
+                                                alt={profile?.full_name || t("User")} 
                                                 fill 
                                                 sizes="80px" 
                                                 className="object-cover" 
@@ -430,15 +459,15 @@ export function ProfileCard() {
                                     </div>
                                     <div className="min-w-0">
                                         <div className="text-2xl font-normal tracking-tight text-foreground truncate">
-                                            {loading && !profile ? <Skeleton className="h-7 w-32" /> : (profile?.full_name || "Resident")}
+                                            {loading && !profile ? <Skeleton className="h-7 w-32" /> : (profile?.full_name || t("Resident"))}
                                         </div>
                                         <div className="flex items-center gap-2 mt-1">
                                             <div className="text-sm text-muted-foreground font-medium truncate">
                                                 {isLandlord
-                                                    ? "Property Owner"
+                                                    ? t("Property Owner")
                                                     : leaseData?.propertyName
-                                                        ? `${leaseData.propertyName} Resident`
-                                                        : "Resident"}
+                                                        ? t("{property} Resident", { property: leaseData.propertyName })
+                                                        : t("Resident")}
                                             </div>
                                         </div>
                                     </div>
@@ -446,7 +475,7 @@ export function ProfileCard() {
                                 <button 
                                     onClick={closeProfile} 
                                     className="rounded-full p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                                    aria-label="Close profile card"
+                                    aria-label={t("Close profile card")}
                                 >
                                     <X className="size-5" />
                                 </button>
@@ -457,8 +486,8 @@ export function ProfileCard() {
                             {isLandlord ? (
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="rounded-2xl neumorphic-inset p-4 border border-border/50">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Portfolio</p>
-                                        <div className="text-sm font-black text-foreground truncate" title={landlordData?.primaryPropertyName || "Managed Property"}>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">{t("Portfolio")}</p>
+                                        <div className="text-sm font-black text-foreground truncate" title={landlordData?.primaryPropertyName || t("Managed Property")}>
                                             {leaseLoading && !landlordData ? (
                                                 <Skeleton className="h-4 w-20" />
                                             ) : landlordData?.primaryPropertyName ? (
@@ -466,32 +495,32 @@ export function ProfileCard() {
                                                     ? `${landlordData.primaryPropertyName} (+${landlordData.propertyCount - 1})`
                                                     : landlordData.primaryPropertyName
                                             ) : (
-                                                "Property Owner"
+                                                t("Property Owner")
                                             )}
                                         </div>
                                     </div>
                                     <div className="rounded-2xl neumorphic-inset p-4 border border-border/50">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Account Role</p>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">{t("Account Role")}</p>
                                         <div className="text-sm font-black text-emerald-500 capitalize flex items-center gap-1.5">
                                             <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                                            <span>Verified Owner</span>
+                                            <span>{t("Verified Owner")}</span>
                                         </div>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="rounded-2xl neumorphic-inset p-4 border border-border/50">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Current Unit</p>
-                                        <div className="text-sm font-black text-foreground truncate" title={leaseData?.unitName || "No assigned unit"}>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">{t("Current Unit")}</p>
+                                        <div className="text-sm font-black text-foreground truncate" title={leaseData ? unitLabel : t("No assigned unit")}>
                                             {leaseLoading && !leaseData ? (
                                                 <Skeleton className="h-4 w-20" />
                                             ) : (
-                                                leaseData?.unitName || "Not Assigned"
+                                                leaseData ? unitLabel : t("Not Assigned")
                                             )}
                                         </div>
                                     </div>
                                     <div className="rounded-2xl neumorphic-inset p-4 border border-border/50">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Lease Status</p>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">{t("Lease Status")}</p>
                                         <div className={cn("text-sm font-black capitalize flex items-center gap-1.5", getStatusColor(leaseData?.status))}>
                                             {leaseLoading && !leaseData ? (
                                                 <Skeleton className="h-4 w-16" />
@@ -501,25 +530,25 @@ export function ProfileCard() {
                                                         "size-1.5 rounded-full shrink-0",
                                                         leaseData.status === 'active' ? "bg-emerald-500 animate-pulse" : "bg-current"
                                                     )} />
-                                                    <span>{leaseData.status.replace(/_/g, ' ')}</span>
+                                                    <span>{t(leaseData.status.replace(/_/g, ' '))}</span>
                                                 </>
                                             ) : (
-                                                <span className="text-muted-foreground">No Lease</span>
+                                                <span className="text-muted-foreground">{t("No Lease")}</span>
                                             )}
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {leaseData?.termMonths && leaseData.monthlyRent ? (
+                            {leaseData?.termLabel && leaseData.monthlyRent ? (
                                 <div className="rounded-2xl neumorphic-inset p-4 border border-border/30 flex items-center justify-between">
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Lease Term</p>
-                                        <p className="text-xs font-black text-foreground">{leaseData.termMonths} Month Term</p>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Lease Term")}</p>
+                                        <p className="text-xs font-black text-foreground">{translateTermLabel(leaseData.termLabel, t)}</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-xs font-black text-foreground">₱{leaseData.monthlyRent.toLocaleString()}</p>
-                                        <p className="text-[10px] text-muted-foreground">Monthly Rent</p>
+                                        <p className="text-[10px] text-muted-foreground">{t("Monthly Rent")}</p>
                                     </div>
                                 </div>
                             ) : null}
@@ -533,7 +562,7 @@ export function ProfileCard() {
                                     className="flex-1 flex items-center justify-center gap-2 rounded-full neumorphic-primary py-4 px-6 text-sm font-semibold text-primary-foreground transition-all hover:opacity-95 active:scale-[0.98]"
                                 >
                                     <User className="size-4" />
-                                    View Full Profile
+                                    {t("View Full Profile")}
                                     <ArrowUpRight className="size-4" />
                                 </button>
 
@@ -541,14 +570,14 @@ export function ProfileCard() {
                                     <button
                                         onClick={handleViewDocuments}
                                         className="flex size-[52px] items-center justify-center rounded-full neumorphic-extruded border border-border text-foreground hover:text-primary transition-all active:scale-[0.92]"
-                                        title="View Documents & Leases"
+                                        title={t("View Documents & Leases")}
                                     >
                                         <FolderOpen className="size-5" />
                                     </button>
                                     <button
                                         onClick={handleMaintenance}
                                         className="flex size-[52px] items-center justify-center rounded-full neumorphic-extruded border border-border text-foreground hover:text-primary transition-all active:scale-[0.92]"
-                                        title="Maintenance"
+                                        title={t("Maintenance")}
                                     >
                                         <Wrench className="size-5" />
                                     </button>
@@ -558,7 +587,7 @@ export function ProfileCard() {
                                             push(isLandlordPortal ? '/landlord/settings' : '/tenant/settings');
                                         }}
                                         className="flex size-[52px] items-center justify-center rounded-full neumorphic-extruded border border-border text-foreground hover:text-primary transition-all active:scale-[0.92]"
-                                        title="Account Settings"
+                                        title={t("Account Settings")}
                                     >
                                         <Settings className="size-5" />
                                     </button>
@@ -573,28 +602,28 @@ export function ProfileCard() {
                                         className="flex-1 flex items-center justify-center gap-3 rounded-full neumorphic-primary py-4 px-6 text-base font-medium text-primary-foreground transition-all hover:opacity-95 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <MessageSquare className="size-5" />
-                                        Message
+                                        {t("Message")}
                                     </button>
 
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={handleViewDocuments}
                                             className="flex size-[52px] items-center justify-center rounded-full neumorphic-extruded border border-border text-foreground hover:text-primary transition-all active:scale-[0.92]"
-                                            title="View Documents"
+                                            title={t("View Documents")}
                                         >
                                             <FolderOpen className="size-5" />
                                         </button>
                                         <button
                                             onClick={handleMaintenance}
                                             className="flex size-[52px] items-center justify-center rounded-full neumorphic-extruded border border-border text-foreground hover:text-primary transition-all active:scale-[0.92]"
-                                            title="Maintenance"
+                                            title={t("Maintenance")}
                                         >
                                             <Wrench className="size-5" />
                                         </button>
                                         <button
                                             onClick={handleActivity}
                                             className="flex size-[52px] items-center justify-center rounded-full neumorphic-extruded border border-border text-foreground hover:text-primary transition-all active:scale-[0.92]"
-                                            title="Activity Log"
+                                            title={t("Activity Log")}
                                         >
                                             <Clock className="size-5" />
                                         </button>
@@ -606,7 +635,7 @@ export function ProfileCard() {
                                         onClick={handleOpenPortfolio}
                                         className="w-full flex items-center justify-center gap-3 rounded-2xl neumorphic-extruded border border-border/70 px-6 py-3.5 text-sm font-semibold text-primary transition-all hover:bg-muted/40 active:scale-[0.98] group"
                                     >
-                                        Open Full Profile
+                                        {t("Open Full Profile")}
                                         <ArrowUpRight className="size-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                                     </button>
                                 </div>

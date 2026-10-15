@@ -23,6 +23,7 @@ import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { toast } from "sonner";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -30,6 +31,7 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
     // Single source of truth: authoritative DB state + persisted deferrals.
     // While loading or on error, lockStage is null, so nobody is redirected on missing data.
     const { lockStage } = useLandlordSetup();
+    const { t } = useLanguageContext();
 
     const isAllowedCreationRoute = pathname === "/landlord/properties/new";
     const isAllowedUnitMapRoute = pathname?.startsWith("/landlord/unit-map");
@@ -56,13 +58,13 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
                 router.replace("/landlord/unit-map");
             }
         } else if (lockStage === "no_billing_rails" && !isAllowedStage3Route) {
-            toast.warning("Configure your payment channels and utility tariffs to unlock operations.");
+            toast.warning(t("Configure your payment channels and utility tariffs to unlock operations."));
             router.replace("/landlord/dashboard");
         } else if (lockStage === "no_tenant" && !isAllowedStage4Route) {
-            toast.warning("Complete property setup and register your first tenant to unlock portal operations.");
+            toast.warning(t("Complete property setup and register your first tenant to unlock portal operations."));
             router.replace("/landlord/dashboard");
         }
-    }, [lockStage, isAllowedCreationRoute, isAllowedUnitMapRoute, isAllowedStage3Route, isAllowedStage4Route, pathname, router]);
+    }, [t, lockStage, isAllowedCreationRoute, isAllowedUnitMapRoute, isAllowedStage3Route, isAllowedStage4Route, pathname, router]);
 
     return (
         <>
@@ -79,6 +81,7 @@ export default function LandlordLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const { t } = useLanguageContext();
     
     const [sidebarWidth, setSidebarWidth] = useState(280);
     const [isGlobalFullscreen, setIsGlobalFullscreen] = useState(false);
@@ -149,7 +152,7 @@ export default function LandlordLayout({
                                     <button 
                                         onClick={() => setIsMobileSidebarOpen(true)} 
                                         className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                                        aria-label="Open navigation menu"
+                                        aria-label={t("Open navigation menu")}
                                     >
                                         <Menu className="size-6" />
                                     </button>
@@ -204,7 +207,7 @@ export default function LandlordLayout({
                                     showContactsSidebar ? "md:pr-24" : ""
                                 )}
                             >
-                                {!isOnboarding && (
+                                {!isOnboarding && !isDocs && (
                                     <div className={cn(
                                         "w-full pointer-events-none z-[100]",
                                         showContactsSidebar && "md:pr-24"

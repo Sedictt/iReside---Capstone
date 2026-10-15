@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseJsonBody } from "@/lib/validation/server";
+import { isId, moveOutApproveSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -12,7 +14,12 @@ export async function PUT(req: Request, { params }: RouteParams) {
 
   try {
     const { id } = await params;
-    const { inspection_date } = await req.json();
+    if (!isId(id)) {
+      return NextResponse.json({ error: "Move-out request not found" }, { status: 404 });
+    }
+    const parsed = await parseJsonBody(req, moveOutApproveSchema);
+    if (!parsed.ok) return parsed.response;
+    const inspection_date = parsed.data.inspection_date;
 
     if (!inspection_date) {
       return NextResponse.json({ error: "Inspection date is required" }, { status: 400 });
@@ -43,17 +50,24 @@ export async function PUT(req: Request, { params }: RouteParams) {
         .update(updatePayload)
         .eq("id", id);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error("[move-out-requests approve] Update error:", updateError);
+      return NextResponse.json({ error: "Failed to approve move-out request" }, { status: 500 });
+    }
 
-    const { error: leaseUpdateError } = await supabase
-      .from("leases")
-      .update({
-        end_date: existingRequest.requested_date,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", existingRequest.lease_id);
+    // Keep end_date > start_date (DB constraint lease_dates_valid).
+    const leaseStart: string | undefined = existingRequest.lease?.start_date;
+    if (!leaseStart || String(existingRequest.requested_date) > String(leaseStart)) {
+      const { error: leaseUpdateError } = await supabase
+        .from("leases")
+        .update({
+          end_date: existingRequest.requested_date,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingRequest.lease_id);
 
-    if (leaseUpdateError) console.error("Failed to update lease end_date:", leaseUpdateError);
+      if (leaseUpdateError) console.error("Failed to update lease end_date:", leaseUpdateError);
+    }
 
     await supabase.from("notifications").insert({
       user_id: existingRequest.tenant_id,
@@ -65,7 +79,7 @@ export async function PUT(req: Request, { params }: RouteParams) {
 
     return NextResponse.json({ success: true, message: "Move-out request approved" });
   } catch (e: unknown) {
-    const error = e as Error;
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[move-out-requests approve] Unexpected error:", e);
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }

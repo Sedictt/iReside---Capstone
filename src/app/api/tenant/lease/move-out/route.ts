@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { parseJsonBody } from "@/lib/validation/server";
+import { moveOutDateRule, moveOutRequestSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 export async function POST(req: Request) {
     const supabase = await createClient();
@@ -9,37 +11,32 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const parsed = await parseJsonBody(req, moveOutRequestSchema);
+    if (!parsed.ok) return parsed.response;
+    const { reason, requestedDate } = parsed.data;
+
+    // Minimum notice (Asia/Manila calendar days); the lease-end bound is checked once the lease is known.
+    const noticeError = moveOutDateRule(requestedDate);
+    if (noticeError) {
+        return NextResponse.json({ error: noticeError, fieldErrors: { requestedDate: noticeError } }, { status: 400 });
+    }
+
     try {
-        const { reason, requestedDate } = await req.json();
-
-        if (!requestedDate) {
-            return NextResponse.json({ error: "Requested date is required" }, { status: 400 });
-        }
-
-        const moveOutDate = new Date(requestedDate);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        // Calculate 30 days from now
-        const minDate = new Date(today);
-        minDate.setDate(today.getDate() + 30);
-
-        if (moveOutDate < minDate) {
-            return NextResponse.json({ 
-                error: `Move-out requests require a minimum of 30 days notice. Earliest available date is ${minDate.toLocaleDateString()}.` 
-            }, { status: 400 });
-        }
-
         // 1. Get active lease
         const { data: lease, error: leaseError } = await supabase
             .from("leases")
-            .select("id, landlord_id")
+            .select("id, landlord_id, end_date")
             .eq("tenant_id", user.id)
             .eq("status", "active")
             .single();
 
         if (leaseError || !lease) {
             return NextResponse.json({ error: "No active lease found" }, { status: 404 });
+        }
+
+        const leaseEndError = moveOutDateRule(requestedDate, { leaseEndDate: (lease as { end_date?: string | null }).end_date ?? null });
+        if (leaseEndError) {
+            return NextResponse.json({ error: leaseEndError, fieldErrors: { requestedDate: leaseEndError } }, { status: 400 });
         }
 
         // 2. Check for existing pending request
@@ -61,12 +58,15 @@ export async function POST(req: Request) {
                 lease_id: lease.id,
                 tenant_id: user.id,
                 landlord_id: lease.landlord_id,
-                reason: reason || "",
+                reason: reason ?? "",
                 requested_date: requestedDate,
                 status: "pending"
             });
 
-        if (insertError) throw insertError;
+        if (insertError) {
+            console.error("[tenant-move-out] Insert error:", insertError);
+            return NextResponse.json({ error: "Failed to submit move-out request." }, { status: 500 });
+        }
 
         // 4. Create notification for landlord
         await supabase.from("notifications").insert({
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true });
     } catch (e: unknown) {
-        const error = e as Error;
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error("[tenant-move-out] Unexpected error:", e);
+        return NextResponse.json({ error: "Failed to submit move-out request." }, { status: 500 });
     }
 }

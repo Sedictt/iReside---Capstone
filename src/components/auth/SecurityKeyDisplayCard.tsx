@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { KeyRound, Copy, Check, Download, Eye, EyeOff, HelpCircle, ShieldCheck, Laptop, FileText, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface SecurityKeyDisplayCardProps {
     securityKey: string;
@@ -73,6 +74,7 @@ export function SecurityKeyDisplayCard({
     accountEmail,
     className,
 }: SecurityKeyDisplayCardProps) {
+    const { t } = useLanguageContext();
     const [copied, setCopied] = useState(false);
     const [downloaded, setDownloaded] = useState(false);
     const [isVisible, setIsVisible] = useState(true);
@@ -83,12 +85,12 @@ export function SecurityKeyDisplayCard({
             await navigator.clipboard.writeText(securityKey);
             setCopied(true);
             onCopy?.();
-            toast.success("Copied to Clipboard", {
-                description: "Emergency code copied to your clipboard.",
+            toast.success(t("Copied to Clipboard"), {
+                description: t("Emergency code copied to your clipboard."),
             });
             setTimeout(() => setCopied(false), 2500);
         } catch {
-            toast.error("Failed to copy code to clipboard");
+            toast.error(t("Failed to copy code to clipboard"));
         }
     };
 
@@ -98,11 +100,11 @@ export function SecurityKeyDisplayCard({
             setDownloaded(true);
             onDownload?.();
             onToggleAcknowledge(true);
-            toast.success("File Downloaded", {
-                description: "Your emergency key has been saved to your downloads.",
+            toast.success(t("File Downloaded"), {
+                description: t("Your emergency key has been saved to your downloads."),
             });
         } else {
-            toast.error("Failed to download key file");
+            toast.error(t("Failed to download key file"));
         }
     };
 
@@ -117,12 +119,12 @@ export function SecurityKeyDisplayCard({
                     <div className="space-y-0.5 min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                             <h3 className="text-sm sm:text-base font-bold text-foreground tracking-tight">
-                                Save Your Emergency Spare Key
+                                {t("Save Your Emergency Spare Key")}
                             </h3>
-                            <span className="sr-only">Landlord Security Recovery Key</span>
+                            <span className="sr-only">{t("Landlord Security Recovery Key")}</span>
                         </div>
                         <p className="text-xs text-muted-foreground leading-snug">
-                            Just like a spare key to your house — keep this safe so you never get locked out.
+                            {t("Just like a spare key to your house — keep this safe so you never get locked out.")}
                         </p>
                     </div>
                 </div>
@@ -135,7 +137,7 @@ export function SecurityKeyDisplayCard({
                         className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group"
                     >
                         <HelpCircle className="size-3.5 text-amber-500 group-hover:text-amber-600 transition-colors" />
-                        <span className="underline-offset-2 group-hover:underline">Why do I need this? (Tap for hint)</span>
+                        <span className="underline-offset-2 group-hover:underline">{t("Why do I need this? (Tap for hint)")}</span>
                     </button>
                 </div>
             </div>
@@ -159,14 +161,14 @@ export function SecurityKeyDisplayCard({
                                     <HelpCircle className="size-4" />
                                 </div>
                                 <h4 id="hint-popup-title" className="text-sm font-bold text-foreground">
-                                    Why You Need This Key
+                                    {t("Why You Need This Key")}
                                 </h4>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setShowHint(false)}
                                 className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-                                aria-label="Close hint"
+                                aria-label={t("Close hint")}
                             >
                                 <X className="size-4" />
                             </button>
@@ -176,9 +178,9 @@ export function SecurityKeyDisplayCard({
                             <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-muted/40 border border-border/40">
                                 <ShieldCheck className="size-4 text-emerald-500 shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="font-bold text-foreground">Emergency Account Recovery</p>
+                                    <p className="font-bold text-foreground">{t("Emergency Account Recovery")}</p>
                                     <p className="text-muted-foreground leading-relaxed mt-0.5">
-                                        If you ever forget your password or lose access to your email, this code lets you quickly unlock your landlord portal without getting stuck.
+                                        {t("If you ever forget your password or lose access to your email, this code lets you quickly unlock your landlord portal without getting stuck.")}
                                     </p>
                                 </div>
                             </div>
@@ -186,9 +188,9 @@ export function SecurityKeyDisplayCard({
                             <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-muted/40 border border-border/40">
                                 <FileText className="size-4 text-violet-500 shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="font-bold text-foreground">Where to Keep It</p>
+                                    <p className="font-bold text-foreground">{t("Where to Keep It")}</p>
                                     <p className="text-muted-foreground leading-relaxed mt-0.5">
-                                        Write it down with pen and paper in your notebook, or keep the downloaded <code className="text-primary font-mono text-[11px]">.txt</code> file in your documents.
+                                        {t("Write it down with pen and paper in your notebook, or keep the downloaded")} <code className="text-primary font-mono text-[11px]">.txt</code> {t("file in your documents.")}
                                     </p>
                                 </div>
                             </div>
@@ -196,9 +198,9 @@ export function SecurityKeyDisplayCard({
                             <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-muted/40 border border-border/40">
                                 <Laptop className="size-4 text-amber-500 shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="font-bold text-foreground">Important Safety Tip</p>
+                                    <p className="font-bold text-foreground">{t("Important Safety Tip")}</p>
                                     <p className="text-muted-foreground leading-relaxed mt-0.5">
-                                        Treat this like the master key to your building. Never share it with tenants or strangers.
+                                        {t("Treat this like the master key to your building. Never share it with tenants or strangers.")}
                                     </p>
                                 </div>
                             </div>
@@ -209,7 +211,7 @@ export function SecurityKeyDisplayCard({
                             onClick={() => setShowHint(false)}
                             className="w-full h-10 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 transition-all cursor-pointer shadow-xs"
                         >
-                            Got It, Thanks!
+                            {t("Got It, Thanks!")}
                         </button>
                     </div>
                 </div>
@@ -220,23 +222,23 @@ export function SecurityKeyDisplayCard({
                 <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     <span className="flex items-center gap-1.5 text-violet-600 dark:text-violet-400">
                         <KeyRound className="size-4" />
-                        <span className="text-[11px] font-bold">YOUR EMERGENCY KEY CODE</span>
+                        <span className="text-[11px] font-bold">{t("YOUR EMERGENCY KEY CODE")}</span>
                     </span>
                     <button
                         type="button"
                         onClick={() => setIsVisible((prev) => !prev)}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                        title={isVisible ? "Hide code" : "Show code"}
+                        title={isVisible ? t("Hide code") : t("Show code")}
                     >
                         {isVisible ? (
                             <>
                                 <EyeOff className="size-3.5" />
-                                <span>Hide</span>
+                                <span>{t("Hide")}</span>
                             </>
                         ) : (
                             <>
                                 <Eye className="size-3.5" />
-                                <span>Show</span>
+                                <span>{t("Show")}</span>
                             </>
                         )}
                     </button>
@@ -256,12 +258,12 @@ export function SecurityKeyDisplayCard({
                         {copied ? (
                             <>
                                 <Check className="size-3.5 text-emerald-500" />
-                                <span className="text-emerald-500">Copied to Clipboard</span>
+                                <span className="text-emerald-500">{t("Copied to Clipboard")}</span>
                             </>
                         ) : (
                             <>
                                 <Copy className="size-3.5 text-muted-foreground" />
-                                <span>Copy Key</span>
+                                <span>{t("Copy Key")}</span>
                             </>
                         )}
                     </button>
@@ -279,12 +281,12 @@ export function SecurityKeyDisplayCard({
                         {downloaded ? (
                             <>
                                 <Check className="size-3.5 text-emerald-500" />
-                                <span>File Downloaded</span>
+                                <span>{t("File Downloaded")}</span>
                             </>
                         ) : (
                             <>
                                 <Download className="size-3.5 text-muted-foreground" />
-                                <span>Download (.txt)</span>
+                                <span>{t("Download (.txt)")}</span>
                             </>
                         )}
                     </button>
@@ -300,7 +302,7 @@ export function SecurityKeyDisplayCard({
                     className="size-4 rounded border-border text-primary focus:ring-primary/20 cursor-pointer shrink-0"
                 />
                 <span className="text-xs font-medium text-muted-foreground">
-                    I saved or wrote down my emergency key
+                    {t("I saved or wrote down my emergency key")}
                 </span>
             </label>
         </div>

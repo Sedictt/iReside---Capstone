@@ -3,8 +3,10 @@
 import React from "react";
 import { m as motion } from "framer-motion";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export function VisualPlannerSkeleton({ propertyName }: { propertyName?: string }) {
+    const { t } = useLanguageContext();
     return (
         <div className="h-full w-full flex flex-col items-center justify-center bg-background dark:bg-background-dark text-foreground antialiased select-none relative overflow-hidden">
             {/* Subtle Atmosphere */}
@@ -25,10 +27,10 @@ export function VisualPlannerSkeleton({ propertyName }: { propertyName?: string 
                         transition={{ duration: 0.3 }}
                         className="text-xs font-black uppercase tracking-[0.25em] text-foreground/80"
                     >
-                        {propertyName ? `Loading ${propertyName}` : "Loading Unit Map"}
+                        {propertyName ? t("Loading {name}", { name: propertyName }) : t("Loading Unit Map")}
                     </motion.p>
                     <p className="text-[11px] font-medium text-muted-foreground tracking-wide">
-                        Synchronizing architectural layout and units...
+                        {t("Synchronizing architectural layout and units...")}
                     </p>
                 </div>
             </div>

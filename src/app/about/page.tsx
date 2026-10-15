@@ -17,6 +17,8 @@ import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { m as motion } from "framer-motion";
 import { TransitionLink } from "@/components/transitions/PageTransitionProvider";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 const VALUES = [
     {
@@ -57,6 +59,8 @@ const WHO_IT_SERVES = [
 ];
 
 export default function AboutPage() {
+    const { t } = useLanguageContext();
+
     return (
         <div className="min-h-screen bg-background text-foreground selection:bg-primary/30 font-sans">
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -80,12 +84,13 @@ export default function AboutPage() {
                     transition={{ duration: 0.6 }}
                     className="flex items-center gap-3"
                 >
+                    <LanguageToggle variant="compact" className="hidden sm:inline-flex" />
                     <ThemeToggle />
                     <TransitionLink
                         href="/login"
                         className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-sm font-black hover:border-primary/30 hover:bg-muted/50 transition-all"
                     >
-                        Sign In
+                        {t("Sign In")}
                         <ArrowRight className="size-4" />
                     </TransitionLink>
                 </motion.div>
@@ -100,14 +105,14 @@ export default function AboutPage() {
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
                         <Sparkles className="size-4 text-primary" />
-                        <span className="text-xs font-black uppercase tracking-widest text-primary">About iReside</span>
+                        <span className="text-xs font-black uppercase tracking-widest text-primary">{t("About iReside")}</span>
                     </div>
                     <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6">
-                        The calm way to
-                        <span className="block text-primary">manage rentals.</span>
+                        {t("The calm way to")}
+                        <span className="block text-primary">{t("manage rentals.")}</span>
                     </h1>
                     <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-medium leading-relaxed">
-                        iReside is an operational platform designed for property owners and landlords who value control, consistency, and security in their rental management.
+                        {t("iReside is an operational platform designed for property owners and landlords who value control, consistency, and security in their rental management.")}
                     </p>
                 </motion.section>
 
@@ -115,10 +120,10 @@ export default function AboutPage() {
                     <div className="rounded-[2.5rem] border border-border bg-card p-8 md:p-12 shadow-sm">
                         <div className="text-center mb-12">
                             <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4">
-                                Built on principles that matter.
+                                {t("Built on principles that matter.")}
                             </h2>
                             <p className="text-muted-foreground font-medium max-w-xl mx-auto">
-                                Every feature in iReside serves one goal: making rental operations feel manageable, not overwhelming.
+                                {t("Every feature in iReside serves one goal: making rental operations feel manageable, not overwhelming.")}
                             </p>
                         </div>
 
@@ -136,8 +141,8 @@ export default function AboutPage() {
                                             <value.icon className="size-6 text-primary" />
                                         </div>
                                         <div>
-                                            <h3 className="text-lg font-black mb-2">{value.title}</h3>
-                                            <p className="text-sm text-muted-foreground leading-relaxed">{value.desc}</p>
+                                            <h3 className="text-lg font-black mb-2">{t(value.title)}</h3>
+                                            <p className="text-sm text-muted-foreground leading-relaxed">{t(value.desc)}</p>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -149,10 +154,10 @@ export default function AboutPage() {
                 <section className="py-16 md:py-20">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4">
-                            Who iReside is for.
+                            {t("Who iReside is for.")}
                         </h2>
                         <p className="text-muted-foreground font-medium max-w-xl mx-auto">
-                            Designed for private portfolios where security, structure, and calm operations take priority.
+                            {t("Designed for private portfolios where security, structure, and calm operations take priority.")}
                         </p>
                     </div>
 
@@ -173,9 +178,9 @@ export default function AboutPage() {
                                             {i === 1 && <ShieldCheck className="size-5 text-primary" />}
                                             {i === 2 && <Users className="size-5 text-primary" />}
                                         </div>
-                                        <h3 className="text-xl font-black">{item.role}</h3>
+                                        <h3 className="text-xl font-black">{t(item.role)}</h3>
                                     </div>
-                                    <p className="text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
+                                    <p className="text-muted-foreground font-medium leading-relaxed">{t(item.desc)}</p>
                                 </div>
                             </motion.div>
                         ))}
@@ -187,24 +192,24 @@ export default function AboutPage() {
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(109,152,56,0.08),transparent_60%)]" />
                         <div className="relative max-w-2xl mx-auto text-center">
                             <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4">
-                                Ready to experience calmer operations?
+                                {t("Ready to experience calmer operations?")}
                             </h2>
                             <p className="text-muted-foreground font-medium mb-8 leading-relaxed">
-                                Join a growing community of property owners who have made the switch to organized, secure rental management.
+                                {t("Join a growing community of property owners who have made the switch to organized, secure rental management.")}
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <TransitionLink
                                     href="/signup"
                                     className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-2xl bg-primary font-black text-primary-foreground hover:bg-primary/90 transition-all hover:scale-[1.02] shadow-lg shadow-primary/20"
                                 >
-                                    Request Access
+                                    {t("Request Access")}
                                     <ArrowRight className="size-5" />
                                 </TransitionLink>
                                 <TransitionLink
                                     href="/login"
                                     className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-2xl border border-border bg-card font-black hover:bg-muted transition-all"
                                 >
-                                    Sign In Instead
+                                    {t("Sign In Instead")}
                                 </TransitionLink>
                             </div>
                         </div>
@@ -219,13 +224,13 @@ export default function AboutPage() {
                         </div>
                         <nav className="flex items-center gap-6 text-sm">
                             <Link href="/docs" className="text-muted-foreground hover:text-primary transition-colors">
-                                Documentation
+                                {t("Documentation")}
                             </Link>
                             <Link href="/login" className="text-muted-foreground hover:text-primary transition-colors">
-                                Sign In
+                                {t("Sign In")}
                             </Link>
                             <Link href="/signup" className="text-muted-foreground hover:text-primary transition-colors">
-                                Register
+                                {t("Register")}
                             </Link>
                         </nav>
                     </div>

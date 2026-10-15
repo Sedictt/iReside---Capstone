@@ -15,6 +15,7 @@ import {
     Gauge
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface AssetClassOption {
     id: "apartment" | "dormitory" | "boarding_house";
@@ -79,6 +80,7 @@ export function AssetClassModal({
     onSelectClass,
     initialClassId
 }: AssetClassModalProps) {
+    const { t } = useLanguageContext();
     const [mounted, setMounted] = useState(false);
     const [activeTab, setActiveTab] = useState<"apartment" | "dormitory" | "boarding_house">("apartment");
 
@@ -159,10 +161,10 @@ export function AssetClassModal({
                                             id="asset-class-guide-title"
                                             className="text-lg font-bold text-foreground tracking-tight"
                                         >
-                                            Property Types
+                                            {t("Property Types")}
                                         </h3>
                                         <p className="text-xs text-muted-foreground mt-0.5">
-                                            Compare how each property type sets up leases and building rules.
+                                            {t("Compare how each property type sets up leases and building rules.")}
                                         </p>
                                     </div>
                                 </div>
@@ -170,7 +172,7 @@ export function AssetClassModal({
                                     type="button"
                                     onClick={onClose}
                                     className="size-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
-                                    aria-label="Close dialog"
+                                    aria-label={t("Close dialog")}
                                 >
                                     <X className="size-4" />
                                 </button>
@@ -194,9 +196,9 @@ export function AssetClassModal({
                                                     : "text-muted-foreground hover:text-foreground hover:bg-card/40"
                                             )}
                                         >
-                                            <span className="truncate">{opt.label}</span>
+                                            <span className="truncate">{t(opt.label)}</span>
                                             {isChosen && (
-                                                <span className="size-1.5 rounded-full bg-primary shrink-0" title="Currently selected" />
+                                                <span className="size-1.5 rounded-full bg-primary shrink-0" title={t("Currently selected")} />
                                             )}
                                         </button>
                                     );
@@ -213,10 +215,10 @@ export function AssetClassModal({
                                 </div>
                                 <div>
                                     <p className="text-xs font-semibold text-foreground leading-relaxed">
-                                        {currentOption.summary}
+                                        {t(currentOption.summary)}
                                     </p>
                                     <p className="text-[11px] text-muted-foreground mt-1 leading-normal">
-                                        {currentOption.tip}
+                                        {t(currentOption.tip)}
                                     </p>
                                 </div>
                             </div>
@@ -225,37 +227,37 @@ export function AssetClassModal({
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div className="p-3.5 rounded-xl border border-border/50 bg-card space-y-1">
                                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                        Lease Structure
+                                        {t("Lease Structure")}
                                     </span>
                                     <p className="text-xs font-medium text-foreground">
-                                        {currentOption.leaseType}
+                                        {t(currentOption.leaseType)}
                                     </p>
                                 </div>
 
                                 <div className="p-3.5 rounded-xl border border-border/50 bg-card space-y-1">
                                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                        Default Occupancy
+                                        {t("Default Occupancy")}
                                     </span>
                                     <p className="text-xs font-medium text-foreground">
-                                        {currentOption.occupancy}
+                                        {t(currentOption.occupancy)}
                                     </p>
                                 </div>
 
                                 <div className="p-3.5 rounded-xl border border-border/50 bg-card space-y-1">
                                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                        Curfew & House Rules
+                                        {t("Curfew & House Rules")}
                                     </span>
                                     <p className="text-xs font-medium text-foreground">
-                                        {currentOption.rules}
+                                        {t(currentOption.rules)}
                                     </p>
                                 </div>
 
                                 <div className="p-3.5 rounded-xl border border-border/50 bg-card space-y-1">
                                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                        Best Suited For
+                                        {t("Best Suited For")}
                                     </span>
                                     <p className="text-xs font-medium text-foreground leading-relaxed">
-                                        {currentOption.bestFor}
+                                        {t(currentOption.bestFor)}
                                     </p>
                                 </div>
                             </div>
@@ -267,10 +269,10 @@ export function AssetClassModal({
                                 {isCurrentSelected ? (
                                     <>
                                         <div className="size-2 rounded-full bg-primary" />
-                                        <span>Currently selected</span>
+                                        <span>{t("Currently selected")}</span>
                                     </>
                                 ) : (
-                                    <span className="text-[11px]">Click Select to apply</span>
+                                    <span className="text-[11px]">{t("Click Select to apply")}</span>
                                 )}
                             </div>
 
@@ -280,7 +282,7 @@ export function AssetClassModal({
                                     onClick={onClose}
                                     className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors cursor-pointer"
                                 >
-                                    Close
+                                    {t("Close")}
                                 </button>
                                 {onSelectClass && (
                                     <button
@@ -300,10 +302,10 @@ export function AssetClassModal({
                                         {isCurrentSelected ? (
                                             <>
                                                 <Check className="size-3.5" />
-                                                <span>Selected</span>
+                                                <span>{t("Selected")}</span>
                                             </>
                                         ) : (
-                                            <span>Select {currentOption.label}</span>
+                                            <span>{t("Select {type}", { type: t(currentOption.label) })}</span>
                                         )}
                                     </button>
                                 )}

@@ -38,11 +38,14 @@ import { triggerHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { CommunityPost } from '@/lib/community/types';
+import { useLanguageContext } from '@/context/LanguageContext';
+import { tr } from '@/hooks/useLanguage';
 
 export function MobileCommunityView() {
     const router = useRouter();
     const { profile } = useAuth();
     const { selectedPropertyId } = useProperty();
+    const { t, locale } = useLanguageContext();
     const role = (profile?.role as 'tenant' | 'landlord') || 'tenant';
     const isLandlord = role === 'landlord';
 
@@ -87,17 +90,17 @@ export function MobileCommunityView() {
     }, [fetchFeed]);
 
     const formatTimeAgo = (dateStr?: string) => {
-        if (!dateStr) return 'Just now';
+        if (!dateStr) return t('Just now');
         const d = new Date(dateStr);
         const diffMs = Date.now() - d.getTime();
         const mins = Math.floor(diffMs / (1000 * 60));
-        if (mins < 1) return 'Just now';
-        if (mins < 60) return `${mins}m ago`;
+        if (mins < 1) return t('Just now');
+        if (mins < 60) return t('{count}m ago', { count: mins });
         const hours = Math.floor(mins / 60);
-        if (hours < 24) return `${hours}h ago`;
+        if (hours < 24) return t('{count}h ago', { count: hours });
         const days = Math.floor(hours / 24);
-        if (days < 7) return `${days}d ago`;
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        if (days < 7) return t('{count}d ago', { count: days });
+        return d.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
     };
 
     // Filter posts
@@ -156,7 +159,7 @@ export function MobileCommunityView() {
     // Handle Submit Post
     const handleCreatePost = async () => {
         if (!postTitle.trim() || !postContent.trim()) {
-            toast.error('Please enter a title and description.');
+            toast.error(t('Please enter a title and description.'));
             return;
         }
 
@@ -182,14 +185,14 @@ export function MobileCommunityView() {
                 });
             }
 
-            toast.success('Post published to community board!');
+            toast.success(t('Post published to community board!'));
             setIsComposerOpen(false);
             setPostTitle('');
             setPostContent('');
             fetchFeed();
         } catch (err: any) {
             console.error('Create post error:', err);
-            toast.error(err.message || 'Failed to publish post');
+            toast.error(tr(err.message || t('Failed to publish post')));
         } finally {
             setSubmittingPost(false);
         }
@@ -227,9 +230,9 @@ export function MobileCommunityView() {
                 }
                 return p;
             }));
-            toast.success('Reply posted');
+            toast.success(t('Reply posted'));
         } catch (err: any) {
-            toast.error(err.message || 'Failed to post reply');
+            toast.error(tr(err.message || t('Failed to post reply')));
         } finally {
             setSubmittingComment(false);
         }
@@ -245,7 +248,7 @@ export function MobileCommunityView() {
                     ) : (
                         <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                             <Megaphone className="size-4 text-primary" />
-                            <span>Resident Noticeboard</span>
+                            <span>{t('Resident Noticeboard')}</span>
                         </div>
                     )}
                     <button
@@ -254,7 +257,7 @@ export function MobileCommunityView() {
                             fetchFeed();
                         }}
                         className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-card text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-2xs"
-                        aria-label="Refresh feed"
+                        aria-label={t('Refresh feed')}
                     >
                         <RefreshCw className={cn("size-4", loading && "animate-spin text-primary")} />
                     </button>
@@ -267,12 +270,13 @@ export function MobileCommunityView() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search notices, announcements, or topics..."
+                        placeholder={t('Search notices, announcements, or topics...')}
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
                     />
                     {searchQuery && (
                         <button
                             onClick={() => setSearchQuery('')}
+                            aria-label={t('Clear search')}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
                         >
                             <X className="size-3.5" />
@@ -294,7 +298,7 @@ export function MobileCommunityView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        All ({posts.length})
+                        {t('All ({count})', { count: posts.length })}
                     </button>
                     <button
                         onClick={() => {
@@ -308,7 +312,7 @@ export function MobileCommunityView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Official Notices
+                        {t('Official Notices')}
                     </button>
                     <button
                         onClick={() => {
@@ -322,7 +326,7 @@ export function MobileCommunityView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Discussions
+                        {t('Discussions')}
                     </button>
                 </div>
 
@@ -331,9 +335,9 @@ export function MobileCommunityView() {
                     {filteredPosts.length === 0 ? (
                         <div className="p-8 text-center rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col items-center gap-2.5">
                             <Megaphone className="size-10 text-muted-foreground/40 stroke-1" />
-                            <h4 className="text-sm font-bold text-foreground">No Community Posts</h4>
+                            <h4 className="text-sm font-bold text-foreground">{t('No Community Posts')}</h4>
                             <p className="text-xs text-muted-foreground max-w-xs">
-                                {searchQuery ? 'No posts match your search query.' : 'Be the first to post an update or announcement.'}
+                                {searchQuery ? t('No posts match your search query.') : t('Be the first to post an update or announcement.')}
                             </p>
                         </div>
                     ) : (
@@ -368,7 +372,7 @@ export function MobileCommunityView() {
                                             <div>
                                                 <div className="flex items-center gap-1.5">
                                                     <h3 className="text-xs font-black text-foreground">
-                                                        {post.author_name || 'Community Member'}
+                                                        {post.author_name || t('Community Member')}
                                                     </h3>
                                                     <span className={cn(
                                                         "px-1.5 py-0.2 rounded text-[9px] font-bold uppercase",
@@ -376,7 +380,7 @@ export function MobileCommunityView() {
                                                             ? "bg-primary/15 text-primary"
                                                             : "bg-slate-100 dark:bg-white/10 text-muted-foreground"
                                                     )}>
-                                                        {post.author_role === 'landlord' ? 'Management' : 'Resident'}
+                                                        {post.author_role === 'landlord' ? t('Management') : t('Resident')}
                                                     </span>
                                                 </div>
                                                 <span className="text-[10px] text-muted-foreground">
@@ -389,12 +393,12 @@ export function MobileCommunityView() {
                                             {isPinned && (
                                                 <span className="p-1 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[10px] font-bold flex items-center gap-0.5">
                                                     <Pin className="size-3 fill-amber-500" />
-                                                    Pinned
+                                                    {t('Pinned')}
                                                 </span>
                                             )}
                                             {isAnnouncement && !isPinned && (
                                                 <span className="px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[9px] font-black uppercase tracking-wider">
-                                                    Advisory
+                                                    {t('Advisory')}
                                                 </span>
                                             )}
                                         </div>
@@ -417,6 +421,7 @@ export function MobileCommunityView() {
                                         <div className="flex items-center gap-3">
                                             <button
                                                 onClick={() => handleToggleReaction(post)}
+                                                aria-label={t('Like')}
                                                 className={cn(
                                                     "flex items-center gap-1.5 text-xs font-bold active:scale-90 transition-all",
                                                     isLiked ? "text-primary" : "text-muted-foreground hover:text-foreground"
@@ -439,7 +444,7 @@ export function MobileCommunityView() {
                                             onClick={() => openCommentsDrawer(post)}
                                             className="text-[11px] font-bold text-primary active:scale-95 transition-all"
                                         >
-                                            View Comments
+                                            {t('View Comments')}
                                         </button>
                                     </div>
                                 </div>
@@ -456,7 +461,7 @@ export function MobileCommunityView() {
                             setIsComposerOpen(true);
                         }}
                         className="size-13 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg flex items-center justify-center active:scale-90 transition-all"
-                        aria-label="Create new post"
+                        aria-label={t('Create new post')}
                     >
                         <Plus className="size-6 stroke-[2.5]" />
                     </button>
@@ -468,10 +473,11 @@ export function MobileCommunityView() {
                         <div className="w-full sm:max-w-md max-h-[85vh] bg-background rounded-t-3xl sm:rounded-2xl p-5 border border-slate-200 dark:border-white/10 shadow-xl flex flex-col gap-4 overflow-y-auto animate-in slide-in-from-bottom duration-200">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-base font-black text-foreground">
-                                    {isLandlord ? 'Post Announcement or Notice' : 'New Community Discussion'}
+                                    {isLandlord ? t('Post Announcement or Notice') : t('New Community Discussion')}
                                 </h3>
                                 <button
                                     onClick={() => setIsComposerOpen(false)}
+                                    aria-label={t('Close')}
                                     className="p-1 rounded-full text-muted-foreground hover:text-foreground"
                                 >
                                     <X className="size-5" />
@@ -489,7 +495,7 @@ export function MobileCommunityView() {
                                             postType === 'announcement' ? "bg-white dark:bg-card text-foreground shadow-xs" : "text-muted-foreground"
                                         )}
                                     >
-                                        Official Advisory
+                                        {t('Official Advisory')}
                                     </button>
                                     <button
                                         type="button"
@@ -499,7 +505,7 @@ export function MobileCommunityView() {
                                             postType === 'discussion' ? "bg-white dark:bg-card text-foreground shadow-xs" : "text-muted-foreground"
                                         )}
                                     >
-                                        Resident Discussion
+                                        {t('Resident Discussion')}
                                     </button>
                                 </div>
                             )}
@@ -508,26 +514,26 @@ export function MobileCommunityView() {
                             <div className="space-y-3">
                                 <div>
                                     <label className="text-xs font-bold text-muted-foreground block mb-1">
-                                        Title / Subject
+                                        {t('Title / Subject')}
                                     </label>
                                     <input
                                         type="text"
                                         value={postTitle}
                                         onChange={(e) => setPostTitle(e.target.value)}
-                                        placeholder="e.g., Scheduled Water Interruption or Lost Keys"
+                                        placeholder={t('e.g., Scheduled Water Interruption or Lost Keys')}
                                         className="w-full p-3 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                                     />
                                 </div>
 
                                 <div>
                                     <label className="text-xs font-bold text-muted-foreground block mb-1">
-                                        Details & Information
+                                        {t('Details & Information')}
                                     </label>
                                     <textarea
                                         value={postContent}
                                         onChange={(e) => setPostContent(e.target.value)}
                                         rows={4}
-                                        placeholder="Share full information with residents..."
+                                        placeholder={t('Share full information with residents...')}
                                         className="w-full p-3 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                                     />
                                 </div>
@@ -538,14 +544,14 @@ export function MobileCommunityView() {
                                     onClick={() => setIsComposerOpen(false)}
                                     className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-muted-foreground hover:text-foreground active:scale-98 transition-all"
                                 >
-                                    Cancel
+                                    {t('Cancel')}
                                 </button>
                                 <button
                                     disabled={submittingPost}
                                     onClick={handleCreatePost}
                                     className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold active:scale-98 transition-all flex items-center justify-center gap-1.5 shadow-xs"
                                 >
-                                    {submittingPost ? <RefreshCw className="size-4 animate-spin" /> : 'Publish to Board'}
+                                    {submittingPost ? <RefreshCw className="size-4 animate-spin" /> : t('Publish to Board')}
                                 </button>
                             </div>
                         </div>
@@ -563,11 +569,12 @@ export function MobileCommunityView() {
                                         {activeCommentPost.title}
                                     </h3>
                                     <span className="text-[10px] text-muted-foreground">
-                                        {commentsList.length} replies
+                                        {t('{count} replies', { count: commentsList.length })}
                                     </span>
                                 </div>
                                 <button
                                     onClick={() => setActiveCommentPost(null)}
+                                    aria-label={t('Close')}
                                     className="p-1 rounded-full text-muted-foreground hover:text-foreground"
                                 >
                                     <X className="size-5" />
@@ -579,18 +586,18 @@ export function MobileCommunityView() {
                                 {loadingComments ? (
                                     <div className="p-6 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
                                         <RefreshCw className="size-4 animate-spin text-primary" />
-                                        <span>Loading conversation...</span>
+                                        <span>{t('Loading conversation...')}</span>
                                     </div>
                                 ) : commentsList.length === 0 ? (
                                     <div className="p-6 text-center text-xs text-muted-foreground">
-                                        No replies yet. Be the first to start the discussion!
+                                        {t('No replies yet. Be the first to start the discussion!')}
                                     </div>
                                 ) : (
                                     commentsList.map((comm) => (
                                         <div key={comm.id} className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-xs space-y-1">
                                             <div className="flex items-center justify-between">
                                                 <span className="font-bold text-foreground">
-                                                    {comm.author?.name || 'Resident'}
+                                                    {comm.author?.name || t('Resident')}
                                                 </span>
                                                 <span className="text-[10px] text-muted-foreground">
                                                     {formatTimeAgo(comm.createdAt)}
@@ -610,7 +617,7 @@ export function MobileCommunityView() {
                                     type="text"
                                     value={commentText}
                                     onChange={(e) => setCommentText(e.target.value)}
-                                    placeholder="Write a comment..."
+                                    placeholder={t('Write a comment...')}
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') handleAddComment();
                                     }}
@@ -620,7 +627,7 @@ export function MobileCommunityView() {
                                     disabled={submittingComment || !commentText.trim()}
                                     onClick={handleAddComment}
                                     className="p-2.5 rounded-xl bg-primary text-primary-foreground disabled:opacity-40 active:scale-95 transition-all"
-                                    aria-label="Send reply"
+                                    aria-label={t('Send reply')}
                                 >
                                     <Send className="size-4" />
                                 </button>

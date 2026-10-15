@@ -8,6 +8,15 @@ import Image from "next/image";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Unit } from "../types";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
+
+const PRIORITY_LABELS: Record<string, string> = {
+    low: "Low",
+    medium: "Medium",
+    high: "High",
+    urgent: "Urgent",
+};
 
 export interface UnitHistoryModalProps {
     isOpen: boolean;
@@ -23,7 +32,7 @@ interface TenantHistoryItem {
     email?: string | null;
     phone?: string | null;
     leaseStart: string;
-    leaseEnd: string;
+    leaseEnd: string | null;
     rent: number;
     securityDeposit: number;
     status: string;
@@ -76,6 +85,7 @@ export const UnitHistoryModal = ({
     initialTab = "tenants",
     onOpenLease,
 }: UnitHistoryModalProps) => {
+    const { t } = useLanguageContext();
     const [activeTab, setActiveTab] = useState<"tenants" | "maintenance">(initialTab);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -102,13 +112,13 @@ export const UnitHistoryModal = ({
             const res = await fetch(`/api/landlord/units/${encodeURIComponent(unitId)}/history`);
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.error || `Failed to fetch history (status ${res.status})`);
+                throw new Error(errorData.error || tr("Failed to fetch history (status {status})", { status: res.status }));
             }
             const data: UnitHistoryData = await res.json();
             setHistoryData(data);
         } catch (err: any) {
             console.error("Failed to load unit history:", err);
-            setError(err.message || "Failed to load unit history. Please try again.");
+            setError(tr(err.message || tr("Failed to load unit history. Please try again.")));
         } finally {
             setLoading(false);
         }
@@ -130,7 +140,7 @@ export const UnitHistoryModal = ({
 
     const unitDisplayName = unit.name?.trim().toLowerCase().startsWith("unit ")
         ? unit.name.trim()
-        : `Unit ${unit.name}`;
+        : t("Unit {name}", { name: unit.name });
 
     return (
         <AnimatePresence>
@@ -155,7 +165,7 @@ export const UnitHistoryModal = ({
                                 type="button"
                                 onClick={onClose} 
                                 className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground"
-                                aria-label="Close modal"
+                                aria-label={t("Close modal")}
                             >
                                 <X className="size-6" />
                             </button>
@@ -169,10 +179,12 @@ export const UnitHistoryModal = ({
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <h2 className="text-2xl font-black tracking-tight text-foreground truncate">
-                                        {unitDisplayName} History
+                                        {t("{name} History", { name: unitDisplayName })}
                                     </h2>
                                     <p className="text-sm font-medium text-muted-foreground truncate">
-                                        {historyData?.unit?.propertyName ? `${historyData.unit.propertyName} • ` : ""}Full audit trail and historical logs
+                                        {historyData?.unit?.propertyName
+                                            ? t("{property} • Full audit trail and historical logs", { property: historyData.unit.propertyName })
+                                            : t("Full audit trail and historical logs")}
                                     </p>
                                 </div>
                             </div>
@@ -191,7 +203,7 @@ export const UnitHistoryModal = ({
                                     }`}
                                 >
                                     <Users className="size-3.5" />
-                                    Tenants
+                                    {t("Tenants")}
                                     {!loading && tenantHistory.length > 0 && (
                                         <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-primary/10 text-primary">
                                             {tenantHistory.length}
@@ -208,7 +220,7 @@ export const UnitHistoryModal = ({
                                     }`}
                                 >
                                     <Wrench className="size-3.5" />
-                                    Maintenance
+                                    {t("Maintenance")}
                                     {!loading && maintenanceHistory.length > 0 && (
                                         <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-primary/10 text-primary">
                                             {maintenanceHistory.length}
@@ -223,7 +235,8 @@ export const UnitHistoryModal = ({
                                     type="button"
                                     onClick={() => void fetchHistory()}
                                     className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all text-xs flex items-center gap-1"
-                                    title="Reload latest history data"
+                                    title={t("Reload latest history data")}
+                                    aria-label={t("Reload latest history data")}
                                 >
                                     <RefreshCw className="size-3.5" />
                                 </button>
@@ -260,15 +273,15 @@ export const UnitHistoryModal = ({
                                         onClick={() => void fetchHistory()} 
                                         className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-primary text-primary-foreground hover:opacity-90 transition-all"
                                     >
-                                        Try Again
+                                        {t("Try Again")}
                                     </button>
                                 </div>
                             ) : activeTab === "tenants" ? (
                                 tenantHistory.length === 0 ? (
                                     <div className="py-16 text-center text-muted-foreground space-y-2">
                                         <Users className="size-10 mx-auto opacity-20" />
-                                        <p className="text-sm font-black text-foreground">No Lease History Found</p>
-                                        <p className="text-xs">No active or past leases recorded for {unitDisplayName}.</p>
+                                        <p className="text-sm font-black text-foreground">{t("No Lease History Found")}</p>
+                                        <p className="text-xs">{t("No active or past leases recorded for {name}.", { name: unitDisplayName })}</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
@@ -309,15 +322,15 @@ export const UnitHistoryModal = ({
                                                                 ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
                                                                 : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
                                                         }`}>
-                                                            {item.status}
+                                                            {t(item.status)}
                                                         </span>
                                                     </div>
 
                                                     <p className="text-[10px] font-black text-muted-foreground mt-1 flex items-center gap-1.5 truncate">
                                                         <Calendar className="size-3 shrink-0 opacity-60" />
-                                                        {item.leaseStart ? <ClientOnlyDate date={item.leaseStart} /> : "N/A"}
+                                                        {item.leaseStart ? <ClientOnlyDate date={item.leaseStart} /> : t("N/A")}
                                                         <span>&mdash;</span>
-                                                        {item.leaseEnd ? <ClientOnlyDate date={item.leaseEnd} /> : "Ongoing"}
+                                                        {item.leaseEnd ? <ClientOnlyDate date={item.leaseEnd} /> : t("Open-ended")}
                                                     </p>
 
                                                     {item.email && (
@@ -332,7 +345,7 @@ export const UnitHistoryModal = ({
                                                     <p className="text-xs font-black text-foreground">
                                                         ₱{item.rent.toLocaleString()}
                                                     </p>
-                                                    <p className="text-[9px] font-black text-muted-foreground">Monthly Rent</p>
+                                                    <p className="text-[9px] font-black text-muted-foreground">{t("Monthly Rent")}</p>
                                                     {onOpenLease && (
                                                         <button
                                                             type="button"
@@ -343,7 +356,7 @@ export const UnitHistoryModal = ({
                                                             className="text-[9px] font-black text-primary uppercase tracking-wider hover:underline mt-1 inline-flex items-center gap-0.5"
                                                         >
                                                             <Eye className="size-3" />
-                                                            View Lease
+                                                            {t("View Lease")}
                                                         </button>
                                                     )}
                                                 </div>
@@ -355,8 +368,8 @@ export const UnitHistoryModal = ({
                                 maintenanceHistory.length === 0 ? (
                                     <div className="py-16 text-center text-muted-foreground space-y-2">
                                         <Wrench className="size-10 mx-auto opacity-20" />
-                                        <p className="text-sm font-black text-foreground">No Maintenance Records Found</p>
-                                        <p className="text-xs">No repair requests or service logs reported for {unitDisplayName}.</p>
+                                        <p className="text-sm font-black text-foreground">{t("No Maintenance Records Found")}</p>
+                                        <p className="text-xs">{t("No repair requests or service logs reported for {name}.", { name: unitDisplayName })}</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
@@ -378,7 +391,7 @@ export const UnitHistoryModal = ({
                                                                 ? "bg-blue-500/10 text-blue-500 border border-blue-500/20"
                                                                 : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
                                                         }`}>
-                                                            {item.status}
+                                                            {t(item.status)}
                                                         </span>
                                                     </div>
 
@@ -393,19 +406,19 @@ export const UnitHistoryModal = ({
                                                         {item.category && (
                                                             <>
                                                                 <span>&bull;</span>
-                                                                <span className="capitalize">{item.category}</span>
+                                                                <span className="capitalize">{t(item.category)}</span>
                                                             </>
                                                         )}
                                                         {item.priority && item.priority !== "normal" && (
                                                             <>
                                                                 <span>&bull;</span>
-                                                                <span className="uppercase text-rose-500">{item.priority} priority</span>
+                                                                <span className="uppercase text-rose-500">{t("{priority} priority", { priority: t(PRIORITY_LABELS[item.priority] ?? item.priority) })}</span>
                                                             </>
                                                         )}
                                                         {item.tenantName && (
                                                             <>
                                                                 <span>&bull;</span>
-                                                                <span>Reported by {item.tenantName}</span>
+                                                                <span>{t("Reported by {name}", { name: item.tenantName })}</span>
                                                             </>
                                                         )}
                                                     </div>
@@ -416,11 +429,11 @@ export const UnitHistoryModal = ({
                                                     {item.cost > 0 ? (
                                                         <>
                                                             <p className="text-xs font-black text-foreground">₱{item.cost.toLocaleString()}</p>
-                                                            <p className="text-[9px] font-black text-muted-foreground">Logged Cost</p>
+                                                            <p className="text-[9px] font-black text-muted-foreground">{t("Logged Cost")}</p>
                                                         </>
                                                     ) : (
                                                         <span className="text-[10px] font-bold text-muted-foreground/60 italic">
-                                                            No cost logged
+                                                            {t("No cost logged")}
                                                         </span>
                                                     )}
                                                 </div>
@@ -438,7 +451,7 @@ export const UnitHistoryModal = ({
                                 onClick={onClose}
                                 className="w-full py-4 rounded-2xl bg-primary text-primary-foreground text-xs font-black uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-lg shadow-primary/20"
                             >
-                                Close History View
+                                {t("Close History View")}
                             </button>
                         </div>
                     </motion.div>

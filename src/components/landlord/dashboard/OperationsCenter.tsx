@@ -30,12 +30,14 @@ import { m as motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useQuickActions } from "@/hooks/useQuickActions";
 import { SortableActionCard } from "./SortableActionCard";
 import type { QuickActionId } from "@/lib/landlord/quick-actions";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface OperationsCenterProps {
     className?: string;
 }
 
 export function OperationsCenter({ className }: OperationsCenterProps) {
+    const { t } = useLanguageContext();
     const [isOpen, setIsOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const shouldReduceMotion = useReducedMotion();
@@ -103,7 +105,7 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                 onClick={() => setIsOpen((prev) => !prev)}
                 className={cn(
                     // On desktop, stay clear of docked mini chat windows (see MINI_CHAT_DOCK_EXTENT_VAR).
-                    "fixed bottom-6 right-6 md:right-[max(7rem,calc(var(--mini-chat-dock-extent,0px)+1rem))] z-[60] group flex items-center gap-2.5 px-4 py-3 min-h-[48px] rounded-full",
+                    "fixed bottom-6 right-6 md:right-[max(7rem,calc(var(--mini-chat-sidebar-extent,0px)+1rem),calc(var(--mini-chat-dock-extent,0px)+1rem))] z-[60] group flex items-center gap-2.5 px-4 py-3 min-h-[48px] rounded-full",
                     "transition-[right] duration-500 ease-in-out",
                     "bg-primary text-primary-foreground font-bold shadow-[0_10px_30px_rgba(var(--primary-rgb),0.35)]",
                     "hover:bg-primary/95 hover:shadow-[0_14px_35px_rgba(var(--primary-rgb),0.5)]",
@@ -111,7 +113,7 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                     "cursor-pointer select-none",
                     className
                 )}
-                aria-label={isOpen ? "Close Quick Actions & Tools" : "Open Quick Actions & Tools"}
+                aria-label={isOpen ? t("Close Quick Actions & Tools") : t("Open Quick Actions & Tools")}
                 aria-expanded={isOpen}
                 aria-haspopup="dialog"
             >
@@ -142,7 +144,7 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                         transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
                         className="text-xs sm:text-sm font-black tracking-tight pr-0.5 inline-block"
                     >
-                        {isOpen ? "Close" : "Quick Tools"}
+                        {isOpen ? t("Close") : t("Quick Tools")}
                     </motion.span>
                 </AnimatePresence>
             </motion.button>
@@ -168,7 +170,7 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                             key="fab-popover-card"
                             role="dialog"
                             aria-modal="true"
-                            aria-label="Quick Actions & Tools"
+                            aria-label={t("Quick Actions & Tools")}
                             drag={isMobile ? "y" : false}
                             dragConstraints={{ top: 0, bottom: 0 }}
                             dragElastic={{ top: 0, bottom: 0.6 }}
@@ -226,11 +228,11 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                             <div className="flex items-center gap-2">
                                 <span className="h-1.5 w-5 rounded-full bg-primary shrink-0" aria-hidden="true" />
                                 <h2 className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
-                                    Quick Actions & Tools
+                                    {t("Quick Actions & Tools")}
                                 </h2>
                                 {isCustomizing && (
                                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
-                                        Organizing
+                                        {t("Organizing")}
                                     </span>
                                 )}
                             </div>
@@ -239,7 +241,7 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                                 type="button"
                                 onClick={() => setIsOpen(false)}
                                 className="size-7 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                aria-label="Close Quick Actions & Tools"
+                                aria-label={t("Close Quick Actions & Tools")}
                             >
                                 <X className="size-4" aria-hidden="true" />
                             </button>
@@ -248,7 +250,7 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                         {/* Subheading / Instructions when customizing */}
                         {isCustomizing && (
                             <p className="text-[11px] text-muted-foreground font-medium">
-                                Drag cards to rearrange &bull; Tap eye icon to hide &bull; Tap card below to restore
+                                {t("Drag cards to rearrange • Tap eye icon to hide • Tap card below to restore")}
                             </p>
                         )}
 
@@ -260,7 +262,7 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                                     <div 
                                         className="flex items-center rounded-xl bg-muted/60 dark:bg-white/[0.05] p-1 text-xs font-semibold border border-border/50 shadow-inner"
                                         role="group"
-                                        aria-label="Quick action sort mode"
+                                        aria-label={t("Quick action sort mode")}
                                     >
                                         <button
                                             type="button"
@@ -271,9 +273,9 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                                                     ? "bg-background text-foreground shadow-xs"
                                                     : "text-muted-foreground hover:text-foreground"
                                             )}
-                                            title="Sort cards in your custom order"
+                                            title={t("Sort cards in your custom order")}
                                         >
-                                            My Order
+                                            {t("My Order")}
                                         </button>
                                         <button
                                             type="button"
@@ -284,10 +286,10 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                                                     ? "bg-background text-foreground shadow-xs"
                                                     : "text-muted-foreground hover:text-foreground"
                                             )}
-                                            title="Sort cards by how often you use them"
+                                            title={t("Sort cards by how often you use them")}
                                         >
                                             <TrendingUp className="size-3 text-amber-500" aria-hidden="true" />
-                                            Most Used
+                                            {t("Most Used")}
                                         </button>
                                     </div>
 
@@ -296,10 +298,10 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                                         type="button"
                                         onClick={startCustomizing}
                                         className="inline-flex items-center gap-1.5 min-h-[32px] px-3 py-1 text-xs font-bold rounded-xl border border-border/60 hover:bg-muted/60 text-foreground transition-all shadow-xs active:scale-95 cursor-pointer"
-                                        title="Rearrange or hide action cards"
+                                        title={t("Rearrange or hide action cards")}
                                     >
                                         <SlidersHorizontal className="size-3 text-muted-foreground" aria-hidden="true" />
-                                        <span>Customize</span>
+                                        <span>{t("Customize")}</span>
                                     </button>
                                 </>
                             ) : (
@@ -309,19 +311,19 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                                         type="button"
                                         onClick={resetToDefaults}
                                         className="inline-flex items-center gap-1 min-h-[32px] px-2.5 py-1 text-xs font-semibold rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all border border-transparent hover:border-border/40 active:scale-95 cursor-pointer"
-                                        title="Reset to factory layout"
+                                        title={t("Reset to factory layout")}
                                     >
                                         <RotateCcw className="size-3" aria-hidden="true" />
-                                        <span>Reset</span>
+                                        <span>{t("Reset")}</span>
                                     </button>
                                     <button
                                         type="button"
                                         onClick={finishCustomizing}
                                         className="inline-flex items-center gap-1 min-h-[32px] px-3.5 py-1 text-xs font-bold rounded-xl bg-foreground text-background dark:bg-primary dark:text-primary-foreground hover:opacity-90 transition-all shadow-sm active:scale-95 cursor-pointer"
-                                        title="Save and finish customization"
+                                        title={t("Save and finish customization")}
                                     >
                                         <Check className="size-3.5" aria-hidden="true" />
-                                        <span>Done</span>
+                                        <span>{t("Done")}</span>
                                     </button>
                                 </>
                             )}
@@ -340,7 +342,7 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                                 <div 
                                     className="grid grid-cols-3 gap-2 sm:gap-2.5"
                                     role="list"
-                                    aria-label="Operational tools"
+                                    aria-label={t("Operational tools")}
                                 >
                                     {displayedActions.map((action) => (
                                         <SortableActionCard
@@ -364,7 +366,7 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                                     <div className="flex items-center gap-1.5">
                                         <EyeOff className="size-3 text-muted-foreground" aria-hidden="true" />
                                         <h3 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                                            Hidden Actions
+                                            {t("Hidden Actions")}
                                         </h3>
                                         <span className="flex items-center justify-center size-4 text-[9px] font-bold rounded-full bg-muted text-muted-foreground">
                                             {hiddenActions.length}
@@ -374,10 +376,10 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                                         type="button"
                                         onClick={restoreAll}
                                         className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline transition-all cursor-pointer"
-                                        title="Restore all hidden actions to the grid"
+                                        title={t("Restore all hidden actions to the grid")}
                                     >
                                         <RotateCcw className="size-2.5" aria-hidden="true" />
-                                        <span>Restore all</span>
+                                        <span>{t("Restore all")}</span>
                                     </button>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -391,7 +393,7 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                                                 "neumorphic-extruded hover:shadow-xs active:scale-98 cursor-pointer",
                                                 "dark:bento-glass-card dark:hover:bg-white/[0.04]"
                                             )}
-                                            title={`Restore ${action.label} to grid`}
+                                            title={t("Restore {label} to grid", { label: t(action.label) })}
                                         >
                                             <div className="flex items-center gap-2 min-w-0">
                                                 <div className={cn(
@@ -402,12 +404,12 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                                                     <action.icon className="size-3.5" aria-hidden="true" />
                                                 </div>
                                                 <span className="text-xs font-bold text-foreground truncate">
-                                                    {action.label}
+                                                    {t(action.label)}
                                                 </span>
                                             </div>
                                             <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-primary group-hover:underline shrink-0">
                                                 <Plus className="size-3" aria-hidden="true" />
-                                                Restore
+                                                {t("Restore")}
                                             </span>
                                         </button>
                                     ))}

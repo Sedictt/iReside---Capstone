@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface UnitShowcaseData {
     id: string;
@@ -55,6 +56,7 @@ export function UnitShowcaseModal({
     onStartApplication,
 }: UnitShowcaseModalProps) {
     const [currentImage, setCurrentImage] = useState(0);
+    const { t } = useLanguageContext();
 
     if (!isOpen || !unit) return null;
 
@@ -65,7 +67,7 @@ export function UnitShowcaseModal({
 
     const details = [
         { label: "Floor", value: unit.floor || "—", icon: Layers },
-        { label: "Area", value: unit.area_sqm ? `${unit.area_sqm} sqm` : "—", icon: Ruler },
+        { label: "Area", value: unit.area_sqm ? t("{area} sqm", { area: unit.area_sqm }) : "—", icon: Ruler },
         { label: "Bedrooms", value: unit.bedrooms ?? "—", icon: BedDouble },
         { label: "Bathrooms", value: unit.bathrooms ?? "—", icon: Bath },
     ];
@@ -88,6 +90,7 @@ export function UnitShowcaseModal({
                 {/* Close */}
                 <button
                     onClick={onClose}
+                    aria-label={t("Close")}
                     className="absolute top-6 right-6 z-20 p-2 text-neutral-400 hover:text-white bg-black/50 hover:bg-black/70 rounded-full transition-colors backdrop-blur-sm"
                 >
                     <X className="size-5" />
@@ -108,12 +111,14 @@ export function UnitShowcaseModal({
                         <>
                             <button
                                 onClick={prevImage}
+                                aria-label={t("Previous image")}
                                 className="absolute left-4 top-1/2 -translate-y-1/2 size-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
                             >
                                 <ChevronLeft className="size-5" />
                             </button>
                             <button
                                 onClick={nextImage}
+                                aria-label={t("Next image")}
                                 className="absolute right-4 top-1/2 -translate-y-1/2 size-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
                             >
                                 <ChevronRight className="size-5" />
@@ -124,6 +129,7 @@ export function UnitShowcaseModal({
                                     <button
                                         key={img}
                                         onClick={() => setCurrentImage(i)}
+                                        aria-label={t("Show image {number}", { number: i + 1 })}
                                         className={cn(
                                             "size-2 rounded-full transition-all",
                                             i === currentImage
@@ -161,7 +167,7 @@ export function UnitShowcaseModal({
                             <p className="text-3xl font-black text-primary">
                                 ₱{(unit.rent_amount || 0).toLocaleString()}
                             </p>
-                            <p className="text-neutral-500 text-sm font-medium">per month</p>
+                            <p className="text-neutral-500 text-sm font-medium">{t("per month")}</p>
                         </div>
                     </div>
 
@@ -175,7 +181,7 @@ export function UnitShowcaseModal({
                                 <d.icon className="size-5 text-primary" />
                                 <p className="text-white font-black text-lg">{d.value}</p>
                                 <p className="text-neutral-500 text-xs font-medium uppercase tracking-wider">
-                                    {d.label}
+                                    {t(d.label)}
                                 </p>
                             </div>
                         ))}
@@ -185,7 +191,7 @@ export function UnitShowcaseModal({
                     {unit.description && (
                         <div className="bg-white/5 border border-white/5 rounded-xl p-5">
                             <h3 className="text-xs font-black uppercase tracking-wide text-neutral-400 mb-2">
-                                Description
+                                {t("Description")}
                             </h3>
                             <p className="text-neutral-300 text-sm leading-relaxed">
                                 {unit.description}
@@ -198,7 +204,7 @@ export function UnitShowcaseModal({
                         <div>
                             <h3 className="text-xs font-black uppercase tracking-wide text-neutral-400 mb-3 flex items-center gap-2">
                                 <Sparkles className="size-3.5" />
-                                Amenities
+                                {t("Amenities")}
                             </h3>
                             <div className="flex flex-wrap gap-2">
                                 {unit.property.amenities.map((amenity) => (
@@ -223,7 +229,7 @@ export function UnitShowcaseModal({
                             className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-black font-black text-lg transition-all flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(var(--primary),0.3)]"
                         >
                             <ClipboardList className="size-5" />
-                            Start Tenant Application
+                            {t("Start Tenant Application")}
                         </button>
                     )}
                 </div>

@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import crypto from "crypto";
+import { onboardingResendSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { buildAppUrl } from "@/lib/app-url";
 
-const resendSchema = z.object({
-    email: z.string().email("Valid email is required"),
-});
+const resendSchema = onboardingResendSchema;
 
 export async function POST(request: Request) {
     try {
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
         const { data: application, error: appError } = await adminClient
             .from("landlord_applications")
             .select("*")
-            .ilike("email", email.toLowerCase())
+            .ilike("email", email.toLowerCase().replace(/[\\%_]/g, (c) => `\\${c}`))
             .eq("status", "approved")
             .maybeSingle();
 
@@ -35,29 +35,39 @@ export async function POST(request: Request) {
             }, { status: 400 });
         }
 
-        // Generate new token
-        const onboardingToken = crypto.randomUUID();
-        const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(); // 72 hours
+        // This endpoint is unauthenticated. Re-send the current link while it is
+        // still valid instead of rotating it, so a stranger who knows the email
+        // cannot invalidate a link the real applicant is about to use.
+        const existingExpiry = application.onboarding_token_expires_at
+            ? new Date(application.onboarding_token_expires_at).getTime()
+            : 0;
+        const canReuseExisting =
+            Boolean(application.onboarding_token) && Number.isFinite(existingExpiry) && existingExpiry > Date.now() + 60 * 1000;
 
-        // Update with new token
-        const { error: updateError } = await adminClient
-            .from("landlord_applications")
-            .update({
-                onboarding_token: onboardingToken,
-                onboarding_token_expires_at: expiresAt,
-                updated_at: new Date().toISOString(),
-            })
-            .eq("id", application.id);
+        let onboardingToken = application.onboarding_token as string | null;
+        let expiresAt = application.onboarding_token_expires_at as string | null;
 
-        if (updateError) {
-            console.error("[Resend] Failed to update token:", updateError);
-            return NextResponse.json({ error: "Failed to generate new link" }, { status: 500 });
+        if (!canReuseExisting || !onboardingToken || !expiresAt) {
+            onboardingToken = crypto.randomUUID();
+            expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(); // 72 hours
+
+            const { error: updateError } = await adminClient
+                .from("landlord_applications")
+                .update({
+                    onboarding_token: onboardingToken,
+                    onboarding_token_expires_at: expiresAt,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", application.id);
+
+            if (updateError) {
+                console.error("[Resend] Failed to update token:", updateError);
+                return NextResponse.json({ error: "Failed to generate new link" }, { status: 500 });
+            }
         }
 
         // Send new magic link email
-        const onboardingUrl = process.env.NEXT_PUBLIC_BASE_URL 
-            ? `${process.env.NEXT_PUBLIC_BASE_URL}/landlord/onboarding/${onboardingToken}` 
-            : `https://ireside.app/landlord/onboarding/${onboardingToken}`;
+        const onboardingUrl = buildAppUrl(`/landlord/onboarding/${onboardingToken}`);
 
         const expiresAtFormatted = new Date(expiresAt).toLocaleDateString('en-US', { 
             month: 'long', 
@@ -91,7 +101,7 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json({ 
-            error: error.message || "Failed to resend link" 
+            error: "Failed to resend link" 
         }, { status: 500 });
     }
 }

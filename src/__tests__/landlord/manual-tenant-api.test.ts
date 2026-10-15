@@ -32,6 +32,10 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 import { POST } from "../../app/api/landlord/tenants/manual/route";
 
+// Property/unit ids are validated as ids at the route boundary.
+const PROPERTY_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const UNIT_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+
 describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -54,9 +58,10 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                 fullName: "Lyle Cannon",
                 email: "lyle@example.com",
                 phone: "09123456789",
-                propertyId: "prop-1",
-                unitId: "unit-1",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
                 startDate: "2026-10-09",
+                termType: "fixed",
                 endDate: "2026-07-31", // before start date!
                 monthlyRent: 20000,
                 securityDeposit: 20000,
@@ -67,7 +72,8 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
         const data = await res.json();
 
         expect(res.status).toBe(400);
-        expect(data.error).toBe("Lease end date must be after start date.");
+        expect(data.error).toMatch(/^Lease end date must be after (the )?start date\.$/);
+        expect(data.fieldErrors?.endDate).toBeTruthy();
     });
 
     it("rejects request if dates have invalid year (e.g., year 0019)", async () => {
@@ -78,9 +84,10 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                 fullName: "Lyle Cannon",
                 email: "lyle@example.com",
                 phone: "09123456789",
-                propertyId: "prop-1",
-                unitId: "unit-1",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
                 startDate: "0019-10-09",
+                termType: "fixed",
                 endDate: "0019-11-09",
                 monthlyRent: 20000,
                 securityDeposit: 20000,
@@ -102,8 +109,8 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                 fullName: "Lyle Cannon",
                 email: "not-an-email",
                 phone: "09123456789",
-                propertyId: "prop-1",
-                unitId: "unit-1",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
                 startDate: "2026-10-09",
                 endDate: "2027-10-09",
                 monthlyRent: 20000,
@@ -118,7 +125,8 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
         expect(data.error).toBe("Please enter a valid email address.");
     });
 
-    it("successfully creates lease and upfront payment records when advance is collected", async () => {
+    /** Wires the happy-path admin client; returns the lease insert spy. */
+    function mockHappyPath() {
         const mockInsertPayment = vi.fn().mockResolvedValue({ error: null });
         const mockInsertLease = vi.fn().mockReturnValue({
             select: vi.fn().mockReturnValue({
@@ -139,8 +147,9 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                         eq: vi.fn().mockReturnValue({
                             maybeSingle: vi.fn().mockResolvedValue({
                                 data: {
-                                    id: "unit-1",
-                                    property_id: "prop-1",
+                                    id: UNIT_ID,
+                                    property_id: PROPERTY_ID,
+                                    status: "vacant",
                                     properties: { landlord_id: "landlord-123" },
                                 },
                                 error: null,
@@ -162,6 +171,16 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
             }
             if (table === "leases") {
                 return {
+                    // Live-lease check on the unit (none found).
+                    select: vi.fn().mockReturnValue({
+                        eq: vi.fn().mockReturnValue({
+                            in: vi.fn().mockReturnValue({
+                                limit: vi.fn().mockReturnValue({
+                                    maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+                                }),
+                            }),
+                        }),
+                    }),
                     insert: mockInsertLease,
                 };
             }
@@ -173,6 +192,12 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
             return {};
         });
 
+        return { mockInsertPayment, mockInsertLease };
+    }
+
+    it("successfully creates lease and upfront payment records when advance is collected", async () => {
+        const { mockInsertPayment, mockInsertLease } = mockHappyPath();
+
         const req = new Request("http://localhost:3000/api/landlord/tenants/manual", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -180,9 +205,10 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                 fullName: "Lyle Cannon",
                 email: "lyle@example.com",
                 phone: "09123456789",
-                propertyId: "prop-1",
-                unitId: "unit-1",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
                 startDate: "2026-10-09",
+                termType: "fixed",
                 endDate: "2027-10-09",
                 monthlyRent: 20000,
                 securityDeposit: 20000,
@@ -200,6 +226,60 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
         expect(data.success).toBe(true);
         expect(data.leaseId).toBe("lease-999");
         expect(mockInsertPayment).toHaveBeenCalledTimes(2); // advance rent + security deposit
+        expect(mockInsertLease).toHaveBeenCalledWith(
+            expect.objectContaining({ term_type: "fixed", end_date: "2027-10-09" }),
+        );
+    });
+
+    it("creates an open-ended lease with no end date when no term type is given", async () => {
+        const { mockInsertLease } = mockHappyPath();
+
+        const req = new Request("http://localhost:3000/api/landlord/tenants/manual", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                fullName: "Lyle Cannon",
+                email: "lyle@example.com",
+                phone: "09123456789",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
+                startDate: "2026-10-09",
+                monthlyRent: 20000,
+                securityDeposit: 20000,
+            }),
+        });
+
+        const res = await POST(req);
+        const data = await res.json();
+
+        expect(res.status).toBe(200);
+        expect(data.leaseId).toBe("lease-999");
+        expect(mockInsertLease).toHaveBeenCalledWith(
+            expect.objectContaining({ term_type: "open_ended", end_date: null }),
+        );
+    });
+
+    it("rejects a fixed-term lease without an end date", async () => {
+        const req = new Request("http://localhost:3000/api/landlord/tenants/manual", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                fullName: "Lyle Cannon",
+                email: "lyle@example.com",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
+                startDate: "2026-10-09",
+                termType: "fixed",
+                monthlyRent: 20000,
+            }),
+        });
+
+        const res = await POST(req);
+        const data = await res.json();
+
+        expect(res.status).toBe(400);
+        expect(data.error).toMatch(/required for a fixed-term lease/);
+        expect(mockAdminFrom).not.toHaveBeenCalled();
     });
 
     it("rejects request if full name contains digits", async () => {
@@ -210,8 +290,8 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                 fullName: "Lyle Cannon 123",
                 email: "lyle@example.com",
                 phone: "09123456789",
-                propertyId: "prop-1",
-                unitId: "unit-1",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
                 startDate: "2026-10-09",
                 endDate: "2027-10-09",
                 monthlyRent: 20000,

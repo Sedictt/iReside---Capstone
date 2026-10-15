@@ -5,9 +5,11 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { WifiOff, RefreshCw, CheckCircle2, CloudUpload } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export function OfflineBanner() {
   const { isOnline, isReconnecting, pendingSyncCount, triggerSync } = useNetworkStatus();
+  const { t } = useLanguageContext();
   const [showRestoredBanner, setShowRestoredBanner] = useState<boolean>(false);
   const [wasOffline, setWasOffline] = useState<boolean>(false);
 
@@ -44,9 +46,9 @@ export function OfflineBanner() {
                 <WifiOff className="size-4 animate-pulse" />
               </div>
               <div className="flex flex-col min-w-0 text-left">
-                <span className="text-xs font-black leading-tight tracking-tight">Offline Mode</span>
+                <span className="text-xs font-black leading-tight tracking-tight">{t("Offline Mode")}</span>
                 <span className="text-[10px] font-bold opacity-85 truncate">
-                  Viewing local cached data
+                  {t("Viewing local cached data")}
                 </span>
               </div>
             </div>
@@ -54,11 +56,11 @@ export function OfflineBanner() {
             {pendingSyncCount > 0 ? (
               <div className="flex items-center gap-1.5 bg-black/10 dark:bg-white/10 px-2 py-1 rounded-lg shrink-0">
                 <CloudUpload className="size-3" />
-                <span className="text-[10px] font-black">{pendingSyncCount} queued</span>
+                <span className="text-[10px] font-black">{t("{count} queued", { count: pendingSyncCount })}</span>
               </div>
             ) : (
               <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10 shrink-0">
-                Read-Only
+                {t("Read-Only")}
               </span>
             )}
           </div>
@@ -86,10 +88,10 @@ export function OfflineBanner() {
               </div>
               <div className="flex flex-col min-w-0 text-left">
                 <span className="text-xs font-black leading-tight tracking-tight">
-                  {isReconnecting ? "Synchronizing Changes..." : "Connection Restored"}
+                  {isReconnecting ? t("Synchronizing Changes...") : t("Connection Restored")}
                 </span>
                 <span className="text-[10px] font-medium opacity-90 truncate">
-                  {isReconnecting ? "Sending queued actions to cloud" : "All data is up to date"}
+                  {isReconnecting ? t("Sending queued actions to cloud") : t("All data is up to date")}
                 </span>
               </div>
             </div>
@@ -99,7 +101,7 @@ export function OfflineBanner() {
                 onClick={() => triggerSync()}
                 className="text-[10px] font-black uppercase tracking-wider bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-lg transition-colors shrink-0"
               >
-                Sync Now
+                {t("Sync Now")}
               </button>
             )}
           </div>

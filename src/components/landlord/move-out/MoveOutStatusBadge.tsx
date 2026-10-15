@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { MoveOutStatus } from "@/types/database";
 import { Clock, CheckCircle2, XCircle, CheckSquare } from "lucide-react";
 
@@ -39,6 +40,7 @@ interface MoveOutStatusBadgeProps {
 }
 
 export function MoveOutStatusBadge({ status, className }: MoveOutStatusBadgeProps) {
+ const { t } = useLanguageContext();
  const config = STATUS_CONFIG[status];
  const Icon = config.icon;
 
@@ -53,7 +55,7 @@ export function MoveOutStatusBadge({ status, className }: MoveOutStatusBadgeProp
  )}
  >
  <Icon className="size-4" />
- {config.label}
+ {t(config.label)}
  </div>
  );
 }

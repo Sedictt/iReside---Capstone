@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { Home, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useBrand } from "@/context/BrandContext";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { m as motion } from "framer-motion";
 
 export default function GlobalNotFound() {
   const router = useRouter();
   const { user, profile } = useAuth();
   const { primaryColor } = useBrand();
+  const { t } = useLanguageContext();
 
   const role = profile?.role || user?.user_metadata?.role || (typeof window !== "undefined" && window.location.pathname.startsWith("/landlord") ? "landlord" : "tenant");
   const isLandlord = role === "landlord" || role === "admin";
@@ -65,10 +67,10 @@ export default function GlobalNotFound() {
           className="space-y-3 -mt-6 sm:-mt-8"
         >
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground">
-            Oops! Page not found.
+            {t("Oops! Page not found.")}
           </h1>
           <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-md sm:max-w-lg mx-auto leading-relaxed">
-            The page you&apos;re looking for doesn&apos;t exist or may have been moved.
+            {t("The page you're looking for doesn't exist or may have been moved.")}
           </p>
         </motion.div>
 
@@ -88,7 +90,7 @@ export default function GlobalNotFound() {
             }}
           >
             <Home className="size-5" />
-            <span>Return to Dashboard</span>
+            <span>{t("Return to Dashboard")}</span>
           </Link>
 
           {/* Secondary Link: Go Back */}
@@ -97,7 +99,7 @@ export default function GlobalNotFound() {
             className="text-xs sm:text-sm md:text-base font-bold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 cursor-pointer py-1.5 group"
           >
             <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
-            <span>Go Back</span>
+            <span>{t("Go Back")}</span>
           </button>
         </motion.div>
 

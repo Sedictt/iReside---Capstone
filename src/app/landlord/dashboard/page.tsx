@@ -263,7 +263,7 @@ export default function LandlordDashboard() {
     const totalUnits = currentProperty?.units?.length || 0;
     const occupiedUnits = Math.max(0, totalUnits - openUnitsCount);
     const maintenanceCount = counts.maintenance || 0;
-    const userName = profile?.full_name?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || "Landlord";
+    const userName = profile?.full_name?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || t("Landlord");
 
     useEffect(() => {
         if (isDashboardTourOpen && currentTourStep === 2) {
@@ -337,7 +337,7 @@ export default function LandlordDashboard() {
                 window.localStorage.setItem("ireside.billing_rails_delayed", "true");
                 window.localStorage.setItem(SCOPED_BILLING_RAILS_DELAYED_KEY, "true");
                 window.dispatchEvent(new Event("billing-rails-delayed-changed"));
-                toast.info("Billing setup postponed. Tenant management is now unlocked.");
+                toast.info(t("Billing setup postponed. Tenant management is now unlocked."));
             } catch {}
         }
         void updateSetupStep("billing", "defer");
@@ -808,10 +808,10 @@ export default function LandlordDashboard() {
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                                            {showBillingSetupCard ? "Onboarding Step 3 of 5" : "Onboarding Step 4 of 5"}
+                                            {t("Onboarding Step {step} of {total}", { step: showBillingSetupCard ? 3 : 4, total: 5 })}
                                         </span>
                                         <span className="text-[10px] font-bold text-muted-foreground">
-                                            {setup.completedCount} of {setup.totalCount} setup steps done
+                                            {t("{completed} of {total} setup steps done", { completed: setup.completedCount, total: setup.totalCount })}
                                         </span>
                                     </div>
                                     <h3 className="text-lg font-black text-foreground tracking-tight">
@@ -969,14 +969,14 @@ export default function LandlordDashboard() {
                                     <Link 
                                         href="/landlord/invoices" 
                                         className="group shrink-0 min-h-[44px] flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-all motion-reduce:transition-none text-muted-foreground hover:text-primary"
-                                        aria-label="View all invoices in the financial hub"
+                                        aria-label={t("View all invoices in the financial hub")}
                                     >
                                         <span>{t("View Bills & Receipts")}</span>
                                         <ArrowUpRight className="size-4 transition-transform motion-reduce:transition-none group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
                                     </Link>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 relative z-10" role="list" aria-label="Payment categories">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 relative z-10" role="list" aria-label={t("Payment categories")}>
                                     {PAYMENT_CATEGORIES.map(({ key, label, hint, emptyState, dot, tone }) => {
                                         const items = paymentsState.paymentsByCategory[key] ?? [];
                                         const topItem = items[0] ?? null;
@@ -994,7 +994,7 @@ export default function LandlordDashboard() {
                                                     <button 
                                                         onClick={() => setOpenPaymentModal(key)} 
                                                         className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-primary neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all"
-                                                        aria-label={`See more details for ${label}`}
+                                                        aria-label={t("See more details for {label}", { label: t(label) })}
                                                     >
                                                         {t("See more")}
                                                     </button>
@@ -1002,7 +1002,7 @@ export default function LandlordDashboard() {
                                                 
                                                 <div className="flex min-h-[130px] sm:min-h-[140px] flex-1 flex-col justify-center rounded-[1.75rem] p-3 sm:p-4 neumorphic-inset transition-colors duration-300 focus-within:bg-background/40">
                                                     {paymentsState.loading ? (
-                                                        <div className="space-y-4 animate-pulse px-2" aria-busy="true" aria-label="Loading latest payments">
+                                                        <div className="space-y-4 animate-pulse px-2" aria-busy="true" aria-label={t("Loading latest payments")}>
                                                             <div className="flex items-center gap-3 sm:gap-4">
                                                                 <div className="size-10 sm:size-12 rounded-full neumorphic-inset" />
                                                                 <div className="flex-1 space-y-3">
@@ -1014,7 +1014,7 @@ export default function LandlordDashboard() {
                                                     ) : paymentsState.error ? (
                                                         <div className="p-3 sm:p-4 text-center rounded-2xl border border-red-500/20 bg-red-500/5">
                                                             <AlertTriangle className="size-5 mx-auto mb-2 text-red-500/70" aria-hidden="true" />
-                                                            <p className="text-[10px] sm:text-xs text-red-500/80 font-black" role="alert">{paymentsState.error}</p>
+                                                            <p className="text-[10px] sm:text-xs text-red-500/80 font-black" role="alert">{t(paymentsState.error)}</p>
                                                         </div>
                                                     ) : topItem ? (
                                                         <PaymentCard
@@ -1057,7 +1057,7 @@ export default function LandlordDashboard() {
                                     <Link 
                                         href="/landlord/utility-billing?tab=verify" 
                                         className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-xl min-h-[44px] px-5 py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
-                                        aria-label="Verify pending utility and invoice payments"
+                                        aria-label={t("Verify pending utility and invoice payments")}
                                     >
                                         {t("Review Payments")}
                                         <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
@@ -1065,7 +1065,7 @@ export default function LandlordDashboard() {
                                     <Link 
                                         href="/landlord/utility-billing" 
                                         className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-xl min-h-[44px] px-5 py-2.5 text-xs sm:text-sm font-bold bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all"
-                                        aria-label="Open utility billing to record readings"
+                                        aria-label={t("Open utility billing to record readings")}
                                     >
                                         <Zap className="size-3.5" />
                                         {t("Record Readings")}
@@ -1086,13 +1086,13 @@ export default function LandlordDashboard() {
                                         </div>
                                         <div>
                                             <h2 id="renewals-heading" className="text-xl sm:text-2xl font-black tracking-tight text-foreground text-balance">{t("Contracts & Tasks")}</h2>
-                                            <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1 max-w-prose text-pretty">{t("Review expiring lease contracts and pending tenant requests.")}</p>
+                                            <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1 max-w-prose text-pretty">{t("Review lease contracts and pending tenant requests.")}</p>
                                         </div>
                                     </div>
                                     <Link 
                                         href="/landlord/tenants?tab=renewals" 
                                         className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-xl min-h-[44px] px-5 py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
-                                        aria-label="View all lease renewals"
+                                        aria-label={t("View all lease renewals")}
                                     >
                                         {t("View All Contracts")}
                                         <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
@@ -1151,7 +1151,7 @@ export default function LandlordDashboard() {
                 <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
                     <button
                         type="button"
-                        aria-label="Close invite modal"
+                        aria-label={t("Close invite modal")}
                         className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
                         onClick={() => setIsInviteModalOpen(false)}
                     />
@@ -1162,15 +1162,15 @@ export default function LandlordDashboard() {
                                     <QrCode className="size-6" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black text-foreground text-balance">Private Referral Link</h2>
-                                    <p className="text-sm font-medium text-muted-foreground/80 text-pretty">Generate exclusive invitation tokens for new residents.</p>
+                                    <h2 className="text-xl font-black text-foreground text-balance">{t("Private Referral Link")}</h2>
+                                    <p className="text-sm font-medium text-muted-foreground/80 text-pretty">{t("Generate exclusive invitation tokens for new residents.")}</p>
                                 </div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setIsInviteModalOpen(false)}
                                 className="group flex size-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/10 bg-card/70 text-muted-foreground transition-all hover:bg-card hover:text-foreground hover:rotate-90 active:scale-95"
-                                aria-label="Close invite modal"
+                                aria-label={t("Close invite modal")}
                             >
                                 <X className="size-5" />
                             </button>
@@ -1280,8 +1280,9 @@ export default function LandlordDashboard() {
                                                 </div>
                                             </div>
 
-                                            <button 
+                                            <button
                                                 onClick={() => setSelectedActionPayment(null)}
+                                                aria-label={t("Close")}
                                                 className="rounded-full p-2 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
                                             >
                                                 <X className="size-5" />
@@ -1293,20 +1294,20 @@ export default function LandlordDashboard() {
                                     <div className="px-8 pb-4 space-y-3">
                                         <div className="rounded-2xl bg-muted/30 p-4 border border-border/50">
                                             <div className="flex items-center justify-between mb-1">
-                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Settlement Due</p>
-                                                <span className="text-[10px] font-black text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full">Overdue</span>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t("Settlement Due")}</p>
+                                                <span className="text-[10px] font-black text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full">{t("Overdue")}</span>
                                             </div>
                                             <h4 className="text-3xl font-black text-foreground tabular-nums">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="rounded-2xl bg-muted/20 p-4 border border-border/30">
-                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Lease Ends</p>
-                                                <p className="text-xs font-black text-foreground">Oct 2026</p>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">{t("Lease Ends")}</p>
+                                                <p className="text-xs font-black text-foreground">{t("Oct")} 2026</p>
                                             </div>
                                             <div className="rounded-2xl bg-muted/20 p-4 border border-border/30">
-                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Tenant Status</p>
-                                                <p className="text-xs font-black text-emerald-500">Good Standing</p>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">{t("Tenant Status")}</p>
+                                                <p className="text-xs font-black text-emerald-500">{t("Good Standing")}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1318,18 +1319,19 @@ export default function LandlordDashboard() {
                                             className="flex-1 min-h-[44px] flex items-center justify-center gap-3 rounded-full bg-[#D7EFFF] dark:bg-blue-500/20 py-3.5 px-6 text-base font-medium text-[#001D35] dark:text-blue-100 transition-all hover:bg-[#c3e6ff] active:scale-[0.98]"
                                         >
                                             <MessageSquare className="size-5" />
-                                            Message
+                                            {t("Message")}
                                         </Link>
                                         
                                         <div className="flex items-center gap-2">
                                             <button 
                                                 onClick={() => setIsConfirmingAction(true)}
                                                 className="flex h-[52px] w-[52px] min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-600 transition-all hover:bg-emerald-500/10 active:scale-[0.92]"
-                                                title="Acknowledge Payment"
+                                                title={t("Acknowledge Payment")}
+                                                aria-label={t("Acknowledge Payment")}
                                             >
                                                 <CheckCircle2 className="size-6" />
                                             </button>
-                                            <button className="flex h-[52px] w-[52px] min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-600 dark:text-neutral-400 transition-all hover:bg-neutral-50 dark:hover:bg-neutral-800 active:scale-[0.92]">
+                                            <button aria-label={t("Documents")} title={t("Documents")} className="flex h-[52px] w-[52px] min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-600 dark:text-neutral-400 transition-all hover:bg-neutral-50 dark:hover:bg-neutral-800 active:scale-[0.92]">
                                                 <FolderOpen className="size-5" />
                                             </button>
                                         </div>
@@ -1341,7 +1343,7 @@ export default function LandlordDashboard() {
                                             onClick={() => setSelectedActionPayment(null)}
                                             className="w-full min-h-[44px] flex items-center justify-center gap-3 rounded-2xl bg-[#f0f4f9] dark:bg-neutral-800 px-6 py-3.5 text-base font-medium text-blue-700 dark:text-blue-400 transition-all hover:bg-[#e1e9f1] dark:hover:bg-neutral-700 group"
                                         >
-                                            Open Full Profile
+                                            {t("Open Full Profile")}
                                             <ArrowUpRight className="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                                         </button>
                                     </div>
@@ -1351,10 +1353,10 @@ export default function LandlordDashboard() {
                                     <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
                                         <AlertTriangle className="size-10" />
                                     </div>
-                                    <h3 className="text-xl font-black text-foreground text-balance">Confirm Settlement</h3>
+                                    <h3 className="text-xl font-black text-foreground text-balance">{t("Confirm Settlement")}</h3>
                                     <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
                                         <p className="text-xs font-black leading-relaxed text-primary/80 text-pretty">
-                                            Make sure that the tenant has already paid their rent. Seek proof of payment for GCash payments.
+                                            {t("Make sure that the tenant has already paid their rent. Seek proof of payment for GCash payments.")}
                                         </p>
                                     </div>
 
@@ -1366,13 +1368,13 @@ export default function LandlordDashboard() {
                                             }}
                                             className="w-full min-h-[44px] rounded-2xl bg-primary py-4 text-sm font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
                                         >
-                                            Complete Settlement
+                                            {t("Complete Settlement")}
                                         </button>
                                         <button 
                                             onClick={() => setIsConfirmingAction(false)}
                                             className="w-full min-h-[44px] rounded-2xl border border-white/10 bg-card/70 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all hover:bg-card hover:text-foreground"
                                         >
-                                            Go Back
+                                            {t("Go Back")}
                                         </button>
                                     </div>
                                 </div>
@@ -1455,12 +1457,14 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
     const { tenant, unit, amount, status, date, avatar } = payment;
     const isPaid = status === 'Paid';
     const isNearDue = status === 'Near Due';
+    const { t } = useLanguage();
+    const statusLabel = isPaid ? t("Paid") : isNearDue ? t("Due soon") : t("Overdue");
 
     return (
         <button 
             type="button"
             onClick={onClick}
-            aria-label={`View payment details for ${tenant}, Unit ${unit}. Amount: PHP ${amount}. Status: ${status}.`}
+            aria-label={t("View payment details for {tenant}, Unit {unit}. Amount: PHP {amount}. Status: {status}.", { tenant, unit, amount, status: statusLabel })}
             className="group relative flex w-full min-h-[52px] cursor-pointer items-center justify-between overflow-hidden rounded-2xl p-3 sm:p-3.5 neumorphic-extruded active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-left"
         >
             <div className="flex items-center gap-2.5 sm:gap-3 relative z-10 min-w-0 flex-1 mr-2">
@@ -1478,7 +1482,7 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
                 </div>
                 <div className="min-w-0 flex-1">
                     <h4 className="truncate text-xs sm:text-sm font-black text-foreground group-hover:text-primary transition-colors">{tenant}</h4>
-                    <p className="text-[11px] font-semibold text-muted-foreground truncate">Unit {unit}</p>
+                    <p className="text-[11px] font-semibold text-muted-foreground truncate">{t("Unit {unit}", { unit })}</p>
                 </div>
             </div>
 

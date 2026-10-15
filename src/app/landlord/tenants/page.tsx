@@ -15,8 +15,10 @@ import { TenantProfileView } from "@/components/landlord/tenants/TenantProfileVi
 import { Tenant } from "@/components/landlord/tenants/TenantCard";
 import { createOrGetDirectConversation } from "@/lib/messages/client";
 import { useInstantData } from "@/lib/hooks/useInstantData";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 function TenantsContent() {
+ const { t } = useLanguageContext();
  const searchParams = useSearchParams();
  const router = useRouter();
  const { push } = router;
@@ -279,8 +281,8 @@ function TenantsContent() {
  {/* Header Block */}
  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
  <div>
- <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Tenants Hub</h1>
- <p className="mt-1 text-muted-foreground">Manage resident records and lease timelines across your portfolio.</p>
+ <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">{t("Tenants Hub")}</h1>
+ <p className="mt-1 text-muted-foreground">{t("Manage resident records and lease timelines across your portfolio.")}</p>
  </div>
  <div className="flex items-center gap-3">
  <button 
@@ -291,7 +293,7 @@ function TenantsContent() {
   className="inline-flex items-center gap-2 rounded-xl neumorphic-primary px-5 py-2.5 text-sm font-black transition-all hover:bg-primary/90 active:scale-95"
  >
  <UserPlus className="size-4" />
- <span>Add New Tenant</span>
+ <span>{t("Add New Tenant")}</span>
  </button>
  </div>
  </div>
@@ -311,7 +313,7 @@ function TenantsContent() {
  )}
  >
  <tab.icon className="size-4" />
- {tab.label}
+ {t(tab.label)}
  {currentTab === tab.id && (
  <m.div 
  layoutId="activeTab"
@@ -353,8 +355,9 @@ function TenantsContent() {
 }
 
 export default function TenantsPage() {
+ const { t } = useLanguageContext();
  return (
- <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading Hub...</div>}>
+ <Suspense fallback={<div className="flex h-screen items-center justify-center">{t("Loading Hub...")}</div>}>
  <TenantsContent />
  </Suspense>
  );

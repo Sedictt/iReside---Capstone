@@ -3,6 +3,7 @@ import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { getInvoiceDetailForActor } from "@/lib/billing/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { isUuid } from "@/lib/validation/schemas/billing.schema";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,10 @@ export async function GET(request: Request, context: RouteContext) {
   if (!("userId" in authContext)) return authContext as Response;
   const { userId } = authContext;
   const adminClient = createServiceRoleSupabaseClient();
+
+  if (!isUuid(id)) {
+    return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+  }
 
   try {
     // Parallelize: expireInPersonIntents and getInvoiceDetailForActor are independent.

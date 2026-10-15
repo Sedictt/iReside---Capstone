@@ -3,6 +3,7 @@
 import React from "react";
 import { LayoutDashboard, Zap, Activity, Banknote, ArrowRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface DashboardGreetingModalProps {
     isOpen: boolean;
@@ -17,7 +18,9 @@ export function DashboardGreetingModal({
     onStartTour,
     propertyName,
 }: DashboardGreetingModalProps) {
+    const { t } = useLanguageContext();
     if (!isOpen) return null;
+    const [introBefore, introAfter] = t("Welcome to your management dashboard for {property}! Take a quick 1-minute guided tour to discover how to record cash payments, check room occupancy, and track rent collection.").split("{property}");
 
     return (
         <div 
@@ -51,17 +54,21 @@ export function DashboardGreetingModal({
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">
-                            Step 5 of 5 • Final Stage
+                            {t("Step {step} of {total} • Final Stage", { step: 5, total: 5 })}
                         </span>
                         <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                            Dashboard Tour
+                            {t("Dashboard Tour")}
                         </span>
                     </div>
                     <h1 id="dashboard-greeting-modal-title" className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight">
-                        Tour Your Dashboard
+                        {t("Tour Your Dashboard")}
                     </h1>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                        Welcome to your management dashboard{propertyName ? <> for <span className="font-bold text-foreground">{propertyName}</span></> : ""}! Take a quick 1-minute guided tour to discover how to record cash payments, check room occupancy, and track rent collection.
+                        {propertyName ? (
+                            <>{introBefore}<span className="font-bold text-foreground">{propertyName}</span>{introAfter}</>
+                        ) : (
+                            t("Welcome to your management dashboard! Take a quick 1-minute guided tour to discover how to record cash payments, check room occupancy, and track rent collection.")
+                        )}
                     </p>
                 </div>
 
@@ -73,10 +80,10 @@ export function DashboardGreetingModal({
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-foreground">
-                                1. Quick Actions
+                                {t("1. Quick Actions")}
                             </h3>
                             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                Record cash payments, onboard walk-in tenants, generate invite links, or download marketing flyers in one click.
+                                {t("Record cash payments, onboard walk-in tenants, generate invite links, or download marketing flyers in one click.")}
                             </p>
                         </div>
                     </div>
@@ -87,10 +94,10 @@ export function DashboardGreetingModal({
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-foreground">
-                                2. Today&apos;s Overview
+                                {t("2. Today's Overview")}
                             </h3>
                             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                See who hasn&apos;t paid rent yet, which rooms are empty, and pending tenant applications at a glance.
+                                {t("See who hasn't paid rent yet, which rooms are empty, and pending tenant applications at a glance.")}
                             </p>
                         </div>
                     </div>
@@ -101,10 +108,10 @@ export function DashboardGreetingModal({
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-foreground">
-                                3. Rent &amp; Payments
+                                {t("3. Rent & Payments")}
                             </h3>
                             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                Review payments in real-time, approve GCash/bank transfers, and issue automatic receipts.
+                                {t("Review payments in real-time, approve GCash/bank transfers, and issue automatic receipts.")}
                             </p>
                         </div>
                     </div>
@@ -117,14 +124,14 @@ export function DashboardGreetingModal({
                         onClick={onClose}
                         className="w-full sm:w-auto h-12 px-6 rounded-2xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all cursor-pointer text-center active:scale-95"
                     >
-                        Explore First
+                        {t("Explore First")}
                     </button>
                     <button
                         type="button"
                         onClick={onStartTour}
                         className="w-full sm:w-auto h-12 flex items-center justify-center gap-2 px-7 rounded-2xl text-sm font-bold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-95"
                     >
-                        <span>Start Guided Tour</span>
+                        <span>{t("Start Guided Tour")}</span>
                         <ArrowRight className="size-4" />
                     </button>
                 </div>

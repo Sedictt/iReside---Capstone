@@ -3,15 +3,8 @@
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-    Bell,
-    CreditCard,
-    Wrench,
-    FileText,
-    MessageCircle,
-    FileCheck,
     CheckCheck,
     Trash2,
-    Sparkles,
     Clock,
     AlertCircle,
     ChevronRight,
@@ -24,44 +17,8 @@ import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModal';
 import { cn } from '@/lib/utils';
 import type { Notification, NotificationType } from '@/types/database';
-
-function formatTimeAgo(value: string) {
-    const timestamp = new Date(value);
-    const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
-
-    if (Number.isNaN(diffMs) || diffMs < 0) {
-        return 'Recently';
-    }
-
-    const minute = 60 * 1000;
-    const hour = 60 * minute;
-    const day = 24 * hour;
-
-    if (diffMs < hour) {
-        const minutes = Math.max(1, Math.floor(diffMs / minute));
-        return `${minutes}m ago`;
-    }
-
-    if (diffMs < day) {
-        const hours = Math.max(1, Math.floor(diffMs / hour));
-        return `${hours}h ago`;
-    }
-
-    const days = Math.floor(diffMs / day);
-    if (days === 1) {
-        return 'Yesterday';
-    }
-
-    if (days < 7) {
-        return `${days}d ago`;
-    }
-
-    return timestamp.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-    });
-}
+import { useLanguageContext } from '@/context/LanguageContext';
+import { formatNotificationFullTime, formatNotificationTime, getNotificationVisual } from '@/lib/notification-display';
 
 const IMPORTANT_TYPES: NotificationType[] = [
     'lease',
@@ -86,6 +43,7 @@ export function MobileNotificationsView() {
 
     const { profile } = useAuth();
     const router = useRouter();
+    const { t, locale } = useLanguageContext();
 
     const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'urgent'>('all');
     const [isClearingAll, setIsClearingAll] = useState(false);
@@ -264,60 +222,6 @@ export function MobileNotificationsView() {
         }
     };
 
-    const getNotificationVisuals = (type: NotificationType) => {
-        switch (type) {
-            case 'payment':
-                return {
-                    icon: CreditCard,
-                    iconColor: 'text-emerald-500',
-                    badgeStyle: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-                    badge: 'Payment',
-                };
-            case 'maintenance':
-                return {
-                    icon: Wrench,
-                    iconColor: 'text-blue-500',
-                    badgeStyle: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20',
-                    badge: 'Maintenance',
-                };
-            case 'lease':
-            case 'lease_renewal_request':
-            case 'lease_renewal_approved':
-            case 'lease_renewal_rejected':
-            case 'move_out_approved':
-            case 'move_out_denied':
-            case 'move_out_inspection_completed':
-            case 'move_out_finalized':
-                return {
-                    icon: FileText,
-                    iconColor: 'text-amber-500',
-                    badgeStyle: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20',
-                    badge: 'Lease',
-                };
-            case 'application':
-                return {
-                    icon: FileCheck,
-                    iconColor: 'text-purple-500',
-                    badgeStyle: 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/20',
-                    badge: 'Application',
-                };
-            case 'message':
-                return {
-                    icon: MessageCircle,
-                    iconColor: 'text-indigo-500',
-                    badgeStyle: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
-                    badge: 'Message',
-                };
-            default:
-                return {
-                    icon: Bell,
-                    iconColor: 'text-primary',
-                    badgeStyle: 'bg-primary/15 text-primary border-primary/20',
-                    badge: 'Notice',
-                };
-        }
-    };
-
     return (
         <PullToRefresh onRefresh={refresh} className="min-h-full pb-10">
             <div className="px-4 pt-2.5 pb-6 flex flex-col gap-3.5">
@@ -335,7 +239,7 @@ export function MobileNotificationsView() {
                                     : 'neumorphic-extruded text-muted-foreground hover:text-foreground'
                             )}
                         >
-                            <span>All</span>
+                            <span>{t('All')}</span>
                             <span className={cn(
                                 "px-1.5 py-0.5 rounded-full text-[9px] font-black leading-none",
                                 activeTab === 'all' ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
@@ -353,7 +257,7 @@ export function MobileNotificationsView() {
                                     : 'neumorphic-extruded text-muted-foreground hover:text-foreground'
                             )}
                         >
-                            <span>Unread</span>
+                            <span>{t('Unread')}</span>
                             {unreadCount > 0 && (
                                 <span className={cn(
                                     "px-1.5 py-0.5 rounded-full text-[9px] font-black leading-none",
@@ -373,7 +277,7 @@ export function MobileNotificationsView() {
                                     : 'neumorphic-extruded text-muted-foreground hover:text-foreground'
                             )}
                         >
-                            <span>Urgent</span>
+                            <span>{t('Urgent')}</span>
                             {urgentCount > 0 && (
                                 <span className={cn(
                                     "px-1.5 py-0.5 rounded-full text-[9px] font-black leading-none",
@@ -390,17 +294,17 @@ export function MobileNotificationsView() {
                         <div className="flex items-center justify-between px-1 pt-1">
                             <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
                                 <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span>{unreadCount} unread notification{unreadCount === 1 ? '' : 's'}</span>
+                                <span>{unreadCount === 1 ? t('1 unread notification') : t('{count} unread notifications', { count: unreadCount })}</span>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setShowMarkAllConfirm(true)}
                                 disabled={isClearingAll}
                                 className="neumorphic-extruded flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 active:scale-95 transition-all cursor-pointer hover:bg-emerald-500/5"
-                                title="Mark all notifications as read"
+                                title={t('Mark all notifications as read')}
                             >
                                 <CheckCheck className="size-3.5 shrink-0" />
-                                <span>Mark all as read</span>
+                                <span>{t('Mark all as read')}</span>
                             </button>
                         </div>
                     )}
@@ -415,7 +319,7 @@ export function MobileNotificationsView() {
                             onClick={() => refresh()}
                             className="underline font-bold hover:opacity-80 cursor-pointer"
                         >
-                            Retry
+                            {t('Retry')}
                         </button>
                     </div>
                 )}
@@ -443,7 +347,7 @@ export function MobileNotificationsView() {
                             {activeTab === 'unread' ? (
                                 <CheckCircle2 className="size-7" strokeWidth={1.8} />
                             ) : activeTab === 'urgent' ? (
-                                <Sparkles className="size-7" strokeWidth={1.8} />
+                                <AlertCircle className="size-7" strokeWidth={1.8} />
                             ) : (
                                 <Inbox className="size-7" strokeWidth={1.8} />
                             )}
@@ -451,24 +355,24 @@ export function MobileNotificationsView() {
                         <div className="space-y-1 max-w-[250px]">
                             <h3 className="text-sm font-black text-foreground">
                                 {activeTab === 'unread'
-                                    ? 'All caught up!'
+                                    ? t('All caught up!')
                                     : activeTab === 'urgent'
-                                    ? 'No urgent notices'
-                                    : 'No notifications yet'}
+                                    ? t('No urgent notices')
+                                    : t('No notifications yet')}
                             </h3>
                             <p className="text-xs text-muted-foreground leading-relaxed">
                                 {activeTab === 'unread'
-                                    ? 'You have read all your notifications.'
+                                    ? t('You have read all your notifications.')
                                     : activeTab === 'urgent'
-                                    ? 'There are no high-priority alerts needing your attention.'
-                                    : 'New updates, payment alerts, and announcements will appear here.'}
+                                    ? t('There are no high-priority alerts needing your attention.')
+                                    : t('New updates, payment alerts, and announcements will appear here.')}
                             </p>
                         </div>
                     </div>
                 ) : (
                     <div className="space-y-3">
                         {filteredNotifications.map((item) => {
-                            const visuals = getNotificationVisuals(item.type);
+                            const visuals = getNotificationVisual(item.type);
                             const Icon = visuals.icon;
                             return (
                                 <div
@@ -484,7 +388,7 @@ export function MobileNotificationsView() {
                                     <div className="flex items-start gap-3.5">
                                         {/* Type Icon with Neumorphic Inset */}
                                         <div className="neumorphic-inset-card flex size-11 items-center justify-center rounded-2xl shrink-0 text-primary">
-                                            <Icon className={cn("size-5", visuals.iconColor)} />
+                                            <Icon className={cn("size-5", visuals.iconClassName)} />
                                         </div>
 
                                         {/* Content */}
@@ -493,19 +397,23 @@ export function MobileNotificationsView() {
                                                 <div className="flex items-center gap-1.5 overflow-hidden">
                                                     <span className={cn(
                                                         'text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border',
-                                                        visuals.badgeStyle
+                                                        visuals.badgeClassName
                                                     )}>
-                                                        {visuals.badge}
+                                                        {t(visuals.label)}
                                                     </span>
                                                     {!item.read && (
                                                         <span className="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] shrink-0 animate-pulse" />
                                                     )}
                                                 </div>
 
-                                                <span className="text-[10px] font-bold text-muted-foreground/70 flex items-center gap-1 shrink-0 font-mono">
+                                                <time
+                                                    dateTime={item.created_at}
+                                                    title={formatNotificationFullTime(item.created_at, locale)}
+                                                    className="text-[10px] font-bold text-muted-foreground/70 flex items-center gap-1 shrink-0 font-mono"
+                                                >
                                                     <Clock className="size-3" />
-                                                    {formatTimeAgo(item.created_at)}
-                                                </span>
+                                                    {formatNotificationTime(item.created_at, t, locale)}
+                                                </time>
                                             </div>
 
                                             <h4 className={cn(
@@ -529,8 +437,8 @@ export function MobileNotificationsView() {
                                                     void deleteNotification(item.id);
                                                 }}
                                                 className="neumorphic-inset-card flex size-7 items-center justify-center rounded-lg text-muted-foreground/50 hover:text-red-500 active:scale-95 transition-all cursor-pointer"
-                                                title="Delete notification"
-                                                aria-label="Delete"
+                                                title={t('Delete notification')}
+                                                aria-label={t('Delete notification')}
                                             >
                                                 <Trash2 className="size-3.5" />
                                             </button>
@@ -547,10 +455,12 @@ export function MobileNotificationsView() {
             {/* Mark All as Read Confirmation Modal */}
             <MobileConfirmModal
                 isOpen={showMarkAllConfirm}
-                title="Mark All as Read?"
-                description={`Are you sure you want to mark all ${unreadCount} unread notification${unreadCount === 1 ? '' : 's'} as read?`}
-                confirmLabel="Mark All Read"
-                cancelLabel="Cancel"
+                title={t('Mark All as Read?')}
+                description={unreadCount === 1
+                    ? t('Are you sure you want to mark 1 unread notification as read?')
+                    : t('Are you sure you want to mark all {count} unread notifications as read?', { count: unreadCount })}
+                confirmLabel={t('Mark All Read')}
+                cancelLabel={t('Cancel')}
                 variant="success"
                 isLoading={isClearingAll}
                 icon={<CheckCheck className="size-5" />}

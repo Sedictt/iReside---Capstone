@@ -6,6 +6,7 @@ import { AnimatePresence } from "framer-motion"
 import { AlertCircle, Users, UserPlus } from "lucide-react"
 import { Tenant, TenantCard, TenantStatus } from "./TenantCard"
 import { TenantFilterBar } from "./TenantFilterBar"
+import { useLanguageContext } from "@/context/LanguageContext"
 
 interface TenantDirectoryProps {
  tenants: Tenant[]
@@ -17,6 +18,7 @@ interface TenantDirectoryProps {
 }
 
 export function TenantDirectory({ tenants, loading, error, onViewProfile, onMessage, onAddTenant }: TenantDirectoryProps) {
+ const { t } = useLanguageContext();
  const searchParams = useSearchParams();
  const [searchQuery, setSearchQuery] = useState(() => searchParams?.get("search") || "");
  const [statusFilter, setStatusFilter] = useState<TenantStatus | "All">("All");
@@ -42,13 +44,13 @@ export function TenantDirectory({ tenants, loading, error, onViewProfile, onMess
  return (
  <div className="flex flex-col items-center justify-center rounded-[2rem] border border-red-500/10 bg-red-500/5 py-12 text-center">
  <AlertCircle className="mb-4 size-12 text-red-500" />
- <h3 className="text-lg font-black text-red-700">Failed to load tenants</h3>
- <p className="mt-1 text-sm text-red-600/70">{error}</p>
+ <h3 className="text-lg font-black text-red-700">{t("Failed to load tenants")}</h3>
+ <p className="mt-1 text-sm text-red-600/70">{t(error)}</p>
  <button 
  onClick={() => window.location.reload()}
  className="mt-6 rounded-xl bg-red-500 px-6 py-2 text-sm font-black text-white hover:bg-red-600"
  >
- Try Again
+ {t("Try Again")}
  </button>
  </div>
  )
@@ -68,9 +70,9 @@ export function TenantDirectory({ tenants, loading, error, onViewProfile, onMess
     <Users className="size-8" />
    </div>
    <div className="space-y-2">
-    <h3 className="text-2xl font-black tracking-tight text-foreground">No tenants registered yet</h3>
+    <h3 className="text-2xl font-black tracking-tight text-foreground">{t("No tenants registered yet")}</h3>
     <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
-     Your property doesn&apos;t have any residents yet. Add your first tenant manually or share an invite link to begin tracking leases, rent collections, and maintenance.
+     {t("Your property doesn't have any residents yet. Add your first tenant manually or share an invite link to begin tracking leases, rent collections, and maintenance.")}
     </p>
    </div>
    {onAddTenant && (
@@ -81,7 +83,7 @@ export function TenantDirectory({ tenants, loading, error, onViewProfile, onMess
       className="inline-flex items-center gap-2 rounded-xl neumorphic-primary px-6 py-3 text-sm font-black text-primary-foreground transition-all hover:brightness-110 active:scale-95 shadow-md shadow-primary/20 cursor-pointer"
      >
       <UserPlus className="size-4" />
-      <span>Add First Tenant</span>
+      <span>{t("Add First Tenant")}</span>
      </button>
     </div>
    )}
@@ -113,13 +115,13 @@ export function TenantDirectory({ tenants, loading, error, onViewProfile, onMess
   <div className="mb-4 rounded-full neumorphic-inset p-6">
   <Users className="size-10 text-muted-foreground/40" />
   </div>
-  <h3 className="text-xl font-black text-foreground">No matching residents</h3>
-  <p className="mt-2 text-muted-foreground">Adjust your search or filters to find what you&apos;re looking for.</p>
+  <h3 className="text-xl font-black text-foreground">{t("No matching residents")}</h3>
+  <p className="mt-2 text-muted-foreground">{t("Adjust your search or filters to find what you're looking for.")}</p>
   <button 
   onClick={() => { setSearchQuery(""); setStatusFilter("All"); }}
   className="mt-6 rounded-xl px-6 py-2 text-sm font-black hover:neumorphic-inset"
   >
-  Clear All Filters
+  {t("Clear All Filters")}
   </button>
   </div>
   )}

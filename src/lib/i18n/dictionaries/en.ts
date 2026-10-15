@@ -406,7 +406,7 @@ export const enDictionary: TranslationDictionary = {
   "Review Payments": "Review Payments",
   "Record Readings": "Record Readings",
   "Contracts & Tasks": "Contracts & Tasks",
-  "Review expiring lease contracts and pending tenant requests.": "Review expiring lease contracts and pending tenant requests.",
+  "Review lease contracts and pending tenant requests.": "Review lease contracts and pending tenant requests.",
   "View All Contracts": "View All Contracts",
 
   // Quick Action Items

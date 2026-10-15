@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { describeAuditEvent } from "@/lib/audit/audit-display";
 import {
   validateAdminFullName,
   validateAdminEmail,
@@ -10,15 +11,9 @@ import {
   isPreseededPhone,
 } from "@/lib/validation/brand-setup";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
-import { z } from "zod";
-
-const accountClaimSchema = z.object({
-  fullName: z.string().trim().min(2, "Full name must be at least 2 characters."),
-  newEmail: z.string().trim().email("Please provide a valid email address."),
-  otp: z.string().trim().length(6, "Verification code must be exactly 6 digits."),
-  newPassword: z.string().min(8, "Password must be at least 8 characters long."),
-  confirmPassword: z.string().min(1, "Please confirm your password."),
-});
+import { parseJsonBody } from "@/lib/validation/server";
+import { accountClaimSchema, escapeLikePattern } from "@/lib/validation/schemas/account.schema";
+import { evaluateOtpAttempt, persistOtpAttempt } from "@/lib/security/otp-verification";
 
 /**
  * POST /api/setup/account/claim
@@ -39,43 +34,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let rawBody: unknown;
-    try {
-      rawBody = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
-    }
+    const parsed = await parseJsonBody(request, accountClaimSchema);
+    if (!parsed.ok) return parsed.response;
 
-    const validation = accountClaimSchema.safeParse(rawBody);
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.issues[0]?.message || "Invalid input fields." },
-        { status: 400 }
-      );
-    }
-
-    const { fullName, newEmail, otp, newPassword, confirmPassword } = validation.data;
+    const { fullName, newEmail, otp, newPassword, confirmPassword } = parsed.data;
     const normalizedEmail = newEmail.toLowerCase().trim();
 
     // Check custom domain & placeholder validation
     const nameCheck = validateAdminFullName(fullName);
     if (!nameCheck.isValid) {
-      return NextResponse.json({ error: nameCheck.error }, { status: 400 });
+      return NextResponse.json({ error: nameCheck.error, fieldErrors: { fullName: nameCheck.error } }, { status: 400 });
     }
 
     const emailCheck = validateAdminEmail(normalizedEmail);
     if (!emailCheck.isValid) {
-      return NextResponse.json({ error: emailCheck.error }, { status: 400 });
+      return NextResponse.json({ error: emailCheck.error, fieldErrors: { newEmail: emailCheck.error } }, { status: 400 });
     }
 
-    const passwordCheck = validateAdminPassword(newPassword);
+    const passwordCheck = validateAdminPassword(newPassword, false, { name: fullName, email: normalizedEmail });
     if (!passwordCheck.isValid) {
-      return NextResponse.json({ error: passwordCheck.error }, { status: 400 });
+      return NextResponse.json({ error: passwordCheck.error, fieldErrors: { newPassword: passwordCheck.error } }, { status: 400 });
     }
 
     const confirmCheck = validateConfirmPassword(newPassword, confirmPassword);
     if (!confirmCheck.isValid) {
-      return NextResponse.json({ error: confirmCheck.error }, { status: 400 });
+      return NextResponse.json({ error: confirmCheck.error, fieldErrors: { confirmPassword: confirmCheck.error } }, { status: 400 });
     }
 
     const adminClient = createServiceRoleSupabaseClient();
@@ -101,17 +84,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (securitySettings.otp_code !== otp) {
-      return NextResponse.json(
-        { error: "Incorrect verification code. Please check and try again." },
-        { status: 400 }
-      );
-    }
+    // Constant-time code check with a hard ceiling on failed guesses per code.
+    const attempt = evaluateOtpAttempt({
+      storedCode: securitySettings.otp_code,
+      storedExpiry: securitySettings.otp_expiry,
+      providedOtp: otp,
+    });
 
-    if (!securitySettings.otp_expiry || new Date() > new Date(securitySettings.otp_expiry)) {
+    if (!attempt.ok) {
+      await persistOtpAttempt(adminClient as any, userId, attempt.nextStoredCode);
+      const message =
+        attempt.reason === "mismatch"
+          ? "Incorrect verification code. Please check and try again."
+          : attempt.reason === "expired"
+            ? "Verification code has expired. Please request a new code."
+            : attempt.reason === "locked"
+              ? "Too many failed attempts. Please request a new verification code."
+              : "No pending verification code found. Please request a new code.";
       return NextResponse.json(
-        { error: "Verification code has expired. Please request a new code." },
-        { status: 400 }
+        { error: message, remainingAttempts: attempt.remainingAttempts },
+        { status: attempt.reason === "locked" ? 429 : 400 }
       );
     }
 
@@ -119,7 +111,7 @@ export async function POST(request: NextRequest) {
     const { data: existingProfile } = await adminClient
       .from("profiles")
       .select("id")
-      .ilike("email", normalizedEmail)
+      .ilike("email", escapeLikePattern(normalizedEmail))
       .neq("id", userId)
       .maybeSingle();
 
@@ -246,8 +238,7 @@ export async function POST(request: NextRequest) {
       userRole: "landlord",
       action: "security_key_generated",
       category: "security",
-      title: "Security Recovery Key Generated",
-      description: `Initial single-use security recovery key generated during account claiming for ${normalizedEmail}.`,
+      ...describeAuditEvent({ action: "security_key_generated" }),
       severity: "info",
     });
 
@@ -256,8 +247,7 @@ export async function POST(request: NextRequest) {
       userRole: "landlord",
       action: "account_claimed",
       category: "security",
-      title: "Workspace Administrator Account Claimed",
-      description: `Landlord claimed account with verified email ${normalizedEmail} and updated credentials.`,
+      ...describeAuditEvent({ action: "account_claimed" }),
       severity: "info",
     });
 
@@ -270,7 +260,7 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     console.error("[POST /api/setup/account/claim] Unexpected error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "An unexpected error occurred during account claiming." },
+      { error: "An unexpected error occurred during account claiming." },
       { status: 500 }
     );
   }

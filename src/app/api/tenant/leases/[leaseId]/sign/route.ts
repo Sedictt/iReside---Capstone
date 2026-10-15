@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { verifySigningToken } from "@/lib/jwt";
 import {
   validateSignature,
@@ -10,6 +10,9 @@ import { logAuditEvent, extractIpAddress, extractUserAgent } from "@/lib/audit-l
 import { sendTenantSignedNotification } from "@/lib/email";
 import { isValidLeaseStatusTransition, getTransitionErrorMessage } from "@/lib/lease-status-transitions";
 import { generateLeasePdf } from "@/lib/lease-pdf";
+import { normalizeTermType } from "@/lib/lease-term";
+import { parseWithSchema } from "@/lib/validation/server";
+import { isId, signLeaseBodySchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 type SignLeaseBody = {
   tenant_signature?: string;
@@ -32,18 +35,24 @@ export async function POST(
   context: { params: Promise<{ leaseId: string }> }
 ) {
   const { leaseId } = await context.params;
-  const supabase = await createClient();
 
-  // Parse request body
-  let body: SignLeaseBody;
+  if (!isId(leaseId)) {
+    return NextResponse.json({ error: "Lease not found" }, { status: 404 });
+  }
+
+  // Parse request body (types + size caps; signature content is checked by validateSignature below)
+  let rawBody: unknown;
   try {
-    body = (await request.json()) as SignLeaseBody;
+    rawBody = await request.json();
   } catch {
     return NextResponse.json(
       { error: "Invalid request body" },
       { status: 400 }
     );
   }
+  const parsedBody = parseWithSchema(signLeaseBodySchema, rawBody);
+  if (!parsedBody.ok) return parsedBody.response;
+  const body: SignLeaseBody = parsedBody.data;
 
   const signatureInput = body.tenant_signature || body.tenantSignature;
   const tokenInput = body.signing_token || body.signingToken;
@@ -84,8 +93,10 @@ export async function POST(
     );
   }
 
-  // Fetch lease record
-  const { data: lease, error: leaseError } = await supabase
+  // Fetch lease record. The verified token is the authorization (the signer may be
+  // signed out or signed in as someone else), so read past RLS; the tenant_id check
+  // below keeps this scoped to the token's tenant.
+  const { data: lease, error: leaseError } = await createAdminClient()
     .from("leases")
     .select("id, status, tenant_id, landlord_id, landlord_signature, tenant_signature")
     .eq("id", leaseId)
@@ -165,7 +176,6 @@ export async function POST(
   const updateLeaseWithRetry = async () => {
     // We use the admin client here to ensure system-level updates (status, lock version) 
     // succeed without RLS interference, since we've already securely verified the JWT token.
-    const { createAdminClient } = await import("@/lib/supabase/admin");
     const adminClient = createAdminClient();
 
     // Fetch current lock version
@@ -239,7 +249,6 @@ export async function POST(
     const { generateLandlordSigningLink } = await import("@/lib/jwt");
     const landlordSigningUrl = generateLandlordSigningLink(leaseId, lease.landlord_id);
 
-    const { createAdminClient } = await import("@/lib/supabase/admin");
     const adminClient = createAdminClient();
 
     // Fetch landlord and tenant details for email using explicit aliases
@@ -295,7 +304,6 @@ export async function POST(
   // Generate and store tenant-signed PDF document in vault
   // This ensures the landlord sees the exact PDF the tenant signed.
   try {
-    const { createAdminClient } = await import("@/lib/supabase/admin");
     const adminClient = createAdminClient();
 
     // Fetch full lease details for PDF generation
@@ -305,6 +313,7 @@ export async function POST(
         id,
         start_date,
         end_date,
+        term_type,
         monthly_rent,
         security_deposit,
         terms,
@@ -346,7 +355,9 @@ export async function POST(
         const pdfBlob = await generateLeasePdf({
           id: leaseData.id,
           startDate: new Date(leaseData.start_date).toLocaleDateString(),
-          endDate: new Date(leaseData.end_date).toLocaleDateString(),
+          // Open-ended leases have no end date; the PDF renders the month-to-month clause.
+          endDate: leaseData.end_date ? new Date(leaseData.end_date).toLocaleDateString() : null,
+          termType: normalizeTermType(leaseData.term_type),
           monthlyRent: leaseData.monthly_rent,
           securityDeposit: leaseData.security_deposit,
           property: (leaseData as any).units?.properties,

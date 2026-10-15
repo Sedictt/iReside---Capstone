@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import type { Database } from "@/types/database";
+import { parseJsonBody } from "@/lib/validation/server";
+import { tenantProfilePatchSchema } from "@/lib/validation/schemas/account.schema";
 
 /**
  * GET /api/tenant/profile
@@ -37,8 +39,10 @@ export async function PATCH(request: Request) {
     const { userId, supabase } = authContext;
 
     try {
-        const body = await request.json();
-        const { has_changed_password, ...otherFields } = body;
+        // Only these fields are accepted; values are type/length/format checked.
+        const parsed = await parseJsonBody(request, tenantProfilePatchSchema);
+        if (!parsed.ok) return parsed.response;
+        const { has_changed_password, ...otherFields } = parsed.data;
 
         // Build update payload - only allow certain fields to be updated
         const updates: Database["public"]["Tables"]["profiles"]["Update"] = {
@@ -50,7 +54,7 @@ export async function PATCH(request: Request) {
         // Allow other safe public profile fields to be updated
         const allowedFields = ["full_name", "bio"] as const;
         for (const field of allowedFields) {
-            if (field in otherFields) {
+            if (otherFields[field] !== undefined) {
                 updates[field] = otherFields[field];
             }
         }
@@ -86,15 +90,15 @@ export async function PATCH(request: Request) {
             }
         }
 
-        const shouldUpdatePrivateProfile = "phone" in otherFields || "address" in otherFields;
+        const shouldUpdatePrivateProfile = otherFields.phone !== undefined || otherFields.address !== undefined;
         if (shouldUpdatePrivateProfile) {
             const { error: privateError } = await (supabase as any)
                 .from("profile_private")
                 .upsert(
                     {
                         profile_id: userId,
-                        phone: "phone" in otherFields ? otherFields.phone : updatedProfile.phone,
-                        address: "address" in otherFields ? otherFields.address : updatedProfile.address,
+                        phone: otherFields.phone !== undefined ? otherFields.phone : updatedProfile.phone,
+                        address: otherFields.address !== undefined ? otherFields.address : updatedProfile.address,
                         updated_at: new Date().toISOString(),
                     },
                     { onConflict: "profile_id" }
@@ -109,7 +113,7 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ profile: updatedProfile });
     } catch (error) {
         console.error("[tenant/profile PATCH] Error:", error);
-        return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+        return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
     }
 }
 

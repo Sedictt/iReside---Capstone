@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { verifySigningToken } from "@/lib/jwt";
 
 /**
@@ -15,8 +16,9 @@ export async function GET(
   context: { params: Promise<{ leaseId: string }> }
 ) {
   const { leaseId } = await context.params;
-  const supabase = await createClient();
-
+  if (!isId(leaseId)) {
+    return NextResponse.json({ error: "Lease not found" }, { status: 404 });
+  }
   try {
     // Get token from query params
     const { searchParams } = new URL(request.url);
@@ -56,7 +58,11 @@ export async function GET(
       );
     }
 
-    // Fetch lease with related data
+    // The signing token is the authorization here: the link is opened from an email,
+    // often signed out or in a browser signed in as someone else, so RLS on the
+    // visitor's session would hide the lease. The token checks above and the
+    // tenant_id check below scope this read.
+    const supabase = createAdminClient();
     const { data: lease, error: leaseError } = await supabase
       .from("leases")
       .select(`
@@ -72,7 +78,9 @@ export async function GET(
           name,
           property:properties!inner (
             name,
-            address
+            address,
+            city,
+            house_rules
           )
         ),
         landlord:profiles!leases_landlord_id_fkey (

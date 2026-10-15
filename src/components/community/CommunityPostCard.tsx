@@ -25,6 +25,10 @@ import {
 } from "lucide-react"
 import type { CommunityPost, CommunityReactionType } from "@/lib/community/types"
 import { CommunityPhotoLightbox } from "./CommunityPhotoLightbox"
+import { useLanguageContext } from "@/context/LanguageContext"
+import type { TranslationParams } from "@/lib/i18n"
+
+type Translator = (phrase: string, params?: TranslationParams) => string
 
 export interface CommentData {
     id: string
@@ -67,18 +71,18 @@ interface CommunityPostCardProps {
     isPending?: boolean
 }
 
-const formatRelative = (value: string) => {
+const formatRelative = (value: string, t: Translator, locale: string) => {
     const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return "Just now"
+    if (Number.isNaN(date.getTime())) return t("Just now")
     const diffMs = Date.now() - date.getTime()
     const minutes = Math.floor(diffMs / 60000)
-    if (minutes < 1) return "Just now"
-    if (minutes < 60) return `${minutes}m ago`
+    if (minutes < 1) return t("Just now")
+    if (minutes < 60) return t("{count}m ago", { count: minutes })
     const hours = Math.floor(minutes / 60)
-    if (hours < 24) return `${hours}h ago`
+    if (hours < 24) return t("{count}h ago", { count: hours })
     const days = Math.floor(hours / 24)
-    if (days < 7) return `${days}d ago`
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    if (days < 7) return t("{count}d ago", { count: days })
+    return date.toLocaleDateString(locale, { month: "short", day: "numeric" })
 }
 
 const getPollOptions = (metadata: unknown): string[] => {
@@ -115,6 +119,7 @@ export function CommunityPostCard({
     onModerationDecision,
     isPending
 }: CommunityPostCardProps) {
+    const { t, locale } = useLanguageContext()
     const [commentContent, setCommentContent] = useState("")
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
     const [kebabOpen, setKebabOpen] = useState(false)
@@ -183,7 +188,7 @@ export function CommunityPostCard({
     }
 
     const handleDeletePost = () => {
-        if (onDeletePost && confirm("Are you sure you want to delete this post?")) {
+        if (onDeletePost && confirm(t("Are you sure you want to delete this post?"))) {
             onDeletePost(post.id)
         }
         setKebabOpen(false)
@@ -215,7 +220,7 @@ export function CommunityPostCard({
     }
 
     const handleDeleteComment = (commentId: string) => {
-        if (onDeleteComment && confirm("Delete this comment?")) {
+        if (onDeleteComment && confirm(t("Delete this comment?"))) {
             onDeleteComment(commentId)
         }
     }
@@ -231,15 +236,15 @@ export function CommunityPostCard({
 
     const menuItems = [
         ...(isAuthor ? [
-            { icon: Pencil, label: "Edit Post", onClick: () => { setIsEditingPost(true); setKebabOpen(false) }, danger: false },
-            { icon: Trash2, label: "Delete Post", onClick: handleDeletePost, danger: true },
+            { icon: Pencil, label: t("Edit Post"), onClick: () => { setIsEditingPost(true); setKebabOpen(false) }, danger: false },
+            { icon: Trash2, label: t("Delete Post"), onClick: handleDeletePost, danger: true },
         ] : []),
         ...(isManagementUser ? [
-            { icon: Pin, label: post.is_pinned ? "Unpin Post" : "Pin Post", onClick: handlePinPost, danger: false },
+            { icon: Pin, label: post.is_pinned ? t("Unpin Post") : t("Pin Post"), onClick: handlePinPost, danger: false },
         ] : []),
-        { icon: Bookmark, label: isSaved ? "Unsave Post" : "Save Post", onClick: handleToggleSave, danger: false },
-        { icon: Share2, label: "Copy Link", onClick: handleShare, danger: false },
-        { icon: Flag, label: "Report", onClick: () => { onReport(post.id); setKebabOpen(false) }, danger: false },
+        { icon: Bookmark, label: isSaved ? t("Unsave Post") : t("Save Post"), onClick: handleToggleSave, danger: false },
+        { icon: Share2, label: t("Copy Link"), onClick: handleShare, danger: false },
+        { icon: Flag, label: t("Report"), onClick: () => { onReport(post.id); setKebabOpen(false) }, danger: false },
     ]
 
     const thumbsUpCount = post.reactions?.thumbs_up || 0
@@ -271,7 +276,7 @@ export function CommunityPostCard({
                             </span>
                             {post.author_role === 'landlord' && (
                                 <span className="shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-primary">
-                                    Management
+                                    {t("Management")}
                                 </span>
                             )}
                             {post.is_pinned && (
@@ -279,7 +284,7 @@ export function CommunityPostCard({
                             )}
                         </div>
                         <span className="text-xs text-muted-foreground/60">
-                            {formatRelative(post.created_at)}
+                            {formatRelative(post.created_at, t, locale)}
                         </span>
                     </div>
                 </div>
@@ -289,7 +294,7 @@ export function CommunityPostCard({
                         <button
                             onClick={(e) => { e.stopPropagation(); setKebabOpen(!kebabOpen) }}
                             className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors neumorphic-extruded"
-                            aria-label="Post options"
+                            aria-label={t("Post options")}
                         >
                             <MoreHorizontal className="size-[18px]" />
                         </button>
@@ -334,13 +339,13 @@ export function CommunityPostCard({
                         value={editPostTitle}
                         onChange={(e) => setEditPostTitle(e.target.value)}
                         className="w-full rounded-xl px-4 py-2.5 text-sm font-black outline-none transition-all neumorphic-inset"
-                        placeholder="Post title..."
+                        placeholder={t("Post title...")}
                     />
                     <textarea maxLength={500}
                         value={editPostContent}
                         onChange={(e) => setEditPostContent(e.target.value)}
                         className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all neumorphic-inset min-h-[80px] resize-none"
-                        placeholder="Post content..."
+                        placeholder={t("Post content...")}
                     />
                     <div className="flex gap-2">
                         <button
@@ -348,13 +353,13 @@ export function CommunityPostCard({
                             disabled={isMutating}
                             className="flex-1 rounded-xl py-2 text-sm font-black transition-opacity neumorphic-primary disabled:opacity-50"
                         >
-                            Save Changes
+                            {t("Save Changes")}
                         </button>
                         <button
                             onClick={() => { setIsEditingPost(false); setEditPostTitle(post.title); setEditPostContent(post.content || "") }}
                             className="flex-1 rounded-xl py-2 text-sm font-black transition-colors neumorphic-extruded disabled:opacity-50"
                         >
-                            Cancel
+                            {t("Cancel")}
                         </button>
                     </div>
                 </div>
@@ -377,7 +382,7 @@ export function CommunityPostCard({
                                         onClick={() => setIsExpanded(!isExpanded)}
                                         className="mt-1 text-xs font-black text-primary hover:underline"
                                     >
-                                        {isExpanded ? 'Show less' : 'Read more'}
+                                        {isExpanded ? t('Show less') : t('Read more')}
                                     </button>
                                 )}
                             </div>
@@ -450,7 +455,7 @@ export function CommunityPostCard({
                         <div className="flex size-8 items-center justify-center rounded-full bg-amber-500/20">
                             <Pin className="size-4 text-amber-500" />
                         </div>
-                        <span className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">Awaiting Moderation</span>
+                        <span className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">{t("Awaiting Moderation")}</span>
                     </div>
                     {isManagementUser && onModerationDecision && (
                         <div className="flex gap-2">
@@ -458,13 +463,13 @@ export function CommunityPostCard({
                                 onClick={() => onModerationDecision(post.id, true)}
                                 className="flex h-8 items-center gap-1.5 rounded-lg bg-emerald-500 px-3 text-xs font-black text-white hover:brightness-110 transition-all"
                             >
-                                <Check className="size-3.5" /> Approve
+                                <Check className="size-3.5" /> {t("Approve")}
                             </button>
                             <button
                                 onClick={() => onModerationDecision(post.id, false)}
                                 className="flex h-8 items-center gap-1.5 rounded-lg bg-red-500 px-3 text-xs font-black text-white hover:brightness-110 transition-all"
                             >
-                                <XCircle className="size-3.5" /> Reject
+                                <XCircle className="size-3.5" /> {t("Reject")}
                             </button>
                         </div>
                     )}
@@ -481,7 +486,7 @@ export function CommunityPostCard({
                         }`}
                     >
                         <ThumbsUp className={`size-4 ${hasReacted ? 'fill-current' : ''}`} />
-                        <span className="text-xs font-black">{thumbsUpCount > 0 ? thumbsUpCount : 'Like'}</span>
+                        <span className="text-xs font-black">{thumbsUpCount > 0 ? thumbsUpCount : t('Like')}</span>
                     </button>
 
                     <button
@@ -493,7 +498,7 @@ export function CommunityPostCard({
                                 ? 'neumorphic-inset text-primary'
                                 : 'neumorphic-extruded text-muted-foreground'
                         }`}
-                        aria-label={`Comments (${post.commentCount || 0})`}
+                        aria-label={t("Comments ({count})", { count: post.commentCount || 0 })}
                     >
                         <MessageCircle className="size-4" />
                         <span className="text-xs font-black">{post.commentCount || 0}</span>
@@ -508,7 +513,7 @@ export function CommunityPostCard({
                         }`}
                     >
                         <Bookmark className={`size-4 ${isSaved ? 'fill-current' : ''}`} />
-                        <span className="text-xs font-black">{isSaved ? 'Saved' : 'Save'}</span>
+                        <span className="text-xs font-black">{isSaved ? t('Saved') : t('Save')}</span>
                     </button>
 
                     <div className="flex-1" />
@@ -516,7 +521,7 @@ export function CommunityPostCard({
                     <button
                         onClick={handleShare}
                         className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-all neumorphic-extruded active:scale-95"
-                        title="Copy link"
+                        title={t("Copy link")}
                     >
                         <Share2 className="size-4" />
                     </button>
@@ -593,13 +598,13 @@ export function CommunityPostCard({
                                                                     disabled={isMutating}
                                                                     className="rounded-lg bg-primary px-3 py-1 text-xs font-black text-primary-foreground hover:opacity-90 disabled:opacity-50"
                                                                 >
-                                                                    Save
+                                                                    {t("Save")}
                                                                 </button>
                                                                 <button
                                                                     onClick={handleCancelCommentEdit}
                                                                     className="rounded-lg border border-border px-3 py-1 text-xs font-black hover:bg-muted/50"
                                                                 >
-                                                                    Cancel
+                                                                    {t("Cancel")}
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -617,29 +622,29 @@ export function CommunityPostCard({
                                                                     {comment.isPending ? (
                                                                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary">
                                                                             <Loader2 className="size-2.5 animate-spin" />
-                                                                            Posting...
+                                                                            {t("Posting...")}
                                                                         </span>
                                                                     ) : comment.isFailed ? (
                                                                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-500">
                                                                             <AlertCircle className="size-2.5" />
-                                                                            Failed to post
+                                                                            {t("Failed to post")}
                                                                         </span>
                                                                     ) : (
-                                                                        <span className="text-[10px] text-muted-foreground/60">{formatRelative(comment.createdAt)}</span>
+                                                                        <span className="text-[10px] text-muted-foreground/60">{formatRelative(comment.createdAt, t, locale)}</span>
                                                                     )}
                                                                     {!comment.isPending && !comment.isFailed && currentUserId === comment.authorId && onEditComment && onDeleteComment && (
                                                                         <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                             <button
                                                                                 onClick={() => handleEditComment(comment)}
                                                                                 className="p-1 text-muted-foreground/60 hover:text-primary rounded hover:bg-primary/10"
-                                                                                title="Edit"
+                                                                                title={t("Edit")}
                                                                             >
                                                                                 <Pencil className="size-3" />
                                                                             </button>
                                                                             <button
                                                                                 onClick={() => handleDeleteComment(comment.id)}
                                                                                 className="p-1 text-muted-foreground/60 hover:text-red-500 rounded hover:bg-red-500/10"
-                                                                                title="Delete"
+                                                                                title={t("Delete")}
                                                                             >
                                                                                 <Trash2 className="size-3" />
                                                                             </button>
@@ -656,7 +661,7 @@ export function CommunityPostCard({
                                                                         className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
                                                                     >
                                                                         <RotateCw className="size-3" />
-                                                                        Retry
+                                                                        {t("Retry")}
                                                                     </button>
                                                                     <button
                                                                         type="button"
@@ -664,7 +669,7 @@ export function CommunityPostCard({
                                                                         className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground/70 hover:text-red-500 transition-colors"
                                                                     >
                                                                         <Trash2 className="size-3" />
-                                                                        Delete
+                                                                        {t("Delete")}
                                                                     </button>
                                                                 </div>
                                                             )}
@@ -683,7 +688,7 @@ export function CommunityPostCard({
                                         transition={{ duration: 0.15 }}
                                         className="py-6 text-center"
                                     >
-                                        <p className="text-sm text-muted-foreground/60">No comments yet. Start the conversation!</p>
+                                        <p className="text-sm text-muted-foreground/60">{t("No comments yet. Start the conversation!")}</p>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -709,13 +714,14 @@ export function CommunityPostCard({
                                                 handleCommentSubmit(e as any)
                                             }
                                         }}
-                                        placeholder="Write a comment..."
+                                        placeholder={t("Write a comment...")}
                                         className="w-full rounded-xl px-3.5 py-2.5 pr-10 text-sm outline-none transition-all neumorphic-inset min-h-[44px] max-h-[120px] resize-none"
                                         rows={1}
                                     />
                                     <button
                                         type="submit"
                                         disabled={!commentContent.trim()}
+                                        aria-label={t("Post comment")}
                                         className="absolute right-2 top-1/2 -translate-y-1/2 text-primary hover:scale-110 disabled:opacity-30 transition-all p-1"
                                     >
                                         <Send className="size-4" />
@@ -741,6 +747,7 @@ export function CommunityPostCard({
 }
 
 function PhotoGrid({ photos, onPhotoClick }: { photos: { id: string; url: string }[], onPhotoClick: (idx: number) => void }) {
+    const { t } = useLanguageContext()
     if (photos.length === 1) {
         return (
             <div
@@ -750,7 +757,7 @@ function PhotoGrid({ photos, onPhotoClick }: { photos: { id: string; url: string
                 tabIndex={0}
                 role="button"
             >
-                <Image src={photos[0].url} alt="Post" fill className="object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
+                <Image src={photos[0].url} alt={t("Post photo")} fill className="object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
             </div>
         )
     }
@@ -766,7 +773,7 @@ function PhotoGrid({ photos, onPhotoClick }: { photos: { id: string; url: string
                     tabIndex={0}
                     role="button"
                 >
-                    <Image src={photo.url} alt={`Photo ${i}`} fill className="object-cover transition-transform hover:scale-[1.03] duration-500" />
+                    <Image src={photo.url} alt={t("Photo {number}", { number: i + 1 })} fill className="object-cover transition-transform hover:scale-[1.03] duration-500" />
                     {photos.length > 4 && i === 3 && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/50 group-hover:bg-black/40 transition-colors">
                             <span className="text-lg font-black text-white">+{photos.length - 4}</span>

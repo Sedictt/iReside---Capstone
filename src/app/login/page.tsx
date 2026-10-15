@@ -16,6 +16,8 @@ import { useState, Suspense, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -23,6 +25,13 @@ import { AccountActivationModal } from "@/components/auth/AccountActivationModal
 import { SecurityKeyRecoveryModal } from "@/components/auth/SecurityKeyRecoveryModal";
 import { DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
 import { OfflineStorage } from "@/lib/offline/offlineStorage";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { emailRule, otpRule } from "@/lib/validation/rules";
+import { CURRENT_PASSWORD_MAX_LENGTH, currentPasswordRule } from "@/lib/validation/schemas/account.schema";
+
+/** Error-state border for the sign-in inputs (matches the auth pages). */
+const AUTH_INPUT_ERROR = "border-red-500 focus:border-red-500 focus:ring-red-500/20";
 
 function clearStaleLandlordData() {
     try {
@@ -67,12 +76,14 @@ function clearStaleLandlordData() {
 
 
 function LoginContent() {
+    const { t } = useLanguageContext();
     const [error, setError] = useState<string | null>(null);
     const [activationBanner, setActivationBanner] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [showActivationModal, setShowActivationModal] = useState(false);
     const [prefilledEmail, setPrefilledEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [mounted, setMounted] = useState(false);
     const [pendingRecovery, setPendingRecovery] = useState<{
         securityKey: string;
@@ -94,11 +105,33 @@ function LoginContent() {
     const [twoFactorError, setTwoFactorError] = useState<string | null>(null);
     const [twoFactorCooldown, setTwoFactorCooldown] = useState(0);
     const [isResendingTwoFactor, setIsResendingTwoFactor] = useState(false);
+    // Set once credentials (and 2FA) are accepted, so the form never reappears while the
+    // browser navigates to the portal — otherwise users think sign-in failed and retry.
+    const [isSigningIn, setIsSigningIn] = useState(false);
 
     const passwordInputRef = useRef<HTMLInputElement>(null);
+
+    // Sign-in only checks that a password was entered — strength rules apply
+    // when a password is set (reset / setup / settings), never at login.
+    const loginForm = useFormValidation(
+        { email: prefilledEmail, password },
+        {
+            email: (value) => emailRule(value),
+            password: (value) => currentPasswordRule(value),
+        },
+    );
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get('redirect');
+
+    useEffect(() => {
+        // Returning via the back button restores this page from bfcache mid-"signing in".
+        const handlePageShow = (event: PageTransitionEvent) => {
+            if (event.persisted) setIsSigningIn(false);
+        };
+        window.addEventListener("pageshow", handlePageShow);
+        return () => window.removeEventListener("pageshow", handlePageShow);
+    }, []);
 
     useEffect(() => {
         if (twoFactorCooldown <= 0) return;
@@ -118,11 +151,13 @@ function LoginContent() {
                 setPrefilledEmail(emailParam);
             }
             setActivationBanner(
-                `Account claimed successfully! Please sign in with your new credentials${emailParam ? ` as ${emailParam}` : ""} to proceed to setup.`
+                emailParam
+                    ? t("Account claimed successfully! Please sign in with your new credentials as {email} to proceed to setup.", { email: emailParam })
+                    : t("Account claimed successfully! Please sign in with your new credentials to proceed to setup.")
             );
             setTimeout(() => {
+                setPassword("");
                 if (passwordInputRef.current) {
-                    passwordInputRef.current.value = "";
                     passwordInputRef.current.focus();
                 }
             }, 150);
@@ -142,13 +177,13 @@ function LoginContent() {
                 }
             } else if (searchParams.get("claimed") === "true") {
                 setActivationBanner(
-                    "Account claimed successfully! Please sign in with your new credentials to proceed to setup."
+                    t("Account claimed successfully! Please sign in with your new credentials to proceed to setup.")
                 );
             }
         } catch {
             // best-effort
         }
-    }, [searchParams]);
+    }, [searchParams, t]);
 
     const handleRecoveryProceed = async () => {
         if (!pendingRecovery) return;
@@ -205,8 +240,8 @@ function LoginContent() {
                     password,
                 });
                 if (!signInErr && signInData?.session) {
-                    toast.success("Account Claimed Successfully!", {
-                        description: "Continuing directly to property setup...",
+                    toast.success(t("Account Claimed Successfully!"), {
+                        description: t("Continuing directly to property setup..."),
                     });
                     if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
                         window.location.replace("/setup");
@@ -229,11 +264,11 @@ function LoginContent() {
         setPendingRecovery(null);
         setPrefilledEmail(email);
         setActivationBanner(
-            `Account claimed successfully! Please sign in with your new credentials as ${email} to proceed to setup.`
+            t("Account claimed successfully! Please sign in with your new credentials as {email} to proceed to setup.", { email })
         );
         setTimeout(() => {
+            setPassword("");
             if (passwordInputRef.current) {
-                passwordInputRef.current.value = "";
                 passwordInputRef.current.focus();
             }
         }, 150);
@@ -264,7 +299,7 @@ function LoginContent() {
         setShowActivationModal(false);
         setPrefilledEmail(newEmail);
         setActivationBanner(
-            `Account claimed successfully! Please sign in with your new credentials as ${newEmail}.`
+            t("Account claimed successfully! Please sign in with your new credentials as {email}.", { email: newEmail })
         );
 
         // Force a full page reload to clear any stale in-memory auth state.
@@ -276,8 +311,8 @@ function LoginContent() {
 
         // Fallback for test environments: focus the password field
         setTimeout(() => {
+            setPassword("");
             if (passwordInputRef.current) {
-                passwordInputRef.current.value = "";
                 passwordInputRef.current.focus();
             }
         }, 150);
@@ -285,6 +320,8 @@ function LoginContent() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (loading) return;
+        if (!loginForm.validateAll()) return;
         setError(null);
         setActivationBanner(null);
         setLoading(true);
@@ -302,16 +339,16 @@ function LoginContent() {
                 password,
             });
             const timeoutPromise = new Promise<{ data: any; error: any }>((_, reject) =>
-                setTimeout(() => reject(new Error("Authentication request timed out. Please check your network and try again.")), 12000)
+                setTimeout(() => reject(new Error(t("Authentication request timed out. Please check your network and try again."))), 12000)
             );
 
             const { data, error } = await Promise.race([signInPromise, timeoutPromise]);
 
             if (error) {
                 if (error.message?.toLowerCase().includes("schema")) {
-                    setError("Login failed due to a Supabase auth schema issue. Please contact support.");
+                    setError(t("Login failed due to a Supabase auth schema issue. Please contact support."));
                 } else {
-                    setError(error.message);
+                    setError(t(error.message));
                 }
                 return;
             }
@@ -367,13 +404,13 @@ function LoginContent() {
                         }
                     } else {
                         const errData = await twoFactorRes.json().catch(() => null);
-                        setError(errData?.error || "Failed to initiate Two-Factor Authentication. Please try again.");
+                        setError(t(errData?.error || "Failed to initiate Two-Factor Authentication. Please try again."));
                         setLoading(false);
                         return;
                     }
                 } catch (twoFactorErr) {
                     console.error("[Login] 2FA challenge check error:", twoFactorErr);
-                    setError("Unable to complete security verification. Please check your connection and try again.");
+                    setError(t("Unable to complete security verification. Please check your connection and try again."));
                     setLoading(false);
                     return;
                 }
@@ -381,8 +418,9 @@ function LoginContent() {
 
             await completeSuccessfulLogin(data.user, role);
         } catch (err) {
+            setIsSigningIn(false);
             console.error('[Login] Unexpected error:', err);
-            setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
+            setError(err instanceof Error ? t(err.message) : t("An unexpected error occurred. Please try again."));
         } finally {
             setLoading(false);
         }
@@ -390,6 +428,7 @@ function LoginContent() {
 
 
     const completeSuccessfulLogin = async (userData: any, userRole?: string) => {
+        setIsSigningIn(true);
         const role = userRole || userData?.user_metadata?.role;
         const isClaimed = userData?.user_metadata?.is_account_claimed;
         const userEmail = (userData?.email || "").toLowerCase().trim();
@@ -410,6 +449,7 @@ function LoginContent() {
             });
             setShowActivationModal(true);
             setTwoFactorChallenge(null);
+            setIsSigningIn(false);
             setLoading(false);
             return;
         }
@@ -466,9 +506,11 @@ function LoginContent() {
     const handleTwoFactorVerify = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!twoFactorChallenge) return;
+        if (twoFactorLoading) return;
         const cleanOtp = twoFactorOtp.replace(/\D/g, "");
-        if (cleanOtp.length !== 6) {
-            setTwoFactorError("Please enter a valid 6-digit verification code.");
+        const otpError = otpRule(cleanOtp);
+        if (otpError) {
+            setTwoFactorError(t(otpError));
             return;
         }
 
@@ -487,17 +529,18 @@ function LoginContent() {
 
             const data = await res.json();
             if (!res.ok || data.error) {
-                setTwoFactorError(data.error || "Verification failed. Please try again.");
+                setTwoFactorError(t(data.error || "Verification failed. Please try again."));
                 setTwoFactorLoading(false);
                 return;
             }
 
-            // 2FA Verified! Complete login
+            // 2FA verified — keep the challenge mounted until navigation; the signing-in
+            // panel covers it so the sign-in form doesn't flash back.
             const { userData, role } = twoFactorChallenge;
-            setTwoFactorChallenge(null);
             await completeSuccessfulLogin(userData, role);
         } catch (err) {
-            setTwoFactorError(err instanceof Error ? err.message : "Verification failed. Please try again.");
+            setIsSigningIn(false);
+            setTwoFactorError(err instanceof Error ? t(err.message) : t("Verification failed. Please try again."));
         } finally {
             setTwoFactorLoading(false);
         }
@@ -522,10 +565,10 @@ function LoginContent() {
             if (res.ok) {
                 setTwoFactorCooldown(60);
             } else {
-                setTwoFactorError(data.error || "Failed to resend code.");
+                setTwoFactorError(t(data.error || "Failed to resend code."));
             }
         } catch {
-            setTwoFactorError("Failed to resend code. Please try again.");
+            setTwoFactorError(t("Failed to resend code. Please try again."));
         } finally {
             setIsResendingTwoFactor(false);
         }
@@ -659,8 +702,9 @@ function LoginContent() {
                         href="/docs"
                         className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors hidden sm:inline-block"
                     >
-                        Documentation
+                        {t("Documentation")}
                     </Link>
+                    <LanguageToggle variant="compact" />
                     <ThemeToggle className="rounded-xl border border-border bg-card/80 shadow-xs" />
                 </div>
             </header>
@@ -722,13 +766,13 @@ function LoginContent() {
                         {/* Text Content */}
                         <div className="relative z-10 space-y-5">
                             <h1 className="text-4xl xl:text-6xl font-black tracking-tight text-foreground leading-[1.08]">
-                                Dedicated <br />
-                                <span className="text-primary underline decoration-primary/30 decoration-6 underline-offset-6">property</span> <br />
-                                operations.
+                                {t("login.hero.dedicated", undefined, "Dedicated")} <br />
+                                <span className="text-primary underline decoration-primary/30 decoration-6 underline-offset-6">{t("login.hero.property", undefined, "property")}</span> <br />
+                                {t("login.hero.operations", undefined, "operations.")}
                             </h1>
 
                             <p className="text-lg text-muted-foreground font-normal leading-relaxed max-w-lg">
-                                Unified workspace for portfolio operations, automated financials, and direct resident engagement.
+                                {t("Unified workspace for portfolio operations, automated financials, and direct resident engagement.")}
                             </p>
                         </div>
 
@@ -743,10 +787,10 @@ function LoginContent() {
                                 </div>
                                 <div className="flex flex-col text-left">
                                     <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-                                        Download iReside App
+                                        {t("Download iReside App")}
                                     </span>
                                     <span className="text-xs text-muted-foreground">
-                                        For Windows & Android
+                                        {t("For Windows & Android")}
                                     </span>
                                 </div>
                                 <ArrowRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all ml-2 shrink-0" />
@@ -762,17 +806,37 @@ function LoginContent() {
                             transition={{ duration: 0.4 }}
                             className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6"
                         >
-                            {twoFactorChallenge ? (
+                            {isSigningIn ? (
+                                <div
+                                    className="flex flex-col items-center text-center py-10 space-y-5"
+                                    role="status"
+                                    aria-live="polite"
+                                >
+                                    <div className="relative size-16">
+                                        <div className="absolute inset-0 rounded-full border-2 border-primary/15" />
+                                        <Loader2 className="absolute inset-0 size-16 text-primary animate-spin" strokeWidth={1.5} />
+                                        <ShieldCheck className="absolute inset-0 m-auto size-6 text-primary" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <h2 className="text-2xl font-black tracking-tight text-foreground">
+                                            {t("Signing you in...")}
+                                        </h2>
+                                        <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
+                                            {t("You're verified. We're opening your portal now. This can take a few seconds, so please don't refresh or sign in again.")}
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : twoFactorChallenge ? (
                                 <div className="space-y-6">
                                     <div className="space-y-2">
                                         <div className="size-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-3">
                                             <ShieldCheck className="size-6" />
                                         </div>
                                         <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-                                            Two-Factor Verification
+                                            {t("Two-Factor Verification")}
                                         </h2>
                                         <p className="text-sm text-muted-foreground leading-relaxed">
-                                            Enter the 6-digit verification code sent to{" "}
+                                            {t("Enter the 6-digit verification code sent to")}{" "}
                                             <span className="font-mono font-bold text-foreground">
                                                 {twoFactorChallenge.email}
                                             </span>.
@@ -803,16 +867,18 @@ function LoginContent() {
                                                 htmlFor="two-factor-code"
                                                 className="block text-xs font-semibold text-foreground/90 select-none"
                                             >
-                                                6-Digit Verification Code
+                                                {t("6-Digit Verification Code")}
                                             </label>
                                             <input
                                                 id="two-factor-code"
                                                 type="text"
                                                 inputMode="numeric"
-                                                maxLength={8}
+                                                autoComplete="one-time-code"
+                                                maxLength={6}
                                                 autoFocus
+                                                aria-invalid={twoFactorError ? true : undefined}
                                                 value={twoFactorOtp}
-                                                onChange={(e) => setTwoFactorOtp(e.target.value.replace(/\D/g, ''))}
+                                                onChange={(e) => setTwoFactorOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                                 placeholder="000000"
                                                 className="h-14 w-full text-center font-mono text-2xl tracking-[0.5em] rounded-xl border border-border bg-background px-3.5 text-foreground placeholder:text-muted-foreground/40 placeholder:tracking-normal transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                                             />
@@ -826,11 +892,11 @@ function LoginContent() {
                                             {twoFactorLoading ? (
                                                 <>
                                                     <Loader2 className="size-4 animate-spin" />
-                                                    <span>Verifying...</span>
+                                                    <span>{t("Verifying...")}</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <span>Verify & Sign In</span>
+                                                    <span>{t("Verify & Sign In")}</span>
                                                     <ArrowRight className="size-4" />
                                                 </>
                                             )}
@@ -844,10 +910,10 @@ function LoginContent() {
                                                 className="font-semibold text-primary hover:underline transition-colors disabled:text-muted-foreground disabled:no-underline cursor-pointer"
                                             >
                                                 {isResendingTwoFactor
-                                                    ? "Sending code..."
+                                                    ? t("Sending code...")
                                                     : twoFactorCooldown > 0
-                                                    ? `Resend code in ${twoFactorCooldown}s`
-                                                    : "Resend Code"}
+                                                    ? t("Resend code in {seconds}s", { seconds: twoFactorCooldown })
+                                                    : t("Resend Code")}
                                             </button>
 
                                             <button
@@ -855,7 +921,7 @@ function LoginContent() {
                                                 onClick={handleCancelTwoFactor}
                                                 className="font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                             >
-                                                Back to sign in
+                                                {t("Back to sign in")}
                                             </button>
                                         </div>
                                     </form>
@@ -865,10 +931,10 @@ function LoginContent() {
                                     {/* Card Header */}
                                     <div className="space-y-1.5">
                                         <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-                                            Sign In
+                                            {t("Sign In")}
                                         </h2>
                                         <p className="text-sm text-muted-foreground">
-                                            Enter your credentials to access your account.
+                                            {t("Enter your credentials to access your account.")}
                                         </p>
                                     </div>
 
@@ -917,9 +983,10 @@ function LoginContent() {
                                                     htmlFor="email"
                                                     className="block text-xs font-semibold text-foreground/90 select-none"
                                                 >
-                                                    Email Address
+                                                    {t("Email Address")}
                                                 </label>
-                                                <input maxLength={50}
+                                                <input maxLength={254}
+                                                    {...loginForm.fieldProps("email")}
                                                     id="email"
                                                     name="email"
                                                     type="email"
@@ -930,8 +997,12 @@ function LoginContent() {
                                                     value={prefilledEmail}
                                                     onChange={(e) => setPrefilledEmail(e.target.value)}
                                                     placeholder="name@example.com"
-                                                    className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                    className={cn(
+                                                        "h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
+                                                        loginForm.errorFor("email") && AUTH_INPUT_ERROR
+                                                    )}
                                                 />
+                                                <FieldError id={loginForm.errorId("email")} message={loginForm.errorFor("email") && t(loginForm.errorFor("email")!)} />
                                             </div>
 
                                             {/* Password Field */}
@@ -941,31 +1012,38 @@ function LoginContent() {
                                                         htmlFor="password"
                                                         className="block text-xs font-semibold text-foreground/90 select-none"
                                                     >
-                                                        Password
+                                                        {t("Password")}
                                                     </label>
                                                     <Link 
                                                         href="/forgot-password" 
                                                         className="text-xs font-semibold text-primary hover:underline transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-xs"
                                                     >
-                                                        Forgot Password?
+                                                        {t("Forgot Password?")}
                                                     </Link>
                                                 </div>
                                                 <div className="relative">
                                                     <input
+                                                        {...loginForm.fieldProps("password")}
                                                         ref={passwordInputRef}
                                                         id="password"
                                                         name="password"
                                                         type={isPasswordVisible ? "text" : "password"}
                                                         required
+                                                        maxLength={CURRENT_PASSWORD_MAX_LENGTH}
                                                         autoComplete="current-password"
+                                                        value={password}
+                                                        onChange={(e) => setPassword(e.target.value)}
                                                         placeholder="••••••••"
-                                                        className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                        className={cn(
+                                                            "h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
+                                                            loginForm.errorFor("password") && AUTH_INPUT_ERROR
+                                                        )}
                                                     />
                                                     <button 
                                                         type="button"
                                                         onClick={() => setIsPasswordVisible(!isPasswordVisible)}
                                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                                                        aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+                                                        aria-label={isPasswordVisible ? t("Hide password") : t("Show password")}
                                                         aria-pressed={isPasswordVisible}
                                                     >
                                                         {isPasswordVisible ? (
@@ -975,6 +1053,7 @@ function LoginContent() {
                                                         )}
                                                     </button>
                                                 </div>
+                                                <FieldError id={loginForm.errorId("password")} message={loginForm.errorFor("password") && t(loginForm.errorFor("password")!)} />
                                             </div>
                                         </div>
 
@@ -987,11 +1066,11 @@ function LoginContent() {
                                             {loading ? (
                                                 <>
                                                     <Loader2 className="size-4 animate-spin" />
-                                                    <span>Authenticating...</span>
+                                                    <span>{t("Authenticating...")}</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <span>Sign In</span>
+                                                    <span>{t("Sign In")}</span>
                                                     <ArrowRight className="size-4" />
                                                 </>
                                             )}
@@ -1001,12 +1080,12 @@ function LoginContent() {
                                     {/* Resident Activation Link (Single Clean Footnote) */}
                                     <div className="pt-2 text-center">
                                         <p className="text-xs text-muted-foreground">
-                                            Invited as a resident?{" "}
+                                            {t("Invited as a resident?")}{" "}
                                             <Link 
                                                 href="/signup/tenant" 
                                                 className="font-semibold text-primary hover:underline transition-colors"
                                             >
-                                                Activate with Invite Code
+                                                {t("Activate with Invite Code")}
                                             </Link>
                                         </p>
                                     </div>
@@ -1022,7 +1101,6 @@ function LoginContent() {
                 isOpen={showActivationModal}
                 onComplete={handleActivationComplete}
                 initialFullName={unclaimedUserData?.fullName}
-                initialEmail={unclaimedUserData?.email}
             />
 
             {/* Security Recovery Key Lightbox Modal (rendered after refresh) */}
@@ -1040,15 +1118,15 @@ function LoginContent() {
                     <span>© 2026 iReside Technologies</span>
                     <span>•</span>
                     <Link href="/privacy" className="hover:text-foreground transition-colors">
-                        Privacy Policy
+                        {t("Privacy Policy")}
                     </Link>
                     <span>•</span>
                     <Link href="/terms" className="hover:text-foreground transition-colors">
-                        Terms of Service
+                        {t("Terms of Service")}
                     </Link>
                     <span>•</span>
                     <Link href="/download" className="hover:text-foreground transition-colors">
-                        Desktop & Mobile
+                        {t("Desktop & Mobile")}
                     </Link>
                 </div>
             </footer>

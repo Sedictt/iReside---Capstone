@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseJsonBody, parseSearchParams } from "@/lib/validation/server";
+import { analyticsReportHistoryQuerySchema, analyticsReportSchema } from "@/lib/validation/schemas/operations.schema";
 
 type ReportRow = {
     metric: string;
@@ -50,9 +52,9 @@ const buildCsvReport = (payload: ReportRequestBody) => {
 };
 
 export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get("limit") ?? "10"), 50);
-    const offset = parseInt(searchParams.get("offset") ?? "0");
+    const parsedQuery = parseSearchParams(new URL(request.url).searchParams, analyticsReportHistoryQuerySchema);
+    if (!parsedQuery.ok) return parsedQuery.response;
+    const { limit, offset } = parsedQuery.data;
 
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
@@ -85,16 +87,14 @@ export async function POST(request: Request) {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
-    const body = (await request.json()) as Partial<ReportRequestBody>;
-
-    if (!body.format || !body.mode || !body.range || !Array.isArray(body.rows)) {
-        return NextResponse.json({ error: "Invalid report payload." }, { status: 400 });
-    }
+    const parsed = await parseJsonBody(request, analyticsReportSchema);
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
 
     const payload: ReportRequestBody = {
         format: body.format,
         mode: body.mode,
-        includeExpandedKpis: Boolean(body.includeExpandedKpis),
+        includeExpandedKpis: body.includeExpandedKpis,
         range: body.range,
         generatedAt: body.generatedAt,
         rows: body.rows,

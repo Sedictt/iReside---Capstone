@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { OfflineStorage } from "@/lib/offline/offlineStorage";
 import { toast } from "sonner";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type EnrichedInvoice = InvoiceListItem & { 
     paymentItems?: Array<{ id: string; label: string; amount: number; category: string }>;
@@ -66,8 +67,23 @@ type PaymentsPayload = {
 
 type TabId = "bill" | "consumption" | "history";
 
+/** Month heading for a "YYYY-MM" key; English keeps the server label, other locales are formatted client-side. */
+const formatMonthKey = (monthKey: string, fallbackLabel: string, locale: string) => {
+    if (!locale.startsWith("fil")) return fallbackLabel;
+    const [year, month] = monthKey.split("-").map(Number);
+    if (!year || !month) return fallbackLabel;
+    return new Date(year, month - 1, 1).toLocaleDateString(locale, { month: "long", year: "numeric" });
+};
+
 export default function FinanceHubPage() {
     const { push } = useRouter();
+    const { t, locale } = useLanguageContext();
+    /** Display label for a DB enum value (status/type), e.g. "partially_paid" -> "Partially paid". */
+    const enumLabel = (value: string | null | undefined) => {
+        if (!value) return "";
+        const words = value.replace(/_/g, " ");
+        return t(words.charAt(0).toUpperCase() + words.slice(1));
+    };
     const [payload, setPayload] = useState<PaymentsPayload | null>(null);
     const [loading, setLoading] = useState(true);
     const [creatingAdvance, setCreatingAdvance] = useState(false);
@@ -102,7 +118,7 @@ export default function FinanceHubPage() {
                     const fallbackCached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
                     if (fallbackCached?.data && alive) {
                         setPayload(fallbackCached.data);
-                        toast.info("Offline Mode: Loaded billing ledger and invoices from local cache.");
+                        toast.info(t("Offline Mode: Loaded billing ledger and invoices from local cache."));
                     }
                 }
             } catch (error) {
@@ -111,7 +127,7 @@ export default function FinanceHubPage() {
                     const fallbackCached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
                     if (fallbackCached?.data && alive) {
                         setPayload(fallbackCached.data);
-                        toast.info("Loaded cached billing ledger offline.");
+                        toast.info(t("Loaded cached billing ledger offline."));
                     }
                 }
             } finally {
@@ -135,7 +151,7 @@ export default function FinanceHubPage() {
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error("API error creating advance payment:", errorData);
-                alert(`Error: ${errorData.error || "Failed to create advance payment"}`);
+                alert(t("Error: {message}", { message: errorData.error || t("Failed to create advance payment") }));
                 return;
             }
 
@@ -151,11 +167,11 @@ export default function FinanceHubPage() {
                 push(checkoutUrl);
             } else {
                 console.error("No ID returned from advance payment API", data);
-                alert("Critical error: Server did not return a valid invoice ID.");
+                alert(t("Critical error: Server did not return a valid invoice ID."));
             }
         } catch (error) {
             console.error("Network or execution error in handlePayInAdvance:", error);
-            alert("Network error: Could not connect to the billing service.");
+            alert(t("Network error: Could not connect to the billing service."));
         } finally {
             setCreatingAdvance(false);
         }
@@ -286,7 +302,7 @@ export default function FinanceHubPage() {
         return (
             <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-muted-foreground">
                 <LoadingSpinner size="md" className="text-primary" />
-                <p className="text-xs font-black uppercase tracking-widest">Synchronizing Hub...</p>
+                <p className="text-xs font-black uppercase tracking-widest">{t("Synchronizing Hub...")}</p>
             </div>
         );
     }
@@ -306,7 +322,7 @@ export default function FinanceHubPage() {
     const getNextBillingMonth = () => {
         const next = new Date();
         next.setMonth(next.getMonth() + 1);
-        return next.toLocaleString('default', { month: 'long', year: 'numeric' });
+        return next.toLocaleString(locale, { month: 'long', year: 'numeric' });
     };
 
     return (
@@ -315,17 +331,17 @@ export default function FinanceHubPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-1">
                     <h1 className="text-4xl font-black text-foreground tracking-tighter">
-                        Finance Hub
+                        {t("Finance Hub")}
                     </h1>
                     <p className="text-muted-foreground font-medium text-sm max-w-2xl">
-                        Monitor your standard rent, utility consumption, and end-to-end payment history.
+                        {t("Monitor your standard rent, utility consumption, and end-to-end payment history.")}
                     </p>
                 </div>
 
                 {nextPayment ? (
                     <div className="neumorphic-inset rounded-[1.5rem] p-3 flex items-center gap-6 animate-in fade-in zoom-in duration-500">
                         <div className="px-1 border-r border-border/50">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Balance Due</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">{t("Balance Due")}</p>
                             <p className="text-lg font-black text-foreground tracking-tight">
                                 {formatPhpCurrency(nextPayment.balanceRemaining)}
                             </p>
@@ -334,13 +350,13 @@ export default function FinanceHubPage() {
                             href={`/tenant/payments/${nextPayment.id}/checkout`}
                             className="px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all hover:-translate-y-0.5 flex items-center gap-2 shrink-0 neumorphic-primary"
                         >
-                            Pay Now <ArrowRight className="size-4" />
+                            {t("Pay Now")} <ArrowRight className="size-4" />
                         </Link>
                     </div>
                 ) : (
                     <div className="neumorphic-inset rounded-[1.5rem] p-3 flex items-center gap-6 animate-in fade-in slide-in-from-right-4 duration-700">
                         <div className="px-1 border-r border-primary/10">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-0.5">Next Cycle Early</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-0.5">{t("Next Cycle Early")}</p>
                             <p className="text-lg font-black text-foreground tracking-tight">
                                 {formatPhpCurrency(lease?.monthlyRent ?? 0)}
                             </p>
@@ -350,7 +366,7 @@ export default function FinanceHubPage() {
                             disabled={creatingAdvance}
                             className="px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all hover:-translate-y-0.5 flex items-center gap-2 shrink-0 disabled:opacity-50 neumorphic-primary"
                         >
-                            {creatingAdvance ? <LoadingSpinner size="sm" /> : <>Pay Next Cycle Now <ArrowRight className="size-4" /></>}
+                            {creatingAdvance ? <LoadingSpinner size="sm" /> : <>{t("Pay Next Cycle Now")} <ArrowRight className="size-4" /></>}
                         </button>
                     </div>
                 )}
@@ -370,20 +386,20 @@ export default function FinanceHubPage() {
                             )}
                         >
                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
-                                {month.monthLabel}
+                                {formatMonthKey(month.month, month.monthLabel, locale)}
                             </p>
                             <p className="text-lg font-black text-foreground mt-1">
                                 {formatPhpCurrency(month.amount)}
                             </p>
                             <div className="flex items-center justify-between gap-1 mt-2">
                                 {month.isForecast ? (
-                                    <span className="text-[9px] font-medium text-muted-foreground">Estimated</span>
+                                    <span className="text-[9px] font-medium text-muted-foreground">{t("Estimated")}</span>
                                 ) : (
-                                    <span className="text-[9px] font-medium text-primary">Ready to Pay</span>
+                                    <span className="text-[9px] font-medium text-primary">{t("Ready to Pay")}</span>
                                 )}
                                 {month.dueDate && (
                                     <span className="text-[9px] text-muted-foreground">
-                                        Due {new Date(month.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                        {t("Due")} {new Date(month.dueDate).toLocaleDateString(locale, { month: "short", day: "numeric" })}
                                     </span>
                                 )}
                             </div>
@@ -406,7 +422,7 @@ export default function FinanceHubPage() {
                         )}
                     >
                         <tab.icon className="size-4" />
-                        {tab.label}
+                        {t(tab.label)}
                     </button>
                 ))}
             </div>
@@ -425,9 +441,9 @@ export default function FinanceHubPage() {
                                 
                                 <div className="flex items-center justify-between mb-4 border-b border-border pb-4">
                                     <div>
-                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Statement Cycle</p>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">{t("Statement Cycle")}</p>
                                         <h3 className="text-2xl font-black text-foreground tracking-tight">
-                                            {nextPayment ? nextPayment.invoiceNumber : `Upcoming Cycle: ${getNextBillingMonth()}`}
+                                            {nextPayment ? nextPayment.invoiceNumber : t("Upcoming Cycle: {month}", { month: getNextBillingMonth() })}
                                         </h3>
                                         <div className="flex items-center gap-3 mt-2">
                                             {nextPayment ? (
@@ -435,26 +451,26 @@ export default function FinanceHubPage() {
                                                     "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border",
                                                     nextPayment.status === 'overdue' ? "bg-red-500/10 text-red-500 border-red-500/20" : "bg-primary/10 text-primary border-primary/20"
                                                 )}>
-                                                    {nextPayment.status}
+                                                    {enumLabel(nextPayment.status)}
                                                 </span>
                                             ) : (
                                                 <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-muted text-muted-foreground border-border">
-                                                    Forecasted
+                                                    {t("Forecasted")}
                                                 </span>
                                             )}
                                             <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
-                                                {nextPayment ? "Active Bill" : "Forecasted Obligation"}
+                                                {nextPayment ? t("Active Bill") : t("Forecasted Obligation")}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Estimated Due</p>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">{t("Estimated Due")}</p>
                                         <p className="text-base font-black text-foreground">
                                             {nextPayment?.dueDate 
                                                 ? nextPayment.dueDate 
                                                 : payload?.upcomingMonths?.[0]?.dueDate
-                                                    ? new Date(payload.upcomingMonths[0].dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                                                    : "Next Cycle"}
+                                                    ? new Date(payload.upcomingMonths[0].dueDate).toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" })
+                                                    : t("Next Cycle")}
                                         </p>
                                     </div>
                                 </div>
@@ -466,8 +482,8 @@ export default function FinanceHubPage() {
                                                 <Home className="size-5" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-black text-foreground group-hover:text-primary transition-colors">Monthly Base Rent</p>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">Fixed Lease Obligation</p>
+                                                <p className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{t("Monthly Base Rent")}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">{t("Fixed Lease Obligation")}</p>
                                             </div>
                                         </div>
                                         <p className="text-lg font-black text-foreground">
@@ -484,8 +500,8 @@ export default function FinanceHubPage() {
                                                     {item.label.toLowerCase().includes('electric') ? <Zap className="size-5" /> : <Droplets className="size-5" />}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{item.label}</p>
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">Calculated via Submeter</p>
+                                                    <p className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{t(item.label)}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">{t("Calculated via Submeter")}</p>
                                                 </div>
                                             </div>
                                             <p className="text-lg font-black text-foreground">{formatPhpCurrency(item.amount)}</p>
@@ -500,11 +516,11 @@ export default function FinanceHubPage() {
                                                         <Zap className="size-5" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-black text-foreground">Electricity Bill</p>
-                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">Awaiting Meter Reading</p>
+                                                        <p className="text-sm font-black text-foreground">{t("Electricity Bill")}</p>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">{t("Awaiting Meter Reading")}</p>
                                                     </div>
                                                 </div>
-                                                <p className="text-sm font-black text-foreground italic">Pending...</p>
+                                                <p className="text-sm font-black text-foreground italic">{t("Pending...")}</p>
                                             </div>
                                             <div className="flex items-center justify-between py-3 opacity-40">
                                                 <div className="flex items-center gap-4">
@@ -512,11 +528,11 @@ export default function FinanceHubPage() {
                                                         <Droplets className="size-5" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-black text-foreground">Water Bill</p>
-                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">Awaiting Meter Reading</p>
+                                                        <p className="text-sm font-black text-foreground">{t("Water Bill")}</p>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">{t("Awaiting Meter Reading")}</p>
                                                     </div>
                                                 </div>
-                                                <p className="text-sm font-black text-foreground italic">Pending...</p>
+                                                <p className="text-sm font-black text-foreground italic">{t("Pending...")}</p>
                                             </div>
                                         </>
                                     )}
@@ -524,9 +540,9 @@ export default function FinanceHubPage() {
                                     <div className="mt-4 pt-4 border-t-2 border-dashed border-border flex items-center justify-between">
                                         <div>
                                             <p className="text-xs font-black text-primary uppercase tracking-[0.3em]">
-                                                {nextPayment ? "Total Balance Due" : "Estimated Total Obligation"}
+                                                {nextPayment ? t("Total Balance Due") : t("Estimated Total Obligation")}
                                             </p>
-                                            {!nextPayment && <p className="text-[9px] text-muted-foreground font-black mt-0.5">Excludes pending utility computations</p>}
+                                            {!nextPayment && <p className="text-[9px] text-muted-foreground font-black mt-0.5">{t("Excludes pending utility computations")}</p>}
                                         </div>
                                         <div className="flex flex-col items-end gap-2">
                                             <p className="text-4xl font-black text-primary tracking-tighter">
@@ -545,12 +561,12 @@ export default function FinanceHubPage() {
                                 </div>
                                 <div className="flex items-center justify-between mb-4 border-b border-border pb-4">
                                     <div>
-                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Utility Analysis</p>
-                                        <h3 className="text-2xl font-black text-foreground tracking-tight">Consumption Metrics</h3>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">{t("Utility Analysis")}</p>
+                                        <h3 className="text-2xl font-black text-foreground tracking-tight">{t("Consumption Metrics")}</h3>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Last Reading</p>
-                                        <p className="text-base font-black text-foreground">{activeReadings.length > 0 ? <ClientOnlyDate date={activeReadings[0].billing_period_end} /> : 'N/A'}</p>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">{t("Last Reading")}</p>
+                                        <p className="text-base font-black text-foreground">{activeReadings.length > 0 ? <ClientOnlyDate date={activeReadings[0].billing_period_end} /> : t('N/A')}</p>
                                     </div>
                                 </div>
 
@@ -567,29 +583,29 @@ export default function FinanceHubPage() {
                                                             {reading.utility_type === 'electricity' ? <Zap className="size-5" /> : <Droplets className="size-5" />}
                                                         </div>
                                                         <div>
-                                                            <h3 className="text-base font-black text-foreground capitalize tracking-tight">{reading.utility_type}</h3>
+                                                            <h3 className="text-base font-black text-foreground capitalize tracking-tight">{enumLabel(reading.utility_type)}</h3>
                                                             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">₱{reading.billed_rate.toFixed(2)}</p>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
                                                         <p className="text-2xl font-black text-foreground tracking-tighter">{reading.usage.toFixed(1)}</p>
-                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Units</p>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Units")}</p>
                                                     </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-2 gap-8 border-t border-border/30 pt-4 mb-4">
                                                     <div className="space-y-0.5">
-                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Prev</p>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Prev")}</p>
                                                         <p className="text-base font-black text-foreground/40">{reading.previous_reading.toFixed(1)}</p>
                                                     </div>
                                                     <div className="space-y-0.5 text-right">
-                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Curr</p>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Curr")}</p>
                                                         <p className="text-base font-black text-foreground">{reading.current_reading.toFixed(1)}</p>
                                                     </div>
                                                 </div>
 
                                                 <div className="flex items-center justify-between p-4 rounded-2xl bg-card border border-border/50 group-hover:bg-primary/[0.02] transition-colors">
-                                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Charge</p>
+                                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">{t("Charge")}</p>
                                                     <p className="text-lg font-black text-foreground">{formatPhpCurrency(reading.computed_charge)}</p>
                                                 </div>
                                             </div>
@@ -597,7 +613,7 @@ export default function FinanceHubPage() {
                                     ) : (
                                         <div className="col-span-full py-24 text-center opacity-40">
                                             <TrendingUp className="size-12 mx-auto mb-4" />
-                                            <p className="text-xs font-black uppercase tracking-widest">No consumption records found.</p>
+                                            <p className="text-xs font-black uppercase tracking-widest">{t("No consumption records found.")}</p>
                                         </div>
                                     )}
                                 </div>
@@ -608,15 +624,15 @@ export default function FinanceHubPage() {
                             <div className="neumorphic-panel rounded-[2.5rem] p-0 relative overflow-hidden min-h-[400px]">
                                 <div className="p-8 border-b border-border bg-muted/5 flex items-center justify-between">
                                     <div>
-                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Audit Trail</p>
-                                        <h3 className="text-2xl font-black text-foreground tracking-tight">Payment Ledger</h3>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">{t("Audit Trail")}</p>
+                                        <h3 className="text-2xl font-black text-foreground tracking-tight">{t("Payment Ledger")}</h3>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="flex items-center gap-1 bg-background border border-border p-1 rounded-full">
                                             <button 
                                                 onClick={handleExportPDF}
                                                 className="flex items-center gap-1.5 hover:bg-muted text-foreground px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all"
-                                                title="Professional Statement"
+                                                title={t("Professional Statement")}
                                             >
                                                 <FileText className="size-3 text-primary" />
                                                 PDF
@@ -624,13 +640,13 @@ export default function FinanceHubPage() {
                                             <button 
                                                 onClick={handleExportCSV}
                                                 className="flex items-center gap-1.5 hover:bg-muted text-foreground px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all"
-                                                title="Data Spreadsheet"
+                                                title={t("Data Spreadsheet")}
                                             >
                                                 <FileSpreadsheet className="size-3 text-muted-foreground" />
                                                 CSV
                                             </button>
                                         </div>
-                                        <span className="text-[10px] font-black text-muted-foreground bg-background border border-border px-4 py-1.5 rounded-full">{history.length} Records</span>
+                                        <span className="text-[10px] font-black text-muted-foreground bg-background border border-border px-4 py-1.5 rounded-full">{t("{count} Records", { count: history.length })}</span>
                                     </div>
                                 </div>
                                 
@@ -645,7 +661,7 @@ export default function FinanceHubPage() {
                                                     <div>
                                                         <h4 className="text-base font-black text-foreground tracking-tight group-hover:text-primary transition-colors">{invoice.invoiceNumber}</h4>
                                                         <div className="flex items-center gap-3 mt-1">
-                                                            <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">{invoice.type}</span>
+                                                            <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">{enumLabel(invoice.type)}</span>
                                                             <span className="size-1 rounded-full bg-border" />
                                                             <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">{invoice.dueDate}</span>
                                                         </div>
@@ -657,16 +673,16 @@ export default function FinanceHubPage() {
                                                         <p className="text-xl font-black text-foreground tracking-tighter">{formatPhpCurrency(invoice.amount)}</p>
                                                         <div className="flex items-center justify-end gap-2 mt-1.5">
                                                             {invoice.hasReceipt && (
-                                                                <div className="flex items-center gap-1 text-[8px] font-black text-emerald-600 uppercase tracking-widest" title="Official Receipt Available">
+                                                                <div className="flex items-center gap-1 text-[8px] font-black text-emerald-600 uppercase tracking-widest" title={t("Official Receipt Available")}>
                                                                     <FileCheck className="size-3" />
-                                                                    Receipted
+                                                                    {t("Receipted")}
                                                                 </div>
                                                             )}
                                                             <div className={cn(
                                                                 "inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border",
                                                                 invoice.status === 'paid' ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-muted text-muted-foreground border-border"
                                                             )}>
-                                                                {invoice.status}
+                                                                {enumLabel(invoice.status)}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -678,7 +694,7 @@ export default function FinanceHubPage() {
                                                                 ? "bg-muted/50 border-border hover:bg-primary/10 hover:border-primary/20 hover:text-primary" 
                                                                 : "bg-primary/10 border-primary/20 text-primary hover:bg-primary hover:text-white"
                                                         )}
-                                                        title={invoice.status === 'paid' ? "View Summary" : "Pay Now"}
+                                                        title={invoice.status === 'paid' ? t("View Summary") : t("Pay Now")}
                                                     >
                                                         {invoice.status === 'paid' ? <ArrowUpRight className="size-5" /> : <CreditCard className="size-4" />}
                                                     </Link>
@@ -688,7 +704,7 @@ export default function FinanceHubPage() {
                                     ) : (
                                         <div className="p-32 text-center opacity-40">
                                             <History className="size-12 mx-auto mb-4" />
-                                            <p className="text-xs font-black uppercase tracking-widest">No historical records found.</p>
+                                            <p className="text-xs font-black uppercase tracking-widest">{t("No historical records found.")}</p>
                                         </div>
                                     )}
                                 </div>
@@ -705,21 +721,21 @@ export default function FinanceHubPage() {
                                     <div>
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <Clock className="size-4 text-primary" />
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Planning Guide</h3>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Planning Guide")}</h3>
                                         </div>
-                                        <p className="text-xs font-black text-foreground">Budgeting for next cycle</p>
+                                        <p className="text-xs font-black text-foreground">{t("Budgeting for next cycle")}</p>
                                     </div>
                                     <div className="space-y-6">
                                         <div className="p-5 rounded-3xl bg-muted/30 border border-border">
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-3">Billing Policy</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-3">{t("Billing Policy")}</p>
                                             <div className="space-y-3">
                                                 <div className="flex items-start gap-2.5">
                                                     <div className="size-1 rounded-full bg-primary mt-1.5 shrink-0" />
-                                                    <p className="text-[9px] text-foreground font-black uppercase tracking-wider leading-tight">Fixed Rent: {formatPhpCurrency(lease?.monthlyRent ?? 0)}</p>
+                                                    <p className="text-[9px] text-foreground font-black uppercase tracking-wider leading-tight">{t("Fixed Rent: {amount}", { amount: formatPhpCurrency(lease?.monthlyRent ?? 0) })}</p>
                                                 </div>
                                                 <div className="flex items-start gap-2.5">
                                                     <div className="size-1 rounded-full bg-primary mt-1.5 shrink-0" />
-                                                    <p className="text-[9px] text-foreground font-black uppercase tracking-wider leading-tight">Submetered Utilities Monthly</p>
+                                                    <p className="text-[9px] text-foreground font-black uppercase tracking-wider leading-tight">{t("Submetered Utilities Monthly")}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -727,7 +743,7 @@ export default function FinanceHubPage() {
                                             <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10">
                                                 <Info className="size-4 text-amber-500 shrink-0 mt-0.5" />
                                                 <p className="text-[9px] text-amber-800 dark:text-amber-400 font-black uppercase tracking-wider leading-relaxed">
-                                                    Pro-tip: Set aside {formatPhpCurrency((lease?.monthlyRent ?? 0) * 1.1)} for utilities.
+                                                    {t("Pro-tip: Set aside {amount} for utilities.", { amount: formatPhpCurrency((lease?.monthlyRent ?? 0) * 1.1) })}
                                                 </p>
                                             </div>
                                         </div>
@@ -740,20 +756,20 @@ export default function FinanceHubPage() {
                                     <div>
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <Zap className="size-4 text-primary" />
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Rate Information</h3>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Rate Information")}</h3>
                                         </div>
-                                        <p className="text-xs font-black text-foreground">Understanding Charges</p>
+                                        <p className="text-xs font-black text-foreground">{t("Understanding Charges")}</p>
                                     </div>
                                     <div className="space-y-6">
                                         <div className="p-5 rounded-3xl bg-muted/30 border border-border">
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-3">Landlord-set Rates</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-3">{t("Landlord-set Rates")}</p>
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
-                                                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Electricity</p>
+                                                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">{t("Electricity")}</p>
                                                     <p className="text-xs font-black text-foreground">₱12.50 / kWh</p>
                                                 </div>
                                                 <div className="flex items-center justify-between">
-                                                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Water</p>
+                                                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">{t("Water")}</p>
                                                     <p className="text-xs font-black text-foreground">₱45.00 / m³</p>
                                                 </div>
                                             </div>
@@ -762,7 +778,7 @@ export default function FinanceHubPage() {
                                             <div className="flex items-start gap-3">
                                                 <UserCircle className="size-4 text-primary shrink-0 mt-0.5" />
                                                 <p className="text-[9px] text-primary font-black uppercase tracking-wider leading-relaxed">
-                                                    Rates and meter readings are managed and provided directly by your Landlord.
+                                                    {t("Rates and meter readings are managed and provided directly by your Landlord.")}
                                                 </p>
                                             </div>
                                         </div>
@@ -775,20 +791,20 @@ export default function FinanceHubPage() {
                                     <div>
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <History className="size-4 text-primary" />
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Ledger Overview</h3>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Ledger Overview")}</h3>
                                         </div>
-                                        <p className="text-xs font-black text-foreground">Financial Standing</p>
+                                        <p className="text-xs font-black text-foreground">{t("Financial Standing")}</p>
                                     </div>
                                     <div className="space-y-6">
                                         <div className="p-5 rounded-3xl bg-muted/30 border border-border">
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-4">Quick Stats</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-4">{t("Quick Stats")}</p>
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
-                                                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Paid Invoices</p>
+                                                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">{t("Paid Invoices")}</p>
                                                     <p className="text-xs font-black text-foreground">{history.filter(h => h.status === 'paid').length}</p>
                                                 </div>
                                                 <div className="flex items-center justify-between">
-                                                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Total Settle</p>
+                                                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">{t("Total Settle")}</p>
                                                     <p className="text-xs font-black text-primary">₱{history.filter(h => h.status === 'paid').reduce((sum, h) => sum + h.amount, 0).toLocaleString()}</p>
                                                 </div>
                                             </div>
@@ -797,7 +813,7 @@ export default function FinanceHubPage() {
                                             href="/tenant/messages"
                                             className="w-full bg-muted hover:bg-muted-dark text-foreground py-6 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] border border-border transition-all flex items-center justify-center gap-4"
                                         >
-                                            Contact Support <HelpCircle className="size-5" />
+                                            {t("Contact Support")} <HelpCircle className="size-5" />
                                         </Link>
                                     </div>
                                 </>
@@ -806,7 +822,7 @@ export default function FinanceHubPage() {
 
                         {/* Property Context Card */}
                         <div className="bg-muted/20 border border-dashed border-border rounded-[2rem] p-6 text-center">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Managed Unit</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">{t("Managed Unit")}</p>
                             <p className="text-sm font-black text-foreground">{lease?.unitName ?? '...'}</p>
                             <p className="text-[9px] text-muted-foreground font-black mt-0.5">{lease?.propertyName ?? '...'}</p>
                         </div>

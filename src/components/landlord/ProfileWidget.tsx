@@ -8,7 +8,7 @@ import { AnimatePresence, m as motion } from "framer-motion";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useHighContrast } from "@/hooks/useHighContrast";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { RoleBadge } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal";
@@ -49,7 +49,7 @@ export function ProfileWidget() {
     const [avatarFailed, setAvatarFailed] = useState(false);
     const { user, profile } = useAuth();
     const { isHighContrast, toggleHighContrast } = useHighContrast();
-    const { t, isFilipino, toggleLanguage } = useLanguage();
+    const { t, isFilipino, toggleLanguage } = useLanguageContext();
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -61,7 +61,7 @@ export function ProfileWidget() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Landlord";
+    const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || t("Landlord");
     const avatarCandidates = [
         profile?.avatar_url,
         typeof user?.user_metadata?.avatar_url === "string" ? user.user_metadata.avatar_url : null,
@@ -109,7 +109,7 @@ export function ProfileWidget() {
                 <button
                     onClick={() => setIsMenuOpen((prev) => !prev)}
                     className="group relative flex size-10 items-center justify-center rounded-full neumorphic-extruded active:scale-95 shrink-0 border border-white/5 transition-all"
-                    aria-label="User profile menu"
+                    aria-label={t("User profile menu")}
                 >
                     <div 
                         className="relative size-full overflow-hidden rounded-full flex items-center justify-center"
@@ -132,7 +132,7 @@ export function ProfileWidget() {
                     {isIncomplete && (
                         <span 
                             className="absolute -top-0.5 -right-0.5 flex size-3.5 z-20 pointer-events-none" 
-                            title="Complete your profile setup"
+                            title={t("Complete your profile setup")}
                         >
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
                             <span className="relative inline-flex rounded-full size-3.5 bg-primary border-2 border-background shadow-sm" />
@@ -192,11 +192,11 @@ export function ProfileWidget() {
                                             >
                                                 <p className="truncate text-base font-black text-foreground dark:text-white hover:text-primary transition-colors cursor-pointer leading-tight">{displayName}</p>
                                             </ProfileCardTrigger>
-                                            <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || "Account"}</p>
+                                            <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || t("Account")}</p>
                                         </div>
                                         <Link 
                                             href="/landlord/profile" 
-                                            title="Edit Profile"
+                                            title={t("Edit Profile")}
                                             className="flex size-8 items-center justify-center rounded-full neumorphic-extruded text-muted-foreground hover:text-primary active:scale-95 transition-all shrink-0"
                                         >
                                             <Pencil className="size-3.5" />
@@ -264,7 +264,7 @@ export function ProfileWidget() {
                                     <span>{t("Language")}</span>
                                 </div>
                                 <span className="text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-md bg-primary text-primary-foreground">
-                                    {isFilipino ? "Filipino" : "English"}
+                                    {isFilipino ? t("Filipino") : t("English")}
                                 </span>
                             </button>
 
@@ -281,7 +281,7 @@ export function ProfileWidget() {
                                     "text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-md",
                                     isHighContrast ? "bg-primary text-primary-foreground" : "bg-white/10 text-muted-foreground"
                                     )}>
-                                    {isHighContrast ? "ON" : "OFF"}
+                                    {isHighContrast ? t("ON") : t("OFF")}
                                 </span>
                             </button>
 

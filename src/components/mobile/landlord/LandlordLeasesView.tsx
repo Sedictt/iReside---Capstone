@@ -29,8 +29,38 @@ import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropert
 import LeaseModal from '@/components/tenant/LeaseModal';
 import { triggerHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 import { toast } from 'sonner';
 import type { LeaseData } from '@/types/lease';
+import {
+    formatTenure,
+    isLeaseExpiringSoon,
+    leaseEndState,
+    leaseTermLabel,
+    tenureSinceLabel,
+} from '@/lib/lease-term';
+import { tr } from '@/hooks/useLanguage';
+
+/** Display labels for lease / renewal status values (values themselves stay untouched). */
+const STATUS_LABELS: Record<string, string> = {
+    active: 'Active',
+    pending: 'Pending',
+    pending_signature: 'Pending Signature',
+    pending_tenant_signature: 'Awaiting Tenant Signature',
+    pending_landlord_signature: 'Awaiting Landlord Signature',
+    draft: 'Draft',
+    approved: 'Approved',
+    rejected: 'Declined',
+    declined: 'Declined',
+    expired: 'Expired',
+    terminated: 'Terminated',
+    cancelled: 'Cancelled',
+    ended: 'Ended',
+    completed: 'Completed',
+};
+
+/** Fixed-term leases ending within this many days count as "expiring" on mobile. */
+const MOBILE_EXPIRING_DAYS = 60;
 
 interface TenantProfile {
     id: string;
@@ -44,7 +74,9 @@ interface LeaseItem {
     id: string;
     status: string;
     start_date: string;
-    end_date: string;
+    /** Null for open-ended (month-to-month) leases. */
+    end_date: string | null;
+    term_type?: string | null;
     monthly_rent: number;
     security_deposit: number;
     signed_at: string | null;
@@ -75,7 +107,8 @@ interface RenewalRequestItem {
     current_lease?: {
         id: string;
         start_date: string;
-        end_date: string;
+        end_date: string | null;
+        term_type?: string | null;
         monthly_rent: number;
         security_deposit: number;
         unit?: {
@@ -98,6 +131,7 @@ export function LandlordLeasesView() {
     const initialTab = searchParams.get('tab') || 'all';
 
     const { selectedPropertyId } = useProperty();
+    const { t, locale, language } = useLanguageContext();
     const [leases, setLeases] = useState<LeaseItem[]>([]);
     const [renewals, setRenewals] = useState<RenewalRequestItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -140,7 +174,7 @@ export function LandlordLeasesView() {
             }
         } catch (err) {
             console.error('Failed to load landlord leases:', err);
-            toast.error('Failed to load lease agreements');
+            toast.error(tr('Failed to load lease agreements'));
         } finally {
             setLoading(false);
         }
@@ -155,28 +189,19 @@ export function LandlordLeasesView() {
         return `₱${amt.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
     };
 
-    const formatDate = (dateStr?: string) => {
-        if (!dateStr) return 'N/A';
+    const formatDate = (dateStr?: string | null) => {
+        if (!dateStr) return t('N/A');
         const d = new Date(dateStr);
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return d.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
-    const getDaysRemaining = (endStr?: string) => {
-        if (!endStr) return 999;
-        const end = new Date(endStr);
-        const today = new Date();
-        const diff = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        return diff;
-    };
+    // Only fixed-term leases expire; open-ended leases never show up here.
+    const isExpiringLease = (l: LeaseItem) => l.status === 'active' && isLeaseExpiringSoon(l, MOBILE_EXPIRING_DAYS);
 
     // Calculate metrics
     const metrics = useMemo(() => {
         const activeCount = leases.filter(l => l.status === 'active').length;
-        const expiringSoon = leases.filter(l => {
-            if (l.status !== 'active') return false;
-            const days = getDaysRemaining(l.end_date);
-            return days >= 0 && days <= 60;
-        }).length;
+        const expiringSoon = leases.filter(isExpiringLease).length;
         const pendingRenewals = renewals.filter(r => r.status === 'pending').length;
         const totalRentRoll = leases
             .filter(l => l.status === 'active')
@@ -189,11 +214,7 @@ export function LandlordLeasesView() {
     const filteredLeases = useMemo(() => {
         let list = leases;
         if (activeTab === 'expiring') {
-            list = list.filter(l => {
-                if (l.status !== 'active') return false;
-                const days = getDaysRemaining(l.end_date);
-                return days >= 0 && days <= 60;
-            });
+            list = list.filter(isExpiringLease);
         } else if (activeTab === 'active') {
             list = list.filter(l => l.status === 'active');
         }
@@ -244,17 +265,17 @@ export function LandlordLeasesView() {
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
-                throw new Error(data.error || 'Failed to update renewal request');
+                throw new Error(data.error || t('Failed to update renewal request'));
             }
 
-            toast.success(action === 'approve' ? 'Renewal request approved!' : 'Renewal request declined.');
+            toast.success(action === 'approve' ? t('Renewal request approved!') : t('Renewal request declined.'));
             setSelectedRenewal(null);
             setDecisionMode(null);
             setRejectNotes('');
             fetchData();
         } catch (err: any) {
             console.error('Renewal decision error:', err);
-            toast.error(err.message || 'Action failed');
+            toast.error(tr(err.message || t('Action failed')));
         } finally {
             setActionSubmitting(false);
         }
@@ -271,10 +292,10 @@ export function LandlordLeasesView() {
                 setPreviewLease(data);
                 setPreviewOpen(true);
             } else {
-                toast.error('Could not load lease contract details');
+                toast.error(t('Could not load lease contract details'));
             }
         } catch (e) {
-            toast.error('Failed to load contract');
+            toast.error(t('Failed to load contract'));
         } finally {
             setPreviewLoading(false);
         }
@@ -292,7 +313,7 @@ export function LandlordLeasesView() {
                             fetchData();
                         }}
                         className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-card text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-2xs"
-                        aria-label="Refresh"
+                        aria-label={t("Refresh")}
                     >
                         <RefreshCw className={cn("size-4", loading && "animate-spin text-primary")} />
                     </button>
@@ -302,13 +323,13 @@ export function LandlordLeasesView() {
                 <div className="grid grid-cols-3 gap-2">
                     <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 flex flex-col justify-between">
                         <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                            Active
+                            {t('Active')}
                         </span>
                         <div className="flex items-baseline gap-1 mt-1">
                             <span className="text-xl font-black text-foreground">
                                 {metrics.activeCount}
                             </span>
-                            <span className="text-[10px] text-muted-foreground font-medium">units</span>
+                            <span className="text-[10px] text-muted-foreground font-medium">{t("units")}</span>
                         </div>
                     </div>
 
@@ -326,7 +347,7 @@ export function LandlordLeasesView() {
                     >
                         <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                                Expiring
+                                {t('Expiring')}
                             </span>
                             {metrics.expiringSoon > 0 && (
                                 <span className="size-2 rounded-full bg-amber-500 animate-ping" />
@@ -336,7 +357,7 @@ export function LandlordLeasesView() {
                             <span className="text-xl font-black text-foreground">
                                 {metrics.expiringSoon}
                             </span>
-                            <span className="text-[10px] text-muted-foreground font-medium">&lt;60d</span>
+                            <span className="text-[10px] text-muted-foreground font-medium">{t("<60d")}</span>
                         </div>
                     </div>
 
@@ -354,7 +375,7 @@ export function LandlordLeasesView() {
                     >
                         <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                                Renewals
+                                {t('Renewals')}
                             </span>
                             {metrics.pendingRenewals > 0 && (
                                 <span className="size-2 rounded-full bg-blue-500 animate-pulse" />
@@ -364,7 +385,7 @@ export function LandlordLeasesView() {
                             <span className="text-xl font-black text-foreground">
                                 {metrics.pendingRenewals}
                             </span>
-                            <span className="text-[10px] text-muted-foreground font-medium">action</span>
+                            <span className="text-[10px] text-muted-foreground font-medium">{t("action")}</span>
                         </div>
                     </div>
                 </div>
@@ -376,7 +397,7 @@ export function LandlordLeasesView() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search tenant, unit, or property..."
+                        placeholder={t("Search tenant, unit, or property...")}
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
                     />
                     {searchQuery && (
@@ -403,7 +424,7 @@ export function LandlordLeasesView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        All ({leases.length})
+                        {t('All ({count})', { count: leases.length })}
                     </button>
                     <button
                         onClick={() => {
@@ -417,7 +438,7 @@ export function LandlordLeasesView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Renewals
+                        {t('Renewals')}
                         {metrics.pendingRenewals > 0 && (
                             <span className="ml-1.5 px-1.5 py-0.2 rounded-full bg-blue-500 text-white text-[9px] font-black">
                                 {metrics.pendingRenewals}
@@ -436,7 +457,7 @@ export function LandlordLeasesView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Expiring
+                        {t('Expiring')}
                         {metrics.expiringSoon > 0 && (
                             <span className="ml-1.5 px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[9px] font-black">
                                 {metrics.expiringSoon}
@@ -455,7 +476,7 @@ export function LandlordLeasesView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Active
+                        {t('Active')}
                     </button>
                 </div>
 
@@ -466,9 +487,9 @@ export function LandlordLeasesView() {
                         {filteredRenewals.length === 0 ? (
                             <div className="p-8 text-center rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col items-center gap-2.5">
                                 <CheckCircle2 className="size-10 text-emerald-500/50 stroke-1" />
-                                <h4 className="text-sm font-bold text-foreground">No Pending Renewals</h4>
+                                <h4 className="text-sm font-bold text-foreground">{t("No Pending Renewals")}</h4>
                                 <p className="text-xs text-muted-foreground max-w-xs">
-                                    All tenant lease renewal requests have been reviewed and processed.
+                                    {t('All tenant lease renewal requests have been reviewed and processed.')}
                                 </p>
                             </div>
                         ) : (
@@ -488,13 +509,13 @@ export function LandlordLeasesView() {
                                             <div>
                                                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase">
                                                     <Building2 className="size-3" />
-                                                    <span>{renewal.current_lease?.unit?.property?.name || 'Property'}</span>
+                                                    <span>{renewal.current_lease?.unit?.property?.name || t('Property')}</span>
                                                 </div>
                                                 <h3 className="text-sm font-black text-foreground mt-0.5">
-                                                    Unit {renewal.current_lease?.unit?.name || 'N/A'}
+                                                    {t('Unit {unit}', { unit: renewal.current_lease?.unit?.name || t('N/A') })}
                                                 </h3>
                                                 <p className="text-xs font-medium text-foreground/80 mt-0.5">
-                                                    Tenant: {renewal.current_lease?.tenant?.full_name || 'Assigned Tenant'}
+                                                    {t('Tenant: {name}', { name: renewal.current_lease?.tenant?.full_name || t('Assigned Tenant') })}
                                                 </p>
                                             </div>
                                             <span className={cn(
@@ -505,20 +526,20 @@ export function LandlordLeasesView() {
                                                     ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                                                     : "bg-red-500/15 text-red-600 dark:text-red-400"
                                             )}>
-                                                {renewal.status}
+                                                {t(STATUS_LABELS[renewal.status] ?? renewal.status)}
                                             </span>
                                         </div>
 
                                         {/* Renewal Comparison Box */}
                                         <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 grid grid-cols-2 gap-2 text-xs">
                                             <div>
-                                                <span className="text-[10px] text-muted-foreground block font-bold uppercase">Proposed Period</span>
+                                                <span className="text-[10px] text-muted-foreground block font-bold uppercase">{t("Proposed Period")}</span>
                                                 <span className="font-semibold text-foreground">
                                                     {formatDate(renewal.proposed_start_date)} - {formatDate(renewal.proposed_end_date)}
                                                 </span>
                                             </div>
                                             <div>
-                                                <span className="text-[10px] text-muted-foreground block font-bold uppercase">Proposed Rent</span>
+                                                <span className="text-[10px] text-muted-foreground block font-bold uppercase">{t("Proposed Rent")}</span>
                                                 <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                                                     {formatCurrency(renewal.proposed_monthly_rent)}
                                                 </span>
@@ -537,7 +558,7 @@ export function LandlordLeasesView() {
                                                     className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-all"
                                                 >
                                                     <Check className="size-3.5" />
-                                                    Approve
+                                                    {t('Approve')}
                                                 </button>
                                                 <button
                                                     onClick={() => {
@@ -548,13 +569,13 @@ export function LandlordLeasesView() {
                                                     className="py-2.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 active:scale-98 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
                                                 >
                                                     <X className="size-3.5" />
-                                                    Decline
+                                                    {t('Decline')}
                                                 </button>
                                                 {renewal.current_lease?.tenant?.id && (
                                                     <Link
                                                         href={`/mobile/landlord/messages?tenantId=${renewal.current_lease.tenant.id}`}
                                                         className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-                                                        aria-label="Message tenant"
+                                                        aria-label={t("Message tenant")}
                                                     >
                                                         <MessageSquare className="size-4" />
                                                     </Link>
@@ -572,16 +593,31 @@ export function LandlordLeasesView() {
                         {filteredLeases.length === 0 ? (
                             <div className="p-8 text-center rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col items-center gap-2.5">
                                 <FileText className="size-10 text-muted-foreground/40 stroke-1" />
-                                <h4 className="text-sm font-bold text-foreground">No Leases Found</h4>
+                                <h4 className="text-sm font-bold text-foreground">{t("No Leases Found")}</h4>
                                 <p className="text-xs text-muted-foreground max-w-xs">
-                                    {searchQuery ? 'Try adjusting your search query.' : 'No leases match the selected tab filter.'}
+                                    {searchQuery ? t('Try adjusting your search query.') : t('No leases match the selected tab filter.')}
                                 </p>
                             </div>
                         ) : (
                             filteredLeases.map((lease) => {
-                                const days = getDaysRemaining(lease.end_date);
-                                const isExpiring = lease.status === 'active' && days >= 0 && days <= 60;
-                                const isUrgent = isExpiring && days <= 30;
+                                const isActive = lease.status === 'active';
+                                const termState = leaseEndState(lease);
+                                const isExpiring = isExpiringLease(lease);
+                                const isUrgent = isExpiring && termState.kind === 'fixed' && termState.urgent;
+                                const isMovingOut = isActive && termState.kind === 'moving_out';
+                                const isOpenEnded = termState.kind === 'open_ended';
+                                const statusLabel = t(STATUS_LABELS[lease.status] ?? lease.status);
+                                const statusChip = !isActive
+                                    ? statusLabel
+                                    : termState.kind === 'fixed' && isExpiring
+                                        ? t('{days}d left', { days: termState.daysLeft })
+                                        : termState.kind === 'moving_out'
+                                            ? t('Moving out · {days}d', { days: termState.daysLeft })
+                                            : termState.kind === 'ended'
+                                                ? t('Ended')
+                                                : isOpenEnded
+                                                    ? t('Open-ended')
+                                                    : statusLabel;
 
                                 return (
                                     <div
@@ -590,7 +626,7 @@ export function LandlordLeasesView() {
                                             "rounded-2xl p-4 bg-card border shadow-xs transition-all flex flex-col gap-3",
                                             isUrgent
                                                 ? "border-red-500/40"
-                                                : isExpiring
+                                                : isExpiring || isMovingOut
                                                 ? "border-amber-500/40"
                                                 : "border-slate-200 dark:border-white/10"
                                         )}
@@ -599,14 +635,14 @@ export function LandlordLeasesView() {
                                             <div>
                                                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase">
                                                     <Building2 className="size-3" />
-                                                    <span>{lease.unit?.property?.name || 'Property'}</span>
+                                                    <span>{lease.unit?.property?.name || t('Property')}</span>
                                                 </div>
                                                 <h3 className="text-sm font-black text-foreground mt-0.5">
-                                                    Unit {lease.unit?.name || 'N/A'}
+                                                    {t('Unit {unit}', { unit: lease.unit?.name || t('N/A') })}
                                                 </h3>
                                                 <div className="flex items-center gap-1.5 mt-0.5">
                                                     <span className="text-xs font-semibold text-foreground">
-                                                        {lease.tenant?.full_name || 'Occupied Unit'}
+                                                        {lease.tenant?.full_name || t('Occupied Unit')}
                                                     </span>
                                                 </div>
                                             </div>
@@ -614,42 +650,54 @@ export function LandlordLeasesView() {
                                             <div className="flex flex-col items-end gap-1">
                                                 <span className={cn(
                                                     "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                                                    lease.status === 'active'
+                                                    isActive
                                                         ? isUrgent
                                                             ? "bg-red-500/15 text-red-600 dark:text-red-400"
-                                                            : isExpiring
+                                                            : isExpiring || isMovingOut
                                                             ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                                                             : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                                                         : "bg-slate-500/15 text-muted-foreground"
                                                 )}>
-                                                    {isUrgent ? `${days}d left` : isExpiring ? `${days}d left` : lease.status}
+                                                    {statusChip}
                                                 </span>
-                                                {lease.status === 'active' && (
-                                                    <span className="text-[10px] text-muted-foreground">
-                                                        Until {formatDate(lease.end_date)}
+                                                {isActive && (
+                                                    <span className="text-[10px] text-muted-foreground text-right">
+                                                        {isOpenEnded
+                                                            ? `${tenureSinceLabel(lease.start_date, language)}${formatTenure(lease.start_date, undefined, language) ? ` · ${formatTenure(lease.start_date, undefined, language)}` : ''}`
+                                                            : leaseTermLabel(lease, undefined, language)}
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
 
                                         {/* Financial & Terms Row */}
-                                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-xs">
+                                        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-xs">
                                             <div>
-                                                <span className="text-[10px] text-muted-foreground block font-bold uppercase">Monthly Rent</span>
+                                                <span className="text-[10px] text-muted-foreground block font-bold uppercase">{t("Monthly Rent")}</span>
                                                 <span className="font-bold text-foreground">
                                                     {formatCurrency(lease.monthly_rent)}
                                                 </span>
                                             </div>
                                             <div>
-                                                <span className="text-[10px] text-muted-foreground block font-bold uppercase">Deposit</span>
+                                                <span className="text-[10px] text-muted-foreground block font-bold uppercase">{t("Deposit")}</span>
                                                 <span className="font-semibold text-muted-foreground">
                                                     {formatCurrency(lease.security_deposit)}
                                                 </span>
                                             </div>
                                             <div>
-                                                <span className="text-[10px] text-muted-foreground block font-bold uppercase">Bed / Bath</span>
+                                                <span className="text-[10px] text-muted-foreground block font-bold uppercase">{t("Bed / Bath")}</span>
                                                 <span className="font-semibold text-muted-foreground">
-                                                    {lease.unit?.beds || 1}B • {lease.unit?.baths || 1}B
+                                                    {t('{beds} Bed • {baths} Bath', { beds: lease.unit?.beds || 1, baths: lease.unit?.baths || 1 })}
+                                                </span>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-[10px] text-muted-foreground block font-bold uppercase">
+                                                    {isOpenEnded ? t('Tenure') : t('Term')}
+                                                </span>
+                                                <span className="font-semibold text-muted-foreground">
+                                                    {isOpenEnded
+                                                        ? (formatTenure(lease.start_date, undefined, language) || t('Month-to-month'))
+                                                        : leaseTermLabel(lease, undefined, language)}
                                                 </span>
                                             </div>
                                         </div>
@@ -661,7 +709,7 @@ export function LandlordLeasesView() {
                                                 className="text-xs font-bold text-primary flex items-center gap-1 active:scale-95 transition-all"
                                             >
                                                 <FileText className="size-3.5" />
-                                                View Agreement
+                                                {t('View Agreement')}
                                             </button>
 
                                             <div className="flex items-center gap-1.5">
@@ -669,7 +717,7 @@ export function LandlordLeasesView() {
                                                     <a
                                                         href={`tel:${lease.tenant.phone}`}
                                                         className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-                                                        aria-label="Call tenant"
+                                                        aria-label={t("Call tenant")}
                                                     >
                                                         <Phone className="size-3.5" />
                                                     </a>
@@ -678,7 +726,7 @@ export function LandlordLeasesView() {
                                                     <Link
                                                         href={`/mobile/landlord/messages?tenantId=${lease.tenant.id}`}
                                                         className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-                                                        aria-label="Message tenant"
+                                                        aria-label={t("Message tenant")}
                                                     >
                                                         <MessageSquare className="size-3.5" />
                                                     </Link>
@@ -698,7 +746,7 @@ export function LandlordLeasesView() {
                         <div className="w-full sm:max-w-md bg-background rounded-t-3xl sm:rounded-2xl p-5 border border-slate-200 dark:border-white/10 shadow-xl flex flex-col gap-4 animate-in slide-in-from-bottom duration-200">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-base font-black text-foreground">
-                                    {decisionMode === 'approve' ? 'Approve Lease Extension' : 'Decline Renewal Request'}
+                                    {decisionMode === 'approve' ? t('Approve Lease Extension') : t('Decline Renewal Request')}
                                 </h3>
                                 <button
                                     onClick={() => {
@@ -706,6 +754,7 @@ export function LandlordLeasesView() {
                                         setDecisionMode(null);
                                     }}
                                     className="p-1 rounded-full text-muted-foreground hover:text-foreground"
+                                    aria-label={t('Close')}
                                 >
                                     <X className="size-5" />
                                 </button>
@@ -713,26 +762,26 @@ export function LandlordLeasesView() {
 
                             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-xs space-y-1.5">
                                 <div className="font-bold text-foreground">
-                                    Unit {selectedRenewal.current_lease?.unit?.name} • {selectedRenewal.current_lease?.tenant?.full_name}
+                                    {t('Unit {unit}', { unit: selectedRenewal.current_lease?.unit?.name ?? '' })} • {selectedRenewal.current_lease?.tenant?.full_name}
                                 </div>
                                 <div className="text-muted-foreground">
-                                    Proposed Period: {formatDate(selectedRenewal.proposed_start_date)} - {formatDate(selectedRenewal.proposed_end_date)}
+                                    {t('Proposed Period: {start} - {end}', { start: formatDate(selectedRenewal.proposed_start_date), end: formatDate(selectedRenewal.proposed_end_date) })}
                                 </div>
                                 <div className="text-muted-foreground font-semibold">
-                                    Monthly Rent: {formatCurrency(selectedRenewal.proposed_monthly_rent)}
+                                    {t('Monthly Rent: {amount}', { amount: formatCurrency(selectedRenewal.proposed_monthly_rent) })}
                                 </div>
                             </div>
 
                             {decisionMode === 'reject' && (
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-bold text-muted-foreground">
-                                        Reason for Declining (Sent to Tenant)
+                                        {t('Reason for Declining (Sent to Tenant)')}
                                     </label>
                                     <textarea
                                         value={rejectNotes}
                                         onChange={(e) => setRejectNotes(e.target.value)}
                                         rows={3}
-                                        placeholder="e.g., Scheduled unit maintenance or rate adjustments..."
+                                        placeholder={t("e.g., Scheduled unit maintenance or rate adjustments...")}
                                         className="w-full p-3 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                                     />
                                 </div>
@@ -740,7 +789,7 @@ export function LandlordLeasesView() {
 
                             {decisionMode === 'approve' && (
                                 <p className="text-xs text-muted-foreground">
-                                    Approving will notify the tenant and prepare the renewed lease terms based on their proposed schedule.
+                                    {t('Approving will notify the tenant and prepare the renewed lease terms based on their proposed schedule.')}
                                 </p>
                             )}
 
@@ -753,7 +802,7 @@ export function LandlordLeasesView() {
                                     }}
                                     className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-muted-foreground hover:text-foreground active:scale-98 transition-all"
                                 >
-                                    Cancel
+                                    {t('Cancel')}
                                 </button>
                                 <button
                                     disabled={actionSubmitting}
@@ -770,12 +819,12 @@ export function LandlordLeasesView() {
                                     ) : decisionMode === 'approve' ? (
                                         <>
                                             <Check className="size-4" />
-                                            Confirm Approval
+                                            {t('Confirm Approval')}
                                         </>
                                     ) : (
                                         <>
                                             <X className="size-4" />
-                                            Confirm Decline
+                                            {t('Confirm Decline')}
                                         </>
                                     )}
                                 </button>

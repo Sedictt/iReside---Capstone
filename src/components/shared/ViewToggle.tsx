@@ -2,6 +2,7 @@
 
 import { List, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface ViewToggleProps {
   view: "list" | "grid";
@@ -11,6 +12,7 @@ interface ViewToggleProps {
 }
 
 export function ViewToggle({ view, onChange, className, size = "md" }: ViewToggleProps) {
+  const { t } = useLanguageContext();
   const isSm = size === "sm";
 
   return (
@@ -21,7 +23,7 @@ export function ViewToggle({ view, onChange, className, size = "md" }: ViewToggl
         className
       )}
       role="group"
-      aria-label="View layout mode"
+      aria-label={t("View layout mode")}
     >
       <button
         type="button"
@@ -33,9 +35,9 @@ export function ViewToggle({ view, onChange, className, size = "md" }: ViewToggl
             ? "bg-primary text-primary-foreground shadow-sm scale-100 font-bold"
             : "text-muted-foreground hover:neumorphic-inset hover:text-foreground scale-95 opacity-70"
         )}
-        aria-label="List view"
+        aria-label={t("List view")}
         aria-pressed={view === "list"}
-        title="List view"
+        title={t("List view")}
       >
         <List className={isSm ? "size-3.5" : "size-4"} />
       </button>
@@ -49,9 +51,9 @@ export function ViewToggle({ view, onChange, className, size = "md" }: ViewToggl
             ? "bg-primary text-primary-foreground shadow-sm scale-100 font-bold"
             : "text-muted-foreground hover:neumorphic-inset hover:text-foreground scale-95 opacity-70"
         )}
-        aria-label="Grid view"
+        aria-label={t("Grid view")}
         aria-pressed={view === "grid"}
-        title="Grid view"
+        title={t("Grid view")}
       >
         <LayoutGrid className={isSm ? "size-3.5" : "size-4"} />
       </button>

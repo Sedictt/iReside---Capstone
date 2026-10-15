@@ -9,12 +9,15 @@
  */
 
 import { z } from "zod";
+import { getPasswordPolicyError, type PasswordContext } from "./password-policy";
+import { isPhMobileEmpty, phMobileError } from "@/lib/phone";
 
 // ---------------------------------------------------------------------------
 // Regular Expressions & Constants
 // ---------------------------------------------------------------------------
 
-export const REGEX_NAME = /^[a-zA-Z\s.,'-]+$/;
+// Unicode letters so names like "Peña" or "Nuñez" are accepted.
+export const REGEX_NAME = /^[\p{L}\p{M}\s.,'’-]+$/u;
 export const REGEX_EMAIL = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export const REGEX_HEX_COLOR = /^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 export const REGEX_PERMIT_NUMBER = /^[a-zA-Z0-9\s\-/.#]+$/;
@@ -82,38 +85,12 @@ export function validateEmail(value: string): { isValid: boolean; error?: string
 }
 
 /**
- * Validates a phone number (Philippine or international standard).
- * Requirements: 7 to 15 digits; accepts '+', '-', '()', spaces.
+ * Validates a contact number: a Philippine mobile number (+63 9XX XXX XXXX).
+ * "09…" and "+63…" forms are both accepted; see src/lib/phone.ts.
  */
 export function validatePhoneNumber(value: string, isRequired = false): { isValid: boolean; error?: string } {
-    const trimmed = value?.trim() ?? "";
-    if (!trimmed) {
-        if (isRequired) {
-            return { isValid: false, error: "Phone number is required." };
-        }
-        return { isValid: true };
-    }
-
-    // Strip non-digit characters except leading plus
-    const cleanDigits = trimmed.replace(/[^\d+]/g, "");
-    const digitsOnly = trimmed.replace(/\D/g, "");
-
-    if (digitsOnly.length < 7) {
-        return { isValid: false, error: "Phone number must have at least 7 digits." };
-    }
-    if (digitsOnly.length > 15) {
-        return { isValid: false, error: "Phone number cannot exceed 15 digits." };
-    }
-
-    // Check if Philippine mobile: e.g. 09XXXXXXXXX (11 digits) or +639XXXXXXXXX (12 digits)
-    if (trimmed.startsWith("09") && digitsOnly.length !== 11) {
-        return { isValid: false, error: "Philippine mobile numbers starting with 09 must be 11 digits." };
-    }
-    if (cleanDigits.startsWith("+639") && digitsOnly.length !== 12) {
-        return { isValid: false, error: "Philippine mobile numbers starting with +639 must have 12 digits." };
-    }
-
-    return { isValid: true };
+    const error = phMobileError(value, { required: isRequired });
+    return error ? { isValid: false, error } : { isValid: true };
 }
 
 /**
@@ -289,82 +266,23 @@ export function validateBannerImageUrl(value: string): { isValid: boolean; error
 }
 
 /**
- * Calculates password strength and checks security requirements.
+ * Strength meter + hard policy now live in `./password-policy` and are shared
+ * by every flow that sets a password. Re-exported here for existing imports.
  */
-export function evaluatePasswordStrength(password: string): {
-    score: number; // 0 to 4
-    label: "Weak" | "Fair" | "Good" | "Strong";
-    color: string;
-    checks: {
-        hasMinLength: boolean;
-        hasLetter: boolean;
-        hasNumberOrSymbol: boolean;
-        hasUppercase: boolean;
-    };
-    error?: string;
-} {
-    const trimmed = password ?? "";
-    const hasMinLength = trimmed.length >= 8;
-    const hasLetter = /[a-zA-Z]/.test(trimmed);
-    const hasNumberOrSymbol = /[\d\W_]/.test(trimmed);
-    const hasUppercase = /[A-Z]/.test(trimmed);
-
-    let score = 0;
-    if (trimmed.length >= 8) score++;
-    if (trimmed.length >= 12) score++;
-    if (hasLetter && hasNumberOrSymbol) score++;
-    if (hasUppercase) score++;
-
-    let label: "Weak" | "Fair" | "Good" | "Strong" = "Weak";
-    let color = "text-rose-500 bg-rose-500";
-
-    if (score >= 4) {
-        label = "Strong";
-        color = "text-emerald-500 bg-emerald-500";
-    } else if (score === 3) {
-        label = "Good";
-        color = "text-blue-500 bg-blue-500";
-    } else if (score === 2) {
-        label = "Fair";
-        color = "text-amber-500 bg-amber-500";
-    }
-
-    let error: string | undefined;
-    if (trimmed.length > 0 && trimmed.length < 8) {
-        error = "Password must be at least 8 characters.";
-    } else if (trimmed.length > 0 && !hasNumberOrSymbol) {
-        error = "Password must include at least one number or special symbol.";
-    }
-
-    return {
-        score,
-        label,
-        color,
-        checks: {
-            hasMinLength,
-            hasLetter,
-            hasNumberOrSymbol,
-            hasUppercase,
-        },
-        error,
-    };
-}
+export { evaluatePasswordStrength, getPasswordPolicyError } from "./password-policy";
+export type { PasswordContext, PasswordStrength } from "./password-policy";
 
 /**
  * Validates a password change pair (new password & confirm password).
  */
 export function validatePasswordPair(
     newPassword: string,
-    confirmPassword: string
+    confirmPassword: string,
+    context?: PasswordContext
 ): { isValid: boolean; newPasswordError?: string; confirmPasswordError?: string } {
-    if (!newPassword) {
-        return { isValid: false, newPasswordError: "New password is required." };
-    }
-    if (newPassword.length < 8) {
-        return { isValid: false, newPasswordError: "New password must be at least 8 characters long." };
-    }
-    if (!/[a-zA-Z]/.test(newPassword) || !/[\d\W_]/.test(newPassword)) {
-        return { isValid: false, newPasswordError: "Password must contain both letters and numbers/symbols." };
+    const policyError = getPasswordPolicyError(newPassword, { label: "New password", context });
+    if (policyError) {
+        return { isValid: false, newPasswordError: policyError };
     }
     if (!confirmPassword) {
         return { isValid: false, confirmPasswordError: "Please confirm your new password." };
@@ -477,9 +395,9 @@ export function validateAllLandlordSettings(
     if (!emergPhoneCheck.isValid) {
         errors["emergency_contact_phone"] = emergPhoneCheck.error!;
     }
-    // Cross check: if one is present, both are recommended
-    if (formData.emergency_contact_name.trim() && !formData.emergency_contact_phone.trim()) {
-        errors["emergency_contact_phone"] = "Emergency phone number is required when a contact name is provided.";
+    // Cross check: a name without a number can't be called.
+    if (formData.emergency_contact_name.trim() && isPhMobileEmpty(formData.emergency_contact_phone)) {
+        errors["emergency_contact_phone"] = "Please also type their mobile number, or clear their name.";
     }
 
     // 3. Identity -> Socials

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseWithSchema } from "@/lib/validation/server";
+import { isId, moveOutDenySchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 /**
  * PUT /api/landlord/move-out/[id]/deny
@@ -16,7 +18,7 @@ export async function PUT(
   if (!("userId" in authContext)) return authContext as Response;
   const { userId, supabase } = authContext;
 
-  let body;
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
@@ -25,13 +27,12 @@ export async function PUT(
       { status: 400 }
     );
   }
-  const { denial_reason } = body;
+  const parsed = parseWithSchema(moveOutDenySchema, body ?? {});
+  if (!parsed.ok) return parsed.response;
+  const { denial_reason } = parsed.data;
 
-  if (!denial_reason) {
-    return NextResponse.json(
-      { error: "Denial reason is required" },
-      { status: 400 }
-    );
+  if (!isId(id)) {
+    return NextResponse.json({ error: "Move-out request not found" }, { status: 404 });
   }
 
   try {

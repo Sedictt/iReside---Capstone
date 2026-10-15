@@ -9,6 +9,16 @@ import {
 import { BILLING_BUCKETS, uploadBillingFile } from "@/lib/billing/storage";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { databaseErrorResponse, parseWithSchema } from "@/lib/validation/server";
+import {
+  PROOF_LIMITS,
+  amountWithinBalanceRule,
+  isUuid,
+  outstandingBalance,
+  proofFileRule, proofContentRule,
+  roundCentavos,
+  tenantPaymentSubmitSchema,
+} from "@/lib/validation/schemas/billing.schema";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -21,25 +31,48 @@ export async function POST(request: Request, context: RouteContext) {
   const { userId } = authContext;
   const adminClient = createServiceRoleSupabaseClient();
 
+  if (!isUuid(id)) {
+    return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+  }
+
+  let formData: FormData;
+  try {
+    formData = await request.formData();
+  } catch {
+    return NextResponse.json({ error: "Request body is invalid.", fieldErrors: {} }, { status: 400 });
+  }
+
+  const parsed = parseWithSchema(tenantPaymentSubmitSchema, {
+    method: formData.get("method") ?? undefined,
+    referenceNumber: formData.get("referenceNumber") ?? undefined,
+    note: formData.get("note"),
+    partialAmount: formData.get("partialAmount") ?? undefined,
+    selectedItemIds: formData.get("selectedItemIds"),
+    selectedReadingIds: formData.get("selectedReadingIds"),
+  });
+  if (!parsed.ok) return parsed.response;
+  const { referenceNumber: trimmedReference, note, partialAmount: requestedAmount, selectedItemIds, selectedReadingIds } = parsed.data;
+
+  const fileEntry = formData.get("receipt");
+  const file = fileEntry instanceof File && fileEntry.size > 0 ? fileEntry : null;
+  if (!file) {
+    return NextResponse.json(
+      { error: "A clear payment proof image is required.", fieldErrors: { receipt: "A clear payment proof image is required." } },
+      { status: 400 },
+    );
+  }
+  const fileError = proofFileRule(file, {
+    label: "Payment proof",
+    required: true,
+    maxBytes: PROOF_LIMITS.paymentProofMaxBytes,
+    minBytes: PROOF_LIMITS.paymentProofMinBytes,
+  }) ?? (await proofContentRule(file, { label: "Payment proof" }));
+  if (fileError) {
+    return NextResponse.json({ error: fileError, fieldErrors: { receipt: fileError } }, { status: 400 });
+  }
+
   try {
     await expireInPersonIntents(adminClient, userId, { tenantId: userId, paymentId: id });
-
-    const formData = await request.formData();
-    const method = formData.get("method");
-
-        const referenceNumber = formData.get("referenceNumber");
-        const note = formData.get("note");
-        const partialAmountRaw = formData.get("partialAmount");
-        const file = formData.get("receipt");
-        const selectedItemIdsRaw = formData.get("selectedItemIds");
-        const selectedReadingIdsRaw = formData.get("selectedReadingIds");
-
-        if (method !== "gcash") {
-            return NextResponse.json(
-                { error: "Use the in-person intent action for face-to-face payments." },
-                { status: 400 },
-            );
-        }
 
         const { data: payment, error: paymentError } = await adminClient
             .from("payments")
@@ -56,19 +89,6 @@ export async function POST(request: Request, context: RouteContext) {
             return NextResponse.json({ error: "This invoice is already finalized." }, { status: 409 });
         }
 
-        const trimmedReference = typeof referenceNumber === "string" ? referenceNumber.trim() : "";
-        if (!trimmedReference) {
-            return NextResponse.json({ error: "Reference number is required for GCash submissions." }, { status: 400 });
-        }
-
-        if (!(file instanceof File) || file.size <= 0) {
-            return NextResponse.json({ error: "A clear payment proof image is required." }, { status: 400 });
-        }
-
-        if (!file.type.startsWith("image/") || file.size < 2048) {
-            return NextResponse.json({ error: "Payment proof is unreadable or invalid. Upload a clearer image." }, { status: 400 });
-        }
-
         if (
             payment.workflow_status === "under_review" &&
             payment.reference_number === trimmedReference &&
@@ -77,17 +97,53 @@ export async function POST(request: Request, context: RouteContext) {
             return NextResponse.json({ ok: true, idempotent: true });
         }
 
-        const partialAmount = typeof partialAmountRaw === "string" && partialAmountRaw.trim().length > 0
-            ? Number(partialAmountRaw)
-            : Number(payment.balance_remaining ?? payment.amount);
-
-        if (!Number.isFinite(partialAmount) || partialAmount <= 0) {
-            return NextResponse.json({ error: "A valid payment amount is required." }, { status: 400 });
+        // Duplicate-submission guard: the submitted amount is already applied to
+        // paid_amount while under review, so a second proof must wait for the review.
+        if (payment.workflow_status === "under_review") {
+            return NextResponse.json(
+                { error: "A payment for this invoice is already awaiting your landlord's review." },
+                { status: 409 },
+            );
         }
 
-        const expectedAmount = Number(payment.balance_remaining ?? payment.amount);
+        const expectedAmount = outstandingBalance(payment);
+        if (expectedAmount <= 0) {
+            return NextResponse.json({ error: "This invoice has no remaining balance." }, { status: 409 });
+        }
+
+        const partialAmount = requestedAmount ?? expectedAmount;
+        const amountError = amountWithinBalanceRule(partialAmount, expectedAmount, { label: "Payment amount" });
+        if (amountError) {
+            return NextResponse.json({ error: amountError, fieldErrors: { partialAmount: amountError } }, { status: 400 });
+        }
+
         if (!payment.allow_partial_payments && partialAmount < expectedAmount) {
-            return NextResponse.json({ error: "Partial payments are not enabled for this invoice." }, { status: 400 });
+            return NextResponse.json(
+                { error: "Partial payments are not enabled for this invoice.", fieldErrors: { partialAmount: "Partial payments are not enabled for this invoice." } },
+                { status: 400 },
+            );
+        }
+
+        // Selected line items / readings must belong to this invoice.
+        if (selectedItemIds.length > 0) {
+            const { data: ownedItems, error: itemsError } = await adminClient
+                .from("payment_items")
+                .select("id")
+                .eq("payment_id", payment.id)
+                .in("id", selectedItemIds);
+            if (itemsError || (ownedItems ?? []).length !== selectedItemIds.length) {
+                return NextResponse.json({ error: "Some selected charges do not belong to this invoice." }, { status: 400 });
+            }
+        }
+        if (selectedReadingIds.length > 0) {
+            const { data: ownedReadings, error: readingsError } = await adminClient
+                .from("utility_readings")
+                .select("id")
+                .eq("payment_id", payment.id)
+                .in("id", selectedReadingIds);
+            if (readingsError || (ownedReadings ?? []).length !== selectedReadingIds.length) {
+                return NextResponse.json({ error: "Some selected readings do not belong to this invoice." }, { status: 400 });
+            }
         }
 
         const proofUpload = await uploadBillingFile({
@@ -110,15 +166,15 @@ export async function POST(request: Request, context: RouteContext) {
                 rejection_reason: null,
                 payment_submitted_at: nowIso,
                 reference_number: trimmedReference,
-                payment_note: typeof note === "string" ? note.trim() || null : null,
+                payment_note: note ?? null,
                 payment_proof_path: proofUpload?.path ?? null,
                 payment_proof_url: proofUpload?.publicUrl ?? null,
-                paid_amount: Number(payment.paid_amount || 0) + partialAmount,
-                balance_remaining: Math.max(0, Number(payment.balance_remaining || payment.amount) - partialAmount),
+                paid_amount: roundCentavos(Number(payment.paid_amount || 0) + partialAmount),
+                balance_remaining: roundCentavos(Math.max(0, expectedAmount - partialAmount)),
                 metadata: {
                     ...((payment.metadata as any) || {}),
-                    pending_item_ids: typeof selectedItemIdsRaw === "string" ? JSON.parse(selectedItemIdsRaw) : [],
-                    pending_reading_ids: typeof selectedReadingIdsRaw === "string" ? JSON.parse(selectedReadingIdsRaw) : [],
+                    pending_item_ids: selectedItemIds,
+                    pending_reading_ids: selectedReadingIds,
                 },
                 in_person_intent_expires_at: null,
                 last_action_at: nowIso,
@@ -129,7 +185,8 @@ export async function POST(request: Request, context: RouteContext) {
             .single();
 
         if (updateError) {
-            throw updateError;
+            console.error("Failed to record tenant payment submission:", updateError);
+            return databaseErrorResponse(updateError, "Failed to submit payment.");
         }
 
         await Promise.all([

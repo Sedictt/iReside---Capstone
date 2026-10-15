@@ -18,11 +18,13 @@ import { useNotifications } from "@/context/NotificationContext";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/hooks/useSound";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 const ROTATION_INTERVAL = 6000; // 6 seconds
 
 export function NotificationBanner() {
     const { importantNotifications, markAsRead } = useNotifications();
+    const { t } = useLanguageContext();
     const { user, profile } = useAuth();
     const router = useRouter();
 
@@ -308,7 +310,7 @@ export function NotificationBanner() {
                             </motion.div>
                             
                             <span className="font-black text-xs tracking-tighter text-foreground">
-                                {totalCount} Alerts
+                                {t("{count} Alerts", { count: totalCount })}
                             </span>
                             
                             <motion.div
@@ -336,7 +338,7 @@ export function NotificationBanner() {
                                 </motion.div>
                                 <div className="hidden md:block">
                                     <h3 className="font-black text-xs uppercase tracking-widest text-muted-foreground leading-none mb-1">
-                                        Priority
+                                        {t("Priority")}
                                     </h3>
                                     <p className="text-sm font-black text-foreground tabular-nums">
                                         {currentIndex + 1} / {totalCount}
@@ -353,7 +355,7 @@ export function NotificationBanner() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-0.5">
                                         <span className={cn("text-[10px] font-black uppercase tracking-widest", config.text)}>
-                                             {config.label}
+                                             {t(config.label)}
                                         </span>
                                         <div className="size-1 rounded-full bg-border" />
                                         <h4 className="font-black text-sm text-foreground truncate">
@@ -374,6 +376,7 @@ export function NotificationBanner() {
                                             handleManualNav('prev');
                                         }} 
                                         className="p-1.5 neumorphic-extruded rounded-lg transition-all opacity-70 hover:opacity-100"
+                                        aria-label={t("Previous alert")}
                                     >
                                         <ChevronLeft className="size-4" />
                                     </button>
@@ -383,6 +386,7 @@ export function NotificationBanner() {
                                             handleManualNav('next');
                                         }} 
                                         className="p-1.5 neumorphic-extruded rounded-lg transition-all opacity-70 hover:opacity-100"
+                                        aria-label={t("Next alert")}
                                     >
                                         <ChevronRight className="size-4" />
                                     </button>
@@ -402,18 +406,19 @@ export function NotificationBanner() {
                                     }}
                                     className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black opacity-70 hover:opacity-100 transition-all neumorphic-extruded"
                                 >
-                                    Dismiss
+                                    {t("Dismiss")}
                                 </button>
                                 <button
                                     onClick={handleTakeAction}
                                     className="flex items-center gap-2 px-4 py-2 rounded-xl neumorphic-primary text-[11px] font-black transition-all active:scale-95 cursor-pointer"
                                 >
-                                    Take Action
+                                    {t("Take Action")}
                                     <ArrowRight className="size-3.5" />
                                 </button>
                                 <button 
                                     onClick={() => setIsExpanded(false)}
                                     className="size-10 flex items-center justify-center rounded-xl transition-colors opacity-70 hover:opacity-100 neumorphic-extruded"
+                                    aria-label={t("Collapse alerts")}
                                 >
                                     <ChevronUp className="size-5" />
                                 </button>

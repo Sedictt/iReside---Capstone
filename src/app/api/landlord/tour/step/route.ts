@@ -2,17 +2,18 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseJsonBody } from "@/lib/validation/server";
 import {
     LANDLORD_PRODUCT_TOUR_STEPS,
     progressLandlordProductTourStep,
 } from "@/lib/landlord-product-tour";
 
 const stepSchema = z.object({
-    stepId: z.string(),
-    route: z.string().optional(),
-    anchorId: z.string().optional().nullable(),
+    stepId: z.string().trim().min(1).max(100),
+    route: z.string().max(300).optional(),
+    anchorId: z.string().max(200).optional().nullable(),
     anchorFound: z.boolean().optional(),
-    metadata: z.record(z.string(), z.unknown()).optional(),
+    metadata: z.record(z.string().max(64), z.unknown()).refine((value) => JSON.stringify(value).length <= 16_000, "Metadata is too large.").optional(),
 });
 
 export async function POST(request: Request) {
@@ -21,9 +22,11 @@ export async function POST(request: Request) {
     const { userId, supabase } = authContext;
     const adminClient = createAdminClient();
 
+    const parsed = await parseJsonBody(request, stepSchema);
+    if (!parsed.ok) return parsed.response;
+    const { stepId, route, anchorId, anchorFound, metadata } = parsed.data;
+
     try {
-        const body = await request.json();
-        const { stepId, route, anchorId, anchorFound, metadata } = stepSchema.parse(body);
 
         const result = await progressLandlordProductTourStep(adminClient as any, {
             landlordId: userId,

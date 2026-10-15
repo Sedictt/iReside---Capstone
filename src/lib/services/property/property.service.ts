@@ -12,8 +12,7 @@ import type {
   PropertySummary,
   PropertyWithUnits,
   UnitSummary,
-  UpdateRenewalSettingsInput,
-} from "./property.types";
+  } from "./property.types";
 import {
   PropertyAccessError,
   PropertyNotFoundError,
@@ -399,42 +398,5 @@ export class PropertyService {
       status: unit.status,
       rentAmount: Number(unit.rent_amount ?? 0),
     };
-  }
-
-  /**
-   * Update renewal settings for a property.
-   *
-   * @param input - Renewal settings update payload.
-   */
-  async updateRenewalSettings(input: UpdateRenewalSettingsInput): Promise<void> {
-    if (input.renewalNoticeDays < 0 || input.defaultRenewalTermMonths < 1) {
-      throw new PropertyValidationError("Invalid renewal settings values.");
-    }
-
-    // Verify ownership first
-    const { data: property } = await this.supabase
-      .from("properties")
-      .select("id")
-      .eq("id", input.propertyId)
-      .eq("landlord_id", input.landlordId)
-      .maybeSingle();
-
-    if (!property) {
-      throw new PropertyAccessError("Property not found or access denied.");
-    }
-
-    const { error } = await this.supabase
-      .from("properties")
-      .update({
-        auto_renewal_enabled: input.autoRenewalEnabled,
-        renewal_notice_days: input.renewalNoticeDays,
-        default_renewal_term_months: input.defaultRenewalTermMonths,
-        default_rent_increase_percent: input.defaultRentIncreasePercent,
-      } as any)
-      .eq("id", input.propertyId);
-
-    if (error) {
-      throw new Error(`Failed to update renewal settings: ${error.message}`);
-    }
   }
 }

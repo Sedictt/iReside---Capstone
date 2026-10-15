@@ -6,6 +6,7 @@ import { HexColorPicker } from "react-colorful";
 import { X, Check, Pipette, RotateCcw, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface ColorPickerModalProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ export function ColorPickerModal({
     { label: "Warm Ivory", hex: "#fafaf6" },
   ],
 }: ColorPickerModalProps) {
+  const { t } = useLanguageContext();
   const [localColor, setLocalColor] = useState(color);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ export function ColorPickerModal({
 
   const handleCopyHex = () => {
     navigator.clipboard.writeText(localColor.toUpperCase());
-    toast.success(`Copied ${localColor.toUpperCase()} to clipboard`);
+    toast.success(t("Copied {value} to clipboard", { value: localColor.toUpperCase() }));
   };
 
   // Helper to determine text readability on top of the live color
@@ -100,15 +102,16 @@ export function ColorPickerModal({
               </div>
               <div>
                 <h3 className="text-sm font-black uppercase tracking-wider text-foreground">
-                  {title}
+                  {t(title)}
                 </h3>
-                <p className="text-[11px] text-muted-foreground font-medium">{subtitle}</p>
+                <p className="text-[11px] text-muted-foreground font-medium">{t(subtitle)}</p>
               </div>
             </div>
 
             <button
               type="button"
               onClick={onClose}
+              aria-label={t("Close")}
               className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 transition-all"
             >
               <X className="size-4" />
@@ -158,7 +161,7 @@ export function ColorPickerModal({
               <button
                 type="button"
                 onClick={handleCopyHex}
-                title="Copy HEX Code"
+                title={t("Copy HEX Code")}
                 className="size-10 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 transition-all"
               >
                 <Copy className="size-4" />
@@ -168,14 +171,14 @@ export function ColorPickerModal({
             {/* Presets Swatches */}
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-                Quick Presets
+                {t("Quick Presets")}
               </p>
               <div className="grid grid-cols-5 gap-2">
                 {presetColors.map((p) => (
                   <button
                     key={p.hex}
                     type="button"
-                    title={p.label || p.hex}
+                    title={p.label ? t(p.label) : p.hex}
                     onClick={() => {
                       setLocalColor(p.hex);
                       onChange(p.hex);
@@ -207,14 +210,14 @@ export function ColorPickerModal({
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground neumorphic-inset transition-all"
             >
-              Cancel
+              {t("Cancel")}
             </button>
             <button
               type="button"
               onClick={handleApply}
               className="px-6 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-primary text-white shadow-lg active:scale-95 transition-all"
             >
-              Apply Color
+              {t("Apply Color")}
             </button>
           </div>
         </motion.div>

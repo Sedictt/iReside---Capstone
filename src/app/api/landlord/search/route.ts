@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseSearchParams } from "@/lib/validation/server";
+import { landlordSearchQuerySchema, sanitizeSearchTerm } from "@/lib/validation/schemas/operations.schema";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get("q")?.trim() || "";
+    const parsedQuery = parseSearchParams(searchParams, landlordSearchQuerySchema);
+    if (!parsedQuery.ok) return parsedQuery.response;
+    // Strip characters that would alter the PostgREST or()/ilike filter syntax.
+    const query = sanitizeSearchTerm(parsedQuery.data.q);
 
     if (!query) {
         return NextResponse.json({ results: [] });
@@ -75,4 +80,4 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ results });
-}
+}

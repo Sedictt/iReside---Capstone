@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import { ArrowRight, Compass, CheckCircle2, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface UtilityBillingCompletionModalProps {
     isOpen: boolean;
@@ -19,6 +20,7 @@ export function UtilityBillingCompletionModal({
     onReturnToDashboard,
     propertyName,
 }: UtilityBillingCompletionModalProps) {
+    const { t } = useLanguageContext();
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape" && isOpen) {
@@ -60,22 +62,24 @@ export function UtilityBillingCompletionModal({
                     </div>
                     <div>
                         <span className="text-xs font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
-                            Step 3 Complete • Rates Saved
+                            {t("Step 3 Complete • Rates Saved")}
                         </span>
                         <h2
                             id="utility-completion-title"
                             className="text-xl sm:text-2xl font-black tracking-tight leading-tight text-foreground"
                         >
-                            Utility Billing Ready
+                            {t("Utility Billing Ready")}
                         </h2>
                     </div>
                 </div>
 
                 {/* Subtext */}
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                    Your water and electric rates have been configured
-                    {propertyName ? <> for <span className="font-bold text-foreground">{propertyName}</span></> : ""}.
-                    Next up in onboarding: Add your tenants and assign them to units so you can issue monthly rent bills.
+                    {propertyName ? (() => {
+                        const [before, after = ""] = t("Your water and electric rates have been configured for {property}.").split("{property}");
+                        return <>{before}<span className="font-bold text-foreground">{propertyName}</span>{after}</>;
+                    })() : t("Your water and electric rates have been configured.")}{" "}
+                    {t("Next up in onboarding: Add your tenants and assign them to units so you can issue monthly rent bills.")}
                 </p>
 
                 {/* Choice Actions */}
@@ -85,7 +89,7 @@ export function UtilityBillingCompletionModal({
                         onClick={onProceedToTenants}
                         className="w-full group inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm shadow-md shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer"
                     >
-                        <span>Next: Add Your Tenants</span>
+                        <span>{t("Next: Add Your Tenants")}</span>
                         <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                     </button>
 
@@ -96,7 +100,7 @@ export function UtilityBillingCompletionModal({
                             className="flex-1 inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-4 rounded-xl text-xs sm:text-sm font-semibold bg-muted/70 hover:bg-muted text-foreground border border-border/70 transition-all cursor-pointer active:scale-[0.98]"
                         >
                             <Compass className="size-4" />
-                            <span>Keep Viewing Rates</span>
+                            <span>{t("Keep Viewing Rates")}</span>
                         </button>
                         <button
                             type="button"
@@ -104,7 +108,8 @@ export function UtilityBillingCompletionModal({
                             className="flex-1 inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-4 rounded-xl text-xs sm:text-sm font-semibold bg-muted/70 hover:bg-muted text-foreground border border-border/70 transition-all cursor-pointer active:scale-[0.98]"
                         >
                             <LayoutDashboard className="size-4" />
-                            <span>Go to Dashboard</span>
+                            <span>{t("Go to Dashboard")}</span>
+
                         </button>
                     </div>
                 </div>

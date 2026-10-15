@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { SocialLinksEditor } from "./SocialLinksEditor";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type Socials = {
     facebook?: string;
@@ -18,6 +19,7 @@ type SocialConnectivityProps = {
 
 export function SocialConnectivity({ userId, initialSocials }: SocialConnectivityProps) {
     const supabase = createClient();
+    const { t } = useLanguageContext();
 
     const handleSave = async (newSocials: Socials) => {
         const { error } = await supabase
@@ -30,7 +32,7 @@ export function SocialConnectivity({ userId, initialSocials }: SocialConnectivit
 
     return (
         <div className="mt-10 pt-10 border-t border-black/10 dark:border-white/5">
-            <p className="text-[9px] font-black tracking-widest text-muted-foreground uppercase mb-4 text-center">Social Connectivity</p>
+            <p className="text-[9px] font-black tracking-widest text-muted-foreground uppercase mb-4 text-center">{t("Social Connectivity")}</p>
             <SocialLinksEditor initialSocials={initialSocials} onSave={handleSave} />
         </div>
     );

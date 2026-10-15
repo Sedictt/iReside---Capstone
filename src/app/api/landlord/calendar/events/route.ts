@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseSearchParams } from "@/lib/validation/server";
+import { calendarEventsQuerySchema } from "@/lib/validation/schemas/operations.schema";
 
 export async function GET(request: Request) {
     try {
@@ -8,7 +10,9 @@ export async function GET(request: Request) {
         const { userId, supabase } = authContext;
 
         const { searchParams } = new URL(request.url);
-        const propertyId = searchParams.get("propertyId");
+        const parsedQuery = parseSearchParams(searchParams, calendarEventsQuerySchema);
+        if (!parsedQuery.ok) return parsedQuery.response;
+        const propertyId = parsedQuery.data.propertyId;
 
         // 1. Fetch Payments (Rent & Utilities due dates)
         const paymentsPromise = supabase
@@ -53,6 +57,7 @@ export async function GET(request: Request) {
                 id,
                 start_date,
                 end_date,
+                term_type,
                 monthly_rent,
                 status,
                 tenant_id,
@@ -207,22 +212,26 @@ export async function GET(request: Request) {
                 rawEvent: l
             });
 
-            // Add Lease End Event
-            events.push({
-                id: `lease-end-${l.id}`,
-                title: `Lease End - ${l.tenant?.full_name || 'Tenant'}`,
-                date: l.end_date,
-                type: "lease",
-                status: "end",
-                leaseStatus: l.status,
-                tenantName: l.tenant?.full_name,
-                tenantAvatar: l.tenant?.avatar_url,
-                tenantBg: l.tenant?.avatar_bg_color,
-                propertyName: l.unit?.property?.name,
-                unitName: l.unit?.name,
-                detailsUrl: `/landlord/leases`,
-                rawEvent: l
-            });
+            // Add Lease End Event. Open-ended leases have no end date until a
+            // move-out is agreed; then the date is a move-out, not an expiry.
+            if (l.end_date) {
+                const isMoveOut = l.term_type !== "fixed";
+                events.push({
+                    id: `lease-end-${l.id}`,
+                    title: `${isMoveOut ? 'Move-out' : 'Lease End'} - ${l.tenant?.full_name || 'Tenant'}`,
+                    date: l.end_date,
+                    type: "lease",
+                    status: isMoveOut ? "move_out" : "end",
+                    leaseStatus: l.status,
+                    tenantName: l.tenant?.full_name,
+                    tenantAvatar: l.tenant?.avatar_url,
+                    tenantBg: l.tenant?.avatar_bg_color,
+                    propertyName: l.unit?.property?.name,
+                    unitName: l.unit?.name,
+                    detailsUrl: `/landlord/leases`,
+                    rawEvent: l
+                });
+            }
         });
 
         // --- Process Maintenance Requests ---

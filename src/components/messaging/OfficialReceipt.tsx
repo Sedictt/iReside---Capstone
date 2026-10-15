@@ -5,6 +5,17 @@ import { m as motion } from "framer-motion";
 import { UiMessage } from "@/components/landlord/messages/types";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/context/BrandContext";
+import { useLanguageContext } from "@/context/LanguageContext";
+
+const RECEIPT_STATUS_LABELS: Record<string, string> = {
+    paid: "Paid",
+    pending: "Pending",
+    overdue: "Overdue",
+    partially_paid: "Partially Paid",
+    cancelled: "Cancelled",
+    refunded: "Refunded",
+    processing: "Processing",
+};
 
 interface OfficialReceiptProps {
     message: UiMessage;
@@ -35,6 +46,7 @@ export function OfficialReceipt({
     role = "landlord",
     isCompact = false
 }: OfficialReceiptProps) {
+    const { t, locale } = useLanguageContext();
     const brand = useBrand();
     const [realData, setRealData] = useState<InvoiceData | null>(null);
     const [loading, setLoading] = useState(false);
@@ -82,25 +94,30 @@ export function OfficialReceipt({
     const displayData = {
         invoiceId: realData?.invoiceNumber || message.invoiceId || "---",
         date: realData?.issuedDate 
-            ? new Date(realData.issuedDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) 
+            ? new Date(realData.issuedDate).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' }) 
             : message.date || "---",
-        landlordName: realData?.landlord?.full_name || message.landlordName || (brand?.isCustomBranded ? brand.propertyName : "iReside Partner"),
-        propertyName: realData?.property?.name || message.propertyName || (brand?.propertyName !== "iReside Residences" ? brand?.propertyName : undefined) || "Managed Property",
-        tenantName: realData?.tenant?.full_name || message.tenantName || "Unknown Tenant",
+        landlordName: realData?.landlord?.full_name || message.landlordName || (brand?.isCustomBranded ? brand.propertyName : t("iReside Partner")),
+        propertyName: realData?.property?.name || message.propertyName || (brand?.propertyName !== "iReside Residences" ? brand?.propertyName : undefined) || "",
+        tenantName: realData?.tenant?.full_name || message.tenantName || t("Unknown Tenant"),
         unit: realData?.unit?.name || message.unit || "---",
-        description: realData?.description || message.description || "Rental Payment",
+        description: realData?.description || message.description || t("Rental Payment"),
         amount: realData?.totalAmount !== undefined 
             ? new Intl.NumberFormat('en-PH').format(realData.totalAmount) 
             : message.amount || "0",
-        status: (realData?.status || "Paid").toUpperCase()
+        status: (() => {
+            const raw = realData?.status || "paid";
+            const label = RECEIPT_STATUS_LABELS[raw.toLowerCase()];
+            return (label ? t(label) : raw).toUpperCase();
+        })()
     };
+    const propertyDisplayName = displayData.propertyName || t("Managed Property");
 
     // Dynamically resolve the brand name established by the landlord
     const brandName = useMemo(() => {
         if (brand?.isCustomBranded && brand.propertyName?.trim()) {
             return brand.propertyName.trim();
         }
-        if (displayData.propertyName && displayData.propertyName !== "Managed Property") {
+        if (displayData.propertyName) {
             return displayData.propertyName;
         }
         if (brand?.propertyName?.trim() && brand.propertyName !== "iReside Residences") {
@@ -144,7 +161,7 @@ export function OfficialReceipt({
                         "font-black tracking-tighter mb-1",
                         isCompact ? "text-lg" : "text-xl"
                     )}>{brandName}</h1>
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Payment Confirmation</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{t("Payment Confirmation")}</p>
                     {loading && (
                         <div className="absolute -top-1 right-0">
                             <div className="size-2 rounded-full bg-primary animate-ping" />
@@ -158,39 +175,39 @@ export function OfficialReceipt({
                     isCompact ? "text-[10px]" : "text-[11px]"
                 )}>
                     <div className="flex justify-between gap-4">
-                        <span className="shrink-0 opacity-60">Invoice #:</span>
+                        <span className="shrink-0 opacity-60">{t("Invoice #:")}</span>
                         <span className="text-right truncate max-w-[150px] font-black">{displayData.invoiceId}</span>
                     </div>
                     <div className="flex justify-between gap-4">
-                        <span className="shrink-0 opacity-60">Date:</span>
+                        <span className="shrink-0 opacity-60">{t("Date:")}</span>
                         <span className="text-right font-black">{displayData.date}</span>
                     </div>
                     
                     <div className="flex justify-between gap-4">
-                        <span className="shrink-0 opacity-60">Landlord:</span>
+                        <span className="shrink-0 opacity-60">{t("Landlord:")}</span>
                         <span className="text-right font-black uppercase">{displayData.landlordName}</span>
                     </div>
                     <div className="flex justify-between gap-4">
-                        <span className="shrink-0 opacity-60">Property:</span>
-                        <span className="text-right font-black uppercase">{displayData.propertyName}</span>
+                        <span className="shrink-0 opacity-60">{t("Property:")}</span>
+                        <span className="text-right font-black uppercase">{propertyDisplayName}</span>
                     </div>
 
                     <div className="my-4 border-t border-zinc-100" />
 
                     <div className="flex justify-between gap-4">
-                        <span className="shrink-0 opacity-60">Tenant:</span>
+                        <span className="shrink-0 opacity-60">{t("Tenant:")}</span>
                         <span className="text-right font-black uppercase">{displayData.tenantName}</span>
                     </div>
                     <div className="flex justify-between gap-4">
-                        <span className="shrink-0 opacity-60">Unit:</span>
+                        <span className="shrink-0 opacity-60">{t("Unit:")}</span>
                         <span className="text-right font-black">{displayData.unit}</span>
                     </div>
                     <div className="flex justify-between gap-4">
-                        <span className="shrink-0 opacity-60">Description:</span>
+                        <span className="shrink-0 opacity-60">{t("Description:")}</span>
                         <span className="text-right font-black">{displayData.description}</span>
                     </div>
                     <div className="flex justify-between gap-4">
-                        <span className="shrink-0 opacity-60">Status:</span>
+                        <span className="shrink-0 opacity-60">{t("Status:")}</span>
                         <span className="px-1.5 py-0.5 bg-zinc-900 text-white text-[9px] font-black uppercase tracking-wider">
                             {displayData.status}
                         </span>
@@ -212,7 +229,7 @@ export function OfficialReceipt({
                         "flex justify-between font-black",
                         isCompact ? "text-xs" : "text-sm"
                     )}>
-                        <span>TOTAL AMOUNT:</span>
+                        <span>{t("TOTAL AMOUNT:")}</span>
                         <span>₱{displayData.amount}</span>
                     </div>
                 </div>
@@ -225,7 +242,7 @@ export function OfficialReceipt({
                             onClick={() => onDownload?.(`receipt-${message.id}`, `Receipt-${displayData.invoiceId}`)}
                             className="text-[10px] font-black underline hover:no-underline uppercase tracking-tighter disabled:opacity-50"
                         >
-                            {isDownloading ? "Saving..." : "Save as Photo"}
+                            {isDownloading ? t("Saving...") : t("Save as Photo")}
                         </button>
                     </div>
                 </div>

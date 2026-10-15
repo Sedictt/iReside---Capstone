@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseWithSchema } from "@/lib/validation/server";
+import { zUuid } from "@/lib/validation/zod-fields";
+import { MESSAGE_LIMITS, messageReportSchema } from "@/lib/validation/schemas/operations.schema";
 
 type ReportBody = {
     conversationId?: string | null;
@@ -10,10 +13,8 @@ type ReportBody = {
     reportedMessageId?: string;
 };
 
-const MAX_DETAILS_LENGTH = 3000;
-const MAX_EXACT_MESSAGE_LENGTH = 2000;
-const MAX_SCREENSHOT_COUNT = 4;
-const MAX_SCREENSHOT_BYTES = 5 * 1024 * 1024;
+const MAX_SCREENSHOT_COUNT = MESSAGE_LIMITS.reportScreenshots;
+const MAX_SCREENSHOT_BYTES = MESSAGE_LIMITS.reportScreenshotBytes;
 const REPORT_EVIDENCE_BUCKET = "message-report-evidence";
 const ALLOWED_SCREENSHOT_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 
@@ -53,7 +54,7 @@ export async function POST(
 
     const { targetUserId } = await context.params;
 
-    if (!targetUserId || targetUserId === user.id) {
+    if (!targetUserId || targetUserId === user.id || !zUuid().safeParse(targetUserId).success) {
         return NextResponse.json({ error: "Invalid target user." }, { status: 400 });
     }
 
@@ -80,30 +81,30 @@ export async function POST(
         body = (await request.json().catch(() => null)) as ReportBody | null;
     }
 
-    const conversationId = (body?.conversationId ?? "").trim();
-    const category = (body?.category ?? "").trim();
-    const details = (body?.details ?? "").trim();
-    const exactMessage = (body?.exactMessage ?? "").trim();
-    const reportedMessageId = (body?.reportedMessageId ?? "").trim();
-
-    if (!category) {
-        return NextResponse.json({ error: "Report category is required." }, { status: 400 });
+    if (!body || typeof body !== "object") {
+        return NextResponse.json({ error: "Invalid report payload." }, { status: 400 });
     }
 
-    if (details.length > MAX_DETAILS_LENGTH) {
-        return NextResponse.json({ error: "Report details are too long." }, { status: 400 });
-    }
+    const parsedReport = parseWithSchema(messageReportSchema, body);
+    if (!parsedReport.ok) return parsedReport.response;
+    const { conversationId, category, details, exactMessage, reportedMessageId } = parsedReport.data;
 
     if (category === "profanity" && exactMessage.length < 3 && !reportedMessageId) {
         return NextResponse.json({ error: "Please provide the exact offending message or select a specific message for profanity reports." }, { status: 400 });
     }
 
-    if (exactMessage.length > MAX_EXACT_MESSAGE_LENGTH) {
-        return NextResponse.json({ error: "Exact reported message is too long." }, { status: 400 });
-    }
-
     if (screenshots.length > MAX_SCREENSHOT_COUNT) {
         return NextResponse.json({ error: `You can attach up to ${MAX_SCREENSHOT_COUNT} screenshots.` }, { status: 400 });
+    }
+
+    // Validate every screenshot before anything is uploaded.
+    for (const screenshot of screenshots) {
+        if (!ALLOWED_SCREENSHOT_TYPES.has(screenshot.type)) {
+            return NextResponse.json({ error: "Only PNG, JPG, WEBP, or GIF screenshots are allowed." }, { status: 400 });
+        }
+        if (screenshot.size <= 0 || screenshot.size > MAX_SCREENSHOT_BYTES) {
+            return NextResponse.json({ error: "Each screenshot must be 5MB or smaller." }, { status: 400 });
+        }
     }
 
     if (!details && !exactMessage && screenshots.length === 0 && !reportedMessageId) {
@@ -111,8 +112,22 @@ export async function POST(
     }
 
     try {
-        let resolvedConversationId = conversationId || null;
+        let resolvedConversationId = conversationId;
         let reportedMessageSnapshot: Record<string, string> | null = null;
+
+        // A referenced conversation must be one the reporter takes part in.
+        if (resolvedConversationId && !reportedMessageId) {
+            const { data: reporterMembership } = await createAdminClient()
+                .from("conversation_participants")
+                .select("conversation_id")
+                .eq("conversation_id", resolvedConversationId)
+                .eq("user_id", user.id)
+                .maybeSingle();
+
+            if (!reporterMembership) {
+                return NextResponse.json({ error: "You do not have access to this conversation." }, { status: 403 });
+            }
+        }
 
         if (reportedMessageId) {
             const adminClient = createAdminClient();

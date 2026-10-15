@@ -13,6 +13,11 @@ import { KpiCardSkeleton } from "@/components/landlord/dashboard/KpiCardSkeleton
 import { ChartSkeleton } from "@/components/landlord/dashboard/ChartSkeleton";
 import { FinancialPerformanceChart, type FinancialChartWindowData } from "@/components/landlord/dashboard/FinancialPerformanceChart";
 import { useProperty } from "@/context/PropertyContext";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { dateRangeRule } from "@/lib/validation/rules";
+import { analyticsDateRule } from "@/lib/validation/schemas/operations.schema";
 
 type KpiItem = {
     title: string;
@@ -278,6 +283,7 @@ function statsReducer(state: StatsState, action: StatsAction): StatsState {
 export default function AnalyticsPage() {
     const { profile } = useAuth();
     const { selectedPropertyId } = useProperty();
+    const { t, locale } = useLanguageContext();
     const [mounted, setMounted] = useState(false);
     const [isBoneyard, setIsBoneyard] = useState(false);
     
@@ -288,6 +294,12 @@ export default function AnalyticsPage() {
     const [selectedRange, setSelectedRange] = useState<RangeOption["id"]>("30d");
     const [startDate, setStartDate] = useState(formatIsoDate(shiftDays(-29)));
     const [endDate, setEndDate] = useState(formatIsoDate(shiftDays(0)));
+    const rangeValues = useMemo(() => ({ startDate, endDate }), [startDate, endDate]);
+    const rangeForm = useFormValidation(rangeValues, {
+        startDate: (value) => analyticsDateRule(value, "Start date"),
+        endDate: (value, all) => analyticsDateRule(value, "End date") ?? dateRangeRule(all.startDate, value),
+    });
+    const isRangeValid = rangeForm.isValid;
     const [isIrisVisible, setIsIrisVisible] = useState(true);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -427,10 +439,10 @@ export default function AnalyticsPage() {
             const blob = new Blob([csvText], { type: "text/csv;charset=utf-8" });
             const datePart = now.toISOString().split("T")[0];
             downloadBlob(blob, `landlord-portfolio-analytics-${datePart}.csv`);
-            setToastMessage("CSV report exported successfully.");
+            setToastMessage(t("CSV report exported successfully."));
             fetchExportHistory();
         } catch {
-            setToastMessage("Unable to export CSV right now. Please try again.");
+            setToastMessage(t("Unable to export CSV right now. Please try again."));
         }
     };
 
@@ -487,7 +499,7 @@ export default function AnalyticsPage() {
 
         const datePart = now.toISOString().split("T")[0];
         doc.save(`landlord-portfolio-analytics-${datePart}.pdf`);
-        setToastMessage("PDF report exported successfully.");
+        setToastMessage(t("PDF report exported successfully."));
         trackPdfExport();
     };
 
@@ -514,7 +526,7 @@ export default function AnalyticsPage() {
             const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
             const datePart = now.toISOString().split("T")[0];
             downloadBlob(blob, `landlord-report-${datePart}.csv`);
-            setToastMessage("CSV redownloaded from history.");
+            setToastMessage(t("CSV redownloaded from history."));
         } else {
             // Re-use logic for PDF with saved rows
             const now = new Date(item.generatedAt);
@@ -558,7 +570,7 @@ export default function AnalyticsPage() {
 
             const datePart = now.toISOString().split("T")[0];
             doc.save(`landlord-report-${datePart}.pdf`);
-            setToastMessage("PDF redownloaded from history.");
+            setToastMessage(t("PDF redownloaded from history."));
         }
     };
 
@@ -623,6 +635,9 @@ export default function AnalyticsPage() {
             // Ignore cache read issues
         }
 
+        // Never query with an incomplete or invalid range; the inputs show why.
+        if (!isRangeValid) return;
+
         const loadOverview = async () => {
             // If we already populated from cache, silently fetch in the background without showing jarring skeletons
             dispatchStats({ type: "LOAD_START", silent: hasCache });
@@ -663,7 +678,7 @@ export default function AnalyticsPage() {
             } catch (error) {
                 if ((error as Error).name === "AbortError") return;
                 if (!hasCache) {
-                    dispatchStats({ type: "LOAD_ERROR", error: "Unable to load live analytics right now." });
+                    dispatchStats({ type: "LOAD_ERROR", error: t("Unable to load live analytics right now.") });
                 }
             }
         };
@@ -673,7 +688,7 @@ export default function AnalyticsPage() {
         return () => {
             controller.abort();
         };
-    }, [mounted, startDate, endDate, selectedPropertyId]);
+    }, [mounted, startDate, endDate, selectedPropertyId, isRangeValid]);
 
     useEffect(() => {
         if (!toastMessage) return;
@@ -725,13 +740,13 @@ export default function AnalyticsPage() {
                 <div>
                     <div className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-primary neumorphic-inset-card">
                         <BarChart className="size-3.5" />
-                        Portfolio Analytics
+                        {t("Portfolio Analytics")}
                     </div>
-                    <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Analytics</h1>
-                    <p className="mt-2 text-sm text-muted-foreground">Detailed insights into your property performance and portfolio health.</p>
+                    <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">{t("Analytics")}</h1>
+                    <p className="mt-2 text-sm text-muted-foreground">{t("Detailed insights into your property performance and portfolio health.")}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                    <Tooltip content="Toggle iRis mascot visibility on this page." side="top">
+                    <Tooltip content={t("Toggle iRis mascot visibility on this page.")} side="top">
                         <button
                             type="button"
                             onClick={() => setIsIrisVisible((prev) => !prev)}
@@ -742,10 +757,10 @@ export default function AnalyticsPage() {
                                     : "text-muted-foreground"
                             )}
                             aria-pressed={!isIrisVisible}
-                            aria-label={isIrisVisible ? "Hide iRis assistant" : "Show iRis assistant"}
+                            aria-label={isIrisVisible ? t("Hide iRis assistant") : t("Show iRis assistant")}
                         >
                             {isIrisVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                            {isIrisVisible ? "Hide iRis" : "Show iRis"}
+                            {isIrisVisible ? t("Hide iRis") : t("Show iRis")}
                         </button>
                     </Tooltip>
                     <button
@@ -753,7 +768,7 @@ export default function AnalyticsPage() {
                         className="neumorphic-primary group inline-flex items-center gap-2.5 rounded-2xl px-6 py-3 text-sm font-black transition-all hover:scale-105 active:scale-95"
                     >
                         <Download className="size-4 transition-transform group-hover:-translate-y-0.5" />
-                        Export Report
+                        {t("Export Report")}
                     </button>
                 </div>
             </div>
@@ -767,10 +782,10 @@ export default function AnalyticsPage() {
                         </div>
                         <div>
                             <h2 className="text-2xl font-black tracking-tight text-foreground">
-                                How Your Portfolio Is Performing
+                                {t("How Your Portfolio Is Performing")}
                             </h2>
                             <p className="text-sm font-medium text-muted-foreground/80">
-                                Simplified for easy reading
+                                {t("Simplified for easy reading")}
                             </p>
                         </div>
                     </div>
@@ -779,7 +794,7 @@ export default function AnalyticsPage() {
                         {statsLoading && (
                             <div className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.15em] text-blue-400 shadow-sm">
                                 <span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                                Syncing...
+                                {t("Syncing...")}
                             </div>
                         )}
                         {statsError && (
@@ -796,7 +811,7 @@ export default function AnalyticsPage() {
                                     : "text-muted-foreground"
                             )}
                         >
-                            {showMoreKpis ? "Less Details" : "More Metrics"}
+                            {showMoreKpis ? t("Less Details") : t("More Metrics")}
                             <ChevronDown className={cn("size-3.5 transition-transform duration-300", showMoreKpis && "rotate-180")} />
                         </button>
                     </div>
@@ -871,17 +886,17 @@ export default function AnalyticsPage() {
                             <TrendingUp className="size-6" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black tracking-tight text-foreground">Financial Performance</h2>
-                            <p className="text-sm font-medium text-muted-foreground/80">Revenue streams, expenses, and operational health overview.</p>
+                            <h2 className="text-2xl font-black tracking-tight text-foreground">{t("Financial Performance")}</h2>
+                            <p className="text-sm font-medium text-muted-foreground/80">{t("Revenue streams, expenses, and operational health overview.")}</p>
                         </div>
                     </div>
                     <Link
                         href="/landlord/invoices"
                         className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
-                        aria-label="Redirect to Finance Hub"
+                        aria-label={t("Redirect to Finance Hub")}
                     >
                         <CreditCard className="size-4 text-primary transition-transform group-hover:scale-110" aria-hidden="true" />
-                        <span>Finance Hub</span>
+                        <span>{t("Finance Hub")}</span>
                         <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
                     </Link>
                 </div>
@@ -919,14 +934,14 @@ export default function AnalyticsPage() {
                         <History className="size-6" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black tracking-tight text-foreground">Export History</h2>
-                        <p className="text-sm font-medium text-muted-foreground/80">Recently generated reports and downloads.</p>
+                        <h2 className="text-2xl font-black tracking-tight text-foreground">{t("Export History")}</h2>
+                        <p className="text-sm font-medium text-muted-foreground/80">{t("Recently generated reports and downloads.")}</p>
                     </div>
                 </div>
                 {exportHistory.length === 0 ? (
                     <div className="neumorphic-inset rounded-2xl flex flex-col items-center justify-center py-12 text-muted-foreground">
                         <FileText className="size-8 mb-3 opacity-20" />
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">No reports exported yet</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">{t("No reports exported yet")}</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -954,12 +969,12 @@ export default function AnalyticsPage() {
                                         )}>
                                             {item.format}
                                         </span>
-                                        <span className="text-[10px] font-black text-muted-foreground">{genDate.toLocaleDateString()}</span>
+                                        <span className="text-[10px] font-black text-muted-foreground">{genDate.toLocaleDateString(locale)}</span>
                                     </div>
                                     <div className="space-y-1">
                                         <span className="block truncate text-xs font-black text-foreground">{item.range}</span>
                                         <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
-                                            {isExpired ? "EXPIRED (15D+)" : `${15 - diffDays} days left`}
+                                            {isExpired ? t("EXPIRED (15D+)") : t("{count} days left", { count: 15 - diffDays })}
                                         </span>
                                     </div>
                                     
@@ -969,7 +984,7 @@ export default function AnalyticsPage() {
                                             className="neumorphic-extruded mt-2 flex w-full items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest text-primary transition-all hover:text-primary-foreground"
                                         >
                                             <Download className="size-3" />
-                                            Redownload
+                                            {t("Redownload")}
                                         </button>
                                     )}
                                 </div>
@@ -984,7 +999,7 @@ export default function AnalyticsPage() {
                             onClick={() => fetchExportHistory(true)}
                             className="neumorphic-extruded group flex items-center gap-2 px-8 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:text-primary active:scale-95"
                         >
-                            Load Older Reports
+                            {t("Load Older Reports")}
                             <ChevronDown className="size-3 transition-transform group-hover:translate-y-0.5" />
                         </button>
                     </div>
@@ -995,7 +1010,7 @@ export default function AnalyticsPage() {
                 <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
                     <button
                         type="button"
-                        aria-label="Close export modal"
+                        aria-label={t("Close export modal")}
                         className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
                         onClick={() => setIsExportModalOpen(false)}
                     />
@@ -1006,13 +1021,14 @@ export default function AnalyticsPage() {
                                     <Download className="size-6" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black text-foreground">Export Report</h2>
-                                    <p className="text-sm font-medium text-muted-foreground/80">Generate a downloadable analytics report.</p>
+                                    <h2 className="text-xl font-black text-foreground">{t("Export Report")}</h2>
+                                    <p className="text-sm font-medium text-muted-foreground/80">{t("Generate a downloadable analytics report.")}</p>
                                 </div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setIsExportModalOpen(false)}
+                                aria-label={t("Close")}
                                 className="neumorphic-extruded group flex size-10 items-center justify-center transition-all hover:text-foreground hover:rotate-90 active:scale-95"
                             >
                                 <X className="size-5" />
@@ -1024,7 +1040,7 @@ export default function AnalyticsPage() {
                             <div className="flex flex-col gap-4">
                                 <label className="flex items-center gap-3 text-sm font-black text-foreground">
                                     <div className="flex size-7 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-[10px] font-black text-primary">1</div>
-                                    Select Report Period
+                                    {t("Select Report Period")}
                                 </label>
                                 <div className="pl-10 flex flex-col gap-4">
                                     <div className="flex flex-wrap items-center gap-2">
@@ -1039,31 +1055,35 @@ export default function AnalyticsPage() {
                                                         : "text-muted-foreground"
                                                 )}
                                             >
-                                                {option.label}
+                                                {t(option.label)}
                                             </button>
                                         ))}
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <div className="flex-1 flex flex-col gap-2">
-                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Start</span>
+                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t("Start")}</span>
                                             <input min="2000-01-01" max="2099-12-31"
+                                                {...rangeForm.fieldProps("startDate")}
                                                 type="date"
                                                 value={startDate}
                                                 onChange={(event) => onStartDateChange(event.target.value)}
                                                 className="neumorphic-inset rounded-xl w-full px-4 py-3 text-sm font-medium"
-                                                aria-label="Report start date"
+                                                aria-label={t("Report start date")}
                                             />
+                                            <FieldError id={rangeForm.errorId("startDate")} message={rangeForm.errorFor("startDate")} />
                                         </div>
                                         <div className="pt-7 text-muted-foreground/40 font-black">–</div>
                                         <div className="flex-1 flex flex-col gap-2">
-                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">End</span>
+                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t("End")}</span>
                                             <input min="2000-01-01" max="2099-12-31"
+                                                {...rangeForm.fieldProps("endDate")}
                                                 type="date"
                                                 value={endDate}
                                                 onChange={(event) => onEndDateChange(event.target.value)}
                                                 className="neumorphic-inset rounded-xl w-full px-4 py-3 text-sm font-medium"
-                                                aria-label="Report end date"
+                                                aria-label={t("Report end date")}
                                             />
+                                            <FieldError id={rangeForm.errorId("endDate")} message={rangeForm.errorFor("endDate")} />
                                         </div>
                                     </div>
                                 </div>
@@ -1073,7 +1093,7 @@ export default function AnalyticsPage() {
                             <div className="flex flex-col gap-4">
                                 <label className="flex items-center gap-3 text-sm font-black text-foreground">
                                     <div className="flex size-7 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-[10px] font-black text-primary">2</div>
-                                    Select Format
+                                    {t("Select Format")}
                                 </label>
                                 <div className="pl-10 grid grid-cols-2 gap-4">
                                     <button
@@ -1109,7 +1129,7 @@ export default function AnalyticsPage() {
                                 onClick={() => setIsExportModalOpen(false)}
                                 className="neumorphic-extruded px-5 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all hover:text-foreground"
                             >
-                                Cancel
+                                {t("Cancel")}
                             </button>
                             <button
                                 onClick={() => {
@@ -1122,7 +1142,8 @@ export default function AnalyticsPage() {
                                     boxShadow: '4px 4px 12px rgba(0,0,0,0.4), -4px -4px 12px rgba(42,42,42,0.2), 0 0 20px rgba(196,176,255,0.2)'
                                 }}
                             >
-                                Generate & Download
+                                {t("Generate & Download")}
+
                             </button>
                         </div>
                     </div>

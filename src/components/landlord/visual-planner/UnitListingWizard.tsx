@@ -4,6 +4,14 @@ import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { m as motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Unit } from "./types";
+import { useLanguageContext } from "@/context/LanguageContext";
+
+const UNIT_STATUS_LABELS: Record<Unit["status"], string> = {
+  occupied: "Occupied",
+  vacant: "Vacant",
+  maintenance: "Under Maintenance",
+  neardue: "Near Due",
+};
 
 export function UnitListingWizard({
   isOpen,
@@ -14,6 +22,7 @@ export function UnitListingWizard({
   onClose: () => void;
   unit: Unit;
 }) {
+  const { t } = useLanguageContext();
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
   const [monthlyRent, setMonthlyRent] = useState(25000);
@@ -72,14 +81,16 @@ export function UnitListingWizard({
             <div>
               <h2 className="text-xl font-black text-zinc-900 flex items-center gap-2">
                 <span className="material-icons-round text-primary">storefront</span>
-                List Unit {unit.name || "Unit"}
+                {t("List Unit {name}", { name: unit.name || "Unit" })}
               </h2>
               <p className="text-zinc-500 text-sm mt-1">
-                Configure your unit details and prepare it for tenant invitations.
+                {t("Configure your unit details and prepare it for tenant invitations.")}
               </p>
             </div>
             <button
               onClick={onClose}
+              aria-label={t("Close")}
+              title={t("Close")}
               className="size-8 flex items-center justify-center rounded-full hover:bg-zinc-100 text-zinc-400 transition-colors"
             >
               <span className="material-icons-round text-[20px]">close</span>
@@ -113,25 +124,25 @@ export function UnitListingWizard({
                   <div className="size-16 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <span className="material-icons-round text-3xl text-primary">campaign</span>
                   </div>
-                  <h3 className="text-2xl font-black text-zinc-900">Let's get this unit rented!</h3>
+                  <h3 className="text-2xl font-black text-zinc-900">{t("Let's get this unit rented!")}</h3>
                   <p className="text-zinc-500 max-w-sm mx-auto mt-2 text-sm leading-relaxed">
-                    We'll guide you through setting up pricing, uploading photos, and preparing this unit for your future tenants.
+                    {t("We'll guide you through setting up pricing, uploading photos, and preparing this unit for your future tenants.")}
                   </p>
                 </div>
                 
                 <div className="bg-background border border-border rounded-2xl p-5">
                   <h4 className="text-sm font-black text-zinc-900 mb-3 flex items-center gap-2">
                     <span className="size-6 rounded-full bg-primary/10 flex items-center justify-center text-xs text-primary font-black">1</span>
-                    Review Basic Information
+                    {t("Review Basic Information")}
                   </h4>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center text-sm border-b border-border pb-3">
-                      <span className="text-zinc-500">Layout</span>
-                      <span className="text-zinc-900 font-medium">{unit.type} Layout</span>
+                      <span className="text-zinc-500">{t("Layout")}</span>
+                      <span className="text-zinc-900 font-medium">{t("{type} Layout", { type: unit.type })}</span>
                     </div>
                      <div className="flex justify-between items-center text-sm border-b border-border pb-3">
-                      <span className="text-zinc-500">Current Status</span>
-                      <span className="text-emerald-400 font-medium capitalize">{unit.status}</span>
+                      <span className="text-zinc-500">{t("Current Status")}</span>
+                      <span className="text-emerald-400 font-medium capitalize">{t(UNIT_STATUS_LABELS[unit.status] ?? unit.status)}</span>
                     </div>
                   </div>
                 </div>
@@ -147,12 +158,12 @@ export function UnitListingWizard({
                 transition={stepTransition}
                 className="space-y-6 transform-gpu"
               >
-                <h3 className="text-xl font-black text-zinc-900 mb-2">Set Rental Pricing</h3>
-                <p className="text-zinc-500 text-sm mb-6">Determine your monthly rent and deposit requirements.</p>
+                <h3 className="text-xl font-black text-zinc-900 mb-2">{t("Set Rental Pricing")}</h3>
+                <p className="text-zinc-500 text-sm mb-6">{t("Determine your monthly rent and deposit requirements.")}</p>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-black text-zinc-500 uppercase tracking-wider mb-2 block">Monthly Rent (PHP)</label>
+                    <label className="text-xs font-black text-zinc-500 uppercase tracking-wider mb-2 block">{t("Monthly Rent (PHP)")}</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-black">₱</span>
                       <input 
@@ -171,7 +182,7 @@ export function UnitListingWizard({
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-black text-zinc-500 uppercase tracking-wider mb-2 block">Security Deposit</label>
+                      <label className="text-xs font-black text-zinc-500 uppercase tracking-wider mb-2 block">{t("Security Deposit")}</label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-black">₱</span>
                         <input type="number" min="0" max="9999999.99" defaultValue="50000" className="w-full bg-white border border-border rounded-xl py-3 pl-10 pr-4 text-zinc-900 font-medium focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all" />
@@ -179,7 +190,7 @@ export function UnitListingWizard({
                     </div>
                     <div>
                       <label className="text-xs font-black text-zinc-500 uppercase tracking-wider mb-2 flex items-center justify-between">
-                        <span>Advance Rent</span>
+                        <span>{t("Advance Rent")}</span>
                       </label>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
@@ -201,6 +212,7 @@ export function UnitListingWizard({
                               setAdvanceCost(monthlyRent * newM);
                             }}
                             className="px-3 py-3 hover:bg-zinc-50 text-zinc-400 transition-colors"
+                            aria-label={t("Decrease advance months")}
                           >
                             <span className="material-icons-round text-[16px]">remove</span>
                           </button>
@@ -212,12 +224,13 @@ export function UnitListingWizard({
                               setAdvanceCost(monthlyRent * newM);
                             }}
                             className="px-3 py-3 hover:bg-zinc-50 text-zinc-400 transition-colors"
+                            aria-label={t("Increase advance months")}
                           >
                             <span className="material-icons-round text-[16px]">add</span>
                           </button>
                         </div>
                       </div>
-                      <p className="text-zinc-500 text-[10px] mt-2 text-right">{advanceMonths} month{advanceMonths !== 1 ? 's' : ''} applied</p>
+                      <p className="text-zinc-500 text-[10px] mt-2 text-right">{t(advanceMonths === 1 ? "{count} month applied" : "{count} months applied", { count: advanceMonths })}</p>
                     </div>
                   </div>
                 </div>
@@ -233,8 +246,8 @@ export function UnitListingWizard({
                 transition={stepTransition}
                 className="space-y-6 transform-gpu"
               >
-                <h3 className="text-xl font-black text-zinc-900 mb-2">Upload Photos</h3>
-                <p className="text-zinc-500 text-sm mb-6">Properties with high-quality photos get 3x more applications.</p>
+                <h3 className="text-xl font-black text-zinc-900 mb-2">{t("Upload Photos")}</h3>
+                <p className="text-zinc-500 text-sm mb-6">{t("Properties with high-quality photos get 3x more applications.")}</p>
                 
                 <div className="space-y-6">
                   {/* Main Thumbnail */}
@@ -242,30 +255,30 @@ export function UnitListingWizard({
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-sm font-black text-zinc-900 flex items-center gap-2">
                         <span className="material-icons-round text-primary text-[18px]">star</span>
-                        Main Thumbnail <span className="text-rose-400">*</span>
+                        {t("Main Thumbnail")} <span className="text-rose-400">*</span>
                       </label>
                     </div>
-                    <p className="text-xs text-zinc-500 mb-3">This is the key photo tenants will see when they receive an invitation.</p>
+                    <p className="text-xs text-zinc-500 mb-3">{t("This is the key photo tenants will see when they receive an invitation.")}</p>
                     <div className="border-2 border-dashed border-border hover:border-primary/50 bg-zinc-50 rounded-2xl flex flex-col items-center justify-center p-6 transition-colors cursor-pointer group h-36">
                       <div className="size-12 rounded-full bg-white flex items-center justify-center mb-3 group-hover:bg-primary/20 group-hover:text-primary transition-colors text-zinc-400 shadow-sm">
                         <span className="material-icons-round text-2xl">add_photo_alternate</span>
                       </div>
-                      <h4 className="text-zinc-900 font-medium text-sm">Upload Main Photo</h4>
+                      <h4 className="text-zinc-900 font-medium text-sm">{t("Upload Main Photo")}</h4>
                     </div>
                   </div>
 
                   {/* Additional Rooms */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-black text-zinc-900 block">Room Details</label>
+                      <label className="text-sm font-black text-zinc-900 block">{t("Room Details")}</label>
                       <button 
-                        onClick={() => setPhotoSlots(prev => [...prev, { id: Date.now().toString(), name: 'Custom View', icon: 'image' }])}
+                        onClick={() => setPhotoSlots(prev => [...prev, { id: Date.now().toString(), name: t('Custom View'), icon: 'image' }])}
                         className="text-xs text-primary font-medium hover:text-primary/80 transition-colors flex items-center gap-1"
                       >
-                        <span className="material-icons-round text-[14px]">add</span> Add Custom
+                        <span className="material-icons-round text-[14px]">add</span> {t("Add Custom")}
                       </button>
                     </div>
-                    <p className="text-xs text-zinc-500 mb-3">Add photos of specific areas to give a complete tour.</p>
+                    <p className="text-xs text-zinc-500 mb-3">{t("Add photos of specific areas to give a complete tour.")}</p>
                     <div className="grid grid-cols-2 gap-3">
                       {photoSlots.map((slot) => (
                         <div key={slot.id} className="border border-border bg-white rounded-xl p-3 flex items-center justify-between group hover:border-primary/30 transition-colors cursor-pointer shadow-sm">
@@ -287,7 +300,7 @@ export function UnitListingWizard({
                                   className="bg-transparent border-b border-primary/50 text-zinc-900 text-xs font-medium focus:outline-none w-full mr-2"
                                />
                             ) : (
-                               <span className="text-zinc-700 text-xs font-medium truncate">{slot.name}</span>
+                               <span className="text-zinc-700 text-xs font-medium truncate">{t(slot.name)}</span>
                             )}
                           </div>
                           {slot.icon === 'image' ? (
@@ -297,6 +310,8 @@ export function UnitListingWizard({
                                 setPhotoSlots(prev => prev.filter(p => p.id !== slot.id));
                               }}
                               className="material-icons-round text-zinc-500 hover:text-rose-400 text-[18px] transition-colors shrink-0"
+                              aria-label={t("Remove photo slot")}
+                              title={t("Remove photo slot")}
                             >
                               close
                             </button>
@@ -324,9 +339,9 @@ export function UnitListingWizard({
                   <div className="size-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                     <span className="material-icons-round text-4xl text-emerald-400">check_circle</span>
                   </div>
-                  <h3 className="text-2xl font-black text-zinc-900 mb-3">Ready to Activate!</h3>
+                  <h3 className="text-2xl font-black text-zinc-900 mb-3">{t("Ready to Activate!")}</h3>
                   <p className="text-zinc-500 text-sm max-w-sm mx-auto leading-relaxed">
-                    Your unit configuration is looking great. It will be ready for tenant invitations immediately.
+                    {t("Your unit configuration is looking great. It will be ready for tenant invitations immediately.")}
                   </p>
                 </div>
                 
@@ -335,8 +350,8 @@ export function UnitListingWizard({
                     <span className="material-icons-round">notification_important</span>
                   </div>
                   <div className="text-sm">
-                    <p className="text-zinc-900 font-medium">Internal Portfolio</p>
-                    <p className="text-zinc-500">This unit will be added to your active management portfolio.</p>
+                    <p className="text-zinc-900 font-medium">{t("Internal Portfolio")}</p>
+                    <p className="text-zinc-500">{t("This unit will be added to your active management portfolio.")}</p>
                   </div>
                 </div>
               </motion.div>
@@ -351,14 +366,14 @@ export function UnitListingWizard({
                 onClick={() => setStep(s => s - 1)}
                 className="px-6 py-2.5 rounded-xl font-black text-sm text-zinc-600 hover:text-zinc-900 hover:bg-white transition-all outline-none"
               >
-                Back
+                {t("Back")}
               </button>
             ) : (
                <button
                 onClick={onClose}
                 className="px-6 py-2.5 rounded-xl font-black text-sm text-zinc-500 hover:text-zinc-900 transition-all outline-none"
               >
-                Cancel
+                {t("Cancel")}
               </button>
             )}
             
@@ -367,7 +382,7 @@ export function UnitListingWizard({
                 onClick={() => setStep(s => s + 1)}
                 className="px-6 py-2.5 rounded-xl font-black text-sm text-zinc-900 bg-white hover:bg-zinc-100 transition-all outline-none flex items-center gap-2 border border-border"
               >
-                Continue
+                {t("Continue")}
                 <span className="material-icons-round text-[18px]">arrow_forward</span>
               </button>
             ) : (
@@ -382,7 +397,7 @@ export function UnitListingWizard({
                 className="px-8 py-2.5 rounded-xl font-black text-sm text-white bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all outline-none flex items-center gap-2"
               >
                 <span className="material-icons-round text-[18px]">bolt</span>
-                Activate Unit
+                {t("Activate Unit")}
               </button>
             )}
           </div>

@@ -4,7 +4,11 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { createClient } from "@supabase/supabase-js";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { describeAuditEvent } from "@/lib/audit/audit-display";
 import { sendRegistrationOTP } from "@/lib/email";
+import { parseJsonBody } from "@/lib/validation/server";
+import { securityKeyRotateSchema } from "@/lib/validation/schemas/account.schema";
+import crypto from "crypto";
 
 /**
  * POST /api/auth/security-key/rotate
@@ -22,10 +26,12 @@ export async function POST(request: Request) {
     const { userId, userRole } = authContext;
 
     try {
-        const body = await request.json();
+        const parsed = await parseJsonBody(request, securityKeyRotateSchema);
+        if (!parsed.ok) return parsed.response;
+        const body = parsed.data;
 
         // Dispatch OTP code if requested
-        if (body.action === "send-otp") {
+        if ("action" in body && body.action === "send-otp") {
             const adminClient = createServiceRoleSupabaseClient();
             const { data: profile } = await adminClient
                 .from("profiles")
@@ -37,7 +43,7 @@ export async function POST(request: Request) {
                 return NextResponse.json({ error: "User profile not found." }, { status: 404 });
             }
 
-            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            const otp = crypto.randomInt(100000, 1000000).toString();
             const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
             await (adminClient as any)
@@ -61,14 +67,13 @@ export async function POST(request: Request) {
             });
         }
 
-        const { currentPassword, otpCode } = body;
-
-        if (!currentPassword || !otpCode) {
+        if (!("currentPassword" in body)) {
             return NextResponse.json(
                 { error: "Current password and verification code are required to rotate your security key." },
                 { status: 400 }
             );
         }
+        const { currentPassword, otpCode } = body;
 
         const adminClient = createServiceRoleSupabaseClient();
 
@@ -108,7 +113,7 @@ export async function POST(request: Request) {
         }
 
         // 3. Verify OTP code
-        const cleanOtp = otpCode.trim();
+        const cleanOtp = otpCode;
         if (!secSettings?.otp_code || secSettings.otp_code !== cleanOtp) {
             return NextResponse.json(
                 { error: "Invalid verification code." },
@@ -149,8 +154,7 @@ export async function POST(request: Request) {
             userRole: (userRole as any) || "tenant",
             action: "security_key_rotated",
             category: "security",
-            title: "Security Recovery Key Rotated",
-            description: "User verified their credentials and rotated their single-use security recovery key.",
+            ...describeAuditEvent({ action: "security_key_rotated" }),
             severity: "warning",
         });
 

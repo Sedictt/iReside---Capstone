@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_ALLOWED_REGEX = /^[+()\-\s\d]+$/;
+import { parseJsonBody } from "@/lib/validation/server";
+import { landlordApplicationCreateSchema, landlordApplicationUpdateSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 type PostgrestLikeError = {
     code?: string | null;
@@ -11,32 +10,6 @@ type PostgrestLikeError = {
     details?: string | null;
     hint?: string | null;
 };
-
-function normalizeString(value: unknown) {
-    return typeof value === "string" ? value.trim() : "";
-}
-
-function toPositiveOrZeroNumber(value: unknown) {
-    if (typeof value === "number") return value;
-    if (typeof value === "string" && value.trim().length > 0) {
-        const parsed = Number(value);
-        return Number.isFinite(parsed) ? parsed : Number.NaN;
-    }
-    return Number.NaN;
-}
-
-function hasValidPhoneFormat(value: string) {
-    const digits = value.replace(/\D/g, "");
-    return PHONE_ALLOWED_REGEX.test(value) && digits.length >= 10 && digits.length <= 15;
-}
-
-function validateRequirementsChecklist(value: unknown) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
-        return false;
-    }
-
-    return Object.values(value as Record<string, unknown>).every((item) => typeof item === "boolean");
-}
 
 function extractMissingColumn(error: PostgrestLikeError | null | undefined) {
     if (!error || error.code !== "PGRST204" || !error.message) {
@@ -59,74 +32,20 @@ export async function POST(request: Request) {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase: _supabase } = authContext;
 
-    const body = await request.json();
+    const parsed = await parseJsonBody(request, landlordApplicationCreateSchema);
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
 
-    const {
-        unit_id,
-        applicant_name,
-        applicant_phone,
-        applicant_email,
-        move_in_date,
-        emergency_contact_name,
-        emergency_contact_phone,
-        employment_info,
-        requirements_checklist,
-        message,
-        status: requestedStatus,
-    } = body;
-
-    const normalizedApplicantName = normalizeString(applicant_name);
-    const normalizedApplicantEmail = normalizeString(applicant_email);
-    const normalizedApplicantPhone = normalizeString(applicant_phone);
-    const normalizedMessage = normalizeString(message);
-    const normalizedEmploymentInfo =
-        employment_info && typeof employment_info === "object" && !Array.isArray(employment_info)
-            ? employment_info
-            : {};
-
-    const occupation = normalizeString((normalizedEmploymentInfo as Record<string, unknown>).occupation);
-    const employer = normalizeString((normalizedEmploymentInfo as Record<string, unknown>).employer);
-    const monthlyIncomeRaw = (normalizedEmploymentInfo as Record<string, unknown>).monthly_income;
-    const monthlyIncome = toPositiveOrZeroNumber(monthlyIncomeRaw);
-
-    if (!unit_id || !normalizedApplicantName || !normalizedApplicantEmail) {
-        return NextResponse.json(
-            { error: "unit_id, applicant_name, and applicant_email are required." },
-            { status: 400 }
-        );
-    }
-
-    if (normalizedApplicantName.length < 2 || normalizedApplicantName.length > 100) {
-        return NextResponse.json({ error: "applicant_name must be between 2 and 100 characters." }, { status: 400 });
-    }
-
-    if (!EMAIL_REGEX.test(normalizedApplicantEmail)) {
-        return NextResponse.json({ error: "applicant_email is invalid." }, { status: 400 });
-    }
-
-    if (normalizedApplicantPhone && !hasValidPhoneFormat(normalizedApplicantPhone)) {
-        return NextResponse.json({ error: "applicant_phone format is invalid." }, { status: 400 });
-    }
-
-    if (occupation.length === 0 || occupation.length > 100) {
-        return NextResponse.json({ error: "employment_info.occupation is required and must be 1-100 characters." }, { status: 400 });
-    }
-
-    if (employer.length === 0 || employer.length > 100) {
-        return NextResponse.json({ error: "employment_info.employer is required and must be 1-100 characters." }, { status: 400 });
-    }
-
-    if (!Number.isFinite(monthlyIncome) || monthlyIncome <= 0 || monthlyIncome > 10_000_000) {
-        return NextResponse.json({ error: "employment_info.monthly_income must be a positive number within range." }, { status: 400 });
-    }
-
-    if (normalizedMessage.length > 1000) {
-        return NextResponse.json({ error: "message must not exceed 1000 characters." }, { status: 400 });
-    }
-
-    if (requirements_checklist && !validateRequirementsChecklist(requirements_checklist)) {
-        return NextResponse.json({ error: "requirements_checklist must only contain boolean values." }, { status: 400 });
-    }
+    const unit_id = body.unit_id;
+    const normalizedApplicantName = body.applicant_name;
+    const normalizedApplicantEmail = body.applicant_email;
+    const normalizedApplicantPhone = body.applicant_phone ?? "";
+    const normalizedMessage = body.message ?? "";
+    const occupation = body.employment_info.occupation;
+    const employer = body.employment_info.employer;
+    const monthlyIncome = body.employment_info.monthly_income;
+    const requirements_checklist = body.requirements_checklist ?? null;
+    const requestedStatus = body.status;
 
     // Verify landlord owns this unit.
     const { data: unit, error: unitError } = await adminClient
@@ -211,9 +130,9 @@ export async function POST(request: Request) {
         applicant_name: normalizedApplicantName,
         applicant_phone: normalizedApplicantPhone || null,
         applicant_email: normalizedApplicantEmail,
-        move_in_date: move_in_date ? normalizeString(move_in_date) : null,
-        emergency_contact_name: emergency_contact_name ? normalizeString(emergency_contact_name) : null,
-        emergency_contact_phone: emergency_contact_phone ? normalizeString(emergency_contact_phone) : null,
+        move_in_date: body.move_in_date,
+        emergency_contact_name: body.emergency_contact_name,
+        emergency_contact_phone: body.emergency_contact_phone,
         employment_info: {
             occupation,
             employer,
@@ -277,67 +196,14 @@ export async function PATCH(request: Request) {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase: _supabase } = authContext;
 
-    const body = await request.json();
-    const {
-        application_id,
-        requirements_checklist,
-        employment_info,
-        status,
-        applicant_name,
-        applicant_email,
-        applicant_phone,
-        emergency_contact_name,
-        emergency_contact_phone,
-        move_in_date,
-        message,
-    } = body;
-
-    const allowedStatuses = new Set(["pending", "reviewing", "rejected", "withdrawn"]);
-
-    if (!application_id) {
-        return NextResponse.json({ error: "application_id is required." }, { status: 400 });
-    }
-
-    if (status === "approved") {
-        return NextResponse.json(
-            { error: "Direct approval is disabled. Move application to payment pending first." },
-            { status: 400 }
-        );
-    }
-
-    if (status && !allowedStatuses.has(status)) {
-        return NextResponse.json({ error: "Invalid status value." }, { status: 400 });
-    }
-
-    if (requirements_checklist && !validateRequirementsChecklist(requirements_checklist)) {
-        return NextResponse.json({ error: "requirements_checklist must only contain boolean values." }, { status: 400 });
-    }
-
-    // Validate applicant fields if provided
-    if (applicant_name !== undefined) {
-        const n = normalizeString(applicant_name);
-        if (n.length < 2 || n.length > 100) {
-            return NextResponse.json({ error: "applicant_name must be 2–100 characters." }, { status: 400 });
-        }
-    }
-    if (applicant_email !== undefined) {
-        const e = normalizeString(applicant_email);
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
-            return NextResponse.json({ error: "applicant_email is invalid." }, { status: 400 });
-        }
-    }
-    if (applicant_phone !== undefined && applicant_phone !== null && applicant_phone !== "") {
-        if (!hasValidPhoneFormat(normalizeString(applicant_phone))) {
-            return NextResponse.json({ error: "applicant_phone format is invalid." }, { status: 400 });
-        }
-    }
-    if (message !== undefined && normalizeString(message).length > 1000) {
-        return NextResponse.json({ error: "message must not exceed 1000 characters." }, { status: 400 });
-    }
+    const parsed = await parseJsonBody(request, landlordApplicationUpdateSchema);
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
+    const { application_id, requirements_checklist, employment_info, status } = body;
 
     // Verify the landlord owns this application
-    let ownershipSelect = "id, created_by, landlord_id";
-    let existing: { id: string; created_by?: string | null; landlord_id?: string | null } | null = null;
+    let ownershipSelect = "id, created_by, landlord_id, status";
+    let existing: { id: string; created_by?: string | null; landlord_id?: string | null; status?: string | null } | null = null;
     let fetchError: PostgrestLikeError | null = null;
 
     for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -355,7 +221,7 @@ export async function PATCH(request: Request) {
 
         const missingColumn = extractMissingColumn(error);
         if (missingColumn === "created_by") {
-            ownershipSelect = "id, landlord_id";
+            ownershipSelect = "id, landlord_id, status";
             continue;
         }
 
@@ -376,42 +242,30 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: "Unauthorized to update this application." }, { status: 403 });
     }
 
+    // An approved application already has a tenant account and lease; its status is final here.
+    if (status && existing.status === "approved") {
+        return NextResponse.json(
+            { error: "This application is already approved and its status can no longer be changed." },
+            { status: 409 }
+        );
+    }
+
     const updates: Record<string, unknown> = {};
 
-    // Applicant identity fields
-    if (applicant_name !== undefined) updates.applicant_name = normalizeString(applicant_name);
-    if (applicant_email !== undefined) updates.applicant_email = normalizeString(applicant_email);
-    if (applicant_phone !== undefined) updates.applicant_phone = applicant_phone ? normalizeString(applicant_phone) : null;
-    if (emergency_contact_name !== undefined) updates.emergency_contact_name = emergency_contact_name ? normalizeString(emergency_contact_name) : null;
-    if (emergency_contact_phone !== undefined) updates.emergency_contact_phone = emergency_contact_phone ? normalizeString(emergency_contact_phone) : null;
-    if (move_in_date !== undefined) updates.move_in_date = move_in_date || null;
-    if (message !== undefined) updates.message = message ? normalizeString(message) : null;
+    // Applicant identity fields (already trimmed/normalized by the schema)
+    if (body.applicant_name !== undefined) updates.applicant_name = body.applicant_name;
+    if (body.applicant_email !== undefined) updates.applicant_email = body.applicant_email;
+    if (body.applicant_phone !== undefined) updates.applicant_phone = body.applicant_phone;
+    if (body.emergency_contact_name !== undefined) updates.emergency_contact_name = body.emergency_contact_name;
+    if (body.emergency_contact_phone !== undefined) updates.emergency_contact_phone = body.emergency_contact_phone;
+    if (body.move_in_date !== undefined) updates.move_in_date = body.move_in_date;
+    if (body.message !== undefined) updates.message = body.message;
 
     if (requirements_checklist) updates.requirements_checklist = requirements_checklist;
     if (employment_info) {
-        const normalizedOccupation = normalizeString(employment_info.occupation);
-        const normalizedEmployer = normalizeString(employment_info.employer);
-        const normalizedMonthlyIncome = toPositiveOrZeroNumber(employment_info.monthly_income);
-
-        if (normalizedOccupation.length === 0 || normalizedOccupation.length > 100) {
-            return NextResponse.json({ error: "employment_info.occupation is required and must be 1-100 characters." }, { status: 400 });
-        }
-
-        if (normalizedEmployer.length === 0 || normalizedEmployer.length > 100) {
-            return NextResponse.json({ error: "employment_info.employer is required and must be 1-100 characters." }, { status: 400 });
-        }
-
-        if (!Number.isFinite(normalizedMonthlyIncome) || normalizedMonthlyIncome <= 0 || normalizedMonthlyIncome > 10_000_000) {
-            return NextResponse.json({ error: "employment_info.monthly_income must be a positive number within range." }, { status: 400 });
-        }
-
-        updates.employment_info = {
-            occupation: normalizedOccupation,
-            employer: normalizedEmployer,
-            monthly_income: normalizedMonthlyIncome,
-        };
-        updates.employment_status = normalizedOccupation;
-        updates.monthly_income = normalizedMonthlyIncome;
+        updates.employment_info = employment_info;
+        updates.employment_status = employment_info.occupation;
+        updates.monthly_income = employment_info.monthly_income;
     }
     if (status) updates.status = status;
 

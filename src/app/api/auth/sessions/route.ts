@@ -2,6 +2,7 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { apiError, apiInternalError, apiSuccess } from "@/lib/api/response";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { parseUserAgent } from "@/lib/utils/device-parser";
+import { sessionRevokeSchema } from "@/lib/validation/schemas/account.schema";
 
 /**
  * GET /api/auth/sessions
@@ -64,7 +65,11 @@ export async function DELETE(req: Request) {
 
     try {
         const body = await req.json().catch(() => ({}));
-        const { sessionId, scope } = body;
+        const validation = sessionRevokeSchema.safeParse(body ?? {});
+        if (!validation.success) {
+            return apiError("VALIDATION_FAILED", validation.error.issues[0]?.message ?? "Invalid request.", 400);
+        }
+        const { sessionId, scope } = validation.data;
 
         const adminClient = createServiceRoleSupabaseClient();
 

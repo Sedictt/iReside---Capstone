@@ -22,6 +22,14 @@ import {
 import { cn } from '@/lib/utils';
 import { triggerHaptic } from '@/lib/haptics';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
+import { useLanguageContext } from '@/context/LanguageContext';
+
+/** Turns a status value like "under_review" into an English display label ("Under Review"). */
+const toStatusLabel = (value: string) =>
+    value
+        .split('_')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
 
 interface PaymentOverviewItem {
     id: string;
@@ -50,6 +58,7 @@ interface PaymentOverviewResponse {
 }
 
 export function TenantPayView() {
+    const { t, locale } = useLanguageContext();
     const [data, setData] = useState<PaymentOverviewResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'pending' | 'paid'>('all');
@@ -132,7 +141,7 @@ export function TenantPayView() {
         if (!selectedInvoice) return;
         if (!referenceNumber.trim()) {
             triggerHaptic('warning');
-            setToast({ type: 'error', message: 'Please enter your reference number (e.g. GCash Ref #).' });
+            setToast({ type: 'error', message: t('Please enter your reference number (e.g. GCash Ref #).') });
             return;
         }
 
@@ -153,11 +162,11 @@ export function TenantPayView() {
 
             if (!res.ok) {
                 const errJson = await res.json().catch(() => ({}));
-                throw new Error(errJson.error || 'Failed to submit payment proof.');
+                throw new Error(errJson.error || t('Failed to submit payment proof.'));
             }
 
             triggerHaptic('success');
-            setToast({ type: 'success', message: 'Payment proof submitted! Landlord will verify shortly.' });
+            setToast({ type: 'success', message: t('Payment proof submitted! Landlord will verify shortly.') });
             setSelectedInvoice(null);
             setReceiptFile(null);
             setReceiptPreview(null);
@@ -166,7 +175,7 @@ export function TenantPayView() {
             fetchPayments();
         } catch (err: any) {
             triggerHaptic('error');
-            setToast({ type: 'error', message: err?.message || 'Error submitting proof.' });
+            setToast({ type: 'error', message: err?.message || t('Error submitting proof.') });
         } finally {
             setSubmitting(false);
         }
@@ -189,11 +198,11 @@ export function TenantPayView() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-wider">
                                 <CreditCard className="size-3.5" />
-                                <span>Total Payable Balance</span>
+                                <span>{t('Total Payable Balance')}</span>
                             </div>
                             {overdueTotal > 0 && (
                                 <span className="text-[10px] font-bold bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full">
-                                    Overdue: {formatCurrency(overdueTotal)}
+                                    {t('Overdue: {amount}', { amount: formatCurrency(overdueTotal) })}
                                 </span>
                             )}
                         </div>
@@ -203,7 +212,7 @@ export function TenantPayView() {
                                 {formatCurrency(unpaidTotal > 0 ? unpaidTotal : 0)}
                             </h2>
                             <p className="text-[11px] text-muted-foreground mt-0.5">
-                                {unpaidTotal > 0 ? 'Pending verification or upcoming due' : 'All invoices are up to date!'}
+                                {unpaidTotal > 0 ? t('Pending verification or upcoming due') : t('All invoices are up to date!')}
                             </p>
                         </div>
                     </div>
@@ -218,7 +227,7 @@ export function TenantPayView() {
                             : "bg-red-500/15 border border-red-500/30 text-red-400"
                     )}>
                         <span>{toast.message}</span>
-                        <button onClick={() => setToast(null)} className="p-1">
+                        <button onClick={() => setToast(null)} className="p-1" aria-label={t('Dismiss')}>
                             <X className="size-3.5" />
                         </button>
                     </div>
@@ -232,17 +241,17 @@ export function TenantPayView() {
                                 <QrCode className="size-4" />
                             </div>
                             <div className="min-w-0">
-                                <h4 className="text-xs font-bold text-foreground">GCash / Maya Payment</h4>
-                                <p className="text-[10px] text-muted-foreground truncate">0917-123-4567 • Property Account</p>
+                                <h4 className="text-xs font-bold text-foreground">{t('GCash / Maya Payment')}</h4>
+                                <p className="text-[10px] text-muted-foreground truncate">0917-123-4567 • {t('Property Account')}</p>
                             </div>
                         </div>
                         <button
                             onClick={copyPaymentInfo}
                             className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-muted text-xs font-bold text-foreground flex items-center gap-1 active:scale-95 transition-all hover:bg-slate-200 shrink-0"
-                            aria-label="Copy account number"
+                            aria-label={t('Copy account number')}
                         >
                             <Copy className="size-3" />
-                            <span>{copiedAccount ? 'Copied!' : 'Copy'}</span>
+                            <span>{copiedAccount ? t('Copied!') : t('Copy')}</span>
                         </button>
                     </div>
                 </div>
@@ -258,7 +267,7 @@ export function TenantPayView() {
                                 : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
                         )}
                     >
-                        All Invoices
+                        {t('All Invoices')}
                     </button>
                     <button
                         onClick={() => setFilter('pending')}
@@ -269,7 +278,7 @@ export function TenantPayView() {
                                 : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
                         )}
                     >
-                        Unpaid / Due
+                        {t('Unpaid / Due')}
                     </button>
                     <button
                         onClick={() => setFilter('paid')}
@@ -280,7 +289,7 @@ export function TenantPayView() {
                                 : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
                         )}
                     >
-                        Paid
+                        {t('Paid')}
                     </button>
                 </div>
 
@@ -289,14 +298,14 @@ export function TenantPayView() {
                     {loading ? (
                         <div className="py-12 flex flex-col items-center justify-center gap-2">
                             <div className="w-8 h-8 rounded-full border-2 border-muted border-t-primary animate-spin" />
-                            <span className="text-xs text-muted-foreground">Loading payment records…</span>
+                            <span className="text-xs text-muted-foreground">{t('Loading payment records…')}</span>
                         </div>
                     ) : filteredPayments.length === 0 ? (
                         <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/50 p-6 text-center flex flex-col items-center justify-center shadow-xs">
                             <CheckCircle2 className="size-8 text-emerald-500/60 mb-1.5" />
-                            <h4 className="text-xs font-bold text-foreground">No invoices in this category</h4>
+                            <h4 className="text-xs font-bold text-foreground">{t('No invoices in this category')}</h4>
                             <p className="text-[11px] text-muted-foreground mt-0.5">
-                                {filter === 'pending' ? 'All dues are settled!' : 'No payment records found.'}
+                                {filter === 'pending' ? t('All dues are settled!') : t('No payment records found.')}
                             </p>
                         </div>
                     ) : (
@@ -313,14 +322,14 @@ export function TenantPayView() {
                                     <div className="flex items-start justify-between gap-2">
                                         <div>
                                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                                {inv.billingCycle || 'Monthly Rent'}
+                                                {inv.billingCycle || t('Monthly Rent')}
                                             </span>
                                             <h4 className="text-base font-black text-foreground">
                                                 {formatCurrency(inv.amount)}
                                             </h4>
                                             <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
                                                 <Calendar className="size-3" />
-                                                Due: {new Date(inv.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                {t('Due: {date}', { date: new Date(inv.dueDate).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' }) })}
                                             </p>
                                         </div>
 
@@ -330,7 +339,7 @@ export function TenantPayView() {
                                             isPending && "bg-amber-500/15 text-amber-500",
                                             isOverdue && "bg-red-500/15 text-red-500"
                                         )}>
-                                            {inv.workflowStatus || inv.status}
+                                            {t(toStatusLabel(inv.workflowStatus || inv.status))}
                                         </span>
                                     </div>
 
@@ -342,11 +351,11 @@ export function TenantPayView() {
                                                 className="text-[10px] font-bold text-primary flex items-center gap-1 active:scale-95 transition-all hover:underline"
                                             >
                                                 <Maximize2 className="size-3" />
-                                                <span>View Uploaded Proof</span>
+                                                <span>{t('View Uploaded Proof')}</span>
                                             </button>
                                         ) : (
                                             <span className="text-[10px] text-muted-foreground">
-                                                No proof submitted
+                                                {t('No proof submitted')}
                                             </span>
                                         )}
 
@@ -361,7 +370,7 @@ export function TenantPayView() {
                                                 className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1 shadow-xs hover:brightness-105 active:scale-95 transition-all"
                                             >
                                                 <Upload className="size-3" />
-                                                <span>{inv.paymentProofUrl ? 'Resubmit Proof' : 'Upload Proof'}</span>
+                                                <span>{inv.paymentProofUrl ? t('Resubmit Proof') : t('Upload Proof')}</span>
                                             </button>
                                         )}
                                     </div>
@@ -386,15 +395,15 @@ export function TenantPayView() {
                     >
                         <div className="flex items-center justify-between pb-2 border-b border-border">
                             <div>
-                                <h3 className="text-sm font-black text-foreground">Upload Proof of Payment</h3>
+                                <h3 className="text-sm font-black text-foreground">{t('Upload Proof of Payment')}</h3>
                                 <p className="text-[10px] text-muted-foreground">
-                                    Invoice amount: {formatCurrency(selectedInvoice.amount)}
+                                    {t('Invoice amount: {amount}', { amount: formatCurrency(selectedInvoice.amount) })}
                                 </p>
                             </div>
                             <button
                                 onClick={() => setSelectedInvoice(null)}
                                 className="p-1.5 rounded-full hover:bg-muted text-muted-foreground"
-                                aria-label="Close modal"
+                                aria-label={t('Close modal')}
                             >
                                 <X className="size-4" />
                             </button>
@@ -403,11 +412,11 @@ export function TenantPayView() {
                         <form onSubmit={handleSubmitProof} className="flex flex-col gap-3">
                             <div>
                                 <label className="text-[11px] font-bold text-foreground block mb-1">
-                                    Reference Number <span className="text-red-500">*</span>
+                                    {t('Reference Number')} <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="e.g. 13-digit GCash Ref / Bank Ref"
+                                    placeholder={t('e.g. 13-digit GCash Ref / Bank Ref')}
                                     value={referenceNumber}
                                     onChange={(e) => setReferenceNumber(e.target.value)}
                                     required
@@ -417,11 +426,11 @@ export function TenantPayView() {
 
                             <div>
                                 <label className="text-[11px] font-bold text-foreground block mb-1">
-                                    Note / Remarks (Optional)
+                                    {t('Note / Remarks (Optional)')}
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="Paid via BPI / GCash, etc."
+                                    placeholder={t('Paid via BPI / GCash, etc.')}
                                     value={note}
                                     onChange={(e) => setNote(e.target.value)}
                                     className="w-full px-3 py-2 text-xs bg-background border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
@@ -430,18 +439,18 @@ export function TenantPayView() {
 
                             <div>
                                 <label className="text-[11px] font-bold text-foreground block mb-1">
-                                    Receipt Screenshot / Photo
+                                    {t('Receipt Screenshot / Photo')}
                                 </label>
                                 {receiptPreview ? (
                                     <div className="relative rounded-xl border border-border p-2.5 bg-muted/20 flex items-center justify-between gap-3">
                                         <div className="flex items-center gap-2.5 min-w-0">
                                             <div className="relative size-14 rounded-lg overflow-hidden border border-border shrink-0 bg-background">
-                                                <Image src={receiptPreview} alt="Receipt preview" fill sizes="56px" className="object-cover" />
+                                                <Image src={receiptPreview} alt={t('Receipt preview')} fill sizes="56px" className="object-cover" />
                                             </div>
                                             <div className="flex flex-col min-w-0 text-left">
                                                 <span className="text-xs font-bold text-foreground truncate">{receiptFile?.name || 'receipt_photo.jpg'}</span>
                                                 <span className="text-[10px] text-muted-foreground">
-                                                    {receiptFile?.size ? `${(receiptFile.size / 1024).toFixed(0)} KB • Attached` : 'Ready to submit'}
+                                                    {receiptFile?.size ? t('{size} KB • Attached', { size: (receiptFile.size / 1024).toFixed(0) }) : t('Ready to submit')}
                                                 </span>
                                             </div>
                                         </div>
@@ -449,8 +458,8 @@ export function TenantPayView() {
                                             type="button"
                                             onClick={handleClearReceipt}
                                             className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 active:scale-95 transition-all text-xs font-bold shrink-0"
-                                            title="Remove photo"
-                                            aria-label="Remove photo"
+                                            title={t('Remove photo')}
+                                            aria-label={t('Remove photo')}
                                         >
                                             <X className="size-4" />
                                         </button>
@@ -460,8 +469,8 @@ export function TenantPayView() {
                                         {/* Direct Camera Capture */}
                                         <label className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border-2 border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 cursor-pointer active:scale-[0.98] transition-all text-center">
                                             <Camera className="size-5 text-primary" />
-                                            <span className="text-xs font-bold text-foreground">Take Photo</span>
-                                            <span className="text-[9px] text-muted-foreground">Open Camera</span>
+                                            <span className="text-xs font-bold text-foreground">{t('Take Photo')}</span>
+                                            <span className="text-[9px] text-muted-foreground">{t('Open Camera')}</span>
                                             <input
                                                 ref={cameraInputRef}
                                                 type="file"
@@ -475,8 +484,8 @@ export function TenantPayView() {
                                         {/* Gallery Upload */}
                                         <label className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border-2 border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 cursor-pointer active:scale-[0.98] transition-all text-center">
                                             <Upload className="size-5 text-muted-foreground" />
-                                            <span className="text-xs font-bold text-foreground">Photo Gallery</span>
-                                            <span className="text-[9px] text-muted-foreground">PNG, JPG up to 5MB</span>
+                                            <span className="text-xs font-bold text-foreground">{t('Photo Gallery')}</span>
+                                            <span className="text-[9px] text-muted-foreground">{t('PNG, JPG up to 5MB')}</span>
                                             <input
                                                 ref={fileInputRef}
                                                 type="file"
@@ -494,7 +503,7 @@ export function TenantPayView() {
                                 disabled={submitting}
                                 className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs hover:brightness-105 active:scale-[0.98] transition-all disabled:opacity-50 mt-2"
                             >
-                                {submitting ? 'Submitting…' : 'Confirm & Submit Proof'}
+                                {submitting ? t('Submitting…') : t('Confirm & Submit Proof')}
                             </button>
                         </form>
                     </div>
@@ -509,13 +518,13 @@ export function TenantPayView() {
                         <button
                             onClick={() => setLightboxUrl(null)}
                             className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20"
-                            aria-label="Close photo"
+                            aria-label={t('Close photo')}
                         >
                             <X className="size-4" />
                         </button>
                     </div>
                     <div className="flex-1 relative my-3 flex items-center justify-center overflow-hidden rounded-xl">
-                        <Image src={lightboxUrl} alt="Enlarged receipt" fill sizes="100vw" className="object-contain" />
+                        <Image src={lightboxUrl} alt={t('Enlarged receipt')} fill sizes="100vw" className="object-contain" />
                     </div>
                 </div>,
                 document.body

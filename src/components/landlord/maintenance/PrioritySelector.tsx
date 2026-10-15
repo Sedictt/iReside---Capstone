@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type Priority = "Low" | "Medium" | "High" | "Critical";
 
@@ -20,6 +21,7 @@ const styles: Record<Priority, { active: string; inactive: string }> = {
 };
 
 export function PrioritySelector({ value, onChange, error }: PrioritySelectorProps) {
+ const { t } = useLanguageContext();
  return (
  <div className="space-y-2">
  <div className="flex rounded-2xl neumorphic-inset p-1 gap-1">
@@ -36,12 +38,12 @@ export function PrioritySelector({ value, onChange, error }: PrioritySelectorPro
  isSelected ? s.active : s.inactive
  )}
  >
- {p}
+ {t(p)}
  </button>
  );
  })}
  </div>
- {error && <p className="text-sm text-red-500">{error}</p>}
+ {error && <p className="text-sm text-red-500">{t(error)}</p>}
  </div>
  );
 }

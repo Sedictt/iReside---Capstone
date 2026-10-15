@@ -10,6 +10,8 @@ import {
     AlertTriangle,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 interface CashPaymentInterfaceProps {
     isOpen: boolean;
@@ -26,6 +28,7 @@ interface CashPaymentInterfaceProps {
 }
 
 export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: CashPaymentInterfaceProps) {
+    const { t } = useLanguageContext();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +41,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
         try {
             await onConfirm(payment.id);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to open invoice review.");
+            setError(err instanceof Error ? tr(err.message) : t("Failed to open invoice review."));
         } finally {
             setIsSubmitting(false);
         }
@@ -49,6 +52,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
             <div className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-white/10 bg-surface-1 shadow-[0_32px_80px_-20px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-300">
                 <button
                     onClick={onClose}
+                    aria-label={t("Close")}
                     className="absolute right-6 top-6 z-20 rounded-2xl bg-surface-2 p-2 text-medium transition-all hover:bg-surface-3 hover:text-high border border-divider"
                 >
                     <X className="size-5" />
@@ -61,8 +65,8 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                             <HandCoins className="size-8 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black tracking-tight text-foreground">Cash Payment</h2>
-                            <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60">Face-to-Face Transaction</p>
+                            <h2 className="text-2xl font-black tracking-tight text-foreground">{t("Cash Payment")}</h2>
+                            <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t("Face-to-Face Transaction")}</p>
                         </div>
                     </div>
                 </div>
@@ -72,7 +76,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                         <div className="rounded-3xl border border-divider bg-surface-2/50 p-6 space-y-4">
                             <div className="flex justify-between items-start">
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-disabled">In-Person Handover</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-disabled">{t("In-Person Handover")}</p>
                                     <h3 className="text-lg font-black text-high">{payment.tenantName}</h3>
                                     <div className="flex items-center gap-2 text-xs text-medium">
                                         <Home className="size-3" />
@@ -94,12 +98,12 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                                         <Wallet className="size-5 text-primary" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-wider text-disabled">Amount to Receive</p>
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-disabled">{t("Amount to Receive")}</p>
                                         <p className="text-xl font-black text-primary">PHP {payment.amount}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[10px] font-black uppercase tracking-wider text-disabled">Description</p>
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-disabled">{t("Description")}</p>
                                     <p className="text-xs font-medium text-medium truncate max-w-[120px]">{payment.description}</p>
                                 </div>
                             </div>
@@ -108,9 +112,9 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                         <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex gap-3">
                             <ShieldCheck className="size-5 text-primary shrink-0 mt-0.5" />
                             <div className="space-y-1">
-                                <p className="text-xs font-black text-high">Verification Protocol</p>
+                                <p className="text-xs font-black text-high">{t("Verification Protocol")}</p>
                                 <p className="text-[11px] text-medium leading-relaxed">
-                                    Continue to invoice review before approval. This keeps the full verification checklist and helps prevent accidental confirmation.
+                                    {t("Continue to invoice review before approval. This keeps the full verification checklist and helps prevent accidental confirmation.")}
                                 </p>
                             </div>
                         </div>
@@ -118,9 +122,9 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                         <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 flex gap-3">
                             <AlertTriangle className="size-5 text-amber-500 shrink-0 mt-0.5" />
                             <div className="space-y-1">
-                                <p className="text-xs font-black text-amber-500">Physical Cash Check Required</p>
+                                <p className="text-xs font-black text-amber-500">{t("Physical Cash Check Required")}</p>
                                 <p className="text-[11px] text-medium leading-relaxed italic">
-                                    Ensure you have the cash in hand before continuing. Recording this settlement will update the tenant's balance immediately.
+                                    {t("Ensure you have the cash in hand before continuing. Recording this settlement will update the tenant's balance immediately.")}
                                 </p>
                             </div>
                         </div>
@@ -140,17 +144,18 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                                 isSubmitting && "flex items-center justify-center"
                             )}
                         >
-                            <span className="relative z-10">{isSubmitting ? "Opening Invoice Review..." : "Open Invoice Review"}</span>
+                            <span className="relative z-10">{isSubmitting ? t("Opening Invoice Review...") : t("Open Invoice Review")}</span>
                             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shimmer" />
                         </button>
                     </div>
                 </div>
 
                 <div className="bg-surface-2 px-8 py-5 flex justify-between items-center border-t border-divider">
-                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-disabled">iReside Secure Payment Node</p>
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-disabled">{t("iReside Secure Payment Node")}</p>
                     <div className="flex items-center gap-1.5 opacity-50">
                         <div className="size-1.5 rounded-full bg-emerald-500" />
-                        <span className="text-[9px] font-black text-medium">Live Connection</span>
+                        <span className="text-[9px] font-black text-medium">{t("Live Connection")}</span>
+
                     </div>
                 </div>
             </div>

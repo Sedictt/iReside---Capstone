@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     MiniChatSharedFilesPanel,
     MiniChatSidebar,
@@ -8,6 +8,9 @@ import {
     getTrayRightOffset,
     useMiniChat,
 } from "@/components/messaging/mini-chat";
+
+/** CSS custom property on <html> holding the messaging rail's current width (+ gap), in px. */
+export const MINI_CHAT_SIDEBAR_EXTENT_VAR = "--mini-chat-sidebar-extent";
 
 /**
  * Landlord messaging rail: a hover-expanding conversation list on the right edge
@@ -18,6 +21,15 @@ export function ContactsSidebar() {
     const { setSharedFilesChatId } = controller;
     const [isExpanded, setIsExpanded] = useState(false);
     const closeSharedFiles = useCallback(() => setSharedFilesChatId(null), [setSharedFilesChatId]);
+
+    // Publish the rail's extent so the Quick Tools FAB slides clear of it when it expands.
+    useEffect(() => {
+        const root = document.documentElement;
+        root.style.setProperty(MINI_CHAT_SIDEBAR_EXTENT_VAR, `${getTrayRightOffset(isExpanded)}px`);
+        return () => {
+            root.style.removeProperty(MINI_CHAT_SIDEBAR_EXTENT_VAR);
+        };
+    }, [isExpanded]);
 
     return (
         <>

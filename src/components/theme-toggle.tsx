@@ -4,6 +4,7 @@ import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
+import { useLanguageContext } from "@/context/LanguageContext"
 
 export interface ThemeToggleProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "sidebar"
@@ -12,6 +13,7 @@ export interface ThemeToggleProps extends React.ButtonHTMLAttributes<HTMLButtonE
 
 export function ThemeToggle({ variant = "default", dataTourId, className, ...props }: ThemeToggleProps) {
   const { setTheme, theme } = useTheme()
+  const { t } = useLanguageContext()
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
@@ -47,12 +49,12 @@ export function ThemeToggle({ variant = "default", dataTourId, className, ...pro
         variant === "sidebar" && "border-transparent bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
         className
       )}
-      title="Toggle theme"
+      title={t("Toggle theme")}
       data-tour-id={dataTourId}
     >
       <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
       <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">{t("Toggle theme")}</span>
     </button>
   );
 }

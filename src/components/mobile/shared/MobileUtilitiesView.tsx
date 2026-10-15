@@ -29,6 +29,8 @@ import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropert
 import { triggerHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useLanguageContext } from '@/context/LanguageContext';
+import { tr } from '@/hooks/useLanguage';
 
 interface UnitItem {
     id: string;
@@ -61,6 +63,7 @@ export function MobileUtilitiesView() {
     const router = useRouter();
     const { profile } = useAuth();
     const { selectedPropertyId } = useProperty();
+    const { t, locale } = useLanguageContext();
     const role = (profile?.role as 'tenant' | 'landlord') || 'landlord';
     const isLandlord = role === 'landlord';
 
@@ -99,10 +102,11 @@ export function MobileUtilitiesView() {
             setReadings(Array.isArray(readingsData.readings) ? readingsData.readings : []);
         } catch (err) {
             console.error('Error fetching utility data:', err);
-            toast.error('Failed to load utility submeter data');
+            toast.error(t('Failed to load utility submeter data'));
         } finally {
             setLoading(false);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedMonth]);
 
     useEffect(() => {
@@ -123,8 +127,8 @@ export function MobileUtilitiesView() {
     const formattedMonthName = useMemo(() => {
         const [yStr, mStr] = selectedMonth.split('-');
         const date = new Date(parseInt(yStr, 10), parseInt(mStr, 10) - 1, 1);
-        return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    }, [selectedMonth]);
+        return date.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+    }, [selectedMonth, locale]);
 
     // Flatten all units with their corresponding readings
     const unitsRoster = useMemo(() => {
@@ -217,7 +221,7 @@ export function MobileUtilitiesView() {
         if (!recordingUnit) return;
         const currentVal = parseFloat(currReading);
         if (isNaN(currentVal) || currentVal < prevReading) {
-            toast.error('Current reading must be equal to or greater than previous reading.');
+            toast.error(t('Current reading must be equal to or greater than previous reading.'));
             return;
         }
 
@@ -247,15 +251,19 @@ export function MobileUtilitiesView() {
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
-                throw new Error(data.error || 'Failed to save utility reading');
+                throw new Error(data.error || t('Failed to save utility reading'));
             }
 
-            toast.success(`${utilityType === 'electricity' ? 'Electric' : 'Water'} reading logged for Unit ${recordingUnit.unit.name}!`);
+            toast.success(
+                utilityType === 'electricity'
+                    ? t('Electric reading logged for Unit {unit}!', { unit: recordingUnit.unit.name })
+                    : t('Water reading logged for Unit {unit}!', { unit: recordingUnit.unit.name })
+            );
             setRecordingUnit(null);
             fetchData();
         } catch (err: any) {
             console.error('Error saving reading:', err);
-            toast.error(err.message || 'Failed to record reading');
+            toast.error(tr(err.message || t('Failed to record reading')));
         } finally {
             setSubmittingReading(false);
         }
@@ -271,7 +279,7 @@ export function MobileUtilitiesView() {
                     ) : (
                         <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                             <Zap className="size-4 text-amber-500" />
-                            <span>My Utility Consumption</span>
+                            <span>{t('My Utility Consumption')}</span>
                         </div>
                     )}
                     <button
@@ -280,7 +288,7 @@ export function MobileUtilitiesView() {
                             fetchData();
                         }}
                         className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-card text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-2xs"
-                        aria-label="Refresh readings"
+                        aria-label={t('Refresh readings')}
                     >
                         <RefreshCw className={cn("size-4", loading && "animate-spin text-primary")} />
                     </button>
@@ -291,7 +299,7 @@ export function MobileUtilitiesView() {
                     <button
                         onClick={() => changeMonth(-1)}
                         className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground active:scale-90 transition-all"
-                        aria-label="Previous month"
+                        aria-label={t('Previous month')}
                     >
                         <ChevronLeft className="size-4" />
                     </button>
@@ -306,7 +314,7 @@ export function MobileUtilitiesView() {
                     <button
                         onClick={() => changeMonth(1)}
                         className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground active:scale-90 transition-all"
-                        aria-label="Next month"
+                        aria-label={t('Next month')}
                     >
                         <ChevronRight className="size-4" />
                     </button>
@@ -315,20 +323,20 @@ export function MobileUtilitiesView() {
                 {/* Metrics Bar */}
                 <div className="grid grid-cols-3 gap-2">
                     <div className="p-2.5 rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col justify-between">
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Progress</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t('Progress')}</span>
                         <div className="flex items-baseline gap-1 mt-0.5">
                             <span className="text-lg font-black text-foreground">{metrics.loggedCount}</span>
-                            <span className="text-[10px] text-muted-foreground">/{metrics.totalUnits} units</span>
+                            <span className="text-[10px] text-muted-foreground">{t('/{total} units', { total: metrics.totalUnits })}</span>
                         </div>
                     </div>
 
                     <div className="p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex flex-col justify-between">
                         <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
                             <Zap className="size-3 fill-amber-500" />
-                            Electricity
+                            {t('Electricity')}
                         </span>
                         <div className="flex items-baseline gap-0.5 mt-0.5">
-                            <span className="text-lg font-black text-foreground">{metrics.totalElecKwh.toLocaleString()}</span>
+                            <span className="text-lg font-black text-foreground">{metrics.totalElecKwh.toLocaleString(locale)}</span>
                             <span className="text-[10px] text-muted-foreground">kWh</span>
                         </div>
                     </div>
@@ -336,10 +344,10 @@ export function MobileUtilitiesView() {
                     <div className="p-2.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex flex-col justify-between">
                         <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1">
                             <Droplets className="size-3 fill-blue-500" />
-                            Water
+                            {t('Water')}
                         </span>
                         <div className="flex items-baseline gap-0.5 mt-0.5">
-                            <span className="text-lg font-black text-foreground">{metrics.totalWaterM3.toLocaleString()}</span>
+                            <span className="text-lg font-black text-foreground">{metrics.totalWaterM3.toLocaleString(locale)}</span>
                             <span className="text-[10px] text-muted-foreground">m³</span>
                         </div>
                     </div>
@@ -352,12 +360,13 @@ export function MobileUtilitiesView() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search unit number or property..."
+                        placeholder={t('Search unit number or property...')}
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
                     />
                     {searchQuery && (
                         <button
                             onClick={() => setSearchQuery('')}
+                            aria-label={t('Clear search')}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
                         >
                             <X className="size-3.5" />
@@ -379,7 +388,7 @@ export function MobileUtilitiesView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        All Units ({unitsRoster.length})
+                        {t('All Units ({count})', { count: unitsRoster.length })}
                     </button>
                     <button
                         onClick={() => {
@@ -393,7 +402,7 @@ export function MobileUtilitiesView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Needs Reading
+                        {t('Needs Reading')}
                     </button>
                     <button
                         onClick={() => {
@@ -407,7 +416,7 @@ export function MobileUtilitiesView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Completed
+                        {t('Completed')}
                     </button>
                 </div>
 
@@ -416,9 +425,9 @@ export function MobileUtilitiesView() {
                     {unitsRoster.length === 0 ? (
                         <div className="p-8 text-center rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col items-center gap-2.5">
                             <Zap className="size-10 text-muted-foreground/40 stroke-1" />
-                            <h4 className="text-sm font-bold text-foreground">No Units Found</h4>
+                            <h4 className="text-sm font-bold text-foreground">{t('No Units Found')}</h4>
                             <p className="text-xs text-muted-foreground max-w-xs">
-                                {searchQuery ? 'No units match your search query.' : 'No units configured for this building.'}
+                                {searchQuery ? t('No units match your search query.') : t('No units configured for this building.')}
                             </p>
                         </div>
                     ) : (
@@ -443,7 +452,7 @@ export function MobileUtilitiesView() {
                                                 <span>{property.name}</span>
                                             </div>
                                             <h3 className="text-sm font-black text-foreground mt-0.5">
-                                                Unit {unit.name}
+                                                {t('Unit {unit}', { unit: unit.name })}
                                             </h3>
                                         </div>
 
@@ -453,7 +462,7 @@ export function MobileUtilitiesView() {
                                                 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                                                 : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                                         )}>
-                                            {isLogged ? 'Logged' : 'Pending Meter'}
+                                            {isLogged ? t('Logged') : t('Pending Meter')}
                                         </span>
                                     </div>
 
@@ -472,7 +481,7 @@ export function MobileUtilitiesView() {
                                             <div className="flex items-center justify-between">
                                                 <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase flex items-center gap-1">
                                                     <Zap className="size-3 fill-amber-500" />
-                                                    Electric
+                                                    {t('Electric')}
                                                 </span>
                                                 {elecReading && <CheckCircle2 className="size-3 text-emerald-500" />}
                                             </div>
@@ -483,13 +492,13 @@ export function MobileUtilitiesView() {
                                                         {elecReading.current_reading} <span className="text-[10px] font-normal text-muted-foreground">kWh</span>
                                                     </div>
                                                     <div className="text-[10px] text-muted-foreground mt-0.5">
-                                                        Usage: +{elecDiff} kWh
+                                                        {t('Usage: +{amount} kWh', { amount: elecDiff ?? 0 })}
                                                     </div>
                                                 </div>
                                             ) : (
                                                 <div className="mt-2 text-[11px] text-muted-foreground font-semibold flex items-center gap-1">
                                                     <Plus className="size-3" />
-                                                    Tap to log
+                                                    {t('Tap to log')}
                                                 </div>
                                             )}
                                         </div>
@@ -507,7 +516,7 @@ export function MobileUtilitiesView() {
                                             <div className="flex items-center justify-between">
                                                 <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase flex items-center gap-1">
                                                     <Droplets className="size-3 fill-blue-500" />
-                                                    Water
+                                                    {t('Water')}
                                                 </span>
                                                 {waterReading && <CheckCircle2 className="size-3 text-emerald-500" />}
                                             </div>
@@ -518,13 +527,13 @@ export function MobileUtilitiesView() {
                                                         {waterReading.current_reading} <span className="text-[10px] font-normal text-muted-foreground">m³</span>
                                                     </div>
                                                     <div className="text-[10px] text-muted-foreground mt-0.5">
-                                                        Usage: +{waterDiff} m³
+                                                        {t('Usage: +{amount} m³', { amount: waterDiff ?? 0 })}
                                                     </div>
                                                 </div>
                                             ) : (
                                                 <div className="mt-2 text-[11px] text-muted-foreground font-semibold flex items-center gap-1">
                                                     <Plus className="size-3" />
-                                                    Tap to log
+                                                    {t('Tap to log')}
                                                 </div>
                                             )}
                                         </div>
@@ -543,17 +552,18 @@ export function MobileUtilitiesView() {
                             <div className="flex items-start justify-between">
                                 <div>
                                     <div className="flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-wider">
-                                        <span>Meter Logging</span>
+                                        <span>{t('Meter Logging')}</span>
                                     </div>
                                     <h3 className="text-base font-black text-foreground mt-0.5">
-                                        Unit {recordingUnit.unit.name} • {recordingUnit.property.name}
+                                        {t('Unit {unit}', { unit: recordingUnit.unit.name })} • {recordingUnit.property.name}
                                     </h3>
                                     <p className="text-xs text-muted-foreground">
-                                        Billing Period: {formattedMonthName}
+                                        {t('Billing Period: {period}', { period: formattedMonthName })}
                                     </p>
                                 </div>
                                 <button
                                     onClick={() => setRecordingUnit(null)}
+                                    aria-label={t('Close')}
                                     className="p-1.5 rounded-full text-muted-foreground hover:text-foreground"
                                 >
                                     <X className="size-5" />
@@ -576,7 +586,7 @@ export function MobileUtilitiesView() {
                                     )}
                                 >
                                     <Zap className="size-3.5 fill-amber-500" />
-                                    Electricity (kWh)
+                                    {t('Electricity (kWh)')}
                                 </button>
                                 <button
                                     type="button"
@@ -592,14 +602,14 @@ export function MobileUtilitiesView() {
                                     )}
                                 >
                                     <Droplets className="size-3.5 fill-blue-500" />
-                                    Water (m³)
+                                    {t('Water (m³)')}
                                 </button>
                             </div>
 
                             {/* Previous Reading vs Current Reading Input */}
                             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 space-y-3">
                                 <div className="flex justify-between items-center text-xs">
-                                    <span className="text-muted-foreground">Previous Reading:</span>
+                                    <span className="text-muted-foreground">{t('Previous Reading:')}</span>
                                     <span className="font-bold text-foreground">
                                         {prevReading} {utilityType === 'electricity' ? 'kWh' : 'm³'}
                                     </span>
@@ -607,21 +617,21 @@ export function MobileUtilitiesView() {
 
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-muted-foreground block">
-                                        Current Submeter Reading:
+                                        {t('Current Submeter Reading:')}
                                     </label>
                                     <input
                                         type="number"
                                         step="any"
                                         value={currReading}
                                         onChange={(e) => setCurrReading(e.target.value)}
-                                        placeholder={`Enter ${utilityType === 'electricity' ? 'kWh' : 'm³'} value`}
+                                        placeholder={t('Enter {unit} value', { unit: utilityType === 'electricity' ? 'kWh' : 'm³' })}
                                         className="w-full p-3 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-base font-black text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
                                     />
                                 </div>
 
                                 {currReading && parseFloat(currReading) >= prevReading && (
                                     <div className="pt-2 border-t border-slate-200/40 dark:border-white/5 flex justify-between items-center text-xs">
-                                        <span className="font-semibold text-muted-foreground">Calculated Consumption:</span>
+                                        <span className="font-semibold text-muted-foreground">{t('Calculated Consumption:')}</span>
                                         <span className="font-black text-emerald-600 dark:text-emerald-400">
                                             +{(parseFloat(currReading) - prevReading).toFixed(1)} {utilityType === 'electricity' ? 'kWh' : 'm³'}
                                         </span>
@@ -632,13 +642,13 @@ export function MobileUtilitiesView() {
                             {/* Notes Input */}
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-muted-foreground block">
-                                    Notes / Observation (Optional)
+                                    {t('Notes / Observation (Optional)')}
                                 </label>
                                 <input
                                     type="text"
                                     value={readingNotes}
                                     onChange={(e) => setReadingNotes(e.target.value)}
-                                    placeholder="e.g., Submeter dial replaced or tenant inspected"
+                                    placeholder={t('e.g., Submeter dial replaced or tenant inspected')}
                                     className="w-full p-2.5 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                                 />
                             </div>
@@ -649,7 +659,7 @@ export function MobileUtilitiesView() {
                                     onClick={() => setRecordingUnit(null)}
                                     className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-muted-foreground hover:text-foreground active:scale-98 transition-all"
                                 >
-                                    Cancel
+                                    {t('Cancel')}
                                 </button>
                                 <button
                                     disabled={submittingReading || !currReading}
@@ -661,7 +671,7 @@ export function MobileUtilitiesView() {
                                     ) : (
                                         <>
                                             <Save className="size-4" />
-                                            Record Reading
+                                            {t('Record Reading')}
                                         </>
                                     )}
                                 </button>

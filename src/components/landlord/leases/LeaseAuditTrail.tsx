@@ -2,6 +2,8 @@
 
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
+import type { TranslationParams } from "@/lib/i18n";
 
 export type LeaseAuditEvent = {
  id: string;
@@ -35,23 +37,28 @@ const EVENT_LABELS: Record<LeaseAuditEvent["event_type"], string> = {
  signing_failed: "Signing failed",
 };
 
-function formatAuditTimestamp(value: string) {
+function formatAuditTimestamp(
+ value: string,
+ t: (phrase: string, params?: TranslationParams) => string,
+ locale: string
+) {
  const date = new Date(value);
- if (Number.isNaN(date.getTime())) return "Invalid date";
- const datePart = date.toLocaleDateString("en-US", {
+ if (Number.isNaN(date.getTime())) return t("Invalid date");
+ const datePart = date.toLocaleDateString(locale, {
  month: "short",
  day: "2-digit",
  year: "numeric",
  });
- const timePart = date.toLocaleTimeString("en-US", {
+ const timePart = date.toLocaleTimeString(locale, {
  hour: "2-digit",
  minute: "2-digit",
  hour12: true,
  });
- return `${datePart} at ${timePart}`;
+ return t("{date} at {time}", { date: datePart, time: timePart });
 }
 
 export function LeaseAuditTrail({ events, className }: LeaseAuditTrailProps) {
+ const { t, locale } = useLanguageContext();
  const sortedEvents = useMemo(
  () => [...events].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
  [events]
@@ -60,7 +67,7 @@ export function LeaseAuditTrail({ events, className }: LeaseAuditTrailProps) {
  if (sortedEvents.length === 0) {
  return (
  <div className={cn("rounded-2xl neumorphic-inset p-6 text-center", className)}>
- <p className="text-xs font-medium text-muted-foreground">No audit events recorded yet.</p>
+ <p className="text-xs font-medium text-muted-foreground">{t("No audit events recorded yet.")}</p>
  </div>
  );
  }
@@ -76,15 +83,15 @@ export function LeaseAuditTrail({ events, className }: LeaseAuditTrailProps) {
  <div className="rounded-2xl /50 neumorphic-inset px-4 py-3 transition-colors hover:neumorphic-inset/30">
  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
  <p className="text-[13px] font-bold text-foreground">
- {EVENT_LABELS[event.event_type]}
+ {t(EVENT_LABELS[event.event_type] ?? event.event_type)}
  </p>
  <p className="text-[10px] font-medium text-muted-foreground">
- {formatAuditTimestamp(event.created_at)}
+ {formatAuditTimestamp(event.created_at, t, locale)}
  </p>
  </div>
  {event.actor_label && (
  <p className="mt-1 text-[11px] font-medium text-muted-foreground/70">
- Action by {event.actor_label}
+ {t("Action by {name}", { name: event.actor_label })}
  </p>
  )}
  </div>

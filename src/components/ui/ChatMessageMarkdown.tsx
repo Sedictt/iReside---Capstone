@@ -5,6 +5,7 @@ import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Check, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface ChatMessageMarkdownProps {
   content: string;
@@ -21,6 +22,7 @@ function CodeBlock({
   language?: string;
   isUser?: boolean;
 }) {
+  const { t } = useLanguageContext();
   const [copied, setCopied] = useState(false);
   const textContent = String(children).replace(/\n$/, "");
 
@@ -52,7 +54,7 @@ function CodeBlock({
             : "border-border/40 bg-muted/40 text-muted-foreground"
         )}
       >
-        <span>{language || "code"}</span>
+        <span>{language || t("code")}</span>
         <button
           type="button"
           onClick={handleCopy}
@@ -60,18 +62,18 @@ function CodeBlock({
             "flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors cursor-pointer",
             isUser ? "hover:bg-white/10 text-white" : "hover:bg-muted text-muted-foreground hover:text-foreground"
           )}
-          title="Copy code"
-          aria-label="Copy code to clipboard"
+          title={t("Copy code")}
+          aria-label={t("Copy code to clipboard")}
         >
           {copied ? (
             <>
               <Check className="size-3 text-emerald-400" />
-              <span className="text-[9px]">Copied</span>
+              <span className="text-[9px]">{t("Copied")}</span>
             </>
           ) : (
             <>
               <Copy className="size-3" />
-              <span className="text-[9px]">Copy</span>
+              <span className="text-[9px]">{t("Copy")}</span>
             </>
           )}
         </button>

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { m as motion } from "framer-motion";
 import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface MessageItem {
     id: string;
@@ -33,6 +34,7 @@ export const CanvasQuickMessenger: React.FC<CanvasQuickMessengerProps> = ({
     onClose,
     primaryColor = "#3b82f6",
 }) => {
+    const { t } = useLanguageContext();
     // Check instant cache first
     const cached = messageCache.get(unitId);
 
@@ -195,7 +197,7 @@ export const CanvasQuickMessenger: React.FC<CanvasQuickMessengerProps> = ({
                             {tenantName}
                         </p>
                         <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                            {unitName} • Quick Chat
+                            {t("{unit} • Quick Chat", { unit: unitName })}
                         </p>
                     </div>
                 </div>
@@ -203,7 +205,8 @@ export const CanvasQuickMessenger: React.FC<CanvasQuickMessengerProps> = ({
                     <Link
                         href={`/landlord/messages?unitId=${encodeURIComponent(unitId)}`}
                         className="flex size-6 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-primary dark:hover:bg-zinc-800"
-                        title="Open Full Messenger"
+                        title={t("Open Full Messenger")}
+                        aria-label={t("Open Full Messenger")}
                     >
                         <span className="material-icons-round text-sm">open_in_new</span>
                     </Link>
@@ -214,6 +217,8 @@ export const CanvasQuickMessenger: React.FC<CanvasQuickMessengerProps> = ({
                             onClose();
                         }}
                         className="flex size-6 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                        title={t("Close")}
+                        aria-label={t("Close")}
                     >
                         <span className="material-icons-round text-sm">close</span>
                     </button>
@@ -228,13 +233,13 @@ export const CanvasQuickMessenger: React.FC<CanvasQuickMessengerProps> = ({
                 {isLoading && messages.length === 0 ? (
                     <div className="flex h-full items-center justify-center text-zinc-400 text-[11px] font-medium">
                         <span className="material-icons-round animate-spin mr-1 text-sm">refresh</span>
-                        Loading messages...
+                        {t("Loading messages...")}
                     </div>
                 ) : messages.length === 0 ? (
                     <div className="flex h-full flex-col items-center justify-center text-center px-4 text-zinc-400">
                         <span className="material-icons-round text-xl mb-1 text-zinc-300 dark:text-zinc-700">chat_bubble_outline</span>
-                        <p className="text-[11px] font-bold">No recent messages</p>
-                        <p className="text-[10px] text-zinc-500">Send a quick note directly to {tenantName}.</p>
+                        <p className="text-[11px] font-bold">{t("No recent messages")}</p>
+                        <p className="text-[10px] text-zinc-500">{t("Send a quick note directly to {name}.", { name: tenantName })}</p>
                     </div>
                 ) : (
                     messages.map((msg) => {
@@ -267,7 +272,7 @@ export const CanvasQuickMessenger: React.FC<CanvasQuickMessengerProps> = ({
                     maxLength={250}
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
-                    placeholder="Type a message..."
+                    placeholder={t("Type a message...")}
                     className="flex-1 rounded-xl border border-zinc-200 bg-zinc-100 px-3.5 py-2.5 text-xs font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:bg-white dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder:text-zinc-500 dark:focus:bg-zinc-750"
                 />
                 <button
@@ -275,7 +280,8 @@ export const CanvasQuickMessenger: React.FC<CanvasQuickMessengerProps> = ({
                     disabled={!inputText.trim() || isSending}
                     className="flex size-9 shrink-0 items-center justify-center rounded-xl text-white transition-transform active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
                     style={{ backgroundColor: primaryColor }}
-                    title="Send message"
+                    title={t("Send message")}
+                    aria-label={t("Send message")}
                 >
                     <span className="material-icons-round text-base">send</span>
                 </button>

@@ -6,8 +6,10 @@ import { m, AnimatePresence } from "framer-motion";
 import VisualBuilder from "@/components/landlord/visual-planner/VisualBuilder";
 
 import { createPortal } from "react-dom";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export function UnitMapFeatureSection() {
+  const { t } = useLanguageContext();
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -30,6 +32,7 @@ export function UnitMapFeatureSection() {
           <div className="absolute top-8 right-8 z-[10100]">
             <button
               onClick={() => setIsLightboxOpen(false)}
+              aria-label={t("Close preview")}
               className="size-14 rounded-full bg-black/40 backdrop-blur-xl text-white flex items-center justify-center hover:bg-black/60 border border-white/20 transition-all shadow-2xl"
             >
               <X className="size-7" />
@@ -49,7 +52,7 @@ export function UnitMapFeatureSection() {
             {/* Top hint */}
             <div className="absolute top-10 left-1/2 -translate-x-1/2 pointer-events-none z-[110]">
               <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.4em] bg-black/40 backdrop-blur-md px-10 py-3.5 rounded-full border border-white/10 shadow-2xl">
-                ESC TO EXIT PREVIEW
+                {t("ESC TO EXIT PREVIEW")}
               </p>
             </div>
           </m.div>
@@ -64,30 +67,30 @@ export function UnitMapFeatureSection() {
         <div className="flex-1 space-y-4">
           <div className="inline-flex items-center gap-2 text-primary font-black">
             <Map className="size-6" />
-            <span>Signature Feature</span>
+            <span>{t("Signature Feature")}</span>
           </div>
-          <h2 className="text-3xl font-black text-text-high">Interactive Unit Map</h2>
+          <h2 className="text-3xl font-black text-text-high">{t("Interactive Unit Map")}</h2>
           <p className="text-lg text-text-medium leading-relaxed">
-            Visualize your entire property layout at a glance. The Unit Map feature transforms standard, text-based property lists into an interactive, visual grid that mirrors your actual building layout.
+            {t("Visualize your entire property layout at a glance. The Unit Map feature transforms standard, text-based property lists into an interactive, visual grid that mirrors your actual building layout.")}
           </p>
           <ul className="space-y-3 pt-2">
             <li className="flex gap-3">
               <div className="mt-1 size-6 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center p-1">
                 <CheckCircle className="h-full w-full" />
               </div>
-              <span className="text-text-medium"><strong>Visual Organization:</strong> Represent properties spatially to match reality. Easily identify which unit is adjacent to which.</span>
+              <span className="text-text-medium"><strong>{t("Visual Organization:")}</strong> {t("Represent properties spatially to match reality. Easily identify which unit is adjacent to which.")}</span>
             </li>
             <li className="flex gap-3">
               <div className="mt-1 size-6 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center p-1">
                 <CheckCircle className="h-full w-full" />
               </div>
-              <span className="text-text-medium"><strong>Instant Status Indicators:</strong> Color-coded blocks immediately reveal which units are vacant, occupied, or pending maintenance.</span>
+              <span className="text-text-medium"><strong>{t("Instant Status Indicators:")}</strong> {t("Color-coded blocks immediately reveal which units are vacant, occupied, or pending maintenance.")}</span>
             </li>
             <li className="flex gap-3">
               <div className="mt-1 size-6 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center p-1">
                 <CheckCircle className="h-full w-full" />
               </div>
-              <span className="text-text-medium"><strong>Quick Actions:</strong> Click any unit block to instantly access lease details, tenant information, and open requests.</span>
+              <span className="text-text-medium"><strong>{t("Quick Actions:")}</strong> {t("Click any unit block to instantly access lease details, tenant information, and open requests.")}</span>
             </li>
           </ul>
         </div>
@@ -111,15 +114,15 @@ export function UnitMapFeatureSection() {
                 <Maximize2 className="size-4" />
               </div>
               <div>
-                <p className="text-lg font-black text-text-high">Try the Interactive Demo</p>
-                <p className="text-sm text-text-medium max-w-[240px] mt-1">Experience the Unit Map interface exactly as landlords do.</p>
+                <p className="text-lg font-black text-text-high">{t("Try the Interactive Demo")}</p>
+                <p className="text-sm text-text-medium max-w-[240px] mt-1">{t("Experience the Unit Map interface exactly as landlords do.")}</p>
               </div>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-white text-xs font-black uppercase tracking-widest">
-                Launch Live Preview
+                {t("Launch Live Preview")}
               </div>
             </div>
           </div>
-          <p className="text-sm text-text-medium italic text-center mt-4">Click the preview above to launch the interactive unit map experience</p>
+          <p className="text-sm text-text-medium italic text-center mt-4">{t("Click the preview above to launch the interactive unit map experience")}</p>
         </div>
       </div>
 

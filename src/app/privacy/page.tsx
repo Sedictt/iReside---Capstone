@@ -8,6 +8,15 @@ import {
   LegalTable,
 } from "@/components/legal/legal-content"
 import { CookiePreferencesButton } from "@/components/legal/CookiePreferencesButton"
+import { LocalizedLegalDocument } from "./LocalizedLegalDocument"
+import {
+  PRIVACY_INTRO_FIL,
+  PRIVACY_LAST_UPDATED_FIL,
+  PRIVACY_SEARCH_PLACEHOLDER_FIL,
+  PRIVACY_SECTIONS_FIL,
+  PRIVACY_SUMMARY_FIL,
+  PRIVACY_TITLE_FIL,
+} from "./privacy-fil"
 
 export const metadata: Metadata = {
   title: "Privacy Policy | iReside",
@@ -623,7 +632,7 @@ const SECTIONS: LegalSection[] = [
 ]
 
 export default function PrivacyPage() {
-  return (
+  const english = (
     <LegalDocumentShell
       title="Privacy Policy"
       intro={
@@ -640,4 +649,20 @@ export default function PrivacyPage() {
       sections={SECTIONS}
     />
   )
+
+  // Filipino courtesy translation; the English version prevails in case of conflict.
+  const filipino = (
+    <LegalDocumentShell
+      title={PRIVACY_TITLE_FIL}
+      intro={PRIVACY_INTRO_FIL}
+      lastUpdated={PRIVACY_LAST_UPDATED_FIL}
+      lastUpdatedIso={LAST_UPDATED_ISO}
+      version={VERSION}
+      searchPlaceholder={PRIVACY_SEARCH_PLACEHOLDER_FIL}
+      summary={PRIVACY_SUMMARY_FIL}
+      sections={PRIVACY_SECTIONS_FIL}
+    />
+  )
+
+  return <LocalizedLegalDocument en={english} fil={filipino} />
 }

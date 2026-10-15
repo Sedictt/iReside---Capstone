@@ -2,6 +2,7 @@
 
 import { m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface LoadingSpinnerProps {
     className?: string;
@@ -94,6 +95,7 @@ export function LoadingSpinner({
 }
 
 export function PageLoader({ message }: { message?: string }) {
+    const { t } = useLanguageContext();
     return (
         <motion.div 
             initial={{ opacity: 0 }}
@@ -125,7 +127,7 @@ export function PageLoader({ message }: { message?: string }) {
                         transition={{ duration: 1.5, ease: "easeOut" }}
                         className="text-[11px] font-medium text-white/40 uppercase"
                     >
-                        {message || "Initiating"}
+                        {message ? t(message) : t("Initiating")}
                     </motion.p>
                     
                     {/* Minimalist progress trace */}
@@ -147,7 +149,7 @@ export function PageLoader({ message }: { message?: string }) {
                     className="flex flex-col items-center"
                 >
                     <span className="text-[9px] font-light text-white/10 tracking-[0.8em] uppercase mb-1">
-                        Established 2024
+                        {t("Established 2024")}
                     </span>
                     <span className="text-[12px] font-black text-white/30 tracking-[0.5em] uppercase">
                         iReside

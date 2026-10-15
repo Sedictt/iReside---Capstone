@@ -21,12 +21,12 @@ import {
     Menu,
     X,
     LayoutGrid,
-    Sparkles,
     Check,
     BookOpen,
     Download,
     AlertTriangle,
     Calendar,
+    Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -42,43 +42,86 @@ import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal
 import { m as motion, AnimatePresence } from "framer-motion";
 import { DEFAULT_AVATAR_URL, getSafeAvatarBgColor, isProfileIncomplete } from "@/lib/constants";
 import type { Notification, Profile } from "@/types/database";
+import { formatNotificationFullTime, formatNotificationTime, getNotificationVisual } from "@/lib/notification-display";
 
-function formatTimeAgo(value: string) {
-    const timestamp = new Date(value);
-    const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
+type TenantPropertyInfo = { name: string; detail: string | null };
 
-    if (Number.isNaN(diffMs) || diffMs < 0) {
-        return "Recently";
+// Kept at module scope so the sidebar doesn't refetch (and flash) when it remounts between pages.
+let cachedTenantProperty: { userId: string; info: TenantPropertyInfo | null } | null = null;
+
+function useTenantProperty() {
+    const { user } = useAuth();
+    const userId = user?.id;
+    const cached = userId && cachedTenantProperty?.userId === userId ? cachedTenantProperty.info : undefined;
+    const [property, setProperty] = useState<TenantPropertyInfo | null | undefined>(cached);
+
+    useEffect(() => {
+        if (!userId) return;
+        if (cachedTenantProperty?.userId === userId) {
+            setProperty(cachedTenantProperty.info);
+            return;
+        }
+        let cancelled = false;
+
+        fetch("/api/tenant/lease")
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                const unit = data?.lease?.unit;
+                const prop = unit?.property;
+                const info: TenantPropertyInfo | null = prop?.name
+                    ? { name: prop.name, detail: [unit?.name, prop.city].filter(Boolean).join(" · ") || null }
+                    : null;
+                cachedTenantProperty = { userId, info };
+                if (!cancelled) setProperty(info);
+            })
+            .catch(() => {
+                if (!cancelled) setProperty(null);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [userId]);
+
+    return property;
+}
+
+function TenantPropertyHeader({ size = "md" }: { size?: "sm" | "md" }) {
+    const property = useTenantProperty();
+
+    if (property === undefined) {
+        return (
+            <div className="flex items-center gap-2.5 min-w-0 w-full">
+                <Skeleton className={cn("shrink-0 rounded-xl", size === "sm" ? "size-7" : "size-9")} />
+                <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-3 w-3/4 rounded-full" />
+                    {size === "md" && <Skeleton className="h-2.5 w-1/2 rounded-full opacity-60" />}
+                </div>
+            </div>
+        );
     }
 
-    const minute = 60 * 1000;
-    const hour = 60 * minute;
-    const day = 24 * hour;
-
-    if (diffMs < hour) {
-        const minutes = Math.max(1, Math.floor(diffMs / minute));
-        return `${minutes}m ago`;
+    if (!property) {
+        return <BrandLogo size={size} className="w-full min-w-0" />;
     }
 
-    if (diffMs < day) {
-        const hours = Math.max(1, Math.floor(diffMs / hour));
-        return `${hours}h ago`;
-    }
-
-    const days = Math.floor(diffMs / day);
-    if (days === 1) {
-        return "Yesterday";
-    }
-
-    if (days < 7) {
-        return `${days}d ago`;
-    }
-
-    return timestamp.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-    });
+    return (
+        <div className="flex items-center gap-2.5 min-w-0 w-full overflow-hidden">
+            <div className={cn("flex shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary", size === "sm" ? "size-7" : "size-9")}>
+                <Building2 className={size === "sm" ? "size-4" : "size-5"} />
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col text-left overflow-hidden">
+                <span className={cn("block truncate font-black tracking-tight text-foreground", size === "sm" ? "text-xs" : "text-sm leading-tight")} title={property.name}>
+                    {property.name}
+                </span>
+                {property.detail && (
+                    <span className="block truncate text-[10px] font-medium leading-tight text-muted-foreground" title={property.detail}>
+                        {property.detail}
+                    </span>
+                )}
+            </div>
+        </div>
+    );
 }
 
 const NAV_SECTIONS = [
@@ -254,7 +297,7 @@ export function TenantSidebar() {
             <header className="md:hidden sticky top-0 z-[90] h-16 border-b border-border/80 bg-background">
                 <div className="h-full px-4 flex items-center justify-between gap-3">
                     <Link href="/tenant/dashboard" className="flex items-center min-w-0 flex-1 overflow-hidden">
-                        <BrandLogo size="sm" className="w-full min-w-0" />
+                        <TenantPropertyHeader size="sm" />
                     </Link>
                     <div className="flex items-center gap-2 sm:gap-3">
                         <LanguageToggle variant="compact" />
@@ -272,7 +315,7 @@ export function TenantSidebar() {
                                     "relative flex size-9 items-center justify-center rounded-lg transition-all",
                                     isNotificationsOpen ? "neumorphic-primary" : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                 )}
-                                aria-label="Notifications"
+                                aria-label={t("Notifications")}
                             >
                                 <Bell className="size-4" />
                                 {unreadCount > 0 && (
@@ -311,7 +354,7 @@ export function TenantSidebar() {
                             type="button"
                             onClick={() => setIsMobileOpen((prev) => !prev)}
                             className="relative inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground neumorphic-extruded"
-                            aria-label="Toggle tenant navigation"
+                            aria-label={t("Toggle tenant navigation")}
                         >
                             {isMobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
                             {isIncomplete && (
@@ -328,7 +371,7 @@ export function TenantSidebar() {
             <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col text-foreground neumorphic-panel" data-tour-id="tour-tenant-navigation">
                 <div className="h-20 px-5 border-b border-border/70 flex items-center justify-between gap-2">
                     <div className="flex items-center min-w-0 flex-1 overflow-hidden">
-                        <BrandLogo size="md" className="w-full min-w-0" />
+                        <TenantPropertyHeader />
                     </div>
                     <ThemeToggle variant="sidebar" dataTourId="tour-theme-toggle" className="shrink-0" />
                 </div>
@@ -349,12 +392,12 @@ export function TenantSidebar() {
                                     className="relative size-full overflow-hidden rounded-full flex items-center justify-center" 
                                     style={{ backgroundColor: avatarBgColor }}
                                 >
-                                    <Image src={avatarUrl} alt="Profile" fill sizes="40px" className="object-cover" />
+                                    <Image src={avatarUrl} alt={t("Profile")} fill sizes="40px" className="object-cover" />
                                 </div>
                                 {isIncomplete && (
                                     <span 
                                         className="absolute -top-0.5 -right-0.5 flex size-3.5 z-20 pointer-events-none" 
-                                        title="Complete your profile setup"
+                                        title={t("Complete your profile setup")}
                                     >
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
                                         <span className="relative inline-flex rounded-full size-3.5 bg-primary border-2 border-background shadow-sm" />
@@ -372,7 +415,7 @@ export function TenantSidebar() {
                                 </ProfileCardTrigger>
                                 <RoleBadge role={profile?.role ?? null} />
                             </div>
-                            <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || "Tenant Account"}</p>
+                            <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || t("Tenant Account")}</p>
                         </div>
                         <div className="relative" ref={notificationsRef}>
                             <button
@@ -388,7 +431,7 @@ export function TenantSidebar() {
                                     "relative rounded-xl p-2 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                                     isNotificationsOpen ? "neumorphic-extruded active text-primary-foreground" : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                 )}
-                                aria-label="Notifications"
+                                aria-label={t("Notifications")}
                             >
                                 <Bell className="size-4" />
                                 {unreadCount > 0 && (
@@ -473,13 +516,13 @@ export function TenantSidebar() {
                 >
                     <div className="mb-6 flex items-center justify-between">
                         <Link href="/tenant/dashboard" className="flex items-center min-w-0" onClick={() => setIsMobileOpen(false)}>
-                            <BrandLogo size="md" />
+                            <TenantPropertyHeader />
                         </Link>
                         <button
                             type="button"
                             onClick={() => setIsMobileOpen(false)}
                             className="inline-flex size-8 items-center justify-center rounded-md neumorphic-extruded"
-                            aria-label="Close tenant navigation"
+                            aria-label={t("Close tenant navigation")}
                         >
                             <X className="size-4" />
                         </button>
@@ -549,11 +592,12 @@ function NotificationPanelContent({
     onMarkAsRead?: (id: string) => void,
     onMarkAllAsRead: () => void 
 }) {
+    const { t, locale } = useLanguage();
     return (
         <>
             <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Notifications</p>
-                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-black text-primary">{unreadCount > 99 ? '99+' : unreadCount} New</span>
+                <p className="text-[10px] font-black uppercase tracking-widest text-foreground">{t("Notifications")}</p>
+                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-black text-primary">{t("{count} New", { count: unreadCount > 99 ? "99+" : unreadCount })}</span>
             </div>
 
             <div className="max-h-[400px] overflow-y-auto custom-scrollbar-premium">
@@ -572,9 +616,9 @@ function NotificationPanelContent({
                     </div>
                 ) : notifications.length === 0 ? (
                     <div className="px-6 py-12 text-center text-muted-foreground">
-                        <Sparkles className="size-8 mx-auto mb-3 opacity-20" />
-                        <p className="text-sm font-black">All caught up!</p>
-                        <p className="text-[10px] mt-1 opacity-60">You have no notifications yet</p>
+                        <Bell className="size-8 mx-auto mb-3 opacity-20" />
+                        <p className="text-sm font-black">{t("All caught up!")}</p>
+                        <p className="text-[10px] mt-1 opacity-60">{t("You have no notifications yet")}</p>
                     </div>
                 ) : (
                     notifications.map((notification) => (
@@ -586,7 +630,16 @@ function NotificationPanelContent({
                                 !notification.read ? "bg-primary/[0.04]" : "opacity-75 hover:opacity-100"
                             )}
                         >
-                            <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-start justify-between gap-3">
+                                {(() => {
+                                    const visual = getNotificationVisual(notification.type);
+                                    const Icon = visual.icon;
+                                    return (
+                                        <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl", visual.tileClassName)}>
+                                            <Icon className="size-4" aria-hidden="true" />
+                                        </div>
+                                    );
+                                })()}
                                 <div className="flex-1 min-w-0">
                                     <p className={cn(
                                         "text-sm font-black transition-colors truncate",
@@ -610,13 +663,17 @@ function NotificationPanelContent({
                                                 className="inline-flex items-center gap-1 text-[11px] font-bold text-red-500 hover:text-red-400 hover:underline transition-colors cursor-pointer"
                                             >
                                                 <AlertTriangle className="size-3 shrink-0" />
-                                                <span>Is this not you? Reset now &rarr;</span>
+                                                <span>{t("Is this not you? Reset now →")}</span>
                                             </Link>
                                         </div>
                                     )}
-                                    <p className="mt-2 text-[10px] font-black text-muted-foreground/40 uppercase tracking-wider">
-                                        {formatTimeAgo(notification.created_at)}
-                                    </p>
+                                    <time
+                                        dateTime={notification.created_at}
+                                        title={formatNotificationFullTime(notification.created_at, locale)}
+                                        className="mt-2 block text-[10px] font-black text-muted-foreground/40 uppercase tracking-wider"
+                                    >
+                                        {formatNotificationTime(notification.created_at, t, locale)}
+                                    </time>
                                 </div>
                                 <div className="flex items-center justify-center size-7 shrink-0 mt-0.5">
                                     {!notification.read ? (
@@ -629,7 +686,7 @@ function NotificationPanelContent({
                                                         e.stopPropagation();
                                                         onMarkAsRead(notification.id);
                                                     }}
-                                                    title="Mark as read"
+                                                    title={t("Mark as read")}
                                                     className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover/item:opacity-100 bg-primary/20 rounded-full text-primary hover:bg-primary/30 transition-all duration-200 transform scale-50 group-hover/item:scale-100"
                                                 >
                                                     <Check className="size-3.5 stroke-[3px]" />
@@ -654,7 +711,7 @@ function NotificationPanelContent({
                     }}
                     className="w-full rounded-xl py-2 text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground transition-all hover:bg-card hover:text-primary hover:shadow-sm"
                 >
-                    Mark all as read
+                    {t("Mark all as read")}
                 </button>
             </div>
         </>
