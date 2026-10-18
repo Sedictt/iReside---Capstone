@@ -59,6 +59,7 @@ const PUBLIC_ROUTE_PREFIXES = [
     "/apply-landlord",
     "/landlord/onboarding",
     "/demo",
+    "/demo-console",
     "/sign",
     "/docs",
     "/download",

@@ -3,7 +3,9 @@
 **Client:** John Peter Gonzales · **Property:** Fernando Gonzales Dormitory (12 rooms, 3 floors, Marulas, Valenzuela City)
 **Password for every demo account:** `Defense2026!`
 
-> Keep this open on a second screen. Find the panel's question in **Section 3**, log in as the account it names, follow the click path.
+> **Fastest way: open `/demo-console`.** It is a private launcher with one button per scenario below. A click signs you in as the right account and opens the screen in a second "demo" window (shift-click opens it in the same tab). It also has a **Reset demo data** button. The page only exists while `DEMO_CONSOLE_ENABLED=true` is in `.env` (already set locally); never set that on a public deployment because the page carries the demo password.
+>
+> Keep this document open as the fallback. Find the panel's question in **Section 3**, log in as the account it names, follow the click path.
 > Before the defense (and after every rehearsal) run the reset in **Section 5** so every scenario is back at its starting point.
 
 ---
