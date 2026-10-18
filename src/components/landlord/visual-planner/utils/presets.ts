@@ -82,7 +82,7 @@ export function generatePresetLayout(
         });
 
         const maxTopH = topUnits.length > 0 ? Math.max(...topUnits.map(u => getUnitDimensions(u?.beds).h)) : 140;
-        const contentW = Math.max(topRowW, bottomRowW, 800);
+        const contentW = Math.max(topRowW, bottomRowW, 0);
         const corridorW = contentW + 80;
         const startX = MARGIN;
         const corridorX = startX - 40;
@@ -125,7 +125,7 @@ export function generatePresetLayout(
             rowW += dims.w + (i > 0 ? GAP : 0);
         }
         const maxUnitH = sortedPool.length > 0 ? Math.max(...sortedPool.map(u => getUnitDimensions(u?.beds).h)) : 140;
-        const contentW = Math.max(rowW, 800);
+        const contentW = rowW;
         const corridorW = contentW + 80;
         const startX = MARGIN;
         const corridorX = startX - 40;
@@ -178,13 +178,13 @@ export function generatePresetLayout(
         const westUnitsStartX = MARGIN;
         const leftCorridorX = nLeft > 0 ? westUnitsStartX + maxLeftW + GAP : MARGIN;
         const topCorridorX = leftCorridorX;
-        const topCorridorW = Math.max(topW + (nRight > 0 ? CORRIDOR_H + GAP * 2 : 80), 640);
+        const topCorridorW = topW + (nRight > 0 ? CORRIDOR_H + GAP * 2 : 80);
         const topUnitsStartX = topCorridorX + Math.max(GAP, Math.round((topCorridorW - topW) / 2));
 
         const startY = MARGIN;
         const topCorridorY = startY + maxTopH + GAP;
         const sideUnitsStartY = topCorridorY + CORRIDOR_H + GAP;
-        const maxSideH = Math.max(leftH, rightH, 420);
+        const maxSideH = Math.max(leftH, rightH);
         const sideCorridorH = maxSideH + CORRIDOR_H + GAP;
 
         // 1. Top row units
@@ -272,13 +272,13 @@ export function generatePresetLayout(
         const westUnitsStartX = MARGIN;
         const leftCorridorX = westUnitsStartX + maxLeftW + GAP;
         const topCorridorX = leftCorridorX;
-        const topCorridorW = Math.max(topW + 80, 600);
+        const topCorridorW = topW + 80;
         const topUnitsStartX = topCorridorX + Math.max(GAP, Math.round((topCorridorW - topW) / 2));
 
         const startY = MARGIN;
         const topCorridorY = startY + maxTopH + GAP;
         const sideUnitsStartY = topCorridorY + CORRIDOR_H + GAP;
-        const sideCorridorH = Math.max(leftH, 420) + CORRIDOR_H + GAP;
+        const sideCorridorH = leftH + CORRIDOR_H + GAP;
 
         // Top row
         let curTopX = topUnitsStartX;

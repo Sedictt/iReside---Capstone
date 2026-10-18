@@ -126,14 +126,39 @@ const TENANTS = {
   angelo: { name: "Angelo Fernandez", email: "angelo.fernandez@ireside.ph", phone: "+639181234507", avatar: AVATAR(16), unit: "302", occupation: "Rider / Delivery Partner", employer: "Grab Philippines", income: 20000, emergency: ["Nora Fernandez (Mother)", "+639181234607"], leaseStart: "2026-02-01", bio: "Pays in cash at the office; requested a transfer to Room 303." },
   daniel: { name: "Daniel Ocampo", email: "daniel.ocampo@ireside.ph", phone: "+639181234508", avatar: AVATAR(4), unit: "303", occupation: "Machine Operator", employer: "Jollibee Foods Corp. – Commissary", income: 16500, emergency: ["Carmen Ocampo (Mother)", "+639181234608"], leaseStart: "2025-09-01", leaseEnd: "2026-08-31", bio: "Former resident; moved out Aug 31, 2026 (archive)." },
 };
+// Settled residents who fill the remaining rooms. They are ordinary paying tenants with no
+// pending workflow, so the scenario accounts above stay the ones to demo.
+const EXTRA_RESIDENTS = [
+  ["jericho", "Jericho Navarro", "105", "2025-11-01", "3rd Year BS Civil Engineering", "Pamantasan ng Lungsod ng Valenzuela", 11000, "Edwin Navarro (Father)", 6],
+  ["lea", "Lea Marie Castillo", "106", "2026-03-01", "Pharmacy Assistant", "Mercury Drug – Malinta", 16000, "Gloria Castillo (Mother)", 11],
+  ["ramon", "Ramon Aquino Jr.", "108", "2025-07-01", "Forklift Operator", "Puregold Distribution Center – Karuhatan", 18000, "Ramon Aquino Sr. (Father)", 8],
+  ["hazel", "Hazel Ann Domingo", "205", "2026-06-01", "2nd Year BS Nursing", "Our Lady of Fatima University – Valenzuela", 12000, "Rodel Domingo (Father)", 13],
+  ["kristoffer", "Kristoffer Santiago", "207", "2026-01-15", "Shift Supervisor", "Starbucks – SM City Valenzuela", 19500, "Liza Santiago (Mother)", 17],
+  ["theresa", "Ma. Theresa Gutierrez", "208", "2025-10-01", "Teacher I", "Marulas Elementary School (DepEd)", 27000, "Arnold Gutierrez (Brother)", 15],
+  ["vincent", "Vincent Tan", "305", "2026-04-01", "Graphic Designer", "Freelance (Upwork)", 30000, "Susan Tan (Mother)", 18],
+  ["bea", "Bea Concepcion", "306", "2025-12-01", "HR Assistant", "Mitsuba Philippines – Marulas", 20000, "Josefina Concepcion (Mother)", 5],
+  ["arvin", "Arvin Salvador", "307", "2026-08-01", "Team Leader", "Teleperformance – Valenzuela", 34000, "Lorna Salvador (Mother)", 9],
+  ["nicole", "Nicole Ramos", "308", "2026-05-01", "Medical Technologist", "Valenzuela Medical Center", 28000, "Ernesto Ramos (Father)", 12],
+];
+EXTRA_RESIDENTS.forEach(([key, name, unit, leaseStart, occupation, employer, income, contact, avatar], i) => {
+  const local = name.toLowerCase().replace(/^ma\. /, "").replace(/ jr\.$/, "").normalize("NFD").replace(/[^a-z ]/g, "").trim().split(/\s+/);
+  TENANTS[key] = {
+    name, email: `${local[0]}.${local[local.length - 1]}@ireside.ph`, phone: `+6391812346${String(20 + i).padStart(2, "0")}`,
+    avatar: AVATAR(avatar), unit, occupation, employer, income, emergency: [contact, `+6391812347${String(20 + i).padStart(2, "0")}`],
+    leaseStart, bio: "Settled resident; pays on time.", extra: true,
+  };
+});
 for (const [key, t] of Object.entries(TENANTS)) { t.key = key; t.id = uid(`user:${key}`); t.leaseId = uid(`lease:${key}`); }
 
-// Rooms: 3 floors × 4 rooms. Floor 1 fan rooms, Floor 2 larger, Floor 3 air-conditioned.
-const UNITS = [
-  ["101", 1, 4500, "occupied"], ["102", 1, 4500, "occupied"], ["103", 1, 4500, "vacant"], ["104", 1, 4500, "occupied"],
-  ["201", 2, 5000, "occupied"], ["202", 2, 5000, "occupied"], ["203", 2, 5000, "occupied"], ["204", 2, 5000, "occupied"],
-  ["301", 3, 5500, "occupied"], ["302", 3, 5500, "occupied"], ["303", 3, 5500, "vacant"], ["304", 3, 5500, "maintenance"],
-].map(([name, floor, rent, status]) => ({ id: uid(`unit:${name}`), name, floor, rent, status }));
+// Rooms: 3 floors × 8 rooms. Floor 1 fan rooms, Floor 2 larger, Floor 3 air-conditioned.
+const ROOMS_PER_FLOOR = 8;
+const ROOM_STATUS = { "103": "vacant", "107": "vacant", "206": "vacant", "303": "vacant", "304": "maintenance" };
+const UNITS = [1, 2, 3].flatMap((floor) =>
+  Array.from({ length: ROOMS_PER_FLOOR }, (_, i) => {
+    const name = `${floor}0${i + 1}`;
+    return [name, floor, floor === 1 ? 4500 : floor === 2 ? 5000 : 5500, ROOM_STATUS[name] ?? "occupied"];
+  })
+).map(([name, floor, rent, status]) => ({ id: uid(`unit:${name}`), name, floor, rent, status }));
 const unitByName = Object.fromEntries(UNITS.map((u) => [u.name, u]));
 // Rooms 104 and 204 are occupied by walk-in residents who do not use the app (realistic: not every resident is onboarded yet).
 const OFFLINE_RESIDENTS = { "104": "Bernard Mendoza", "204": "Aljon Rivera" };
@@ -333,7 +358,7 @@ async function main() {
   await upsert("profiles", [{
     id: LANDLORD.id, email: LANDLORD.email, full_name: LANDLORD.name, role: "landlord", phone: LANDLORD.phone,
     avatar_url: LANDLORD.avatar, avatar_bg_color: "#2f6f5e", cover_url: "/art/banners/morning-sun.svg",
-    bio: "Second-generation owner of Fernando Gonzales Dormitory, a 12-room dormitory in Barangay Marulas named after my late father. We have housed students of OLFU and workers from the Marulas–Karuhatan industrial belt since 2009.",
+    bio: "Second-generation owner of Fernando Gonzales Dormitory, a 24-room dormitory in Barangay Marulas named after my late father. We have housed students of OLFU and workers from the Marulas–Karuhatan industrial belt since 2009.",
     address: PROPERTY_ADDRESS, website: null,
     business_name: PROPERTY_NAME, business_permit_number: "VC-BP-2026-018734", business_permits: [],
     socials: { branding, facebook: "fb.com/fernandogonzalesdorm", notification_preferences: { payments: true, maintenance: true, applications: true, messages: true, community: true } },
@@ -354,10 +379,11 @@ async function main() {
   ok("Landlord + 8 tenant profiles");
 
   // ---- property -----------------------------------------------------------
+  let propertyDecorations;
   step("Property, rooms, floor map, policies, utilities");
   await insert("properties", [{
     id: PROPERTY_ID, landlord_id: LANDLORD.id, name: PROPERTY_NAME, address: PROPERTY_ADDRESS, city: "Valenzuela",
-    description: "Three-storey dormitory with 12 rooms (2 beds each), 24/7 CCTV, biometric gate, common kitchen, study hall and laundry area. Five minutes from OLFU Valenzuela and the Marulas industrial zone.",
+    description: "Three-storey dormitory with 24 rooms (8 per floor, 2 beds each), 24/7 CCTV, biometric gate, common kitchen, study hall and laundry area. Five minutes from OLFU Valenzuela and the Marulas industrial zone.",
     type: "dormitory", total_units: 12, total_floors: 3, base_rent_amount: 4500,
     amenities: ["Wi-Fi", "CCTV", "Study Hall", "Common Kitchen", "Laundry Area", "Water Dispenser", "Rooftop Drying Area", "Biometric Gate"],
     house_rules: HOUSE_RULES, images: ["/art/property.svg"], is_featured: true,
@@ -374,7 +400,7 @@ async function main() {
       ],
       last_updated: "2026-01-12T02:20:00.000Z",
     },
-    map_decorations: {
+    map_decorations: propertyDecorations = {
       branding,
       flyer_template: {
         propertyName: PROPERTY_NAME, tagline: "Resident portal for cash & GCash payments, utility readings, and repair requests.",
@@ -402,9 +428,38 @@ async function main() {
     { id: uid("floor:2"), property_id: PROPERTY_ID, floor_number: 2, floor_key: "floor2", display_name: "Second Floor", sort_order: 2 },
     { id: uid("floor:3"), property_id: PROPERTY_ID, floor_number: 3, floor_key: "floor3", display_name: "Third Floor (Air-conditioned)", sort_order: 3 },
   ], "floor configs");
-  await insert("unit_map_positions", UNITS.map((u, i) => ({
-    unit_id: u.id, floor_key: `floor${u.floor}`, x: 60 + (i % 4) * 240, y: 80, w: 200, h: 140,
-  })), "map positions");
+  // Same geometry the editor's "Double Loaded" preset produces (200×140 rooms, 20 px gaps,
+  // 80 px corridor), with the corridor exactly as long as the room rows it serves.
+  const ROOM_W = 200, ROOM_H = 140, GAP = 20, CORRIDOR_H = 80, MARGIN = 80, STAIR_W = 80;
+  const perRow = Math.ceil(ROOMS_PER_FLOOR / 2);
+  const rowW = perRow * ROOM_W + (perRow - 1) * GAP;
+  const corridorY = MARGIN + ROOM_H + GAP;
+  const corridorX = MARGIN - 40;
+  const corridorW = rowW + 80;
+  const positions = [];
+  const floorDecorations = {};
+  for (const floor of [1, 2, 3]) {
+    const rooms = UNITS.filter((u) => u.floor === floor);
+    rooms.forEach((u, i) => {
+      const top = i < perRow;
+      const col = top ? i : i - perRow;
+      positions.push({
+        unit_id: u.id, floor_key: `floor${floor}`,
+        x: MARGIN + col * (ROOM_W + GAP),
+        y: top ? MARGIN : corridorY + CORRIDOR_H + GAP,
+        w: ROOM_W, h: ROOM_H,
+      });
+    });
+    floorDecorations[`floor${floor}`] = {
+      corridors: [{ id: `corridor-floor${floor}-main`, label: floor === 1 ? "Main Hallway" : `${floor === 2 ? "Second" : "Third"} Floor Hallway`, x: corridorX, y: corridorY, w: corridorW, h: CORRIDOR_H }],
+      structures: [{
+        id: `stair-floor${floor}-east`, type: "stairwell", variant: "straight", label: "East Stairs",
+        x: corridorX + corridorW + GAP, y: corridorY - (160 - CORRIDOR_H) / 2, w: STAIR_W, h: 160,
+      }],
+    };
+  }
+  await insert("unit_map_positions", positions, "map positions");
+  await db.from("properties").update({ map_decorations: { ...propertyDecorations, ...floorDecorations } }).eq("id", PROPERTY_ID);
   await insert("property_environment_policies", [{
     property_id: PROPERTY_ID, environment_mode: "dormitory", max_occupants_per_unit: 2,
     curfew_enabled: true, curfew_time: "23:00:00", visitor_cutoff_enabled: true, visitor_cutoff_time: "21:00:00",
@@ -419,7 +474,7 @@ async function main() {
   await insert("landlord_payment_destinations", [{
     id: uid("gcash:dest"), landlord_id: LANDLORD.id, provider: "gcash", account_name: LANDLORD.name, account_number: LANDLORD.gcash, is_enabled: true,
   }], "GCash destination");
-  ok("Property + 12 rooms + map + policies + utility rates + GCash");
+  ok(`Property + ${UNITS.length} rooms + map + policies + utility rates + GCash`);
 
   // ---- leases -------------------------------------------------------------
   step("Leases");
@@ -444,6 +499,7 @@ async function main() {
     leaseRow(TENANTS.angelo),
     leaseRow(TENANTS.mark, { signing_mode: "remote", signed_at: "2026-10-08T11:05:00.000Z", tenant_signed_at: "2026-10-08T10:42:00.000Z", landlord_signed_at: "2026-10-08T11:05:00.000Z", created_at: "2026-10-07T06:00:00.000Z" }),
     leaseRow(TENANTS.daniel, { status: "terminated", end_date: "2026-08-31", term_type: "open_ended" }),
+    ...Object.values(TENANTS).filter((t) => t.extra).map((t) => leaseRow(t)),
     // Katrina: approved applicant, lease generated, waiting for HER e-signature (digital signing demo)
     leaseRow(K, { status: "pending_tenant_signature", tenant_signature: null, landlord_signature: null, signing_mode: "remote", signed_at: null, tenant_signed_at: null, landlord_signed_at: null, signature_lock_version: 0, created_at: "2026-10-16T07:20:00.000Z" }),
   ], "leases");
@@ -471,8 +527,11 @@ async function main() {
     maria: { e: 4120, w: 212 }, joshua: { e: 3875, w: 188 }, ronald: { e: 2990, w: 240 }, christine: { e: 5310, w: 171 },
     angelo: { e: 1440, w: 96 }, daniel: { e: 6020, w: 305 }, mark: { e: 12, w: 3 },
   };
+  const keyHash = (key) => [...key].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 997, 7);
+  for (const t of Object.values(TENANTS)) if (!meters[t.key]) meters[t.key] = { e: 800 + keyHash(t.key) * 4, w: 40 + (keyHash(t.key) % 120) };
   const usageFor = (key, m) => {
-    const base = { maria: [62, 3.4], joshua: [88, 4.1], ronald: [74, 4.8], christine: [96, 3.2], angelo: [58, 3.0], daniel: [81, 4.4], mark: [40, 2.0] }[key];
+    const base = { maria: [62, 3.4], joshua: [88, 4.1], ronald: [74, 4.8], christine: [96, 3.2], angelo: [58, 3.0], daniel: [81, 4.4], mark: [40, 2.0] }[key]
+      ?? [55 + (keyHash(key) % 40), Number((2.8 + (keyHash(key) % 18) / 10).toFixed(1))];
     const wobble = ((m * 7 + key.length * 3) % 5) - 2; // deterministic ±2
     return { kwh: base[0] + wobble * 4 + (m >= 4 && m <= 6 ? 18 : 0), cbm: Number((base[1] + wobble * 0.2).toFixed(1)) }; // summer months use more power
   };
@@ -563,6 +622,12 @@ async function main() {
   const angeloOct = monthlyInvoice(TENANTS.angelo, 2026, 10, "awaiting_cash", { lateFee: LATE_FEE, submittedAt: hoursAgo(20), expiresAt: iso(new Date(Date.now() + 52 * 3600_000)) });
   // Daniel (moved out Aug 31): Jan–Aug paid
   for (let m = 1; m <= 8; m++) monthlyInvoice(TENANTS.daniel, 2026, m, "paid_gcash");
+  // Extra residents: every month since move-in (or since January) paid.
+  for (const t of Object.values(TENANTS).filter((r) => r.extra)) {
+    const [sy, sm] = t.leaseStart.split("-").map(Number);
+    const firstMonth = sy < 2026 ? 1 : sm;
+    for (let m = firstMonth; m <= 10; m++) monthlyInvoice(t, 2026, m, keyHash(t.key) % 3 === 0 ? "paid_cash" : "paid_gcash", { paidDay: 1 + (keyHash(t.key) % 4) });
+  }
   // Mark (moved in Oct 10): move-in payments + first invoice for November (upcoming)
   const markUnit = unitByName[TENANTS.mark.unit];
   for (const [kind, label, desc] of [["advance", "Monthly Rent (Advance)", "Advance rent — 1 month (move-in requirement)"], ["deposit", "Security Deposit", "Security deposit — 1 month (refundable)"]]) {
@@ -817,7 +882,9 @@ async function main() {
   notify(LANDLORD.id, "lease", "Unit transfer request — Room 302 → 303", "Angelo Fernandez asked to transfer to Room 303.", { transfer_id: uid("transfer:angelo") }, daysAgo(2));
   notify(LANDLORD.id, "lease", "Signing link opened — Katrina Mae Villanueva", "Katrina opened the e-signature link for Room 201. Waiting for her signature.", { lease_id: K.leaseId }, "2026-10-17T13:10:00.000Z");
   notify(LANDLORD.id, "message", "New message from Mark Anthony Lim", "“…the outlet near the aircon sparked when I plugged it in…”", { conversation_id: uid("conv:mark") }, hoursAgo(10.5));
-  notify(LANDLORD.id, "payment", "October collections: 3 of 6 invoices settled", "Paid: Rooms 101, 203, 301 (move-in). Outstanding: Rooms 102 (under review), 202 (reminder sent), 302 (cash pending).", { month: "2026-10" }, daysAgo(1, 0), true);
+  const octInvoices = payments.filter((p) => p.billing_cycle === "2026-10-01");
+  const octPaid = octInvoices.filter((p) => p.status === "completed").length;
+  notify(LANDLORD.id, "payment", `October collections: ${octPaid} of ${octInvoices.length} invoices settled`, "Outstanding: Rooms 102 (under review), 202 (reminder sent), 302 (cash pending). Everyone else is paid.", { month: "2026-10" }, daysAgo(1, 0), true);
   // Tenant inboxes
   notify(TENANTS.maria.id, "payment", "Receipt issued — October 2026", "Your GCash payment was confirmed. Receipt available under Payments.", { payment_id: uid("pay:maria:2026-10-01") }, "2026-10-02T13:00:00.000Z", true);
   notify(TENANTS.maria.id, "announcement", "Water interruption on Tuesday, Oct 21", "8:00 AM – 12:00 NN. Fill your containers Monday night.", { post_id: uid("post:water") }, daysAgo(2, 1));
@@ -845,7 +912,7 @@ async function main() {
   ), "tenant tours");
   await insert("iris_chat_messages", [
     { user_id: LANDLORD.id, role: "user", content: "Who hasn't paid for October yet?", created_at: daysAgo(1, 2) },
-    { user_id: LANDLORD.id, role: "assistant", content: `Three October invoices are still open:\n\n• Room 102 – Joshua Miguel Dela Cruz: ${peso(joshuaOct.amount)}, GCash proof submitted Oct 12, **awaiting your review**.\n• Room 202 – Ronald Bautista: ${peso(ronaldOct.amount)}, overdue, reminder sent Oct 8.\n• Room 302 – Angelo Fernandez: ${peso(angeloOct.amount)}, said he will pay **cash at the office** (intent expires in ~2 days).\n\nRooms 101, 203 and 301 are fully settled.`, created_at: daysAgo(1, 2) },
+    { user_id: LANDLORD.id, role: "assistant", content: `Three October invoices are still open:\n\n• Room 102 – Joshua Miguel Dela Cruz: ${peso(joshuaOct.amount)}, GCash proof submitted Oct 12, **awaiting your review**.\n• Room 202 – Ronald Bautista: ${peso(ronaldOct.amount)}, overdue, reminder sent Oct 8.\n• Room 302 – Angelo Fernandez: ${peso(angeloOct.amount)}, said he will pay **cash at the office** (intent expires in ~2 days).\n\nEvery other occupied room is fully settled for October.`, created_at: daysAgo(1, 2) },
     { user_id: LANDLORD.id, role: "user", content: "Draft a polite Filipino reminder for Ronald.", created_at: daysAgo(1, 2) },
     { user_id: LANDLORD.id, role: "assistant", content: `Hi Ronald, good day! Paalala lang po na ang October 2026 invoice ninyo (${peso(ronaldOct.amount)}, kasama ang ₱200 late fee) ay due pa noong Oct 5. Pwede po kayong magbayad via GCash sa app o cash sa office. Salamat po at ingat sa paglipat sa Cebu! — Sir John`, created_at: daysAgo(1, 2) },
     { user_id: TENANTS.maria.id, role: "user", content: "Kailan ang next due ko?", created_at: daysAgo(6) },
