@@ -5,6 +5,7 @@ import { validateSignature } from "@/lib/signature-validation";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { generateLeasePdf, exportLeaseDocumentElementToPdf } from "@/lib/lease-pdf";
+import { blobToBase64 } from "@/lib/pdf-base64";
 import { LeaseDocument, type LeaseDocumentProps } from "@/components/lease/LeaseDocument";
 import { CheckCircle2, AlertCircle, FileText, Shield, ArrowLeft, PenTool } from "lucide-react";
 import { useAppToast } from "@/hooks/useAppToast";
@@ -138,8 +139,10 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
 
     const generateDoc = async () => {
       try {
-        // If lease is already active and stored document exists, load it
-        if (lease.status === "active" && lease.signed_document_url) {
+        // Sign on top of the stored document when there is one: for a lease awaiting the
+        // landlord it is the exact PDF the tenant drew on, so the tenant's signature
+        // keeps its drawn size and position in the final copy.
+        if (lease.signed_document_url) {
           try {
             const pdfResponse = await fetch(lease.signed_document_url);
             if (pdfResponse.ok) {
@@ -193,6 +196,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
             terms: lease.terms,
             tenantSignature: lease.tenant_signature,
             tenantSignedAt: lease.tenant_signed_at,
+            blankUnsignedSlots: true,
           });
         }
 
@@ -221,25 +225,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
     }
 
     try {
-      let signedPdfBase64: string | undefined;
-      if (signedBlob) {
-        try {
-          const arrayBuffer = await signedBlob.arrayBuffer();
-          const bytes = new Uint8Array(arrayBuffer);
-          let binary = "";
-          const len = bytes.byteLength;
-          const chunkSize = 8192;
-          for (let i = 0; i < len; i += chunkSize) {
-            binary += String.fromCharCode.apply(
-              null,
-              bytes.subarray(i, Math.min(i + chunkSize, len)) as unknown as number[]
-            );
-          }
-          signedPdfBase64 = btoa(binary);
-        } catch (b64Err) {
-          console.warn("[landlord-sign] Failed to encode signed PDF blob:", b64Err);
-        }
-      }
+      const signedPdfBase64 = await blobToBase64(signedBlob);
 
       const response = await fetch(`/api/landlord/leases/${leaseId}/sign`, {
         method: "POST",
@@ -291,6 +277,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
           <LeaseDocument
             containerId="landlord-signing-lease-document"
             disableAnimation={true}
+            blankUnsignedSlots={true}
             className="shadow-none border-none max-w-none w-[816px] p-8 sm:p-10"
             {...formattedLeaseData}
           />

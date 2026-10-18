@@ -5,6 +5,7 @@ import { validateSignature } from "@/lib/signature-validation";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { generateLeasePdf, exportLeaseDocumentElementToPdf } from "@/lib/lease-pdf";
+import { blobToBase64 } from "@/lib/pdf-base64";
 import { LeaseDocument, type LeaseDocumentProps } from "@/components/lease/LeaseDocument";
 import { CheckCircle2, AlertCircle, FileText, Shield, ArrowLeft } from "lucide-react";
 import { useAppToast } from "@/hooks/useAppToast";
@@ -170,6 +171,7 @@ function LeaseSigningContent({ params }: { params: Promise<{ leaseId: string }> 
             landlord: { name: lease.landlord.full_name, email: lease.landlord.email },
             tenant: { name: lease.tenant.full_name, email: lease.tenant.email },
             terms: lease.terms,
+            blankUnsignedSlots: true,
           });
         }
 
@@ -198,6 +200,9 @@ function LeaseSigningContent({ params }: { params: Promise<{ leaseId: string }> 
     }
 
     try {
+      // Send the exact page the tenant drew on so the stored lease shows the ink
+      // at the size and position it was drawn, not a resized copy.
+      const signedPdfBase64 = await blobToBase64(signedBlob);
       const response = await fetch(`/api/tenant/leases/${leaseId}/sign`, {
         method: "POST",
         headers: {
@@ -206,6 +211,7 @@ function LeaseSigningContent({ params }: { params: Promise<{ leaseId: string }> 
         body: JSON.stringify({
           tenant_signature: signatureDataUrl,
           signing_token: token,
+          signed_pdf_base64: signedPdfBase64,
         }),
       });
 
@@ -247,6 +253,7 @@ function LeaseSigningContent({ params }: { params: Promise<{ leaseId: string }> 
           <LeaseDocument
             containerId="tenant-signing-lease-document"
             disableAnimation={true}
+            blankUnsignedSlots={true}
             className="shadow-none border-none max-w-none w-[816px] p-8 sm:p-10"
             {...formattedLeaseData}
           />
