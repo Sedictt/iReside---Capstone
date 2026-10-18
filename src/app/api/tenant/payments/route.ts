@@ -42,7 +42,9 @@ export async function GET(request: Request) {
         
         for (let i = 1; i <= 3; i++) {
             const targetDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
-            const monthKey = targetDate.toISOString().slice(0, 7);
+            // Build the key from local calendar parts: toISOString() shifts the 1st of the month
+            // back into the previous month for timezones ahead of UTC (e.g. Asia/Manila).
+            const monthKey = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, "0")}`;
             const cycleKey = `${monthKey}-01`;
             
             const existing = existingMap.get(cycleKey);

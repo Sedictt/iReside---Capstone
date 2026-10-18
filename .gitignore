@@ -147,3 +147,6 @@ output/*.mp4
 output/*.srt
 output/*-script.md
 output/uat-video-src/
+
+# Defense demo seed output (contains a signing token)
+output/defense-demo-ids.json

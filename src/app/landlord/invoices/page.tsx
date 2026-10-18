@@ -263,7 +263,12 @@ export default function InvoicesPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         {(() => {
           const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-          const netCashFlow = metrics.collectedLast30Days - totalExpenses;
+          const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+          const expensesLast30Days = expenses.reduce(
+            (sum, expense) => (new Date(expense.date_incurred).getTime() >= thirtyDaysAgo ? sum + expense.amount : sum),
+            0,
+          );
+          const netCashFlow = metrics.collectedLast30Days - expensesLast30Days;
           return (
             <>
               <HeroStat label={t("Net Cash Flow (30d)")} value={formatPhpCurrency(netCashFlow)} highlight={netCashFlow >= 0 ? "text-emerald-500" : "text-rose-500"} loading={loading} />

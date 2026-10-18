@@ -442,6 +442,17 @@ export async function listLandlordInvoices(
         buildInvoiceListItem(payment, readingMap.get(payment.id) ?? [], receiptMap.get(payment.id) ?? []),
     );
 
+    // "Collected (30d)" only counts invoices settled in the last 30 days, not all-time history.
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const settledRecently = new Set(
+        payments
+            .filter((payment) => {
+                const settledAt = payment.paid_at ?? payment.updated_at;
+                return settledAt ? new Date(settledAt).getTime() >= thirtyDaysAgo : false;
+            })
+            .map((payment) => payment.id),
+    );
+
     const metrics = invoices.reduce(
         (acc, invoice) => {
             if (
@@ -459,7 +470,7 @@ export async function listLandlordInvoices(
             if (invoice.status === "overdue") {
                 acc.overdueAmount += invoice.balanceRemaining;
             }
-            if (invoice.status === "paid" || invoice.status === "receipted") {
+            if ((invoice.status === "paid" || invoice.status === "receipted") && settledRecently.has(invoice.id)) {
                 acc.collectedLast30Days += invoice.amount;
             }
             acc.totalInvoices += 1;
