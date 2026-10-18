@@ -3,8 +3,9 @@
 /**
  * iReside UI sounds.
  *
- * Every file in /public/sounds is synthesized in-house by
- * scripts/sounds/generate-sounds.py (no third-party samples). They share one key
+ * Every file in /public/sounds except pageturn.mp3 is synthesized in-house by
+ * scripts/sounds/generate-sounds.py (no third-party samples); pageturn.mp3 is the
+ * original page-turn recording, kept by choice. They share one key
  * (F major) and a soft mallet timbre, kept in the 300-1,500 Hz range so they stay
  * clear for older users without being shrill. Edit a recipe there and re-run it to
  * change a sound; the file names below stay the same.

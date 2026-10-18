@@ -24,7 +24,10 @@ Design notes
     warning        two equal mid notes       "please check this"
     error          two falling low notes     "that didn't work" (calm, not a buzzer)
     tap            tiny wooden tick          navigation / toggles
-    pageturn       paper swish               e-book page turn
+
+Not generated here: public/sounds/pageturn.mp3 is the original page-turn recording,
+kept by choice (2026-10-18). The pageturn() recipe below is unused; add it back to
+RECIPES only if you want to replace that file.
 """
 
 from __future__ import annotations
@@ -222,7 +225,6 @@ RECIPES = {
     "warning": warning,
     "error": error,
     "tap": tap,
-    "pageturn": pageturn,
 }
 
 
