@@ -16,6 +16,7 @@
     "seed:turnkey-admin": "npx tsx scripts/create-test-account.ts --turnkey-default",
     "db:inventory": "node scripts/database-inventory.mjs",
     "seed:notifications": "node scripts/seed-notifications.mjs",
+    "seed:defense": "node scripts/seed-defense-demo.mjs",
     "moderation:candidates": "node scripts/messages/generate-profanity-candidates.mjs public/dataset/val.csv output/profanity-candidates.json",
     "moderation:spam-candidates": "node scripts/messages/generate-spam-candidates.mjs public/dataset/spam.csv output/spam-candidates.json",
     "desktop:icon": "node desktop/scripts/generate-ico.mjs",
