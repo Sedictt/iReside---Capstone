@@ -25,6 +25,17 @@ Design notes
     error          two falling low notes     "that didn't work" (calm, not a buzzer)
     tap            tiny wooden tick          navigation / toggles
 
+  Unit map editor (quiet, physical "desk" sounds, same key):
+    map_pickup     soft rising bloop         a room/corridor is lifted
+    map_slide      faint tick                the dragged item moves to a new grid cell
+    map_snap       crisp "tk-tink"           it locks onto a neighbour's edge
+    map_drop       soft wooden thunk         it is set down in a valid spot
+    map_invalid    rubbery "nope"            dropped on top of something; it bounces back
+    map_add        plonk + low knock         a new block is placed from the sidebar
+    map_remove     falling pop               an item is deleted
+    map_undo       quick falling pair        undo
+    map_rotate     small ratchet             rotate / flip
+
 Not generated here: public/sounds/pageturn.mp3 is the original page-turn recording,
 kept by choice (2026-10-18). The pageturn() recipe below is unused; add it back to
 RECIPES only if you want to replace that file.
@@ -216,6 +227,101 @@ def pageturn() -> np.ndarray:
     return finish(swish * shape * flutter, -10.0, fade=0.05)
 
 
+
+# ---------------------------------------------------------------------------
+# Unit map editor
+# ---------------------------------------------------------------------------
+
+def glide(f0: float, f1: float, seconds: float, decay: float, curve: float = 1.0) -> np.ndarray:
+    """Sine whose pitch slides from f0 to f1 (exponential path), with a mallet-like envelope."""
+    t = t_axis(seconds)
+    n = len(t)
+    frac = (t / seconds) ** curve
+    freq = f0 * (f1 / f0) ** frac
+    phase = 2 * np.pi * np.cumsum(freq) / SR
+    return np.sin(phase) * envelope(n, 0.003, decay)
+
+
+def click(freq: float = 1800, decay: float = 0.006, seconds: float = 0.03) -> np.ndarray:
+    t = t_axis(seconds)
+    n = len(t)
+    tone = np.sin(2 * np.pi * freq * t)
+    grain = lowpass(rng.standard_normal(n), 3500) * 0.6
+    return (tone + grain) * envelope(n, 0.0005, decay)
+
+
+def thump(freq: float = 90, seconds: float = 0.18, decay: float = 0.05) -> np.ndarray:
+    """Low body thud: pitch drops quickly, like setting a block on a table."""
+    return glide(freq * 1.6, freq, seconds, decay, curve=0.4)
+
+
+def map_pickup() -> np.ndarray:
+    tr = np.zeros(int(SR * 0.3))
+    place(tr, glide(F4, C5, 0.22, 0.07, curve=0.6), 0.0, 1.0)
+    place(tr, mallet(F5, seconds=0.2, decay=0.04, brightness=0.4), 0.0, 0.25)
+    return finish(lowpass(tr, 4500), -10.0, fade=0.02)
+
+
+def map_slide() -> np.ndarray:
+    return finish(lowpass(click(1100, decay=0.004, seconds=0.025), 3000), -24.0, fade=0.005)
+
+
+def map_snap() -> np.ndarray:
+    tr = np.zeros(int(SR * 0.25))
+    place(tr, click(2200, decay=0.004), 0.0, 0.8)
+    place(tr, mallet(C6, seconds=0.2, decay=0.05, brightness=0.6), 0.028, 0.7)
+    return finish(lowpass(tr, 6000), -12.0, fade=0.02)
+
+
+def map_drop() -> np.ndarray:
+    tr = np.zeros(int(SR * 0.35))
+    place(tr, thump(95, decay=0.06), 0.0, 1.0)
+    place(tr, mallet(C4, seconds=0.3, decay=0.07, brightness=0.5), 0.0, 0.55)
+    place(tr, click(700, decay=0.008), 0.0, 0.25)
+    return finish(lowpass(tr, 3200), -9.0, fade=0.03)
+
+
+def map_invalid() -> np.ndarray:
+    tr = np.zeros(int(SR * 0.4))
+    wob = glide(260, 185, 0.3, 0.12, curve=0.7)
+    t = t_axis(0.3)
+    wob = wob * (1 + 0.35 * np.sin(2 * np.pi * 18 * t))  # rubbery wobble
+    place(tr, wob, 0.0, 1.0)
+    place(tr, thump(80, decay=0.05), 0.0, 0.5)
+    return finish(lowpass(tr, 2600), -10.0, fade=0.04)
+
+
+def map_add() -> np.ndarray:
+    tr = np.zeros(int(SR * 0.55))
+    place(tr, thump(110, decay=0.06), 0.0, 0.8)
+    place(tr, mallet(F4, seconds=0.5, decay=0.12, brightness=0.6), 0.0, 0.6)
+    place(tr, mallet(C5, seconds=0.5, decay=0.14, brightness=0.7), 0.035, 0.8)
+    return finish(room(lowpass(tr, 4500), mix=0.06, length=0.2), -8.0)
+
+
+def map_remove() -> np.ndarray:
+    tr = np.zeros(int(SR * 0.4))
+    place(tr, glide(C5, F3, 0.26, 0.09, curve=0.8), 0.0, 1.0)
+    noise = lowpass(rng.standard_normal(int(SR * 0.2)), 2200) * envelope(int(SR * 0.2), 0.01, 0.05)
+    place(tr, noise, 0.0, 0.35)
+    place(tr, click(1500, decay=0.005), 0.0, 0.4)
+    return finish(lowpass(tr, 4000), -10.0, fade=0.03)
+
+
+def map_undo() -> np.ndarray:
+    tr = np.zeros(int(SR * 0.4))
+    place(tr, mallet(G5, seconds=0.25, decay=0.05, brightness=0.6), 0.0, 0.8)
+    place(tr, mallet(C5, seconds=0.35, decay=0.09, brightness=0.6), 0.07, 1.0)
+    return finish(lowpass(tr, 5000), -11.0, fade=0.03)
+
+
+def map_rotate() -> np.ndarray:
+    tr = np.zeros(int(SR * 0.16))
+    for k, at in enumerate([0.0, 0.03, 0.06]):
+        place(tr, click(1400 + 200 * k, decay=0.004), at, 0.9 - 0.15 * k)
+    return finish(lowpass(tr, 5000), -14.0, fade=0.01)
+
+
 RECIPES = {
     "notification": notification,
     "message": message,
@@ -225,6 +331,15 @@ RECIPES = {
     "warning": warning,
     "error": error,
     "tap": tap,
+    "map_pickup": map_pickup,
+    "map_slide": map_slide,
+    "map_snap": map_snap,
+    "map_drop": map_drop,
+    "map_invalid": map_invalid,
+    "map_add": map_add,
+    "map_remove": map_remove,
+    "map_undo": map_undo,
+    "map_rotate": map_rotate,
 }
 
 

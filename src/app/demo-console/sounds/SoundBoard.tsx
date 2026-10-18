@@ -12,7 +12,16 @@ const SOUNDS: Array<{ type: SoundType; label: string; when: string }> = [
     { type: "warning", label: "Warning", when: "Something needs checking (warning toasts)." },
     { type: "error", label: "Error", when: "Something did not work (error toasts)." },
     { type: "tap", label: "Tap", when: "Small navigation, e.g. the notification banner arrows." },
-    { type: "pageturn", label: "Page turn", when: "Turning a page in the e-book manual." },
+    { type: "pageturn", label: "Page turn", when: "Turning a page in the e-book manual (original recording)." },
+    { type: "map_pickup", label: "Unit map · Pick up", when: "A room, corridor or stairwell starts moving." },
+    { type: "map_slide", label: "Unit map · Slide", when: "The dragged item enters a new grid cell (very quiet)." },
+    { type: "map_snap", label: "Unit map · Snap", when: "It locks onto a neighbour's edge." },
+    { type: "map_drop", label: "Unit map · Drop", when: "It is set down in a valid spot." },
+    { type: "map_invalid", label: "Unit map · Bounce back", when: "Dropped on top of something; it returns." },
+    { type: "map_add", label: "Unit map · Add block", when: "A new room, corridor or structure is placed from the sidebar." },
+    { type: "map_remove", label: "Unit map · Remove", when: "An item is deleted." },
+    { type: "map_undo", label: "Unit map · Undo", when: "Undo the last change." },
+    { type: "map_rotate", label: "Unit map · Rotate / flip", when: "Rotate or flip the selected item." },
 ];
 
 export function SoundBoard() {
@@ -24,7 +33,7 @@ export function SoundBoard() {
                 <div style={{ fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", color: "#7fd1b4", fontWeight: 700 }}>Private · Sound board</div>
                 <h1 style={{ margin: "4px 0 6px", fontSize: 26, fontWeight: 800 }}>iReside sounds</h1>
                 <p style={{ margin: "0 0 22px", color: "#9fb3a8", fontSize: 15 }}>
-                    All sounds are synthesized in-house (scripts/sounds/generate-sounds.py). Click to hear each one at the volume the app uses.
+                    All sounds except the page turn are synthesized in-house (scripts/sounds/generate-sounds.py). Click to hear each one at the volume the app uses.
                 </p>
                 <div style={{ display: "grid", gap: 10 }}>
                     {SOUNDS.map((s) => (

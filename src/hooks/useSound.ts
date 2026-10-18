@@ -29,6 +29,25 @@ const SOUND_PATHS = {
     tap: "/sounds/tap.mp3",
     /** E-book page turn. */
     pageturn: "/sounds/pageturn.mp3",
+    // Unit map editor
+    /** A room, corridor or structure is lifted. */
+    map_pickup: "/sounds/map_pickup.mp3",
+    /** The dragged item moves into a new grid cell (very quiet). */
+    map_slide: "/sounds/map_slide.mp3",
+    /** The dragged item locks onto a neighbour's edge. */
+    map_snap: "/sounds/map_snap.mp3",
+    /** Set down in a valid spot. */
+    map_drop: "/sounds/map_drop.mp3",
+    /** Dropped on top of something; it bounces back. */
+    map_invalid: "/sounds/map_invalid.mp3",
+    /** A new block is placed from the sidebar. */
+    map_add: "/sounds/map_add.mp3",
+    /** An item is deleted. */
+    map_remove: "/sounds/map_remove.mp3",
+    /** Undo. */
+    map_undo: "/sounds/map_undo.mp3",
+    /** Rotate or flip. */
+    map_rotate: "/sounds/map_rotate.mp3",
 } as const;
 
 export type SoundType = keyof typeof SOUND_PATHS;
@@ -44,10 +63,21 @@ const DEFAULT_VOLUME: Record<SoundType, number> = {
     error: 0.5,
     tap: 0.4,
     pageturn: 0.6,
+    map_pickup: 0.7,
+    map_slide: 0.6,
+    map_snap: 0.7,
+    map_drop: 0.75,
+    map_invalid: 0.7,
+    map_add: 0.7,
+    map_remove: 0.7,
+    map_undo: 0.65,
+    map_rotate: 0.7,
 };
 
 /** Ignore repeats of the same sound inside this window (e.g. a burst of realtime events). */
 const REPEAT_GUARD_MS = 120;
+/** Per-sound overrides: drag ticks may repeat faster, but are still capped so a fast drag never buzzes. */
+const REPEAT_GUARD_OVERRIDE: Partial<Record<SoundType, number>> = { map_slide: 55 };
 
 class SoundManager {
     private static instance: SoundManager;
@@ -63,7 +93,7 @@ class SoundManager {
         if (typeof window === "undefined") return;
 
         const now = Date.now();
-        if (now - (this.lastPlayed.get(type) ?? 0) < REPEAT_GUARD_MS) return;
+        if (now - (this.lastPlayed.get(type) ?? 0) < (REPEAT_GUARD_OVERRIDE[type] ?? REPEAT_GUARD_MS)) return;
         this.lastPlayed.set(type, now);
 
         try {

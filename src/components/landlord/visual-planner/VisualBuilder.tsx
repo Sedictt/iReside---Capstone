@@ -89,6 +89,7 @@ import {
     getUnitDimensions, getPlacementDimensions, getUnitVisualStatus,
     STANDARD_UNIT_WIDTH, STANDARD_UNIT_HEIGHT
 } from "./utils";
+import { playSound } from "@/hooks/useSound";
 import { 
     INITIAL_UNITS, LEGEND_VISIBILITY_STORAGE_KEY, FLOOR_LAYOUTS_STORAGE_KEY, 
     ACTIVE_FLOOR_STORAGE_KEY, UNIT_NOTES_STORAGE_KEY, EMPTY_FLOOR_LAYOUT, 
@@ -1020,6 +1021,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const flipSelectedItem = useCallback((axis: 'x' | 'y') => {
         if (!selectedItem) return;
+        playSound("map_rotate");
         if (selectedItem.kind === "unit") {
             setUnits(prev => prev.map(u => u.id === selectedItem.id ? { ...u, [axis === 'x' ? 'flipX' : 'flipY']: !u[axis === 'x' ? 'flipX' : 'flipY'] } : u));
         } else if (selectedItem.kind === "structure") {
@@ -1114,6 +1116,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const performUndo = useCallback(() => {
         if (historyIndexRef.current <= 0) return;
+        playSound("map_undo");
 
         // Mark as undoing so the effect doesn't record this state change as a new action
         isUndoingRef.current = true;
@@ -1504,6 +1507,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         const startPointerY = e.clientY;
         const startItemX = itemX;
         const startItemY = itemY;
+        // Sound state: lift only once the pointer really moves (a plain click stays silent),
+        // tick when the item enters a new grid cell, snap when it locks onto a neighbour.
+        const LIFT_THRESHOLD_PX = 4;
+        let hasLifted = false;
+        const startCellKey = `${itemX},${itemY}`;
+        let lastCellKey = startCellKey;
+        let wasMagnetic = false;
 
         setDragPointerAnchor(kind, id, itemX, itemY, startPointerX, startPointerY);
         setDragPlacementIndicator(kind, id, true, false);
@@ -1541,6 +1551,23 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
             updateTrashHotState(moveEvt.clientX, moveEvt.clientY);
             setDragPlacementIndicator(kind, id, placement.isValid, placement.isMagnetic);
+
+            if (!hasLifted && Math.hypot(moveEvt.clientX - startPointerX, moveEvt.clientY - startPointerY) > LIFT_THRESHOLD_PX) {
+                hasLifted = true;
+                playSound("map_pickup");
+            }
+            if (hasLifted) {
+                const cellKey = `${placement.x},${placement.y}`;
+                // A room resting against its neighbours already counts as "magnetic", so only
+                // snap once it has left its starting spot.
+                if (placement.isMagnetic && !wasMagnetic && cellKey !== startCellKey) {
+                    playSound("map_snap");
+                } else if (cellKey !== lastCellKey) {
+                    playSound("map_slide");
+                }
+                lastCellKey = cellKey;
+                wasMagnetic = placement.isMagnetic && cellKey !== startCellKey;
+            }
 
             // Auto-expand canvas bounds smoothly if moving near or beyond edges
             if (rawX + itemW > BLUEPRINT_WIDTH - 100 || rawY + itemH > BLUEPRINT_HEIGHT - 100) {
@@ -1597,8 +1624,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             );
 
             if (!placement.isValid) {
+                if (hasLifted) playSound("map_invalid");
                 triggerOverlapToast();
             } else {
+                if (hasLifted) playSound("map_drop");
                 updateCanvasDimensions({
                     kind,
                     id,
@@ -2314,6 +2343,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const confirmDeleteItem = () => {
         if (!pendingDelete) return;
+        playSound("map_remove");
         deleteCanvasItem(pendingDelete.item);
         setSelectedItem(current => current?.kind === pendingDelete.item.kind && current.id === pendingDelete.item.id ? null : current);
         setPendingDelete(null);
@@ -2342,6 +2372,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     };
 
     const rotateSelectedItem = (item: SelectedCanvasItem) => {
+        playSound("map_rotate");
         const rotateRect = (rect: { x: number; y: number; w: number; h: number }) => {
             const nextWidth = rect.h;
             const nextHeight = rect.w;
@@ -2856,10 +2887,12 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         const dropRect = { x: clampedX, y: clampedY, w: blockWidth, h: blockHeight };
 
         if (hasCollisionWithPlacedItems(dropRect)) {
+            playSound("map_invalid");
             triggerOverlapToast();
             return;
         }
 
+        playSound("map_add");
         updateCanvasDimensions({
             kind: parsed.blockType === "corridor" ? "corridor" : (parsed.blockType?.includes("stair") || parsed.blockType === "elevator") ? "structure" : "unit",
             id: "temp-drop-check",
