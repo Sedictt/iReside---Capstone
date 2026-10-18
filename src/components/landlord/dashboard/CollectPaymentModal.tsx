@@ -32,6 +32,7 @@ import { dateRule, parseNumericInput, textRule, todayIsoDate } from "@/lib/valid
 import { BILLING_LIMITS, amountWithinBalanceRule } from "@/lib/validation/schemas/billing.schema";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
+import { playSound } from "@/hooks/useSound";
 
 interface CollectPaymentModalProps {
     isOpen: boolean;
@@ -340,6 +341,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                 }
 
                 setIsConfirmDialogOpen(false);
+                playSound("payment");
                 setSuccessResult({
                     receiptNumber: data.receiptNumber || `REC-${Date.now().toString().slice(-6)}`,
                     amount: numAmount,
@@ -370,6 +372,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                 // A rejected HTTP response is still a "fulfilled" fetch; only 2xx counts as settled.
                 const succeeded = results.filter((r) => r.status === "fulfilled" && r.value.ok).length;
                 setIsConfirmDialogOpen(false);
+                playSound("payment");
                 setSuccessResult({
                     receiptNumber: `BULK-${Date.now().toString().slice(-6)}`,
                     amount: totalSelectedDue,

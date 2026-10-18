@@ -1051,7 +1051,7 @@ setPaymentHistoryLoading(true);
                         disclosureAllowed: moderation.disclosureAllowed 
                     });
                     const mapped = mapMessageToUi({ ...created, sender: null });
-                    playSound("message", 0.4);
+                    playSound("message_sent");
                     setMessagesState((prev) => prev.map((msg) => msg.id === optimisticTextId ? { ...mapped, status: "sent" } : msg));
                     window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
                 } catch (error) {
@@ -1125,7 +1125,7 @@ setPaymentHistoryLoading(true);
                         "image"
                     );
                     const mapped = mapMessageToUi({ ...created, sender: null });
-                    playSound("message", 0.4);
+                    playSound("message_sent");
                     setMessagesState((prev) => prev.map((msg) => msg.id === optimisticAlbumId ? { ...mapped, status: "sent" } : msg));
                     window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
                 } catch (error) {
@@ -1178,7 +1178,7 @@ setPaymentHistoryLoading(true);
                             "image"
                         );
                         const mapped = mapMessageToUi({ ...created, sender: null });
-                        playSound("message", 0.4);
+                        playSound("message_sent");
                         setMessagesState((prev) => prev.map((msg) => msg.id === optimisticImgId ? { ...mapped, status: "sent" } : msg));
                         window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
                     } catch (error) {
@@ -1232,7 +1232,7 @@ setPaymentHistoryLoading(true);
                             "file"
                         );
                         const mapped = mapMessageToUi({ ...created, sender: null });
-                        playSound("message", 0.4);
+                        playSound("message_sent");
                         setMessagesState((prev) => prev.map((msg) => msg.id === optimisticFileId ? { ...mapped, status: "sent" } : msg));
                         window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
                     } catch (error) {

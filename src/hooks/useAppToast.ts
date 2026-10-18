@@ -19,7 +19,7 @@ export function useAppToast() {
             return toast.info(tr(message), options);
         },
         warning: (message: string, options?: any) => {
-            playSound("error", 0.3); // Subtle error sound for warnings
+            playSound("warning");
             return toast.warning(tr(message), options);
         },
         promise: <T>(promise: Promise<T>, options: {

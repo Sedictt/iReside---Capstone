@@ -24,6 +24,7 @@ import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { moneyRule } from "@/lib/validation/rules";
 import { BILLING_LIMITS, rejectionReasonRule, roundCentavos } from "@/lib/validation/schemas/billing.schema";
 import { tr } from "@/hooks/useLanguage";
+import { playSound } from "@/hooks/useSound";
 
 type InvoiceDetail = Awaited<ReturnType<typeof import("@/lib/billing/server").getInvoiceDetailForActor>>;
 
@@ -254,6 +255,8 @@ export function InvoiceModal({
                 if (errorData?.fieldErrors?.rejectionReason) setShowRejectionWarning(true);
                 throw new Error(errorData.error || t("Failed to process review"));
             }
+
+            if (action === "confirm" || action === "confirm_received") playSound("payment");
 
             // Reload invoice data to show updated state
             await new Promise(resolve => setTimeout(resolve, 500));
