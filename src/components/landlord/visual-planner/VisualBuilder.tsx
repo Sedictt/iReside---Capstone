@@ -86,7 +86,7 @@ import {
     UNIT_SIZE_BY_BEDS, unitTypeFromBeds, dbUnitToCanvasUnit, 
     parseFloorNumber, getFloorDisplayLabel, formatFloorWatermark, 
     QUICK_ACTIONS_BY_STATUS, QUICK_ACTION_META, evaluateQuickAction,
-    getUnitDimensions, getPlacementDimensions,
+    getUnitDimensions, getPlacementDimensions, getUnitVisualStatus,
     STANDARD_UNIT_WIDTH, STANDARD_UNIT_HEIGHT
 } from "./utils";
 import { 
@@ -4551,7 +4551,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                })}
 
 {units.map((unit) => {
-                                        const isFiltered = !statusFilters.includes(unit.status);
+                                        const visualStatus = getUnitVisualStatus(unit);
+                                        const isFiltered = !statusFilters.includes(visualStatus);
                                         const isDragging = activeDragItem?.kind === "unit" && activeDragItem?.id === unit.id;
                                         const displayX = isDragging ? activeDragItem.currentX : unit.x;
                                         const displayY = isDragging ? activeDragItem.currentY : unit.y;
@@ -4673,9 +4674,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                             ? (isDark ? 'bg-zinc-800/40 opacity-100' : 'bg-zinc-300/40 opacity-100')
                                                             : `opacity-[0.18] group-hover:opacity-[0.3] ${
                                                                 isCurrentTenantUnit ? 'bg-primary' :
-                                                                unit.status === 'occupied' ? 'bg-blue-500' :
-                                                                unit.status === 'vacant' ? 'bg-emerald-500' :
-                                                                unit.status === 'maintenance' ? 'bg-red-500' : 'bg-amber-500'
+                                                                visualStatus === 'occupied' ? 'bg-blue-500' :
+                                                                visualStatus === 'vacant' ? 'bg-emerald-500' :
+                                                                visualStatus === 'maintenance' ? 'bg-red-500' : 'bg-amber-500'
                                                             }`
                                                     }`}></div>
 
@@ -4685,9 +4686,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                 ? 'bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb,59,130,246),0.9)] animate-pulse'
                                                                 : isFiltered
                                                                 ? (isDark ? 'bg-zinc-500 border border-zinc-400/40 shadow-none' : 'bg-zinc-400 border border-zinc-500/40 shadow-none')
-                                                                : unit.status === 'occupied' ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.9)]'
-                                                                : unit.status === 'vacant' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.9)]'
-                                                                : unit.status === 'maintenance' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]'
+                                                                : visualStatus === 'occupied' ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.9)]'
+                                                                : visualStatus === 'vacant' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.9)]'
+                                                                : visualStatus === 'maintenance' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]'
                                                                 : 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.9)]'
                                                         }`}></div>
 
@@ -4718,28 +4719,28 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                             </span>
                                                         ) : (
                                                             <>
-                                                                {unit.status === 'vacant' && (
+                                                                {visualStatus === 'vacant' && (
                                                                     <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
                                                                         isFiltered
                                                                             ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
                                                                             : (isDark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-400/60 bg-emerald-100/90 text-emerald-800')
                                                                     }`}>{t("Vacant")}</span>
                                                                 )}
-                                                                {unit.status === 'occupied' && (
+                                                                {visualStatus === 'occupied' && (
                                                                     <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
                                                                         isFiltered
                                                                             ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
                                                                             : (isDark ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' : 'border-blue-400/60 bg-blue-100/90 text-blue-800')
                                                                     }`}>{t("Occupied")}</span>
                                                                 )}
-                                                                {unit.status === 'maintenance' && (
+                                                                {visualStatus === 'maintenance' && (
                                                                     <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
                                                                         isFiltered
                                                                             ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
                                                                             : (isDark ? 'border-red-500/30 bg-red-500/10 text-red-400' : 'border-red-400/60 bg-red-100/90 text-red-800')
                                                                     }`}>{t("Maint")}</span>
                                                                 )}
-                                                                {unit.status === 'neardue' && (
+                                                                {visualStatus === 'neardue' && (
                                                                     <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
                                                                         isFiltered
                                                                             ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
@@ -4978,7 +4979,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         <div className="flex items-center gap-4 px-1 py-0.5">
                                             <div className="flex flex-col">
                                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("Live Units")}</span>
-                                                <span className="font-mono text-base font-bold leading-none mt-1">{units.filter(u => statusFilters.includes(u.status)).length}</span>
+                                                <span className="font-mono text-base font-bold leading-none mt-1">{units.filter(u => statusFilters.includes(getUnitVisualStatus(u))).length}</span>
                                             </div>
                                             <div className={`h-7 w-px ${isDark ? 'bg-white/10' : 'bg-border'}`} />
                                             <div className="flex flex-col">
@@ -5095,7 +5096,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     ></div>
 
                                                     {units.map((unit) => {
-                                                        const isMinimapFiltered = !statusFilters.includes(unit.status);
+                                                        const minimapStatus = getUnitVisualStatus(unit);
+                                                        const isMinimapFiltered = !statusFilters.includes(minimapStatus);
                                                         const isCurrentMinimapUnit = Boolean(readOnly && currentUnitId && (unit.id === currentUnitId || unit.dbId === currentUnitId));
                                                         return (
                                                             <div
@@ -5105,9 +5107,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                         ? 'bg-primary ring-1 ring-white shadow-[0_0_8px_rgba(var(--primary-rgb,59,130,246),0.9)] z-10'
                                                                         : isMinimapFiltered
                                                                         ? (isDark ? 'bg-zinc-600 border border-zinc-500/40' : 'bg-zinc-400 border border-zinc-500/40')
-                                                                        : unit.status === 'occupied' ? 'bg-blue-500/85'
-                                                                        : unit.status === 'vacant' ? 'bg-emerald-500/85'
-                                                                        : unit.status === 'maintenance' ? 'bg-red-500/85'
+                                                                        : minimapStatus === 'occupied' ? 'bg-blue-500/85'
+                                                                        : minimapStatus === 'vacant' ? 'bg-emerald-500/85'
+                                                                        : minimapStatus === 'maintenance' ? 'bg-red-500/85'
                                                                         : 'bg-amber-500/85'
                                                                 }`}
                                                                 style={{
@@ -6325,9 +6327,9 @@ const UnitDetailsPanel = ({
                         </div>
                         <div className={`flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40`}>
                             <div className={`size-2 rounded-full animate-pulse ${
-                                unit.status === 'occupied' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' :
-                                unit.status === 'vacant' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
-                                unit.status === 'maintenance' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
+                                getUnitVisualStatus(unit) === 'occupied' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' :
+                                getUnitVisualStatus(unit) === 'vacant' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
+                                getUnitVisualStatus(unit) === 'maintenance' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
                                 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
                             }`} />
                             <span className="text-[11px] font-black tracking-wide text-zinc-800 dark:text-zinc-100 uppercase">{t(currentStatus.label)}</span>

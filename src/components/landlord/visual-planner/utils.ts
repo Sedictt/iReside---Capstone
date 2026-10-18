@@ -13,6 +13,21 @@ export const UNIT_SIZE_BY_BEDS: Record<number, { w: number; h: number }> = {
     3: { w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }, // 3BR
 };
 
+/** Ticket statuses that mean a repair is still underway in the unit. */
+const ACTIVE_MAINTENANCE_STATUSES = new Set(["open", "assigned", "in_progress"]);
+
+/**
+ * Status used for the map's colour coding, legend filters and badges.
+ * A unit with an active repair ticket shows as "maintenance" even when its stored
+ * status is "occupied", so the map flags rooms that are being worked on.
+ * The stored status is kept for occupancy logic (tenant name, messaging).
+ */
+export const getUnitVisualStatus = (unit: Pick<Unit, "status" | "maintenanceStatus">): Unit["status"] => {
+    if (unit.status === "maintenance") return "maintenance";
+    if (unit.maintenanceStatus && ACTIVE_MAINTENANCE_STATUSES.has(unit.maintenanceStatus)) return "maintenance";
+    return unit.status;
+};
+
 export const getUnitDimensions = (_beds?: number, _type?: Unit["type"]): { w: number; h: number } => {
     return { w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT };
 };
