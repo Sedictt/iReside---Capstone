@@ -13,6 +13,8 @@ interface BrandLogoProps {
   showText?: boolean;
   size?: "sm" | "md" | "lg";
   theme?: "adaptive" | "light" | "dark";
+  /** Replaces the brand name shown next to the logo (e.g. a single-property landlord's property name). */
+  nameOverride?: string | null;
 }
 
 export function BrandLogo({
@@ -21,8 +23,11 @@ export function BrandLogo({
   showText = true,
   size = "md",
   theme = "adaptive",
+  nameOverride,
 }: BrandLogoProps) {
-  const { propertyName, propertyTagline, logoUrl, monogramInitials, isCustomBranded, primaryColor } = useBrand();
+  const brand = useBrand();
+  const propertyName = nameOverride?.trim() ? nameOverride.trim() : brand.propertyName;
+  const { propertyTagline, logoUrl, monogramInitials, isCustomBranded, primaryColor } = brand;
 
   const sizeClasses = {
     sm: { box: "size-7 shrink-0", text: "text-xs font-black", subtext: "text-[9px]", font: "text-[11px] font-black" },
