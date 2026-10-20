@@ -454,13 +454,13 @@ export function MobileCommunityView() {
                 </div>
 
                 {/* Floating Add Post Button */}
-                <div className="fixed bottom-18 right-4 z-40">
+                <div className="mobile-above-tab-bar fixed right-4 z-40">
                     <button
                         onClick={() => {
                             triggerHaptic('medium');
                             setIsComposerOpen(true);
                         }}
-                        className="size-13 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg flex items-center justify-center active:scale-90 transition-all"
+                        className="m-btn m-btn-primary size-14 px-0 rounded-full active:scale-90"
                         aria-label={t('Create new post')}
                     >
                         <Plus className="size-6 stroke-[2.5]" />

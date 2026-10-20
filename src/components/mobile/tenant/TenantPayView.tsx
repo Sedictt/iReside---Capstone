@@ -208,27 +208,27 @@ export function TenantPayView() {
 
     return (
         <PullToRefresh onRefresh={fetchPayments}>
-            <div className="flex flex-col gap-3 pb-3">
+            <div className="m-stagger flex flex-col gap-4 pb-4">
                 {/* Balance & Overview Card */}
-                <div className="px-4 pt-2.5">
-                    <div className="rounded-2xl p-4 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border border-primary/25 shadow-xs flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-wider">
+                <div className="px-4 pt-1">
+                    <div className="m-hero m-hero-deep p-5 flex flex-col gap-3">
+                        <div className="relative flex items-center justify-between gap-2">
+                            <span className="m-eyebrow flex items-center gap-1.5">
                                 <CreditCard className="size-3.5" />
-                                <span>{t('Total Payable Balance')}</span>
-                            </div>
+                                {t('Total Payable Balance')}
+                            </span>
                             {overdueTotal > 0 && (
-                                <span className="text-[10px] font-bold bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full">
+                                <span className="m-pill m-pill-ghost">
                                     {t('Overdue: {amount}', { amount: formatCurrency(overdueTotal) })}
                                 </span>
                             )}
                         </div>
 
-                        <div className="mt-0.5">
-                            <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+                        <div className="relative">
+                            <h2 className="m-amount text-[36px]">
                                 {formatCurrency(unpaidTotal > 0 ? unpaidTotal : 0)}
                             </h2>
-                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                            <p className="m-hero-muted text-sm mt-2">
                                 {unpaidTotal > 0
                                     ? t('Pending verification or upcoming due')
                                     : awaitingReview === 1
@@ -244,10 +244,10 @@ export function TenantPayView() {
                 {/* Toast Notification */}
                 {toast && (
                     <div className={cn(
-                        "mx-4 p-3 rounded-xl text-xs font-bold flex items-center justify-between animate-in fade-in duration-200",
-                        toast.type === 'success' 
-                            ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400" 
-                            : "bg-red-500/15 border border-red-500/30 text-red-400"
+                        "mx-4 p-3.5 rounded-2xl text-sm font-bold flex items-center justify-between animate-in fade-in duration-200",
+                        toast.type === 'success'
+                            ? "bg-[var(--m-teal-tint)] text-[var(--m-teal-text)]"
+                            : "bg-[var(--m-coral-tint)] text-[var(--m-coral-text)]"
                     )}>
                         <span>{toast.message}</span>
                         <button onClick={() => setToast(null)} className="p-1" aria-label={t('Dismiss')}>
@@ -260,27 +260,25 @@ export function TenantPayView() {
                 {(gcashDestination || bankDestination) && (
                     <div className="px-4 flex flex-col gap-2">
                         {[
-                            gcashDestination && { method: 'gcash' as const, icon: QrCode, tone: 'bg-blue-500/15 text-blue-500', title: t('GCash'), name: gcashDestination.accountName, number: gcashDestination.accountNumber ?? '' },
-                            bankDestination && { method: 'bank_transfer' as const, icon: Landmark, tone: 'bg-emerald-500/15 text-emerald-600', title: bankDestination.bankName || t('Bank Transfer'), name: bankDestination.accountName, number: formatAccountNumber(bankDestination.accountNumber) },
+                            gcashDestination && { method: 'gcash' as const, icon: QrCode, tone: 'm-tile-brand', title: t('GCash'), name: gcashDestination.accountName, number: gcashDestination.accountNumber ?? '' },
+                            bankDestination && { method: 'bank_transfer' as const, icon: Landmark, tone: 'm-tile-teal', title: bankDestination.bankName || t('Bank Transfer'), name: bankDestination.accountName, number: formatAccountNumber(bankDestination.accountNumber) },
                         ].filter((card): card is NonNullable<typeof card> => Boolean(card)).map((card) => {
                             const Icon = card.icon;
                             return (
-                                <div key={card.method} className="rounded-2xl p-3 bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex items-center justify-between">
-                                    <div className="flex items-center gap-2.5 min-w-0">
-                                        <div className={cn('size-8 rounded-xl flex items-center justify-center shrink-0', card.tone)}>
-                                            <Icon className="size-4" />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <h4 className="text-xs font-bold text-foreground truncate">{card.title}</h4>
-                                            <p className="text-[10px] text-muted-foreground truncate">{card.number} • {card.name}</p>
-                                        </div>
+                                <div key={card.method} className="m-card p-3.5 flex items-center gap-3.5">
+                                    <div className={cn('m-tile size-11', card.tone)}>
+                                        <Icon className="size-5" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h4 className="text-[15px] font-bold text-foreground truncate">{card.title}</h4>
+                                        <p className="text-[13px] text-muted-foreground truncate">{card.number} • {card.name}</p>
                                     </div>
                                     <button
                                         onClick={() => copyPaymentInfo(card.method, card.number)}
-                                        className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-muted text-xs font-bold text-foreground flex items-center gap-1 active:scale-95 transition-all hover:bg-slate-200 shrink-0"
+                                        className="m-btn m-btn-tint min-h-[40px] px-3.5 text-[13px] shrink-0"
                                         aria-label={t('Copy account number')}
                                     >
-                                        <Copy className="size-3" />
+                                        <Copy className="size-4" />
                                         <span>{copiedAccount === card.method ? t('Copied!') : t('Copy')}</span>
                                     </button>
                                 </div>
@@ -290,36 +288,36 @@ export function TenantPayView() {
                 )}
 
                 {/* Filter Tabs */}
-                <div className="px-4 flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
+                <div className="px-4 flex gap-2 overflow-x-auto scrollbar-none pb-1" role="tablist" aria-label={t('Invoice filter')}>
                     <button
+                        role="tab"
+                        aria-selected={filter === 'all'}
                         onClick={() => setFilter('all')}
                         className={cn(
-                            "px-3 py-1.5 rounded-xl text-xs font-bold transition-all",
-                            filter === 'all' 
-                                ? "bg-primary text-primary-foreground shadow-xs" 
-                                : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
+                            "m-btn min-h-[40px] px-4 text-[13px] shrink-0",
+                            filter === 'all' ? "m-btn-primary" : "m-btn-surface text-muted-foreground"
                         )}
                     >
                         {t('All Invoices')}
                     </button>
                     <button
+                        role="tab"
+                        aria-selected={filter === 'pending'}
                         onClick={() => setFilter('pending')}
                         className={cn(
-                            "px-3 py-1.5 rounded-xl text-xs font-bold transition-all",
-                            filter === 'pending' 
-                                ? "bg-primary text-primary-foreground shadow-xs" 
-                                : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
+                            "m-btn min-h-[40px] px-4 text-[13px] shrink-0",
+                            filter === 'pending' ? "m-btn-primary" : "m-btn-surface text-muted-foreground"
                         )}
                     >
                         {t('Unpaid / Due')}
                     </button>
                     <button
+                        role="tab"
+                        aria-selected={filter === 'paid'}
                         onClick={() => setFilter('paid')}
                         className={cn(
-                            "px-3 py-1.5 rounded-xl text-xs font-bold transition-all",
-                            filter === 'paid' 
-                                ? "bg-primary text-primary-foreground shadow-xs" 
-                                : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
+                            "m-btn min-h-[40px] px-4 text-[13px] shrink-0",
+                            filter === 'paid' ? "m-btn-primary" : "m-btn-surface text-muted-foreground"
                         )}
                     >
                         {t('Paid')}
@@ -334,10 +332,12 @@ export function TenantPayView() {
                             <span className="text-xs text-muted-foreground">{t('Loading payment records…')}</span>
                         </div>
                     ) : filteredPayments.length === 0 ? (
-                        <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/50 p-6 text-center flex flex-col items-center justify-center shadow-xs">
-                            <CheckCircle2 className="size-8 text-emerald-500/60 mb-1.5" />
-                            <h4 className="text-xs font-bold text-foreground">{t('No invoices in this category')}</h4>
-                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                        <div className="m-card p-6 text-center flex flex-col items-center justify-center gap-1">
+                            <div className="m-tile m-tile-teal size-12 mb-1.5">
+                                <CheckCircle2 className="size-6" />
+                            </div>
+                            <h4 className="text-[15px] font-bold text-foreground">{t('No invoices in this category')}</h4>
+                            <p className="text-[13px] text-muted-foreground">
                                 {filter === 'pending' ? t('All dues are settled!') : t('No payment records found.')}
                             </p>
                         </div>
@@ -352,44 +352,45 @@ export function TenantPayView() {
                             return (
                                 <div
                                     key={inv.id}
-                                    className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/80 p-3.5 shadow-xs flex flex-col gap-2.5 transition-all"
+                                    className="m-card p-4 flex flex-col gap-3 transition-all"
                                 >
                                     <div className="flex items-start justify-between gap-2">
                                         <div>
-                                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                            <span className="m-eyebrow">
                                                 {t(inv.label)}
                                             </span>
-                                            <h4 className="text-base font-black text-foreground">
+                                            <h4 className="m-amount text-[22px] text-foreground mt-1">
                                                 {formatCurrency(inv.amount)}
                                             </h4>
-                                            <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                                                <Calendar className="size-3" />
+                                            <p className="text-[13px] text-muted-foreground flex items-center gap-1.5 mt-1.5">
+                                                <Calendar className="size-3.5" />
                                                 {t('Due: {date}', { date: new Date(inv.dueDate).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' }) })}
                                             </p>
                                         </div>
 
                                         <span className={cn(
-                                            "text-[10px] font-bold px-2 py-0.5 rounded-full capitalize",
-                                            isPaid && "bg-emerald-500/15 text-emerald-500",
-                                            isPending && "bg-amber-500/15 text-amber-500",
-                                            isOverdue && "bg-red-500/15 text-red-500"
+                                            "m-pill capitalize",
+                                            isPaid && "m-pill-teal",
+                                            isPending && "m-pill-amber",
+                                            isOverdue && "m-pill-coral",
+                                            !isPaid && !isPending && !isOverdue && "m-pill-brand"
                                         )}>
                                             {t(toStatusLabel(inv.workflowStatus || inv.status))}
                                         </span>
                                     </div>
 
                                     {/* Action Bar */}
-                                    <div className="pt-2 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-2">
+                                    <div className="pt-3 border-t border-[rgba(49,37,120,0.08)] dark:border-white/10 flex items-center justify-between gap-2">
                                         {inv.paymentProofUrl ? (
                                             <button
                                                 onClick={() => setLightboxUrl(inv.paymentProofUrl || null)}
-                                                className="text-[10px] font-bold text-primary flex items-center gap-1 active:scale-95 transition-all hover:underline"
+                                                className="text-[13px] font-bold text-primary flex items-center gap-1.5 active:scale-95 transition-all hover:underline"
                                             >
-                                                <Maximize2 className="size-3" />
+                                                <Maximize2 className="size-3.5" />
                                                 <span>{t('View Uploaded Proof')}</span>
                                             </button>
                                         ) : (
-                                            <span className="text-[10px] text-muted-foreground">
+                                            <span className="text-[13px] text-muted-foreground">
                                                 {t('No proof submitted')}
                                             </span>
                                         )}
@@ -397,9 +398,9 @@ export function TenantPayView() {
                                         {canUploadProof && (
                                             <button
                                                 onClick={() => openProofSheet(inv)}
-                                                className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1 shadow-xs hover:brightness-105 active:scale-95 transition-all"
+                                                className="m-btn m-btn-primary min-h-[40px] px-4 text-[13px]"
                                             >
-                                                <Upload className="size-3" />
+                                                <Upload className="size-4" />
                                                 <span>{inv.paymentProofUrl ? t('Resubmit Proof') : t('Upload Proof')}</span>
                                             </button>
                                         )}
@@ -420,26 +421,26 @@ export function TenantPayView() {
                     }}
                 >
                     <div 
-                        className="w-full max-w-md bg-card border-t sm:border border-slate-300 dark:border-white/15 rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl flex flex-col gap-3.5 max-h-[85vh] overflow-y-auto"
+                        className="w-full max-w-md bg-card rounded-t-[28px] sm:rounded-[28px] p-5 shadow-2xl flex flex-col gap-4 max-h-[85vh] overflow-y-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="flex items-center justify-between pb-2 border-b border-border">
+                        <div className="flex items-center justify-between gap-3">
                             <div>
-                                <h3 className="text-sm font-black text-foreground">{t('Upload Proof of Payment')}</h3>
-                                <p className="text-[10px] text-muted-foreground">
+                                <h3 className="m-display text-[18px] text-foreground">{t('Upload Proof of Payment')}</h3>
+                                <p className="text-[13px] text-muted-foreground mt-0.5">
                                     {t('Invoice amount: {amount}', { amount: formatCurrency(selectedInvoice.amount) })}
                                 </p>
                             </div>
                             <button
                                 onClick={() => setSelectedInvoice(null)}
-                                className="p-1.5 rounded-full hover:bg-muted text-muted-foreground"
+                                className="m-btn m-btn-surface size-11 px-0 shrink-0 text-muted-foreground"
                                 aria-label={t('Close modal')}
                             >
-                                <X className="size-4" />
+                                <X className="size-5" />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmitProof} className="flex flex-col gap-3">
+                        <form onSubmit={handleSubmitProof} className="flex flex-col gap-3.5">
                             {proofMethods.length > 1 && (
                                 <div role="radiogroup" aria-label={t('How did you pay?')} className="grid grid-cols-2 gap-1.5 rounded-2xl bg-muted/40 p-1">
                                     {proofMethods.map((option) => (
@@ -450,7 +451,7 @@ export function TenantPayView() {
                                             aria-checked={payMethod === option}
                                             onClick={() => setPayMethod(option)}
                                             className={cn(
-                                                'flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-all',
+                                                'flex items-center justify-center gap-1.5 rounded-xl min-h-[40px] text-[13px] font-bold transition-all',
                                                 payMethod === option ? 'bg-background text-foreground shadow-xs ring-1 ring-border' : 'text-muted-foreground'
                                             )}
                                         >
@@ -473,8 +474,8 @@ export function TenantPayView() {
                             )}
 
                             <div>
-                                <label className="text-[11px] font-bold text-foreground block mb-1">
-                                    {t('Reference Number')} <span className="text-red-500">*</span>
+                                <label className="text-[13px] font-bold text-foreground block mb-1.5">
+                                    {t('Reference Number')} <span className="text-[var(--m-coral-text)]">*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -482,12 +483,12 @@ export function TenantPayView() {
                                     value={referenceNumber}
                                     onChange={(e) => setReferenceNumber(e.target.value)}
                                     required
-                                    className="w-full px-3 py-2 text-xs bg-background border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
+                                    className="m-input text-sm"
                                 />
                             </div>
 
                             <div>
-                                <label className="text-[11px] font-bold text-foreground block mb-1">
+                                <label className="text-[13px] font-bold text-foreground block mb-1.5">
                                     {t('Note / Remarks (Optional)')}
                                 </label>
                                 <input
@@ -495,12 +496,12 @@ export function TenantPayView() {
                                     placeholder={t('Paid via BPI / GCash, etc.')}
                                     value={note}
                                     onChange={(e) => setNote(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs bg-background border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
+                                    className="m-input text-sm"
                                 />
                             </div>
 
                             <div>
-                                <label className="text-[11px] font-bold text-foreground block mb-1">
+                                <label className="text-[13px] font-bold text-foreground block mb-1.5">
                                     {t('Receipt Screenshot / Photo')}
                                 </label>
                                 {receiptPreview ? (
@@ -529,10 +530,10 @@ export function TenantPayView() {
                                 ) : (
                                     <div className="grid grid-cols-2 gap-2">
                                         {/* Direct Camera Capture */}
-                                        <label className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border-2 border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 cursor-pointer active:scale-[0.98] transition-all text-center">
-                                            <Camera className="size-5 text-primary" />
-                                            <span className="text-xs font-bold text-foreground">{t('Take Photo')}</span>
-                                            <span className="text-[9px] text-muted-foreground">{t('Open Camera')}</span>
+                                        <label className="flex flex-col items-center justify-center gap-1.5 min-h-[88px] p-3.5 rounded-2xl border-[1.5px] border-dashed border-[rgba(49,37,120,0.18)] bg-[var(--m-ground)] cursor-pointer active:scale-[0.98] transition-all text-center">
+                                            <Camera className="size-[22px] text-[var(--brand-primary-900)] dark:text-primary" />
+                                            <span className="text-[13px] font-bold text-foreground">{t('Take Photo')}</span>
+                                            <span className="text-xs text-muted-foreground">{t('Open Camera')}</span>
                                             <input
                                                 ref={cameraInputRef}
                                                 type="file"
@@ -544,10 +545,10 @@ export function TenantPayView() {
                                         </label>
 
                                         {/* Gallery Upload */}
-                                        <label className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border-2 border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 cursor-pointer active:scale-[0.98] transition-all text-center">
-                                            <Upload className="size-5 text-muted-foreground" />
-                                            <span className="text-xs font-bold text-foreground">{t('Photo Gallery')}</span>
-                                            <span className="text-[9px] text-muted-foreground">{t('PNG, JPG up to 5MB')}</span>
+                                        <label className="flex flex-col items-center justify-center gap-1.5 min-h-[88px] p-3.5 rounded-2xl border-[1.5px] border-dashed border-[rgba(49,37,120,0.18)] bg-[var(--m-ground)] cursor-pointer active:scale-[0.98] transition-all text-center">
+                                            <Upload className="size-[22px] text-[var(--brand-primary-900)] dark:text-primary" />
+                                            <span className="text-[13px] font-bold text-foreground">{t('Photo Gallery')}</span>
+                                            <span className="text-xs text-muted-foreground">{t('PNG, JPG up to 5MB')}</span>
                                             <input
                                                 ref={fileInputRef}
                                                 type="file"
@@ -563,7 +564,7 @@ export function TenantPayView() {
                             <button
                                 type="submit"
                                 disabled={submitting}
-                                className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs hover:brightness-105 active:scale-[0.98] transition-all disabled:opacity-50 mt-2"
+                                className="m-btn m-btn-primary w-full min-h-[52px] text-[15px] mt-1"
                             >
                                 {submitting ? t('Submitting…') : t('Confirm & Submit Proof')}
                             </button>

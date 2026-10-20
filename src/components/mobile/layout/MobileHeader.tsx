@@ -53,11 +53,11 @@ export function MobileHeader({
     return (
         <header className={cn('mobile-header shrink-0', className)}>
             {/* Left: back button or spacer */}
-            <div className="w-10 flex items-center justify-start">
+            <div className="w-11 flex items-center justify-start">
                 {showBack ? (
                     <button
                         onClick={handleBack}
-                        className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 active:bg-muted transition-all"
+                        className="m-card flex items-center justify-center w-11 h-11 rounded-2xl text-foreground active:scale-90 transition-all"
                         aria-label={t("Go back")}
                     >
                         <ChevronLeft size={22} strokeWidth={2} />
@@ -66,27 +66,27 @@ export function MobileHeader({
             </div>
 
             {/* Center: page title */}
-            <h1 className="text-[15px] font-semibold text-foreground tracking-tight truncate flex-1 text-center px-2 min-w-0">
+            <h1 className="m-display text-[18px] text-foreground truncate flex-1 text-center px-2 min-w-0">
                 {t(title)}
             </h1>
 
             {/* Right: notification bell or custom action */}
-            <div className="w-10 flex items-center justify-end">
+            <div className="w-11 flex items-center justify-end">
                 {rightAction ?? (
                     <Link
                         href={notificationsHref}
                         prefetch={true}
-                        className="relative flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 transition-all"
+                        className="m-card relative flex items-center justify-center w-11 h-11 rounded-2xl text-foreground active:scale-90 transition-all"
                         aria-label={
                             effectiveCount > 0
                                 ? t('{count} unread notifications', { count: effectiveCount })
                                 : t('Notifications')
                         }
                     >
-                        <Bell size={20} strokeWidth={1.8} />
+                        <Bell size={20} strokeWidth={1.9} />
                         {effectiveCount > 0 && (
                             <span
-                                className="absolute top-1 right-1 min-w-[14px] h-[14px] px-[3px] rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse"
+                                className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-[5px] rounded-full bg-[var(--m-coral)] text-white text-[11px] font-bold flex items-center justify-center"
                                 aria-hidden="true"
                             >
                                 {effectiveCount > 9 ? '9+' : effectiveCount}

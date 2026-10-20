@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { m as motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { triggerHaptic } from '@/lib/haptics'
 import { useLanguageContext } from '@/context/LanguageContext'
@@ -130,12 +131,21 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
                             isActive && 'active'
                         )}
                         aria-label={t(tab.label)}
+                        title={t(tab.label)}
                         aria-current={isActive ? 'page' : undefined}
                     >
+                        {isActive && (
+                            <motion.span
+                                layoutId="mobile-tab-indicator"
+                                className="mobile-tab-indicator"
+                                transition={{ type: 'spring', stiffness: 500, damping: 38, mass: 0.8 }}
+                                aria-hidden="true"
+                            />
+                        )}
                         <span className="tab-icon relative">
                             <Icon
-                                size={22}
-                                strokeWidth={isActive ? 2.5 : 1.8}
+                                size={24}
+                                strokeWidth={isActive ? 2.2 : 1.9}
                                 aria-hidden="true"
                             />
                             {badgeCount > 0 && (
@@ -144,7 +154,7 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
                                 </span>
                             )}
                         </span>
-                        <span className="font-bold">{t(tab.label)}</span>
+                        <span className="sr-only">{t(tab.label)}</span>
                     </Link>
                 )
             })}

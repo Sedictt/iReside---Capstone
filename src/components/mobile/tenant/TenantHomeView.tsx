@@ -108,103 +108,88 @@ export function TenantHomeView() {
     const hasOverdue = overduePayments.length > 0;
 
     const formatCurrency = (amt: number) => `₱${amt.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+    const landlordInitials = (lease?.landlordName || '')
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase() || 'PM';
 
     return (
         <PullToRefresh onRefresh={fetchDashboard}>
-            <div className="flex flex-col gap-3 pb-3">
-                {/* Hero / Property & Unit Banner */}
-                <div className="px-4 pt-2.5">
-                    <div className="rounded-2xl p-3.5 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border border-primary/20 shadow-xs relative overflow-hidden">
-                        <div className="flex items-start justify-between relative z-10">
-                            <div>
-                                <div className="flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-wider mb-0.5">
-                                    <Building2 className="size-3.5" />
-                                    <span>{lease?.propertyName || t('My Residence')}</span>
-                                </div>
-                                <h2 className="text-base font-black tracking-tight text-foreground">
-                                    {t('Welcome, {name}', { name: formattedUsername })}
-                                </h2>
-                                <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                                    <span className="font-semibold text-foreground">
-                                        {lease?.unitName ? t('Unit {unit}', { unit: lease.unitName }) : t('Assigned Unit')}
-                                    </span>
-                                    {lease?.propertyAddress ? `• ${lease.propertyAddress}` : ''}
-                                </p>
-                            </div>
-                        </div>
+            <div className="m-stagger flex flex-col gap-4 pb-4">
+                {/* Greeting header */}
+                <div className="px-4 pt-1 flex flex-col gap-1.5 min-w-0">
+                    <div className="m-eyebrow flex items-center gap-1.5 min-w-0">
+                        <Building2 className="size-3.5 shrink-0" />
+                        <span className="truncate">{lease?.propertyName || t('My Residence')}</span>
+                    </div>
+                    <h2 className="m-display text-[26px] text-foreground">
+                        {t('Welcome, {name}', { name: formattedUsername })}
+                    </h2>
+                    <div className="flex items-center gap-2 min-w-0">
+                        <span className="m-pill m-pill-brand shrink-0">
+                            {lease?.unitName ? t('Unit {unit}', { unit: lease.unitName }) : t('Assigned Unit')}
+                        </span>
+                        {lease?.propertyAddress ? (
+                            <span className="text-[13px] text-muted-foreground truncate">{lease.propertyAddress}</span>
+                        ) : null}
                     </div>
                 </div>
 
                 {/* Primary Payment Due / Status Card */}
                 <div className="px-4">
-                    <div className={cn(
-                        "rounded-2xl p-3.5 border shadow-xs transition-all",
-                        hasOverdue 
-                            ? "bg-red-500/10 border-red-500/30" 
-                            : "bg-white dark:bg-card/80 border-slate-300 dark:border-white/15"
-                    )}>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
+                    <div className={cn("m-hero p-5 flex flex-col gap-3.5", hasOverdue && "m-hero-coral")}>
+                        <div className="relative flex items-center justify-between gap-2">
+                            <span className="m-eyebrow flex items-center gap-1.5">
                                 {hasOverdue ? (
-                                    <AlertTriangle className="size-4 text-red-500" />
+                                    <AlertTriangle className="size-3.5" />
                                 ) : (
-                                    <Clock className="size-4 text-primary" />
+                                    <Clock className="size-3.5" />
                                 )}
-                                <span className={cn(
-                                    "text-xs font-bold uppercase tracking-wider",
-                                    hasOverdue ? "text-red-500" : "text-muted-foreground"
-                                )}>
-                                    {hasOverdue ? t('Overdue Payment Required') : t('Next Rent Payment')}
-                                </span>
-                            </div>
-                            <span className={cn(
-                                "text-[10px] font-bold px-2 py-0.5 rounded-full",
-                                hasOverdue 
-                                    ? "bg-red-500/20 text-red-500" 
-                                    : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                            )}>
+                                {hasOverdue ? t('Overdue Payment Required') : t('Next Rent Payment')}
+                            </span>
+                            <span className="m-pill m-pill-ghost">
                                 {hasOverdue ? t('Overdue') : t('Due Soon')}
                             </span>
                         </div>
 
-                        <div className="mt-2 flex items-baseline justify-between">
-                            <div>
-                                <h3 className="text-2xl font-black tracking-tight text-foreground">
-                                    {hasOverdue 
-                                        ? formatCurrency(overduePayments[0].amount)
-                                        : nextPayment 
-                                            ? formatCurrency(nextPayment.amount)
-                                            : lease?.monthlyRent 
-                                                ? formatCurrency(lease.monthlyRent)
-                                                : '₱0.00'}
-                                </h3>
-                                <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                                    <Calendar className="size-3" />
-                                    {hasOverdue 
-                                        ? t('Due date was {date}', { date: new Date(overduePayments[0].dueDate).toLocaleDateString(locale, { month: 'short', day: 'numeric' }) })
-                                        : nextPayment?.dueDate 
-                                            ? t('Due on {date}', { date: new Date(nextPayment.dueDate).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' }) })
-                                            : t('No active upcoming invoice')}
-                                </p>
-                            </div>
+                        <div className="relative">
+                            <h3 className="m-amount text-[40px]">
+                                {hasOverdue
+                                    ? formatCurrency(overduePayments[0].amount)
+                                    : nextPayment
+                                        ? formatCurrency(nextPayment.amount)
+                                        : lease?.monthlyRent
+                                            ? formatCurrency(lease.monthlyRent)
+                                            : '₱0.00'}
+                            </h3>
+                            <p className="m-hero-muted text-sm mt-2 flex items-center gap-1.5">
+                                <Calendar className="size-3.5" />
+                                {hasOverdue
+                                    ? t('Due date was {date}', { date: new Date(overduePayments[0].dueDate).toLocaleDateString(locale, { month: 'short', day: 'numeric' }) })
+                                    : nextPayment?.dueDate
+                                        ? t('Due on {date}', { date: new Date(nextPayment.dueDate).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' }) })
+                                        : t('No active upcoming invoice')}
+                            </p>
                         </div>
 
                         {/* Direct Pay Action */}
-                        <div className="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-white/10 flex items-center gap-2">
+                        <div className="relative mt-0.5 flex items-center gap-2.5">
                             <Link
                                 href="/mobile/tenant/pay"
-                                className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold text-center flex items-center justify-center gap-1.5 shadow-xs hover:brightness-105 active:scale-[0.98] transition-all"
+                                className="m-btn m-btn-on-hero flex-1 min-h-[48px] text-[15px]"
                             >
-                                <CreditCard className="size-3.5" />
+                                <CreditCard className="size-4" />
                                 <span>{t('Pay Rent / Upload Proof')}</span>
                             </Link>
                             <Link
                                 href="/mobile/tenant/calendar"
-                                className="py-2 px-3 rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/80 text-foreground text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs active:scale-[0.98] transition-all"
+                                className="m-btn m-btn-on-hero-ghost size-12 px-0 shrink-0"
                                 aria-label={t("Schedule")}
                             >
-                                <Calendar className="size-3.5 text-sky-500" />
-                                <span>{t('Schedule')}</span>
+                                <Calendar className="size-5" />
                             </Link>
                         </div>
                     </div>
@@ -215,12 +200,12 @@ export function TenantHomeView() {
                     <div className="grid grid-cols-4 gap-2">
                         <Link
                             href="/mobile/tenant/maintenance"
-                            className="p-3 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col items-center text-center gap-1.5 active:scale-[0.97] transition-all hover:border-primary/40"
+                            className="flex flex-col items-center text-center gap-2 active:scale-[0.97] transition-all"
                         >
-                            <div className="size-9 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center shrink-0">
-                                <Wrench className="size-4" />
+                            <div className="m-tile m-tile-coral size-14">
+                                <Wrench className="size-[22px]" />
                             </div>
-                            <span className="text-[11px] font-bold text-foreground leading-tight">
+                            <span className="text-xs font-semibold text-foreground leading-tight">
                                 {t('Request Repair')}
                             </span>
                         </Link>
@@ -231,36 +216,36 @@ export function TenantHomeView() {
                                 triggerHaptic('light');
                                 setIsAmenityDrawerOpen(true);
                             }}
-                            className="p-3 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col items-center text-center gap-1.5 active:scale-[0.97] transition-all hover:border-primary/40"
+                            className="flex flex-col items-center text-center gap-2 active:scale-[0.97] transition-all"
                         >
-                            <div className="size-9 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                                <Sparkles className="size-4" />
+                            <div className="m-tile m-tile-teal size-14">
+                                <Sparkles className="size-[22px]" />
                             </div>
-                            <span className="text-[11px] font-bold text-foreground leading-tight">
+                            <span className="text-xs font-semibold text-foreground leading-tight">
                                 {t('Amenities')}
                             </span>
                         </button>
 
                         <Link
                             href="/mobile/tenant/messages"
-                            className="p-3 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col items-center text-center gap-1.5 active:scale-[0.97] transition-all hover:border-primary/40"
+                            className="flex flex-col items-center text-center gap-2 active:scale-[0.97] transition-all"
                         >
-                            <div className="size-9 rounded-xl bg-blue-500/15 text-blue-500 flex items-center justify-center shrink-0">
-                                <MessageSquare className="size-4" />
+                            <div className="m-tile m-tile-brand size-14">
+                                <MessageSquare className="size-[22px]" />
                             </div>
-                            <span className="text-[11px] font-bold text-foreground leading-tight">
+                            <span className="text-xs font-semibold text-foreground leading-tight">
                                 {t('Message Landlord')}
                             </span>
                         </Link>
 
                         <Link
                             href="/mobile/tenant/lease"
-                            className="p-3 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col items-center text-center gap-1.5 active:scale-[0.97] transition-all hover:border-primary/40"
+                            className="flex flex-col items-center text-center gap-2 active:scale-[0.97] transition-all"
                         >
-                            <div className="size-9 rounded-xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0">
-                                <FileText className="size-4" />
+                            <div className="m-tile m-tile-deep size-14">
+                                <FileText className="size-[22px]" />
                             </div>
-                            <span className="text-[11px] font-bold text-foreground leading-tight">
+                            <span className="text-xs font-semibold text-foreground leading-tight">
                                 {t('View Lease')}
                             </span>
                         </Link>
@@ -268,27 +253,25 @@ export function TenantHomeView() {
                 </div>
 
                 {/* House Rules & Safety Quick Banner */}
-<div className="px-4">
-    <Link
-        href="/mobile/tenant/manual"
-        className="p-3 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 shadow-xs flex items-center justify-between active:scale-[0.98] transition-all"
-    >
-        <div className="flex items-center gap-2.5">
-            <div className="size-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0">
-                <BookOpen className="size-4" />
-            </div>
-            <div>
-                <h4 className="text-xs font-bold text-foreground">
-                    {t('House Rules & Emergency Guide')}
-                </h4>
-                <p className="text-[10px] text-muted-foreground">
-                    {t('Quiet hours, safety protocols & speed dial')}
-                </p>
-            </div>
-        </div>
-        <ChevronRight className="size-4 text-primary" />
-    </Link>
-</div>
+                <div className="px-4">
+                    <Link
+                        href="/mobile/tenant/manual"
+                        className="m-card p-3.5 flex items-center gap-3.5 active:scale-[0.98] transition-all"
+                    >
+                        <div className="m-tile m-tile-amber size-11">
+                            <BookOpen className="size-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <h4 className="text-[15px] font-bold text-foreground">
+                                {t('House Rules & Emergency Guide')}
+                            </h4>
+                            <p className="text-[13px] text-muted-foreground">
+                                {t('Quiet hours, safety protocols & speed dial')}
+                            </p>
+                        </div>
+                        <ChevronRight className="size-[18px] text-muted-foreground shrink-0" />
+                    </Link>
+                </div>
 
                 {/* Amenities & Facility Booking Quick Banner */}
                 <div className="px-4">
@@ -298,45 +281,49 @@ export function TenantHomeView() {
                             triggerHaptic('light');
                             setIsAmenityDrawerOpen(true);
                         }}
-                        className="w-full p-3 rounded-2xl bg-gradient-to-r from-purple-500/10 via-primary/5 to-transparent border border-purple-500/20 shadow-xs flex items-center justify-between active:scale-[0.98] transition-all text-left"
+                        className="m-card w-full p-3.5 flex items-center gap-3.5 active:scale-[0.98] transition-all text-left"
                     >
-                        <div className="flex items-center gap-2.5">
-                            <div className="size-8 rounded-xl bg-purple-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-                                <Sparkles className="size-4" />
-                            </div>
-                            <div>
-                                <h4 className="text-xs font-bold text-foreground">
-                                    Property Amenities & Facility Booking
-                                </h4>
-                                <p className="text-[10px] text-muted-foreground">
-                                    Reserve clubhouse, pool, lounge & gym slots
-                                </p>
-                            </div>
+                        <div className="m-tile m-tile-brand size-11">
+                            <Sparkles className="size-5" />
                         </div>
-                        <ChevronRight className="size-4 text-primary" />
+                        <div className="min-w-0 flex-1">
+                            <h4 className="text-[15px] font-bold text-foreground">
+                                Property Amenities & Facility Booking
+                            </h4>
+                            <p className="text-[13px] text-muted-foreground">
+                                Reserve clubhouse, pool, lounge & gym slots
+                            </p>
+                        </div>
+                        <ChevronRight className="size-[18px] text-muted-foreground shrink-0" />
                     </button>
                 </div>
 
                 {/* Landlord Contact Quick Card */}
                 {lease?.landlordName && (
                     <div className="px-4">
-                        <div className="rounded-2xl p-3 bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex items-center justify-between">
-                            <div className="min-w-0">
-                                <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                        <div className="m-card p-3.5 flex items-center gap-3.5">
+                            <span
+                                aria-hidden="true"
+                                className="m-avatar size-11 text-[15px] bg-[var(--brand-primary-900)] text-white"
+                            >
+                                {landlordInitials}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                                <span className="m-eyebrow">
                                     {t('Property Manager')}
                                 </span>
-                                <h4 className="text-xs font-bold text-foreground truncate">
+                                <h4 className="text-[15px] font-bold text-foreground truncate">
                                     {lease.landlordName}
                                 </h4>
-                                <p className="text-[10px] text-muted-foreground truncate">
+                                <p className="text-[13px] text-muted-foreground truncate">
                                     {formatPhMobile(lease.landlordPhone) || lease.landlordEmail || t('Tap to message')}
                                 </p>
                             </div>
                             <Link
                                 href="/mobile/tenant/messages"
-                                className="px-3 py-1.5 rounded-xl bg-primary/10 text-primary text-xs font-bold flex items-center gap-1 active:scale-95 transition-all hover:bg-primary/20 shrink-0"
+                                className="m-btn m-btn-tint min-h-[40px] px-3.5 text-[13px] shrink-0"
                             >
-                                <MessageSquare className="size-3.5" />
+                                <MessageSquare className="size-4" />
                                 <span>{t('Chat')}</span>
                             </Link>
                         </div>
@@ -345,36 +332,41 @@ export function TenantHomeView() {
 
                 {/* Announcements / Building Notices Section */}
                 <div className="px-4">
-                    <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-1.5">
-                            <Megaphone className="size-3.5 text-primary" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                                {t('Building Notices')}
-                            </h3>
-                        </div>
-                        <span className="text-[10px] text-muted-foreground">{t('Community')}</span>
+                    <div className="flex items-baseline justify-between mb-2.5">
+                        <h3 className="m-display text-[18px] text-foreground">
+                            {t('Building Notices')}
+                        </h3>
+                        <span className="text-[13px] font-semibold text-primary">{t('Community')}</span>
                     </div>
 
                     {announcements.length === 0 ? (
-                        <div className="rounded-2xl p-4 bg-white dark:bg-card/60 border border-slate-300 dark:border-white/15 text-center shadow-xs">
-                            <p className="text-xs text-muted-foreground">{t('No new announcements at this time.')}</p>
+                        <div className="m-card p-5 flex items-center gap-3.5">
+                            <div className="m-tile m-tile-teal size-11">
+                                <Megaphone className="size-5" />
+                            </div>
+                            <p className="text-[13px] text-muted-foreground">{t('No new announcements at this time.')}</p>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2.5">
                             {announcements.slice(0, 3).map((notice) => (
                                 <div
                                     key={notice.id}
-                                    className="p-3 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col gap-1"
+                                    className="m-card p-3.5 flex items-start gap-3.5"
                                 >
-                                    <div className="flex items-center justify-between gap-2">
-                                        <h4 className="text-xs font-bold text-foreground truncate">{notice.title}</h4>
-                                        <span className="text-[9px] text-muted-foreground shrink-0">
-                                            {new Date(notice.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
-                                        </span>
+                                    <div className="m-tile m-tile-teal size-11">
+                                        <Megaphone className="size-5" />
                                     </div>
-                                    <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
-                                        {notice.message}
-                                    </p>
+                                    <div className="min-w-0 flex-1 flex flex-col gap-0.5">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <h4 className="text-[15px] font-bold text-foreground truncate">{notice.title}</h4>
+                                            <span className="text-xs text-muted-foreground shrink-0">
+                                                {new Date(notice.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
+                                            </span>
+                                        </div>
+                                        <p className="text-[13px] text-muted-foreground line-clamp-2 leading-relaxed">
+                                            {notice.message}
+                                        </p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
