@@ -6586,10 +6586,10 @@ const UnitDetailsPanel = ({
                                 onClick={() => setTenantActionMenu((current) => ({ isOpen: !current.isOpen }))}
                                 className="group relative flex w-full flex-col rounded-3xl border border-zinc-200 bg-white p-5 text-left transition-all hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 dark:border-white/5 dark:bg-zinc-900/60 dark:hover:bg-zinc-900"
                             >
-                                <div className="flex items-center gap-5">
-                                    <div className="relative">
-                                        <div className="relative size-16 rounded-[22px] border-2 border-primary/20 p-1 transition-transform group-hover:scale-105">
-                                            <div className="h-full w-full overflow-hidden rounded-[18px] bg-zinc-100 dark:bg-zinc-800 relative" style={unit.tenantAvatarBgColor ? { backgroundColor: unit.tenantAvatarBgColor } : undefined}>
+                                <div className="flex items-center gap-3 pr-7">
+                                    <div className="relative shrink-0">
+                                        <div className="relative size-14 rounded-[20px] border-2 border-primary/20 p-1 transition-transform group-hover:scale-105">
+                                            <div className="h-full w-full overflow-hidden rounded-[16px] bg-zinc-100 dark:bg-zinc-800 relative" style={unit.tenantAvatarBgColor ? { backgroundColor: unit.tenantAvatarBgColor } : undefined}>
                                                 {unit.tenantAvatarUrl ? (
                                                     <Image
                                                         src={unit.tenantAvatarUrl}
@@ -6609,16 +6609,16 @@ const UnitDetailsPanel = ({
                                             <div className="absolute -bottom-1 -right-1 size-5 rounded-full border-4 border-white bg-emerald-500 shadow-sm dark:border-black"></div>
                                         </div>
                                     </div>
-                                    <div className="flex-1">
-                                        <p className="text-xl font-black tracking-tight text-zinc-900 dark:text-white">{unit.tenant || t("VACANT UNIT")}</p>
-                                        <div className="mt-1 flex items-center gap-2">
-                                            <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{unit.tenant ? t("Active Tenant") : t("Ready for Move-in")}</span>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="line-clamp-2 text-base font-black leading-snug tracking-tight text-zinc-900 dark:text-white" title={unit.tenant || undefined}>{unit.tenant || t("VACANT UNIT")}</p>
+                                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                            <span className="whitespace-nowrap text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{unit.tenant ? t("Active Tenant") : t("Ready for Move-in")}</span>
                                             <div className="size-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                                            <span className="text-[11px] font-black text-primary tracking-wide">ID-{unit.id.slice(0, 5).toUpperCase()}</span>
+                                            <span className="whitespace-nowrap text-[11px] font-black text-primary tracking-wide">ID-{unit.id.slice(0, 5).toUpperCase()}</span>
                                         </div>
                                     </div>
-                                    <div className="flex size-10 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-400 group-hover:bg-primary/10 group-hover:text-primary dark:bg-black/40">
-                                        <span className="material-icons-round text-xl">more_vert</span>
+                                    <div className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-xl bg-zinc-100 text-zinc-400 group-hover:bg-primary/10 group-hover:text-primary dark:bg-black/40">
+                                        <span className="material-icons-round text-lg">more_vert</span>
                                     </div>
                                 </div>
                             </button>
