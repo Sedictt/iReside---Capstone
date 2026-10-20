@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isProofMethod } from "@/lib/billing/payment-methods";
 import {
     applyPaymentPendingExpiry,
     areRequiredPaymentRequestsCompleted,
@@ -164,8 +165,15 @@ export async function POST(request: Request, context: RouteContext) {
             if (!req.bypassed && !req.method) {
                 return NextResponse.json({ error: "Payment method is required before confirmation." }, { status: 400 });
             }
-            if (!req.bypassed && req.method === "gcash" && !req.payment_proof_url) {
-                return NextResponse.json({ error: "GCash proof is required before confirmation." }, { status: 400 });
+            if (!req.bypassed && isProofMethod(req.method) && !req.payment_proof_url) {
+                return NextResponse.json(
+                    {
+                        error: req.method === "bank_transfer"
+                            ? "Bank transfer proof is required before confirmation."
+                            : "GCash proof is required before confirmation.",
+                    },
+                    { status: 400 }
+                );
             }
         }
     }

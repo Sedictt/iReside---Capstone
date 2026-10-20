@@ -17,12 +17,16 @@ import {
     FileText,
     Calendar,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    Landmark
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { triggerHaptic } from '@/lib/haptics';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { useLanguageContext } from '@/context/LanguageContext';
+import { formatAccountNumber, type ProofMethod } from '@/lib/billing/payment-methods';
+import { BankTransferDetails, GcashLimitNotice, type BankDestinationView } from '@/components/shared/payment-methods/PaymentMethodBits';
+import { mobilePayTotals, toMobilePayItems, type MobilePayItem, type OverviewResponse } from './pay-overview';
 
 /** Turns a status value like "under_review" into an English display label ("Under Review"). */
 const toStatusLabel = (value: string) =>
@@ -31,30 +35,20 @@ const toStatusLabel = (value: string) =>
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
         .join(' ');
 
-interface PaymentOverviewItem {
-    id: string;
-    amount: number;
-    paidAmount: number;
-    balanceRemaining: number;
-    dueDate: string;
-    billingCycle?: string;
-    status: 'paid' | 'pending' | 'overdue' | 'processing' | 'partial';
-    workflowStatus?: string;
-    referenceNumber?: string;
-    paymentProofUrl?: string | null;
-    invoiceNumber?: string;
-    notes?: string;
-}
+type PaymentOverviewItem = MobilePayItem;
 
-interface PaymentOverviewResponse {
+/** GET /api/tenant/payments: `nextPayment` + `history` (see getTenantPaymentOverview) plus the landlord's accounts. */
+interface PaymentOverviewResponse extends OverviewResponse {
     lease?: {
         monthlyRent: number;
         propertyName: string;
         unitName: string;
+    } | null;
+    /** The landlord's turned-on GCash wallet and bank account (null when off or not set up). */
+    paymentDestinations?: {
+        gcash: BankDestinationView | null;
+        bank_transfer: BankDestinationView | null;
     };
-    payments?: PaymentOverviewItem[];
-    overdueTotal?: number;
-    unpaidTotal?: number;
 }
 
 export function TenantPayView() {
@@ -76,7 +70,8 @@ export function TenantPayView() {
 
     // Lightbox for inspecting submitted receipts
     const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-    const [copiedAccount, setCopiedAccount] = useState(false);
+    const [copiedAccount, setCopiedAccount] = useState<ProofMethod | null>(null);
+    const [payMethod, setPayMethod] = useState<ProofMethod>('gcash');
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -101,9 +96,18 @@ export function TenantPayView() {
         fetchPayments();
     }, []);
 
-    const payments = data?.payments || [];
-    const unpaidTotal = data?.unpaidTotal || 0;
-    const overdueTotal = data?.overdueTotal || 0;
+    const payments = useMemo(() => toMobilePayItems(data), [data]);
+    const { unpaidTotal, overdueTotal, awaitingReview } = useMemo(() => mobilePayTotals(payments), [payments]);
+    const gcashDestination = data?.paymentDestinations?.gcash ?? null;
+    const bankDestination = data?.paymentDestinations?.bank_transfer ?? null;
+    // GCash stays the default when the landlord has not set anything up yet.
+    const proofMethods: ProofMethod[] = [
+        ...(gcashDestination || !bankDestination ? (['gcash'] as const) : []),
+        ...(bankDestination ? (['bank_transfer'] as const) : []),
+    ];
+    const selectedAmount = selectedInvoice
+        ? (selectedInvoice.balanceRemaining > 0 ? selectedInvoice.balanceRemaining : selectedInvoice.amount)
+        : 0;
 
     const filteredPayments = useMemo(() => {
         return payments.filter((p) => {
@@ -141,7 +145,12 @@ export function TenantPayView() {
         if (!selectedInvoice) return;
         if (!referenceNumber.trim()) {
             triggerHaptic('warning');
-            setToast({ type: 'error', message: t('Please enter your reference number (e.g. GCash Ref #).') });
+            setToast({
+                type: 'error',
+                message: payMethod === 'bank_transfer'
+                    ? t('Please enter the reference number from your bank receipt.')
+                    : t('Please enter your reference number (e.g. GCash Ref #).'),
+            });
             return;
         }
 
@@ -150,7 +159,7 @@ export function TenantPayView() {
 
         try {
             const formData = new FormData();
-            formData.append('method', 'gcash');
+            formData.append('method', payMethod);
             formData.append('referenceNumber', referenceNumber.trim());
             if (note.trim()) formData.append('note', note.trim());
             if (receiptFile) formData.append('receipt', receiptFile);
@@ -181,10 +190,18 @@ export function TenantPayView() {
         }
     };
 
-    const copyPaymentInfo = () => {
-        navigator.clipboard?.writeText('0917-123-4567');
-        setCopiedAccount(true);
-        setTimeout(() => setCopiedAccount(false), 2000);
+    const copyPaymentInfo = (method: ProofMethod, value: string) => {
+        navigator.clipboard?.writeText(value.replace(/\s/g, ''));
+        setCopiedAccount(method);
+        setTimeout(() => setCopiedAccount(null), 2000);
+    };
+
+    const openProofSheet = (inv: PaymentOverviewItem) => {
+        setSelectedInvoice(inv);
+        setReceiptFile(null);
+        setReceiptPreview(null);
+        setReferenceNumber(inv.referenceNumber || '');
+        setPayMethod(proofMethods[0] ?? 'gcash');
     };
 
     const formatCurrency = (amt: number) => `₱${amt.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
@@ -212,7 +229,13 @@ export function TenantPayView() {
                                 {formatCurrency(unpaidTotal > 0 ? unpaidTotal : 0)}
                             </h2>
                             <p className="text-[11px] text-muted-foreground mt-0.5">
-                                {unpaidTotal > 0 ? t('Pending verification or upcoming due') : t('All invoices are up to date!')}
+                                {unpaidTotal > 0
+                                    ? t('Pending verification or upcoming due')
+                                    : awaitingReview === 1
+                                        ? t('1 payment is waiting for your landlord to confirm.')
+                                        : awaitingReview > 1
+                                            ? t('{count} payments are waiting for your landlord to confirm.', { count: awaitingReview })
+                                            : t('All invoices are up to date!')}
                             </p>
                         </div>
                     </div>
@@ -233,28 +256,38 @@ export function TenantPayView() {
                     </div>
                 )}
 
-                {/* Payment Instructions / Account Card */}
-                <div className="px-4">
-                    <div className="rounded-2xl p-3 bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex items-center justify-between">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="size-8 rounded-xl bg-blue-500/15 text-blue-500 flex items-center justify-center shrink-0">
-                                <QrCode className="size-4" />
-                            </div>
-                            <div className="min-w-0">
-                                <h4 className="text-xs font-bold text-foreground">{t('GCash / Maya Payment')}</h4>
-                                <p className="text-[10px] text-muted-foreground truncate">0917-123-4567 • {t('Property Account')}</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={copyPaymentInfo}
-                            className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-muted text-xs font-bold text-foreground flex items-center gap-1 active:scale-95 transition-all hover:bg-slate-200 shrink-0"
-                            aria-label={t('Copy account number')}
-                        >
-                            <Copy className="size-3" />
-                            <span>{copiedAccount ? t('Copied!') : t('Copy')}</span>
-                        </button>
+                {/* Where to send money: the landlord's GCash and/or bank account */}
+                {(gcashDestination || bankDestination) && (
+                    <div className="px-4 flex flex-col gap-2">
+                        {[
+                            gcashDestination && { method: 'gcash' as const, icon: QrCode, tone: 'bg-blue-500/15 text-blue-500', title: t('GCash'), name: gcashDestination.accountName, number: gcashDestination.accountNumber ?? '' },
+                            bankDestination && { method: 'bank_transfer' as const, icon: Landmark, tone: 'bg-emerald-500/15 text-emerald-600', title: bankDestination.bankName || t('Bank Transfer'), name: bankDestination.accountName, number: formatAccountNumber(bankDestination.accountNumber) },
+                        ].filter((card): card is NonNullable<typeof card> => Boolean(card)).map((card) => {
+                            const Icon = card.icon;
+                            return (
+                                <div key={card.method} className="rounded-2xl p-3 bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex items-center justify-between">
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className={cn('size-8 rounded-xl flex items-center justify-center shrink-0', card.tone)}>
+                                            <Icon className="size-4" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h4 className="text-xs font-bold text-foreground truncate">{card.title}</h4>
+                                            <p className="text-[10px] text-muted-foreground truncate">{card.number} • {card.name}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => copyPaymentInfo(card.method, card.number)}
+                                        className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-muted text-xs font-bold text-foreground flex items-center gap-1 active:scale-95 transition-all hover:bg-slate-200 shrink-0"
+                                        aria-label={t('Copy account number')}
+                                    >
+                                        <Copy className="size-3" />
+                                        <span>{copiedAccount === card.method ? t('Copied!') : t('Copy')}</span>
+                                    </button>
+                                </div>
+                            );
+                        })}
                     </div>
-                </div>
+                )}
 
                 {/* Filter Tabs */}
                 <div className="px-4 flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
@@ -311,7 +344,9 @@ export function TenantPayView() {
                     ) : (
                         filteredPayments.map((inv) => {
                             const isPaid = inv.status === 'paid';
-                            const isPending = inv.status === 'pending' || inv.status === 'processing';
+                            const isPending = inv.status === 'pending' || inv.status === 'processing' || inv.status === 'partial';
+                            // A proof already waiting for the landlord blocks a second one (the server refuses it too).
+                            const canUploadProof = !isPaid && inv.workflowStatus !== 'under_review';
                             const isOverdue = inv.status === 'overdue';
 
                             return (
@@ -322,7 +357,7 @@ export function TenantPayView() {
                                     <div className="flex items-start justify-between gap-2">
                                         <div>
                                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                                {inv.billingCycle || t('Monthly Rent')}
+                                                {t(inv.label)}
                                             </span>
                                             <h4 className="text-base font-black text-foreground">
                                                 {formatCurrency(inv.amount)}
@@ -359,14 +394,9 @@ export function TenantPayView() {
                                             </span>
                                         )}
 
-                                        {!isPaid && (
+                                        {canUploadProof && (
                                             <button
-                                                onClick={() => {
-                                                    setSelectedInvoice(inv);
-                                                    setReceiptFile(null);
-                                                    setReceiptPreview(null);
-                                                    setReferenceNumber(inv.referenceNumber || '');
-                                                }}
+                                                onClick={() => openProofSheet(inv)}
                                                 className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1 shadow-xs hover:brightness-105 active:scale-95 transition-all"
                                             >
                                                 <Upload className="size-3" />
@@ -410,13 +440,45 @@ export function TenantPayView() {
                         </div>
 
                         <form onSubmit={handleSubmitProof} className="flex flex-col gap-3">
+                            {proofMethods.length > 1 && (
+                                <div role="radiogroup" aria-label={t('How did you pay?')} className="grid grid-cols-2 gap-1.5 rounded-2xl bg-muted/40 p-1">
+                                    {proofMethods.map((option) => (
+                                        <button
+                                            key={option}
+                                            type="button"
+                                            role="radio"
+                                            aria-checked={payMethod === option}
+                                            onClick={() => setPayMethod(option)}
+                                            className={cn(
+                                                'flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-all',
+                                                payMethod === option ? 'bg-background text-foreground shadow-xs ring-1 ring-border' : 'text-muted-foreground'
+                                            )}
+                                        >
+                                            {option === 'gcash' ? <QrCode className="size-3.5" /> : <Landmark className="size-3.5" />}
+                                            {option === 'gcash' ? t('GCash') : t('Bank Transfer')}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {payMethod === 'gcash' && (
+                                <GcashLimitNotice
+                                    amount={selectedAmount}
+                                    onSwitchToBank={bankDestination ? () => setPayMethod('bank_transfer') : undefined}
+                                />
+                            )}
+
+                            {payMethod === 'bank_transfer' && bankDestination && (
+                                <BankTransferDetails compact destination={bankDestination} amount={selectedAmount} />
+                            )}
+
                             <div>
                                 <label className="text-[11px] font-bold text-foreground block mb-1">
                                     {t('Reference Number')} <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder={t('e.g. 13-digit GCash Ref / Bank Ref')}
+                                    placeholder={payMethod === 'bank_transfer' ? t('Bank reference or trace no.') : t('e.g. 13-digit GCash Ref / Bank Ref')}
                                     value={referenceNumber}
                                     onChange={(e) => setReferenceNumber(e.target.value)}
                                     required

@@ -237,4 +237,8 @@ export const filMessagePatterns: PatternDictionary = {
   "Lease created for existing tenant account ({email}).": "Nagawa ang lease para sa kasalukuyang tenant account ({email}).",
   "Tenant account created. Temporary password: {password}. Please share these credentials with the tenant.":
     "Nagawa ang tenant account. Pansamantalang password: {password}. Pakibigay ang mga credential na ito sa nangungupahan.",
+  // Bank transfer payments
+  "Tenant submitted bank transfer proof for invoice {invoice}.": "Nagpasa ang nangungupahan ng patunay ng bank transfer para sa invoice {invoice}.",
+  "{applicant} submitted payment proof ({amount}) for {unit}. Txn Ref: {reference}, Bank Transfer: {bank}.": "Nagpasa si {applicant} ng patunay ng bayad ({amount}) para sa {unit}. Txn Ref: {reference}, Bank Transfer: {bank}.",
+  "{applicant} submitted payment proof ({amount}) for {unit}. Txn Ref: {reference}, Cash: {cash}.": "Nagpasa si {applicant} ng patunay ng bayad ({amount}) para sa {unit}. Txn Ref: {reference}, Cash: {cash}.",
 };

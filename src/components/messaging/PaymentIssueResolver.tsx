@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { 
     AlertTriangle, CheckCircle2, HandCoins, Info, 
     Receipt, X, ArrowUpRight,
-    HelpCircle, TrendingUp, QrCode, Upload, Loader2
+    HelpCircle, TrendingUp, QrCode, Upload, Loader2, Landmark
 } from "lucide-react";
 import { m as motion } from "framer-motion";
 import { UiMessage } from "../landlord/messages/types";
@@ -16,6 +16,8 @@ import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { REFUND_DETAILS_REQUIRED, gcashNumberRule } from "@/lib/validation/schemas/billing.schema";
+import { bankAccountNameRule, bankAccountNumberRule, bankNameRule } from "@/lib/validation/schemas/properties.schema";
+import { OTHER_BANK, PH_BANKS, type ProofMethod } from "@/lib/billing/payment-methods";
 import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
@@ -32,15 +34,28 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
     const [excessAction, setExcessAction] = useState<"credit" | "refund">("credit");
     const [gcashNumber, setGcashNumber] = useState("");
     const [qrFile, setQrFile] = useState<File | null>(null);
+    const [refundMethod, setRefundMethod] = useState<ProofMethod>("gcash");
+    const [bankChoice, setBankChoice] = useState("");
+    const [otherBankName, setOtherBankName] = useState("");
+    const [bankAccountName, setBankAccountName] = useState("");
+    const [bankAccountNumber, setBankAccountNumber] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const refundValues = useMemo(() => ({ excessAction, gcashNumber, qrFile }), [excessAction, gcashNumber, qrFile]);
+    const bankName = bankChoice === OTHER_BANK ? otherBankName.trim() : bankChoice;
+    const refundValues = useMemo(
+        () => ({ excessAction, refundMethod, gcashNumber, qrFile, bankName, bankAccountName, bankAccountNumber }),
+        [excessAction, refundMethod, gcashNumber, qrFile, bankName, bankAccountName, bankAccountNumber],
+    );
+    const isBankRefund = (all: typeof refundValues) => all.excessAction === "refund" && all.refundMethod === "bank_transfer";
     const refundForm = useFormValidation(refundValues, {
         gcashNumber: (value, all) => {
-            if (all.excessAction !== "refund") return undefined;
+            if (all.excessAction !== "refund" || all.refundMethod !== "gcash") return undefined;
             if (!String(value ?? "").trim() && !all.qrFile) return REFUND_DETAILS_REQUIRED;
             return gcashNumberRule(value);
         },
+        bankName: (value, all) => (isBankRefund(all) ? bankNameRule(value) : undefined),
+        bankAccountName: (value, all) => (isBankRefund(all) ? bankAccountNameRule(value) : undefined),
+        bankAccountNumber: (value, all) => (isBankRefund(all) ? bankAccountNumberRule(value) : undefined),
     });
 
     if (!message) return null;
@@ -55,8 +70,16 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
         try {
             const formData = new FormData();
             formData.append("action", excessAction);
-            if (excessAction === "refund" && gcashNumber.trim()) formData.append("gcashNumber", gcashNumber.trim());
-            if (excessAction === "refund" && qrFile) formData.append("qrFile", qrFile);
+            if (excessAction === "refund") formData.append("refundMethod", refundMethod);
+            if (excessAction === "refund" && refundMethod === "gcash") {
+                if (gcashNumber.trim()) formData.append("gcashNumber", gcashNumber.trim());
+                if (qrFile) formData.append("qrFile", qrFile);
+            }
+            if (excessAction === "refund" && refundMethod === "bank_transfer") {
+                formData.append("bankName", bankName);
+                formData.append("bankAccountName", bankAccountName.trim());
+                formData.append("bankAccountNumber", bankAccountNumber.trim());
+            }
 
             const response = await fetch(`/api/tenant/payments/${message.invoiceId}/refund-info`, {
                 method: "POST",
@@ -210,6 +233,27 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
 
                                 {excessAction === "refund" && (
                                     <div className="space-y-4 p-6 rounded-2xl border border-white/5 bg-surface-1 animate-in zoom-in-95 duration-300">
+                                        <div role="radiogroup" aria-label={t("Where should we send your refund?")} className="grid grid-cols-2 gap-2">
+                                            {(["gcash", "bank_transfer"] as const).map((option) => (
+                                                <button
+                                                    key={option}
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={refundMethod === option}
+                                                    onClick={() => setRefundMethod(option)}
+                                                    className={cn(
+                                                        "flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all",
+                                                        refundMethod === option ? "border-primary bg-primary/10 text-primary" : "border-white/10 bg-surface-2 text-text-medium"
+                                                    )}
+                                                >
+                                                    {option === "gcash" ? <QrCode className="size-4" /> : <Landmark className="size-4" />}
+                                                    {option === "gcash" ? t("GCash") : t("Bank")}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {refundMethod === "gcash" ? (
+                                            <>
                                         <div className="space-y-2">
                                             <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("GCash Number")}</p>
                                             <PhoneNumberInput
@@ -241,6 +285,64 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                                 />
                                             </label>
                                         </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="space-y-2">
+                                                    <label htmlFor="refund-bank" className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Your bank")}</label>
+                                                    <select
+                                                        id="refund-bank"
+                                                        {...refundForm.fieldProps("bankName")}
+                                                        value={bankChoice}
+                                                        onChange={(event) => setBankChoice(event.target.value)}
+                                                        className={cn("w-full rounded-xl border border-white/10 bg-surface-2 px-4 py-3 text-sm font-black text-text-high outline-none focus:border-primary/50 transition-all", refundForm.errorFor("bankName") && fieldErrorClass)}
+                                                    >
+                                                        <option value="">{t("Choose your bank")}</option>
+                                                        {PH_BANKS.map((bank) => (
+                                                            <option key={bank} value={bank}>{bank}</option>
+                                                        ))}
+                                                        <option value={OTHER_BANK}>{t("Other bank")}</option>
+                                                    </select>
+                                                    {bankChoice === OTHER_BANK && (
+                                                        <input
+                                                            aria-label={t("Bank name")}
+                                                            value={otherBankName}
+                                                            maxLength={60}
+                                                            onChange={(event) => setOtherBankName(event.target.value)}
+                                                            placeholder={t("Type the bank's name")}
+                                                            className="w-full rounded-xl border border-white/10 bg-surface-2 px-4 py-3 text-sm font-black text-text-high outline-none focus:border-primary/50 transition-all"
+                                                        />
+                                                    )}
+                                                    <FieldError id={refundForm.errorId("bankName")} message={refundForm.errorFor("bankName")} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label htmlFor="refund-bank-account-name" className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Account name")}</label>
+                                                    <input
+                                                        id="refund-bank-account-name"
+                                                        {...refundForm.fieldProps("bankAccountName")}
+                                                        value={bankAccountName}
+                                                        maxLength={60}
+                                                        autoComplete="name"
+                                                        onChange={(event) => setBankAccountName(event.target.value)}
+                                                        className={cn("w-full rounded-xl border border-white/10 bg-surface-2 px-4 py-3 text-sm font-black text-text-high outline-none focus:border-primary/50 transition-all", refundForm.errorFor("bankAccountName") && fieldErrorClass)}
+                                                    />
+                                                    <FieldError id={refundForm.errorId("bankAccountName")} message={refundForm.errorFor("bankAccountName")} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label htmlFor="refund-bank-account-number" className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Account number")}</label>
+                                                    <input
+                                                        id="refund-bank-account-number"
+                                                        {...refundForm.fieldProps("bankAccountNumber")}
+                                                        value={bankAccountNumber}
+                                                        inputMode="numeric"
+                                                        maxLength={24}
+                                                        onChange={(event) => setBankAccountNumber(event.target.value.replace(/[^\d\s-]/g, ""))}
+                                                        className={cn("w-full rounded-xl border border-white/10 bg-surface-2 px-4 py-3 text-sm font-black text-text-high outline-none focus:border-primary/50 transition-all font-mono tracking-wider", refundForm.errorFor("bankAccountNumber") && fieldErrorClass)}
+                                                    />
+                                                    <FieldError id={refundForm.errorId("bankAccountNumber")} message={refundForm.errorFor("bankAccountNumber")} />
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 )}
 

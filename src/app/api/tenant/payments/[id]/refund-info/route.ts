@@ -34,9 +34,15 @@ export async function POST(
   const parsed = parseWithSchema(refundInfoSchema, {
     action: formData.get("action") ?? undefined,
     gcashNumber: formData.get("gcashNumber"),
+    refundMethod: formData.get("refundMethod"),
+    bankName: formData.get("bankName"),
+    bankAccountName: formData.get("bankAccountName"),
+    bankAccountNumber: formData.get("bankAccountNumber"),
   });
   if (!parsed.ok) return parsed.response;
-  const { action, gcashNumber } = parsed.data;
+  const { action, refundMethod, bankName, bankAccountName, bankAccountNumber } = parsed.data;
+  // Only keep the details for the method the tenant chose.
+  const gcashNumber = refundMethod === "gcash" ? parsed.data.gcashNumber : null;
 
   const qrEntry = formData.get("qrFile");
   const qrFile = qrEntry instanceof File && qrEntry.size > 0 ? qrEntry : null;
@@ -45,7 +51,7 @@ export async function POST(
     return NextResponse.json({ error: qrError, fieldErrors: { qrFile: qrError } }, { status: 400 });
   }
 
-  if (action === "refund" && !gcashNumber && !qrFile) {
+  if (action === "refund" && refundMethod === "gcash" && !gcashNumber && !qrFile) {
     return NextResponse.json({ error: REFUND_DETAILS_REQUIRED, fieldErrors: { gcashNumber: REFUND_DETAILS_REQUIRED } }, { status: 400 });
   }
 
@@ -71,7 +77,7 @@ export async function POST(
 
 
         let qrUrl = null;
-        if (qrFile) {
+        if (qrFile && refundMethod === "gcash") {
             const fileName = `refund-qr-${payment.id}-${Date.now()}.${proofFileExtension(qrFile)}`;
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from("payment-proofs")
@@ -90,7 +96,11 @@ export async function POST(
             ...(payment.metadata as any || {}),
             refund_preference: {
                 action,
+                method: action === "refund" ? refundMethod : null,
                 gcash_number: gcashNumber || null,
+                bank_name: refundMethod === "bank_transfer" ? bankName ?? null : null,
+                bank_account_name: refundMethod === "bank_transfer" ? bankAccountName ?? null : null,
+                bank_account_number: refundMethod === "bank_transfer" ? bankAccountNumber ?? null : null,
                 qr_url: qrUrl,
                 submitted_at: new Date().toISOString(),
             }

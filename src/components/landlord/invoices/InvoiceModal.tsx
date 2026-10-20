@@ -25,6 +25,7 @@ import { moneyRule } from "@/lib/validation/rules";
 import { BILLING_LIMITS, rejectionReasonRule, roundCentavos } from "@/lib/validation/schemas/billing.schema";
 import { tr } from "@/hooks/useLanguage";
 import { playSound } from "@/hooks/useSound";
+import { formatAccountNumber, maskAccountNumber, paymentMethodLabel } from "@/lib/billing/payment-methods";
 
 type InvoiceDetail = Awaited<ReturnType<typeof import("@/lib/billing/server").getInvoiceDetailForActor>>;
 
@@ -686,22 +687,34 @@ export function InvoiceModal({
                                             
                                             <div className="grid gap-3">
                                                 <div className="grid grid-cols-2 gap-3">
-                                                    <StatusLine label={t("Payment Method")} value={invoice.paymentMethod ?? t("Not specified")} icon={<CreditCardIcon className="size-3.5" />} />
+                                                    <StatusLine label={t("Payment Method")} value={t(paymentMethodLabel(invoice.paymentMethod))} icon={<CreditCardIcon className="size-3.5" />} />
                                                     <StatusLine label={t("Reference #")} value={invoice.referenceNumber ?? t("None")} icon={<Hash className="size-3.5" />} />
                                                 </div>
 
-                                                {invoice.paymentDestination && (
-                                                    <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-3 shadow-sm">
-                                                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-disabled">
-                                                            <QrCode className="size-3.5" />
-                                                            {t("Paid To")}
+                                                {(() => {
+                                                    // The account the tenant says they paid into: the bank for bank transfers, GCash otherwise.
+                                                    const isBank = invoice.paymentMethod === "bank_transfer";
+                                                    const paidTo = isBank ? invoice.paymentDestinations?.bank_transfer : invoice.paymentDestination;
+                                                    if (!paidTo) return null;
+                                                    return (
+                                                        <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-3 shadow-sm">
+                                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-disabled">
+                                                                {isBank ? <Wallet className="size-3.5" /> : <QrCode className="size-3.5" />}
+                                                                {t("Paid To")}
+                                                                <span className="ml-auto rounded-full bg-surface-3 px-2 py-0.5 text-[9px]">{t(paymentMethodLabel(invoice.paymentMethod ?? "gcash"))}</span>
+                                                            </div>
+                                                            <div>
+                                                                {isBank && paidTo.bank_name && (
+                                                                    <p className="text-[11px] font-black uppercase tracking-widest text-text-medium">{paidTo.bank_name}</p>
+                                                                )}
+                                                                <p className="text-sm font-black text-text-high">{paidTo.account_name}</p>
+                                                                <p className="text-xs font-black text-primary mt-0.5 tracking-wider">
+                                                                    {isBank ? maskAccountNumber(paidTo.account_number) : paidTo.account_number}
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <p className="text-sm font-black text-text-high">{(invoice.paymentDestination as any)?.account_name}</p>
-                                                            <p className="text-xs font-black text-primary mt-0.5 tracking-wider">{(invoice.paymentDestination as any)?.account_number}</p>
-                                                        </div>
-                                                    </div>
-                                                )}
+                                                    );
+                                                })()}
                                             </div>
                                         </section>
 
@@ -1656,7 +1669,9 @@ function RefundCenter({
                     <div className="space-y-1">
                         <p className="text-xs font-black text-text-high leading-tight">{t("Tenant Refund Request")}</p>
                         <p className="text-[10px] text-text-medium font-medium leading-relaxed">
-                            {t("The tenant has requested a refund for the excess payment. Please process this via GCash.")}
+                            {refund.method === "bank_transfer"
+                                ? t("The tenant has requested a refund for the excess payment. Please send it to their bank account below.")
+                                : t("The tenant has requested a refund for the excess payment. Please process this via GCash.")}
                         </p>
                     </div>
                 </div>
@@ -1664,12 +1679,26 @@ function RefundCenter({
                 <div className="grid gap-3 p-3 rounded-xl bg-surface-2 border border-white/5 shadow-inner">
                     <div className="flex items-center justify-between">
                         <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Method")}</p>
-                        <p className="text-[10px] font-black text-text-high uppercase tracking-widest">GCash</p>
+                        <p className="text-[10px] font-black text-text-high uppercase tracking-widest">{t(paymentMethodLabel(refund.method ?? "gcash"))}</p>
                     </div>
+                    {refund.method === "bank_transfer" && (
+                        <>
+                            <div className="flex items-center justify-between">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Bank")}</p>
+                                <p className="text-xs font-black text-text-high">{refund.bank_name}</p>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Account name")}</p>
+                                <p className="text-xs font-black text-text-high">{refund.bank_account_name}</p>
+                            </div>
+                        </>
+                    )}
                     <div className="flex items-center justify-between">
                         <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Account Number")}</p>
                         <p className="text-sm font-black text-primary tracking-wider font-mono">
-                            {refund.gcash_number || t("Provided via QR")}
+                            {refund.method === "bank_transfer"
+                                ? formatAccountNumber(refund.bank_account_number)
+                                : refund.gcash_number || t("Provided via QR")}
                         </p>
                     </div>
                     {refund.qr_url && (

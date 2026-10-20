@@ -13,6 +13,7 @@ import {
     ExternalLink,
     FileCheck,
     FileText,
+    Landmark,
     Loader2,
     QrCode,
     RefreshCw,
@@ -30,7 +31,9 @@ import { useFormValidation } from "@/hooks/useFormValidation";
 import { cn } from "@/lib/utils";
 import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { textRule } from "@/lib/validation/rules";
-import { BILLING_LIMITS } from "@/lib/validation/schemas/billing.schema";
+import { BILLING_LIMITS, BANK_REFERENCE_REQUIRED_MESSAGE, REFERENCE_REQUIRED_MESSAGE } from "@/lib/validation/schemas/billing.schema";
+import { isProofMethod, type CheckoutMethod } from "@/lib/billing/payment-methods";
+import { BankTransferDetails, GcashLimitNotice } from "@/components/shared/payment-methods/PaymentMethodBits";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
 
@@ -43,7 +46,7 @@ type PaymentRequestItem = {
     amount: number;
     dueAt: string | null;
     status: "pending" | "processing" | "completed" | "rejected" | "expired";
-    method: "gcash" | "cash" | null;
+    method: CheckoutMethod | null;
     referenceNumber: string | null;
     transactionReference?: string | null;
     note: string | null;
@@ -73,9 +76,23 @@ type PortalPayload = {
         accountNumber: string | null;
         qrImageUrl: string | null;
     } | null;
+    /** The landlord's bank account, when they turned bank transfer on. */
+    bankDestination?: {
+        bankName: string | null;
+        accountName: string | null;
+        accountNumber: string | null;
+        qrImageUrl: string | null;
+    } | null;
     requests: PaymentRequestItem[];
     transactionReference?: string | null;
-    methods: Array<"gcash" | "cash">;
+    methods: CheckoutMethod[];
+};
+
+/** Label for a prospect's chosen method (English key; pass through t()). */
+const METHOD_DISPLAY: Record<CheckoutMethod, string> = {
+    gcash: "GCash (E-Wallet)",
+    bank_transfer: "Bank Transfer",
+    cash: "Cash (In Person)",
 };
 
 const peso = new Intl.NumberFormat("en-PH", {
@@ -116,7 +133,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     // Form inputs
-    const [method, setMethod] = useState<"gcash" | "cash">("gcash");
+    const [method, setMethod] = useState<CheckoutMethod>("gcash");
     const [referenceNumber, setReferenceNumber] = useState("");
     const [note, setNote] = useState("");
     const [proofFile, setProofFile] = useState<File | null>(null);
@@ -157,6 +174,9 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                 const firstSubmitted = data.requests.find((r) => r.referenceNumber || r.method);
                 if (firstSubmitted?.method) {
                     setMethod(firstSubmitted.method);
+                } else if (Array.isArray(data.methods) && data.methods.length > 0 && !data.methods.includes("gcash")) {
+                    // Landlord only takes bank transfer (and cash): start there.
+                    setMethod(data.methods[0]);
                 }
                 if (firstSubmitted?.referenceNumber) {
                     setReferenceNumber(firstSubmitted.referenceNumber);
@@ -273,9 +293,9 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
     const hasProof = Boolean(proofFile || existingProofUrl);
     const hasReference = referenceNumber.trim().length > 0;
 
-    // Submit disabled unless proof of payment submitted (for GCash)
+    // Submit disabled unless proof of payment submitted (for GCash and bank transfer)
     const canSubmit = useMemo(() => {
-        if (method === "gcash") {
+        if (isProofMethod(method)) {
             return hasProof && hasReference;
         }
         return true;
@@ -284,10 +304,15 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
     const portalValues = useMemo(() => ({ method, referenceNumber, note, hasProof }), [method, referenceNumber, note, hasProof]);
     const portalForm = useFormValidation(portalValues, {
         referenceNumber: (value, all) => {
-            if (all.method === "gcash" && !String(value ?? "").trim()) return t("Reference number is required for GCash submissions.");
+            if (isProofMethod(all.method) && !String(value ?? "").trim()) {
+                return t(all.method === "bank_transfer" ? BANK_REFERENCE_REQUIRED_MESSAGE : REFERENCE_REQUIRED_MESSAGE);
+            }
             return textRule(value, { label: "Reference number", max: BILLING_LIMITS.reference });
         },
-        hasProof: (value, all) => (all.method === "gcash" && !value ? t("Upload your GCash receipt to continue.") : undefined),
+        hasProof: (value, all) =>
+            isProofMethod(all.method) && !value
+                ? t(all.method === "bank_transfer" ? "Upload your bank receipt or deposit slip to continue." : "Upload your GCash receipt to continue.")
+                : undefined,
         note: (value) => textRule(value, { label: "Note", max: BILLING_LIMITS.applicationNote }),
     });
 
@@ -676,6 +701,22 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 </div>
                             </section>
                         )}
+
+                        {/* Bank Transfer Destination Card */}
+                        {payload.bankDestination && (
+                            <section
+                                data-testid="portal-bank-destination"
+                                className="rounded-3xl border border-emerald-500/20 bg-gradient-to-b from-emerald-50/40 via-white/90 to-white/90 dark:from-emerald-950/20 dark:via-zinc-900/60 dark:to-zinc-900/60 p-6 sm:p-7 backdrop-blur-xl shadow-sm dark:shadow-xl transition-colors"
+                            >
+                                <div className="mb-4 flex items-center gap-2 border-b border-zinc-200/70 dark:border-white/5 pb-3">
+                                    <Landmark className="size-5 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                                    <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                                        {t("Bank Transfer Destination")}
+                                    </span>
+                                </div>
+                                <BankTransferDetails destination={payload.bankDestination} amount={totalAmount} />
+                            </section>
+                        )}
                     </div>
 
                     {/* RIGHT COLUMN: Unified Payment Form / Under Review Receipt (7 cols) */}
@@ -784,14 +825,16 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                         )}
                                         {referenceNumber && (
                                             <div className="flex justify-between">
-                                                <span className="text-zinc-500 dark:text-zinc-400">{t("GCash Ref No.")}</span>
+                                                <span className="text-zinc-500 dark:text-zinc-400">
+                                                    {payload.requests[0]?.method === "bank_transfer" ? t("Bank Ref No.") : t("GCash Ref No.")}
+                                                </span>
                                                 <span className="font-mono font-bold text-zinc-900 dark:text-white">{referenceNumber}</span>
                                             </div>
                                         )}
                                         <div className="flex justify-between">
                                             <span className="text-zinc-500 dark:text-zinc-400">{t("Payment Method")}</span>
                                             <span className="font-semibold text-zinc-900 dark:text-white capitalize">
-                                                {payload.requests[0]?.method === "gcash" ? t("GCash (E-Wallet)") : t("Cash (In Person)")}
+                                                {t(METHOD_DISPLAY[payload.requests[0]?.method ?? "cash"])}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
@@ -845,40 +888,63 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
                                     <div className="mt-4 space-y-4">
                                         {/* Payment Method Selector */}
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => setMethod("gcash")}
-                                                className={`flex items-center justify-center gap-2 rounded-2xl py-3 px-4 text-xs sm:text-sm font-bold transition ${
-                                                    method === "gcash"
+                                        <div
+                                            role="radiogroup"
+                                            aria-label={t("Payment method")}
+                                            className={cn("grid gap-3", (payload.methods?.length ?? 2) >= 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2")}
+                                        >
+                                            {(payload.methods?.length ? payload.methods : (["gcash", "cash"] as CheckoutMethod[])).map((option) => {
+                                                const selected = method === option;
+                                                const selectedTone =
+                                                    option === "gcash"
                                                         ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 border border-blue-500"
-                                                        : "bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400 border border-zinc-200/80 dark:border-white/5 hover:bg-zinc-200/70 dark:hover:bg-zinc-800"
-                                                }`}
-                                            >
-                                                <span className="flex size-4 items-center justify-center rounded-full bg-white text-[9px] font-black text-blue-600">
-                                                    G
-                                                </span>
-                                                <span>{t("GCash (E-Wallet)")}</span>
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => setMethod("cash")}
-                                                className={`flex items-center justify-center gap-2 rounded-2xl py-3 px-4 text-xs sm:text-sm font-bold transition ${
-                                                    method === "cash"
-                                                        ? "bg-zinc-800 text-white shadow-md border border-zinc-700 dark:bg-zinc-700"
-                                                        : "bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400 border border-zinc-200/80 dark:border-white/5 hover:bg-zinc-200/70 dark:hover:bg-zinc-800"
-                                                }`}
-                                            >
-                                                <CreditCard className="size-4" />
-                                                <span>{t("Cash (In Person)")}</span>
-                                            </button>
+                                                        : option === "bank_transfer"
+                                                        ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20 border border-emerald-500"
+                                                        : "bg-zinc-800 text-white shadow-md border border-zinc-700 dark:bg-zinc-700";
+                                                return (
+                                                    <button
+                                                        key={option}
+                                                        type="button"
+                                                        role="radio"
+                                                        aria-checked={selected}
+                                                        data-method={option}
+                                                        onClick={() => setMethod(option)}
+                                                        className={`flex items-center justify-center gap-2 rounded-2xl py-3 px-4 text-xs sm:text-sm font-bold transition ${
+                                                            selected
+                                                                ? selectedTone
+                                                                : "bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400 border border-zinc-200/80 dark:border-white/5 hover:bg-zinc-200/70 dark:hover:bg-zinc-800"
+                                                        }`}
+                                                    >
+                                                        {option === "gcash" ? (
+                                                            <span className="flex size-4 items-center justify-center rounded-full bg-white text-[9px] font-black text-blue-600">
+                                                                G
+                                                            </span>
+                                                        ) : option === "bank_transfer" ? (
+                                                            <Landmark className="size-4" />
+                                                        ) : (
+                                                            <CreditCard className="size-4" />
+                                                        )}
+                                                        <span>{t(METHOD_DISPLAY[option])}</span>
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
+
+                                        {method === "gcash" && (
+                                            <GcashLimitNotice
+                                                amount={totalAmount}
+                                                onSwitchToBank={payload.bankDestination ? () => setMethod("bank_transfer") : undefined}
+                                            />
+                                        )}
 
                                         {/* Reference Number Field */}
                                         <div>
                                             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                                                {method === "gcash" ? t("13-Digit GCash Reference Number *") : t("Reference Number (Optional)")}
+                                                {method === "gcash"
+                                                    ? t("13-Digit GCash Reference Number *")
+                                                    : method === "bank_transfer"
+                                                    ? t("Bank Reference / Trace Number *")
+                                                    : t("Reference Number (Optional)")}
                                             </label>
                                             <div className="relative">
                                                 <input maxLength={60}
@@ -886,7 +952,13 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                     type="text"
                                                     value={referenceNumber}
                                                     onChange={(e) => setReferenceNumber(e.target.value)}
-                                                    placeholder={method === "gcash" ? t("e.g. 1002 9384 1029 1") : t("Optional cash memo or receipt number")}
+                                                    placeholder={
+                                                        method === "gcash"
+                                                            ? t("e.g. 1002 9384 1029 1")
+                                                            : method === "bank_transfer"
+                                                            ? t("Bank reference or trace no.")
+                                                            : t("Optional cash memo or receipt number")
+                                                    }
                                                     className={cn("w-full rounded-2xl border border-zinc-300 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition", portalForm.errorFor("referenceNumber") && fieldErrorClass)}
                                                 />
                                                 {referenceNumber.trim().length > 0 && (
@@ -899,7 +971,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                         {/* File Upload Dropzone */}
                                         <div>
                                             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                                                {method === "gcash" ? t("Proof of Payment Receipt *") : t("Proof of Payment Receipt (Optional)")}
+                                                {isProofMethod(method) ? t("Proof of Payment Receipt *") : t("Proof of Payment Receipt (Optional)")}
                                             </label>
 
                                             <input
@@ -1046,9 +1118,11 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                     </button>
 
                                     {/* Status guidance note under button */}
-                                    {!canSubmit && method === "gcash" && (
+                                    {!canSubmit && isProofMethod(method) && (
                                         <p className="mt-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
-                                            {t("Please upload your GCash receipt and enter the reference number to proceed.")}
+                                            {method === "bank_transfer"
+                                                ? t("Please upload your bank receipt and enter the reference number to proceed.")
+                                                : t("Please upload your GCash receipt and enter the reference number to proceed.")}
                                         </p>
                                     )}
                                 </div>
@@ -1090,7 +1164,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-zinc-500 dark:text-zinc-400">{t("Payment Method")}</span>
-                                <span className="font-bold text-zinc-900 dark:text-white capitalize">{method === "cash" ? t("Cash") : method}</span>
+                                <span className="font-bold text-zinc-900 dark:text-white">{t(METHOD_DISPLAY[method])}</span>
                             </div>
                             {referenceNumber && (
                                 <div className="flex justify-between">

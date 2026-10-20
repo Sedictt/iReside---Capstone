@@ -1400,10 +1400,31 @@ const manualArticles: TranslationDictionary = {
   "Open the landlord manual": "Buksan ang landlord manual",
 };
 
+/** Bank transfer payments: settings, checkout and API messages. */
+const bankTransferMessages: TranslationDictionary = {
+  "Bank account name": "Pangalan ng bank account",
+  "Payment methods saved successfully.": "Matagumpay na na-save ang mga paraan ng pagbabayad.",
+  "Reference number is required for bank transfer submissions.": "Kailangan ang reference number para sa bayad sa bank transfer.",
+  "Type the bank account number: 10 to 16 numbers, no letters.": "I-type ang bank account number: 10 hanggang 16 na numero, walang letra.",
+  "Choose GCash or bank transfer for your refund.": "Piliin ang GCash o bank transfer para sa refund mo.",
+  "Choose your bank.": "Piliin ang bangko mo.",
+  "Type the name on your bank account.": "I-type ang pangalan sa bank account mo.",
+  "Method must be GCash, Bank Transfer or Cash.": "Dapat ay GCash, Bank Transfer o Cash ang paraan ng pagbabayad.",
+  "Your landlord has not set up bank transfer yet. Please choose another payment method.": "Hindi pa naka-set up ang bank transfer ng landlord mo. Pumili ng ibang paraan ng pagbabayad.",
+  "The landlord has not set up bank transfer yet. Please choose another payment method.": "Hindi pa naka-set up ang bank transfer ng landlord. Pumili ng ibang paraan ng pagbabayad.",
+  "Proof upload is required for bank transfer submissions.": "Kailangang mag-upload ng patunay para sa bayad sa bank transfer.",
+  "Bank transfer proof is required before confirmation.": "Kailangan ang patunay ng bank transfer bago kumpirmahin.",
+  "Bank account name can only contain letters, spaces, periods, commas, apostrophes, and hyphens.": "Letra, espasyo, tuldok, kuwit, kudlit, at gitling lang ang puwede sa pangalan ng bank account.",
+  "Bank name can only contain letters, numbers, spaces, periods, ampersands, and hyphens.": "Letra, numero, espasyo, tuldok, ampersand, at gitling lang ang puwede sa pangalan ng bangko.",
+  "Type your bank account number.": "I-type ang bank account number mo.",
+  "Use numbers only for the bank account number.": "Numero lang ang gamitin sa bank account number.",
+};
+
 export const runtimeMessages: TranslationDictionary = {
   ...withLowercaseVariants(fieldLabels),
   ...fieldLabels,
   ...validationMessages,
   ...apiMessages,
   ...manualArticles,
+  ...bankTransferMessages,
 };

@@ -181,6 +181,7 @@ export default function InvoicesPage() {
     if (filterMethod !== "all") {
       filteredInvoices = filteredInvoices.filter((i) => {
         if (filterMethod === "gcash") return i.paymentMethod === "gcash";
+        if (filterMethod === "bank_transfer") return i.paymentMethod === "bank_transfer";
         if (filterMethod === "in_person") return i.paymentMethod === "in_person" || i.paymentMethod === "cash" || i.workflowStatus === "awaiting_in_person";
         return true;
       });
@@ -480,6 +481,7 @@ export default function InvoicesPage() {
                 >
                   <option value="all">{t("All Methods")}</option>
                   <option value="gcash">GCash</option>
+                  <option value="bank_transfer">{t("Bank Transfer")}</option>
                   <option value="in_person">{t("Cash / In-Person")}</option>
                 </select>
 

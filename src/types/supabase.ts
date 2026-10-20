@@ -1209,6 +1209,7 @@ export type Database = {
         Row: {
           account_name: string
           account_number: string
+          bank_name: string | null
           created_at: string
           id: string
           is_enabled: boolean
@@ -1221,6 +1222,7 @@ export type Database = {
         Insert: {
           account_name: string
           account_number: string
+          bank_name?: string | null
           created_at?: string
           id?: string
           is_enabled?: boolean
@@ -1233,6 +1235,7 @@ export type Database = {
         Update: {
           account_name?: string
           account_number?: string
+          bank_name?: string | null
           created_at?: string
           id?: string
           is_enabled?: boolean
@@ -3640,7 +3643,7 @@ export type Database = {
         | "lease_renewal_approved"
         | "lease_renewal_rejected"
       payment_amount_tag: "exact" | "partial" | "overpaid" | "short_paid"
-      payment_intent_method: "gcash" | "in_person"
+      payment_intent_method: "gcash" | "bank_transfer" | "in_person"
       payment_method:
         | "credit_card"
         | "debit_card"
@@ -3861,7 +3864,7 @@ export const Constants = {
         "lease_renewal_rejected",
       ],
       payment_amount_tag: ["exact", "partial", "overpaid", "short_paid"],
-      payment_intent_method: ["gcash", "in_person"],
+      payment_intent_method: ["gcash", "bank_transfer", "in_person"],
       payment_method: [
         "credit_card",
         "debit_card",

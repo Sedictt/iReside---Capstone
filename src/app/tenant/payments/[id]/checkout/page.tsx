@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, Suspense, type ReactNode } from "react";
-import { ArrowLeft, CheckCircle2, CreditCard, Loader2, QrCode, ShieldCheck, Upload, Wallet, Receipt, TrendingUp, Info, HelpCircle, HandCoins, ChevronRight, AlertCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CreditCard, Loader2, QrCode, ShieldCheck, Upload, Wallet, Receipt, TrendingUp, Info, HelpCircle, HandCoins, ChevronRight, AlertCircle, Landmark } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -16,7 +16,9 @@ import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { textRule } from "@/lib/validation/rules";
-import { BILLING_LIMITS } from "@/lib/validation/schemas/billing.schema";
+import { BILLING_LIMITS, BANK_REFERENCE_REQUIRED_MESSAGE, PROOF_LIMITS, REFERENCE_REQUIRED_MESSAGE } from "@/lib/validation/schemas/billing.schema";
+import { isProofMethod, paymentMethodLabel, type CheckoutMethod } from "@/lib/billing/payment-methods";
+import { BankTransferDetails, CopyValueButton, GcashLimitNotice } from "@/components/shared/payment-methods/PaymentMethodBits";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
 
@@ -223,6 +225,22 @@ function buildFaceToFacePreviewInvoice(invoiceId: string): InvoiceDetail {
             created_at: now,
             updated_at: now,
         } as any,
+        paymentDestinations: {
+            gcash: {
+                id: "preview-destination",
+                landlord_id: "preview-landlord",
+                provider: "gcash",
+                bank_name: null,
+                account_name: "Landlord Preview",
+                account_number: "09179876543",
+                qr_image_path: null,
+                qr_image_url: null,
+                is_enabled: true,
+                created_at: now,
+                updated_at: now,
+            },
+            bank_transfer: null,
+        },
         leaseTermsSummary: {
             dueDay: 5,
             lateFeeAmount: 250,
@@ -420,6 +438,34 @@ function buildSelectivePreviewInvoice(invoiceId: string): InvoiceDetail {
             created_at: now,
             updated_at: now,
         } as any,
+        paymentDestinations: {
+            gcash: {
+                id: "dest-selective",
+                landlord_id: "landlord-selective",
+                provider: "gcash",
+                bank_name: null,
+                account_name: "Skyline Heights Apartments",
+                account_number: "09170001122",
+                qr_image_path: null,
+                qr_image_url: null,
+                is_enabled: true,
+                created_at: now,
+                updated_at: now,
+            },
+            bank_transfer: {
+                id: "dest-selective-bank",
+                landlord_id: "landlord-selective",
+                provider: "bank_transfer",
+                bank_name: "BDO Unibank",
+                account_name: "Skyline Heights Apartments",
+                account_number: "001234567890",
+                qr_image_path: null,
+                qr_image_url: null,
+                is_enabled: true,
+                created_at: now,
+                updated_at: now,
+            },
+        },
         leaseTermsSummary: {
             dueDay: 1,
             lateFeeAmount: 500,
@@ -438,7 +484,7 @@ function CheckoutPageContent() {
     const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [method, setMethod] = useState<"gcash" | "cash">("gcash");
+    const [method, setMethod] = useState<CheckoutMethod>("gcash");
     const [referenceNumber, setReferenceNumber] = useState("");
     const [note, setNote] = useState("");
     const [receipt, setReceipt] = useState<File | null>(null);
@@ -503,11 +549,32 @@ function CheckoutPageContent() {
         }
     }, [isFaceToFacePreview, invoice]);
 
+    // Methods the landlord turned on. Cash is always possible; when nothing is set up yet
+    // GCash stays visible, as before bank transfer existed.
+    const gcashDestination = invoice?.paymentDestinations?.gcash ?? invoice?.paymentDestination ?? null;
+    const bankDestination = invoice?.paymentDestinations?.bank_transfer?.is_enabled ? invoice.paymentDestinations.bank_transfer : null;
+    const gcashAvailable = Boolean(gcashDestination?.is_enabled) || !bankDestination;
+    const availableMethods = useMemo<CheckoutMethod[]>(
+        () => [...(gcashAvailable ? (["gcash"] as const) : []), ...(bankDestination ? (["bank_transfer"] as const) : []), "cash"],
+        [gcashAvailable, bankDestination],
+    );
+
     useEffect(() => {
         if (isFaceToFacePreview || isSelectivePreview) {
             setMethod(isFaceToFacePreview ? "cash" : "gcash");
         }
     }, [isFaceToFacePreview, isSelectivePreview]);
+
+    // Keep the selection on a method this landlord accepts (e.g. bank only → start on bank).
+    useEffect(() => {
+        if (!availableMethods.includes(method)) setMethod(availableMethods[0]);
+    }, [availableMethods, method]);
+
+    // A reading billed through a line item (item.reading_id) is already in that item's amount.
+    const readingsInItems = useMemo(
+        () => new Set((invoice?.lineItems ?? []).map((item) => item.reading_id).filter(Boolean) as string[]),
+        [invoice],
+    );
 
     const amountDue = useMemo(() => {
         if (!invoice) return 0;
@@ -517,21 +584,21 @@ function CheckoutPageContent() {
             .reduce((sum, item) => sum + item.amount, 0);
             
         const selectedReadingsTotal = invoice.readings
-            .filter(r => selectedReadingIds.includes(r.id))
+            .filter(r => selectedReadingIds.includes(r.id) && !readingsInItems.has(r.id))
             .reduce((sum, r) => sum + (r.billing_mode === 'included_in_rent' ? 0 : r.computed_charge), 0);
             
         const totalSelected = selectedItemsTotal + selectedReadingsTotal;
         return Math.max(0, totalSelected - invoice.paidAmount);
-    }, [invoice, selectedItemIds, selectedReadingIds]);
+    }, [invoice, selectedItemIds, selectedReadingIds, readingsInItems]);
 
     const paymentValues = useMemo(() => ({ referenceNumber, receipt, note }), [referenceNumber, receipt, note]);
     const paymentForm = useFormValidation(paymentValues, {
         referenceNumber: (value) => {
-            if (method !== "gcash") return undefined;
-            if (!String(value ?? "").trim()) return t("Reference number is required for GCash submissions.");
+            if (!isProofMethod(method)) return undefined;
+            if (!String(value ?? "").trim()) return t(method === "bank_transfer" ? BANK_REFERENCE_REQUIRED_MESSAGE : REFERENCE_REQUIRED_MESSAGE);
             return textRule(value, { label: "Reference number", max: BILLING_LIMITS.reference });
         },
-        receipt: (value) => (method === "gcash" && !value ? t("A clear payment proof image is required.") : undefined),
+        receipt: (value) => (isProofMethod(method) && !value ? t("A clear payment proof image is required.") : undefined),
         note: (value) => textRule(value, { label: "Note", max: BILLING_LIMITS.paymentNote }),
     });
 
@@ -579,7 +646,7 @@ function CheckoutPageContent() {
             `/api/tenant/payments/${invoice.id}/submit`,
             "POST",
             payload,
-            `Offline GCash payment for Invoice #${invoice.invoiceNumber}`
+            `Offline ${paymentMethodLabel(method)} payment for Invoice #${invoice.invoiceNumber}`
         );
 
         toast.success(t("Payment proof saved offline! It will submit to your Landlord automatically once online."));
@@ -587,7 +654,7 @@ function CheckoutPageContent() {
 
     const submitPayment = async () => {
         if (!invoice) return;
-        if (method !== "gcash") return;
+        if (!isProofMethod(method)) return;
         if (submitting) return; // double-click guard
         if (!paymentForm.validateAll()) return;
         setSubmitting(true);
@@ -783,57 +850,65 @@ function CheckoutPageContent() {
 
                     {/* Step 1: Payment Method */}
                     <section className="rounded-[2rem] p-1 backdrop-blur-xl neumorphic-inset">
-                        <div className="grid grid-cols-2 gap-1">
-                            <button
-                                onClick={() => setMethod("gcash")}
-                                disabled={isFaceToFacePreview}
-                                className={cn(
-                                    "relative flex items-center gap-3 rounded-[1.7rem] px-6 py-4 transition-all duration-300",
-                                    method === "gcash" ? "bg-background shadow-md ring-1 ring-border/50" : "text-muted-foreground hover:bg-white/5",
-                                    isFaceToFacePreview && "opacity-50 cursor-not-allowed"
-                                )}
-                            >
-                                <div className={cn(
-                                    "flex size-10 items-center justify-center rounded-xl border transition-all",
-                                    method === "gcash" ? "border-primary/30 bg-primary/10 text-primary" : "border-border/50 bg-muted/50"
-                                )}>
-                                    <QrCode className="size-5" />
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-sm font-black tracking-tight">{t("GCash Wallet")}</p>
-                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-60">{t("Digital Settlement")}</p>
-                                </div>
-                                {method === "gcash" && <motion.div layoutId="active-pill" className="absolute inset-0 rounded-[1.7rem] border-2 border-primary/20 pointer-events-none" />}
-                            </button>
-
-                            <button
-                                onClick={() => setMethod("cash")}
-                                className={cn(
-                                    "relative flex items-center gap-3 rounded-[1.7rem] px-6 py-4 transition-all duration-300",
-                                    method === "cash" ? "bg-background shadow-md ring-1 ring-border/50" : "text-muted-foreground hover:bg-white/5"
-                                )}
-                            >
-                                <div className={cn(
-                                    "flex size-10 items-center justify-center rounded-xl border transition-all",
-                                    method === "cash" ? "border-amber-500/30 bg-amber-500/10 text-amber-500" : "border-border/50 bg-muted/50"
-                                )}>
-                                    <Wallet className="size-5" />
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-sm font-black tracking-tight">{t("Cash / In-Person")}</p>
-                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-60">{t("Face-to-Face")}</p>
-                                </div>
-                                {method === "cash" && <motion.div layoutId="active-pill" className="absolute inset-0 rounded-[1.7rem] border-2 border-primary/20 pointer-events-none" />}
-                            </button>
+                        <div
+                            role="radiogroup"
+                            aria-label={t("Payment method")}
+                            className={cn("grid gap-1", availableMethods.length === 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2")}
+                        >
+                            {availableMethods.map((option) => {
+                                const meta = {
+                                    gcash: { icon: QrCode, title: "GCash Wallet", caption: "Digital Settlement", tone: "border-primary/30 bg-primary/10 text-primary" },
+                                    bank_transfer: { icon: Landmark, title: "Bank Transfer", caption: "InstaPay / PESONet", tone: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" },
+                                    cash: { icon: Wallet, title: "Cash / In-Person", caption: "Face-to-Face", tone: "border-amber-500/30 bg-amber-500/10 text-amber-500" },
+                                }[option];
+                                const Icon = meta.icon;
+                                const selected = method === option;
+                                const locked = isFaceToFacePreview && option !== "cash";
+                                return (
+                                    <button
+                                        key={option}
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={selected}
+                                        data-method={option}
+                                        onClick={() => setMethod(option)}
+                                        disabled={locked}
+                                        className={cn(
+                                            "relative flex items-center gap-3 rounded-[1.7rem] px-5 py-4 transition-all duration-300",
+                                            selected ? "bg-background shadow-md ring-1 ring-border/50" : "text-muted-foreground hover:bg-white/5",
+                                            locked && "opacity-50 cursor-not-allowed"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "flex size-10 shrink-0 items-center justify-center rounded-xl border transition-all",
+                                            selected ? meta.tone : "border-border/50 bg-muted/50"
+                                        )}>
+                                            <Icon className="size-5" />
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="text-sm font-black tracking-tight">{t(meta.title)}</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest opacity-60">{t(meta.caption)}</p>
+                                        </div>
+                                        {selected && <motion.div layoutId="active-pill" className="absolute inset-0 rounded-[1.7rem] border-2 border-primary/20 pointer-events-none" />}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </section>
+
+                    {method === "gcash" && (
+                        <GcashLimitNotice
+                            amount={partialAmount ? Number(partialAmount) : amountDue}
+                            onSwitchToBank={bankDestination ? () => setMethod("bank_transfer") : undefined}
+                        />
+                    )}
 
                     {/* Step 2: Payment Details */}
                     <div className="min-h-[400px]">
                         <AnimatePresence mode="wait">
-                            {method === "gcash" ? (
+                            {isProofMethod(method) ? (
                                 <motion.div 
-                                    key="gcash"
+                                    key={method}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
@@ -848,7 +923,7 @@ function CheckoutPageContent() {
                                                         value={referenceNumber}
                                                         onChange={(event) => setReferenceNumber(event.target.value)}
                                                         className={cn("w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10", paymentForm.errorFor("referenceNumber") && fieldErrorClass)}
-                                                        placeholder={t("13-digit GCash Ref #")}
+                                                        placeholder={t(method === "bank_transfer" ? "Bank reference or trace no." : "13-digit GCash Ref #")}
                                                     />
                                                     <FieldError id={paymentForm.errorId("referenceNumber")} message={paymentForm.errorFor("referenceNumber")} />
                                                 </Field>
@@ -862,11 +937,11 @@ function CheckoutPageContent() {
                                                             {receipt ? <CheckCircle2 className="size-6" /> : <Upload className="size-6" />}
                                                         </div>
                                                         <div className="space-y-1">
-                                                            <p className="text-sm font-black text-foreground truncate max-w-[240px]">
-                                                                {receipt ? receipt.name : t("Upload Screenshot")}
+                                                            <p className={cn("text-sm font-black text-foreground", receipt && "truncate max-w-[240px]")}>
+                                                                {receipt ? receipt.name : t(method === "bank_transfer" ? "Upload Screenshot or Deposit Slip" : "Upload Screenshot")}
                                                             </p>
                                                             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                                {t("JPG, PNG or WebP up to 5MB")}
+                                                                {t("JPG, PNG or WebP up to 8MB")}
                                                             </p>
                                                         </div>
                                                         <input
@@ -878,7 +953,7 @@ function CheckoutPageContent() {
                                                                 // Images only: the landlord reviews the proof as an image and the server rejects other types.
                                                                 const validFile = handleMediaSelection(event, {
                                                                     preset: "image",
-                                                                    maxSizeBytes: 5 * 1024 * 1024,
+                                                                    maxSizeBytes: PROOF_LIMITS.paymentProofMaxBytes,
                                                                     notify: (message, description) => toast.error(tr(message), { description }),
                                                                 });
                                                                 setReceipt(validFile);
@@ -891,12 +966,24 @@ function CheckoutPageContent() {
                                             </div>
                                         </div>
 
+                                        {method === "bank_transfer" && bankDestination ? (
+                                            <BankTransferDetails
+                                                className="order-first md:order-none"
+                                                amount={partialAmount ? Number(partialAmount) : amountDue}
+                                                destination={{
+                                                    bankName: bankDestination.bank_name,
+                                                    accountName: bankDestination.account_name,
+                                                    accountNumber: bankDestination.account_number,
+                                                    qrImageUrl: bankDestination.qr_image_url,
+                                                }}
+                                            />
+                                        ) : (
                                         <div className="rounded-[2rem] p-6 backdrop-blur-3xl text-center flex flex-col justify-center neumorphic-panel">
                                             <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t("Destination QR")}</p>
                                             <div className="group relative mx-auto mb-6 aspect-square w-full max-w-[200px] overflow-hidden rounded-3xl border border-border/50 bg-white p-3 shadow-md transition-all hover:scale-[1.02]">
-                                                {invoice.paymentDestination?.qr_image_url ? (
+                                                {gcashDestination?.qr_image_url ? (
                                                     <Image 
-                                                        src={invoice.paymentDestination.qr_image_url} 
+                                                        src={gcashDestination.qr_image_url} 
                                                         alt={t("Destination QR")} 
                                                         width={300} 
                                                         height={300} 
@@ -909,10 +996,14 @@ function CheckoutPageContent() {
                                                 )}
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-sm font-black text-foreground truncate">{invoice.paymentDestination?.account_name || t("Landlord Wallet")}</p>
-                                                <p className="text-[11px] font-black tracking-[0.1em] text-primary">{invoice.paymentDestination?.account_number || "---"}</p>
+                                                <p className="text-sm font-black text-foreground truncate">{gcashDestination?.account_name || t("Landlord Wallet")}</p>
+                                                <p className="text-[11px] font-black tracking-[0.1em] text-primary">{gcashDestination?.account_number || "---"}</p>
+                                                {gcashDestination?.account_number && (
+                                                    <CopyValueButton className="mx-auto mt-2" value={gcashDestination.account_number} label={t("Copy GCash number")} />
+                                                )}
                                             </div>
                                         </div>
+                                        )}
                                     </div>
 
                                     {/* Optional Note moved inside for better density */}
@@ -1066,6 +1157,8 @@ function CheckoutPageContent() {
                             })}
                             
                             {invoice.readings.map((reading) => {
+                                // Shown (and charged) through its line item instead.
+                                if (readingsInItems.has(reading.id)) return null;
                                 const metadata = (invoice.metadata as any) || {};
                                 const paidIds = metadata.paid_reading_ids || [];
                                 const pendingIds = metadata.pending_reading_ids || [];
@@ -1181,7 +1274,7 @@ function CheckoutPageContent() {
                                 </div>
                             )}
 
-                            {method === "gcash" && (
+                            {isProofMethod(method) && (
                                 <button 
                                     onClick={submitPayment}
                                     disabled={submitting || amountDue === 0}

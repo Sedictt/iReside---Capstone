@@ -70,6 +70,19 @@ export function MiniChatSystemMessage({ message, viewerRole }: MiniChatSystemMes
         );
     }
 
+    if (message.systemType === "payment_submitted") {
+        return (
+            <NotificationCard
+                message={message}
+                icon={<History className="size-6" />}
+                title={t("Payment Under Review")}
+                subtitle={viewerRole === "landlord" ? t("Awaiting Your Review") : t("Waiting for Landlord")}
+                variant="warning"
+                isCompact
+            />
+        );
+    }
+
     if (message.systemType === "reminder_sent") {
         return (
             <NotificationCard

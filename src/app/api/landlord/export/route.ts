@@ -5,6 +5,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { parseSearchParams } from "@/lib/validation/server";
 import { landlordExportQuerySchema } from "@/lib/validation/schemas/operations.schema";
 import { leaseTermTypeLabel } from "@/lib/lease-term";
+import { paymentMethodLabel } from "@/lib/billing/payment-methods";
 
 export const dynamic = "force-dynamic";
 
@@ -105,7 +106,7 @@ export async function GET(request: Request) {
                     "Balance Remaining (PHP)": balance,
                     "Status": inv.status || "pending",
                     "Billing Type": inv.type || "Rent",
-                    "Payment Method": inv.paymentMethod || "N/A",
+                    "Payment Method": paymentMethodLabel(inv.paymentMethod, "N/A"),
                 };
             });
 

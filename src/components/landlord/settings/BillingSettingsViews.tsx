@@ -1,21 +1,22 @@
 "use client";
 
 /**
- * Settings-page presentation for BillingOperationsPanel (`embedded` mode): the "GCash payments"
- * and "Water and electricity rates" pages. The panel keeps all state, validation and saving;
+ * Settings-page presentation for BillingOperationsPanel (`embedded` mode): the "Payment methods"
+ * (GCash + bank transfer) and "Water and electricity rates" pages. The panel keeps all state, validation and saving;
  * these components only draw it with the shared settings kit (big type, visible labels,
  * plain words). Saving happens through the page's own save bar, so there are no save buttons here.
  */
 
 import { useId, useRef } from "react";
 import Image from "next/image";
-import { CheckCircle2, ImagePlus, Loader2, Plus, Smartphone, Trash2, Upload } from "lucide-react";
+import { CheckCircle2, ImagePlus, Landmark, Loader2, Plus, Smartphone, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import type { BillingWorkspace } from "@/lib/billing/server";
 import { cn } from "@/lib/utils";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
-import { utilityRateRule } from "@/lib/validation/schemas/properties.schema";
+import { bankAccountNameRule, bankAccountNumberRule, utilityRateRule } from "@/lib/validation/schemas/properties.schema";
+import { OTHER_BANK, PH_BANKS, bankInitials, formatAccountNumber, normalizeAccountNumber } from "@/lib/billing/payment-methods";
 import { PH_MOBILE_DIGITS, isPhMobile, phMobileDigits, toPhMobileLocal } from "@/lib/phone";
 import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
 import { useLanguageContext } from "@/context/LanguageContext";
@@ -248,6 +249,231 @@ export function GcashSettingsView({ accountName, accountNumber, isEnabled, qrPre
                             </p>
                             <p className="font-mono text-lg font-bold tracking-wider text-foreground">
                                 {(isPhMobile(accountNumber) ? toPhMobileLocal(accountNumber) : null) || <span className="font-sans tracking-normal text-muted-foreground">{t("Your number will show here")}</span>}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </SettingsCard>
+        </>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Bank transfer (same page as GCash)
+// ---------------------------------------------------------------------------
+
+export interface BankSettingsDraft {
+    bankName: string;
+    accountName: string;
+    accountNumber: string;
+    isEnabled: boolean;
+    qrPreview: string | null;
+}
+
+interface BankTransferSettingsViewProps extends BankSettingsDraft {
+    onChange: (patch: Partial<BankSettingsDraft> & { qrFile?: File | null; removeQr?: boolean }) => void;
+}
+
+/** Bank picked from the list, or the typed name when it is not listed ("Other"). */
+function bankChoiceFor(bankName: string): string {
+    if (!bankName) return "";
+    return (PH_BANKS as readonly string[]).includes(bankName) ? bankName : OTHER_BANK;
+}
+
+export function BankTransferSettingsView({ bankName, accountName, accountNumber, isEnabled, qrPreview, onChange }: BankTransferSettingsViewProps) {
+    const { t } = useLanguageContext();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const otherNameId = useId();
+    const choice = bankChoiceFor(bankName);
+    const isOther = choice === OTHER_BANK;
+    const hasAnyDetail = Boolean(bankName || accountName || accountNumber);
+
+    const nameError = accountName.length > 0 ? bankAccountNameRule(accountName) : undefined;
+    const numberError = normalizeAccountNumber(accountNumber).length >= 10 || /[^\d\s-]/.test(accountNumber)
+        ? bankAccountNumberRule(accountNumber)
+        : undefined;
+    const digitsTyped = normalizeAccountNumber(accountNumber).length;
+    const numberProgress = !numberError && digitsTyped > 0 && digitsTyped < 10
+        ? t("Type at least {count} more numbers.", { count: 10 - digitsTyped })
+        : null;
+
+    return (
+        <>
+            <SettingsCard
+                id="bank-transfer-settings"
+                title={t("Your bank account")}
+                description={t("For big payments like move-in deposits. GCash can only send up to ₱50,000 at a time, so tenants can send larger amounts to your bank instead.")}
+            >
+                <div className="space-y-6">
+                    <SettingsField
+                        label={t("Your bank")}
+                        htmlFor="bank-name"
+                        help={t("Pick your bank from the list. If it is not there, choose Other bank and type it.")}
+                    >
+                        <select
+                            {...fieldAria("bank-name", { help: true })}
+                            value={choice}
+                            onChange={(event) => {
+                                const next = event.target.value;
+                                onChange({ bankName: next === OTHER_BANK ? OTHER_BANK : next });
+                            }}
+                            className={settingsInputClass(false)}
+                        >
+                            <option value="">{t("Choose your bank")}</option>
+                            {PH_BANKS.map((bank) => (
+                                <option key={bank} value={bank}>{bank}</option>
+                            ))}
+                            <option value={OTHER_BANK}>{t("Other bank")}</option>
+                        </select>
+                    </SettingsField>
+
+                    {isOther && (
+                        <SettingsField label={t("Bank name")} htmlFor={otherNameId}>
+                            <input
+                                id={otherNameId}
+                                value={bankName === OTHER_BANK ? "" : bankName}
+                                maxLength={60}
+                                placeholder={t("e.g. Bank of Commerce")}
+                                onChange={(event) => onChange({ bankName: event.target.value || OTHER_BANK })}
+                                className={settingsInputClass(false)}
+                            />
+                        </SettingsField>
+                    )}
+
+                    <SettingsField
+                        label={t("Name on your bank account")}
+                        htmlFor="bank-account-name"
+                        help={t("Type it the same way it shows on your passbook or bank app.")}
+                        error={nameError}
+                    >
+                        <input
+                            {...fieldAria("bank-account-name", { help: true, error: nameError })}
+                            value={accountName}
+                            placeholder={t("e.g. Marina Reyes")}
+                            maxLength={60}
+                            autoComplete="name"
+                            onChange={(event) => onChange({ accountName: event.target.value.replace(/[^\p{L}\s.,'’-]/gu, "") })}
+                            className={settingsInputClass(Boolean(nameError))}
+                        />
+                    </SettingsField>
+
+                    <SettingsField
+                        label={t("Bank account number")}
+                        htmlFor="bank-account-number"
+                        help={t("Numbers only, 10 to 16 digits. Spaces are fine.")}
+                        error={numberError}
+                    >
+                        <input
+                            {...fieldAria("bank-account-number", { help: true, error: numberError })}
+                            value={accountNumber}
+                            inputMode="numeric"
+                            maxLength={24}
+                            placeholder="0012 3456 7890"
+                            onChange={(event) => onChange({ accountNumber: event.target.value.replace(/[^\d\s-]/g, "") })}
+                            className={settingsInputClass(Boolean(numberError), "font-mono tracking-wider")}
+                        />
+                        {numberProgress && <p className="text-base font-semibold text-amber-800 dark:text-amber-300">{numberProgress}</p>}
+                    </SettingsField>
+
+                    <SettingsSwitchRow
+                        icon={Landmark}
+                        label={t("Let tenants pay by bank transfer")}
+                        description={t("When this is on, tenants see your bank details next to GCash when they pay.")}
+                        checked={isEnabled}
+                        onChange={(next) => onChange({ isEnabled: next })}
+                    />
+                </div>
+            </SettingsCard>
+
+            <SettingsCard
+                title={t("Your bank QR code (optional)")}
+                description={t("Many bank apps can show a QR Ph code for your account. Tenants can scan it instead of typing your account number.")}
+            >
+                <div className="space-y-5">
+                    {qrPreview ? (
+                        <div className="mx-auto w-full max-w-[16rem] rounded-2xl border-2 border-foreground/15 bg-white p-4">
+                            <Image src={qrPreview} alt={t("Your bank QR code")} width={224} height={224} unoptimized className="h-auto w-full object-contain" />
+                        </div>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className={cn(
+                                "flex w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-foreground/30 bg-background px-6 py-8 text-center transition-colors cursor-pointer",
+                                "hover:border-foreground/60 hover:bg-muted focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50",
+                            )}
+                        >
+                            <ImagePlus className="size-10 text-foreground" aria-hidden />
+                            <span className="text-lg font-bold text-foreground">{t("Add your QR code picture")}</span>
+                            <span className="text-base text-muted-foreground">{t("A photo or screenshot, up to 5 MB.")}</span>
+                        </button>
+                    )}
+
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept={MEDIA_ACCEPT_STRINGS.image}
+                        className="sr-only"
+                        tabIndex={-1}
+                        aria-hidden
+                        onChange={(event) => {
+                            const file = handleMediaSelection(event, {
+                                preset: "image",
+                                maxSizeBytes: 5 * 1024 * 1024,
+                                notify: (msg, desc) => toast.error(tr(msg), { description: desc }),
+                            });
+                            if (file) onChange({ qrFile: file, qrPreview: URL.createObjectURL(file), removeQr: false });
+                        }}
+                    />
+
+                    {qrPreview && (
+                        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                            <SettingsButton variant="secondary" icon={Upload} onClick={() => fileInputRef.current?.click()}>
+                                {t("Use a different picture")}
+                            </SettingsButton>
+                            <SettingsButton
+                                variant="secondary"
+                                icon={Trash2}
+                                onClick={() => onChange({ removeQr: true, qrFile: null, qrPreview: null })}
+                                className="text-rose-700 dark:text-rose-300"
+                            >
+                                {t("Remove QR code")}
+                            </SettingsButton>
+                        </div>
+                    )}
+                </div>
+            </SettingsCard>
+
+            <SettingsCard
+                title={t("What tenants will see")}
+                description={t("This is how your bank details will look to tenants when they pay.")}
+            >
+                <div className="space-y-4">
+                    {!isEnabled && hasAnyDetail && (
+                        <SettingsNotice tone="warning">
+                            {t("Bank transfer is turned off. Tenants will not see these details until you turn it on.")}
+                        </SettingsNotice>
+                    )}
+                    <div className={cn("mx-auto max-w-sm space-y-4 rounded-3xl border-2 border-foreground/15 bg-background p-6", !isEnabled && "opacity-70")}>
+                        <div className="flex items-center gap-3">
+                            <span aria-hidden className="flex h-12 min-w-12 items-center justify-center rounded-xl bg-emerald-700 px-2 text-sm font-black text-white">
+                                {bankInitials(isOther ? (bankName === OTHER_BANK ? "" : bankName) : bankName)}
+                            </span>
+                            <div className="min-w-0">
+                                <p className="text-base text-muted-foreground">{t("Pay by bank transfer")}</p>
+                                <p className="truncate text-xl font-bold text-foreground">
+                                    {(bankName && bankName !== OTHER_BANK ? bankName : null) || <span className="text-muted-foreground">{t("Your bank will show here")}</span>}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-base text-muted-foreground">{t("Send to")}</p>
+                            <p className="flex items-center gap-2 break-words text-xl font-bold text-foreground">
+                                {accountName.trim() || <span className="text-muted-foreground">{t("Your name will show here")}</span>}
+                                {accountName.trim() && <CheckCircle2 className="size-5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />}
+                            </p>
+                            <p className="font-mono text-lg font-bold tracking-wider text-foreground">
+                                {formatAccountNumber(accountNumber) || <span className="font-sans tracking-normal text-muted-foreground">{t("Your account number will show here")}</span>}
                             </p>
                         </div>
                     </div>
