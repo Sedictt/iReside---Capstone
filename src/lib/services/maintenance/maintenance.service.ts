@@ -5,7 +5,8 @@
  * Never imports createClient() internally.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, MaintenancePriority, MaintenanceStatus } from "@/types/database";
+import type { Database, MaintenanceStatus } from "@/types/database";
+import { toDbPriority, toPriorityLabel } from "@/lib/maintenance-priority";
 import {
   buildHeuristicMaintenanceTriage,
   computeMaintenanceTriageHash,
@@ -17,7 +18,6 @@ import type {
   CreateLandlordMaintenanceInput,
   CreateTenantMaintenanceInput,
   MaintenanceMetrics,
-  MaintenancePriorityLabel,
   MaintenanceRequestItem,
   MaintenanceSentimentLabel,
   MaintenanceStatusLabel,
@@ -95,34 +95,6 @@ const resolveStatus = (status: MaintenanceStatus | null | undefined): Maintenanc
       return "Resolved";
     default:
       return "Pending";
-  }
-};
-
-const resolvePriority = (priority: MaintenancePriority | null | undefined): MaintenancePriorityLabel => {
-  switch (priority) {
-    case "urgent":
-      return "Critical";
-    case "high":
-      return "High";
-    case "medium":
-      return "Medium";
-    case "low":
-    default:
-      return "Low";
-  }
-};
-
-const toDbPriority = (priority: MaintenancePriorityLabel): MaintenancePriority => {
-  switch (priority) {
-    case "Critical":
-      return "urgent";
-    case "High":
-      return "high";
-    case "Medium":
-      return "medium";
-    case "Low":
-    default:
-      return "low";
   }
 };
 
@@ -382,9 +354,8 @@ export class MaintenanceService {
       const propertyRecord = unitRecord ? propertyMap.get(unitRecord.property_id) : null;
       const statusLabel = resolveStatus(maintenanceRow.status);
       const triageData = triageMap.get(maintenanceRow.id);
-      const priorityLabel = triageData
-        ? resolvePriority(triageData.priority)
-        : resolvePriority(maintenanceRow.priority);
+      // The stored priority is what the tenant sees too; triage only adds the reason/sentiment.
+      const priorityLabel = toPriorityLabel(maintenanceRow.priority);
       const { cleanedDescription, isSelfRepairRequested } = extractSelfRepairDetails(
         maintenanceRow.description,
         maintenanceRow.category,
@@ -540,7 +511,7 @@ export class MaintenanceService {
         property: property?.name ?? "Property",
         unit: unit?.name ?? "Unit",
         landlord: landlord?.full_name ?? "Landlord",
-        priority: resolvePriority(row.priority),
+        priority: toPriorityLabel(row.priority),
         status: resolveStatus(row.status),
         reportedAt: formatRelativeDate(row.created_at),
         images: Array.isArray(row.images) ? row.images : [],
@@ -643,7 +614,7 @@ export class MaintenanceService {
       tenant: "",
       tenantAvatar: null,
       tenantAvatarBgColor: null,
-      priority: resolvePriority(newRequest.priority),
+      priority: toPriorityLabel(newRequest.priority),
       status: resolveStatus(newRequest.status),
       reportedAt: formatRelativeDate(newRequest.created_at),
       images: [],
@@ -726,7 +697,7 @@ export class MaintenanceService {
       thirdPartyName: null,
       property: "Property",
       unit: "Unit",
-      priority: resolvePriority(newRequest.priority),
+      priority: toPriorityLabel(newRequest.priority),
       status: resolveStatus(newRequest.status),
       reportedAt: formatRelativeDate(newRequest.created_at),
       images: Array.isArray(newRequest.images) ? newRequest.images : [],
@@ -844,7 +815,7 @@ export class MaintenanceService {
         ? tenantRecord.avatar_bg_color
         : null,
       status: resolveStatus(refreshedRequest.status),
-      priority: resolvePriority(refreshedRequest.priority),
+      priority: toPriorityLabel(refreshedRequest.priority),
       reportedAt: formatRelativeDate(refreshedRequest.created_at),
       images: Array.isArray(refreshedRequest.images)
         ? refreshedRequest.images.filter(isNonEmptyString)
@@ -927,7 +898,7 @@ export class MaintenanceService {
       property: "Property",
       unit: "Unit",
       status: resolveStatus(refreshedRequest.status),
-      priority: resolvePriority(refreshedRequest.priority),
+      priority: toPriorityLabel(refreshedRequest.priority),
       reportedAt: formatRelativeDate(refreshedRequest.created_at),
       images: Array.isArray(refreshedRequest.images)
         ? refreshedRequest.images.filter(isNonEmptyString)

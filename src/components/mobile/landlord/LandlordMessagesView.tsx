@@ -1627,12 +1627,12 @@ export function LandlordMessagesView() {
                 )}
 
                 {/* Floating Action Button (FAB) */}
-                <div className="fixed bottom-20 right-4 z-40 max-w-md mx-auto pointer-events-none">
+                <div className="mobile-above-tab-bar fixed right-4 z-40 max-w-md mx-auto pointer-events-none">
                     {viewMode === 'chats' ? (
                         <button
                             type="button"
                             onClick={() => setIsNewChatModalOpen(true)}
-                            className="pointer-events-auto h-12 px-5 rounded-full neumorphic-primary text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-xl active:scale-95 transition-all hover:brightness-105 cursor-pointer"
+                            className="m-btn m-btn-primary pointer-events-auto min-h-[48px] px-5 text-sm"
                         >
                             <UserPlus className="size-4" />
                             <span>{t('New Chat')}</span>
@@ -1641,7 +1641,7 @@ export function LandlordMessagesView() {
                         <button
                             type="button"
                             onClick={() => setIsBroadcastModalOpen(true)}
-                            className="pointer-events-auto h-12 px-5 rounded-full neumorphic-primary text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-xl active:scale-95 transition-all hover:brightness-105 cursor-pointer"
+                            className="m-btn m-btn-primary pointer-events-auto min-h-[48px] px-5 text-sm"
                         >
                             <Megaphone className="size-4" />
                             <span>{t('Broadcast')}</span>

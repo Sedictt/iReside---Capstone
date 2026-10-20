@@ -94,7 +94,42 @@ describe("MaintenanceService", () => {
       expect(result.requests[0].property).toBe("Sunshine Tower");
       expect(result.requests[0].unit).toBe("101");
       expect(result.requests[0].tenant).toBe("John Doe");
+      expect(result.requests[0].priority).toBe("Critical");
       expect(result.metrics.actionRequired).toBe(1);
+    });
+
+    it("shows the stored priority, not the triage guess, so it matches the tenant view", async () => {
+      // Bland wording: the keyword triage rates this "low", but the ticket is stored as urgent.
+      const mockRow = {
+        id: "req-2",
+        unit_id: "unit-1",
+        tenant_id: "tenant-1",
+        title: "Light in hallway",
+        description: "Please check it",
+        status: "open",
+        priority: "urgent",
+        category: "general",
+        images: [],
+        self_repair_requested: false,
+        created_at: new Date().toISOString(),
+      };
+      const emptyIn = { select: vi.fn().mockReturnThis(), in: vi.fn().mockResolvedValue({ data: [], error: null }) };
+      mockSupabase.from.mockImplementation((tableName: string) => {
+        if (tableName === "maintenance_requests") {
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            order: vi.fn().mockResolvedValue({ data: [mockRow], error: null }),
+            update: vi.fn().mockReturnThis(),
+          };
+        }
+        return emptyIn;
+      });
+
+      const result = await maintenanceService.getLandlordMaintenanceRequests("landlord-123");
+
+      expect(result.requests[0].priority).toBe("Critical");
+      expect(result.requests[0].triageReason).toBeTruthy();
     });
   });
 

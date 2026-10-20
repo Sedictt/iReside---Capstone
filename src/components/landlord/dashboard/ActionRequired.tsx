@@ -22,6 +22,7 @@ import { useProperty } from "@/context/PropertyContext";
 import { AnimatedFilterPills, type FilterPillItem } from "@/components/ui/AnimatedFilterPills";
 import { EXPIRING_URGENT_DAYS, OPEN_ENDED_NOTICE_DAYS, formatLeaseDate, isFixedTerm, leaseEndState } from "@/lib/lease-term";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { MAINTENANCE_PRIORITY_BADGE_TEXT, toPriorityLabel, type MaintenancePriorityLabel } from "@/lib/maintenance-priority";
 
 // --- Types ---
 
@@ -31,7 +32,7 @@ type MaintenanceRequestItem = {
     property: string;
     unit: string;
     tenant: string;
-    priority: "Critical" | "High" | "Medium" | "Low";
+    priority: MaintenancePriorityLabel;
     status: "Pending" | "Assigned" | "In Progress" | "Resolved";
     reportedAt: string;
 };
@@ -360,8 +361,9 @@ export function ActionRequired() {
             .filter((request) => request.status !== "Resolved")
             .slice(0, 10)
             .forEach((request) => {
-                const isCritical = request.priority === "Critical";
-                const isHigh = request.priority === "High";
+                const priority = toPriorityLabel(request.priority);
+                const isCritical = priority === "Critical";
+                const isHigh = priority === "High";
 
                 rawActions.push({
                     id: `maintenance-${request.id}`,
@@ -375,7 +377,7 @@ export function ActionRequired() {
                     href: `/landlord/maintenance?id=${request.id}`,
                     cta: t("Dispatch Tech"),
                     tone: isCritical ? "critical" : isHigh ? "high" : "medium",
-                    badgeLabel: isCritical ? "Critical SLA" : isHigh ? "High Priority" : "Standard",
+                    badgeLabel: isCritical ? "Critical SLA" : isHigh ? MAINTENANCE_PRIORITY_BADGE_TEXT.High : "Standard",
                     kind: "maintenance",
                 });
             });

@@ -78,7 +78,7 @@ export function BannerCustomizerModal({
       }
 
       setSelectedBanner(data.bannerUrl);
-      toast.success(t("Banner photo uploaded! Click 'Apply Banner Photo' to save."), { id: toastId });
+      toast.success(t("Banner photo uploaded! Tap 'Apply photo' to save."), { id: toastId });
     } catch (err: any) {
       console.error("[BannerCustomizerModal] Upload error:", err);
       toast.error(tr(err.message || t("Failed to upload image. Please try again.")), { id: toastId });
@@ -220,14 +220,14 @@ export function BannerCustomizerModal({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || isSaving}
-          className="w-full py-3 px-4 rounded-2xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-dashed border-zinc-300 dark:border-zinc-700 text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xs disabled:opacity-50"
+          className="w-full min-h-[48px] py-3 px-4 rounded-2xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-dashed border-zinc-300 dark:border-zinc-700 text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xs disabled:opacity-50"
         >
           {isUploading ? (
             <span className="inline-block size-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           ) : (
             <Upload className="size-4 text-primary" />
           )}
-          <span>{isUploading ? t("Uploading photo...") : t("Upload Property Photo (PNG / JPG)")}</span>
+          <span>{isUploading ? t("Uploading photo…") : t("Upload a property photo")}</span>
         </button>
 
         {/* Curated Presets Grid */}
@@ -281,15 +281,15 @@ export function BannerCustomizerModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2 pt-3 border-t border-zinc-100 dark:border-zinc-800">
           <button
             type="button"
             onClick={handleReset}
             disabled={isSaving || isUploading}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            className="min-h-[44px] px-3.5 rounded-full text-sm font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap disabled:opacity-50"
           >
-            <RotateCcw className="size-3.5" />
-            <span>{t("Reset to Default")}</span>
+            <RotateCcw className="size-4" />
+            <span>{t("Reset to default")}</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -297,7 +297,7 @@ export function BannerCustomizerModal({
               type="button"
               onClick={onClose}
               disabled={isSaving || isUploading}
-              className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50"
+              className="flex-1 sm:flex-none min-h-[44px] px-5 rounded-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-semibold whitespace-nowrap transition-all active:scale-95 disabled:opacity-50"
             >
               {t("Cancel")}
             </button>
@@ -306,14 +306,14 @@ export function BannerCustomizerModal({
               type="button"
               onClick={handleSave}
               disabled={isSaving || isUploading}
-              className="px-6 py-2 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-xs flex items-center gap-1.5 disabled:opacity-50"
+              className="flex-1 sm:flex-none min-h-[44px] px-5 rounded-full bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-sm font-semibold whitespace-nowrap transition-all active:scale-95 shadow-xs flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isSaving ? (
-                <span className="inline-block size-3.5 border-2 border-white/30 border-t-white dark:border-zinc-900/30 dark:border-t-zinc-900 rounded-full animate-spin" />
+                <span className="inline-block size-4 border-2 border-white/30 border-t-white dark:border-zinc-900/30 dark:border-t-zinc-900 rounded-full animate-spin" />
               ) : (
-                <Check className="size-3.5 stroke-[3]" />
+                <Check className="size-4 stroke-[3]" />
               )}
-              <span>{isSaving ? t("Applying...") : t("Apply Banner Photo")}</span>
+              <span>{isSaving ? t("Applying…") : t("Apply photo")}</span>
             </button>
           </div>
         </div>

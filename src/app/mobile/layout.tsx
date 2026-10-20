@@ -3,7 +3,9 @@
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useBrand } from '@/context/BrandContext'
 import { BottomTabBar } from '@/components/mobile/layout/BottomTabBar'
+import { MobileSheetExit } from '@/components/mobile/layout/MobileSheetExit'
 import { NotificationProvider } from '@/context/NotificationContext'
 import { PropertyProvider } from '@/context/PropertyContext'
 import { cn } from '@/lib/utils'
@@ -19,6 +21,7 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
     const router = useRouter()
     const pathname = usePathname()
     const { t } = useLanguageContext()
+    const { isCustomBranded } = useBrand()
 
     // Ensure no outer window scrollbar appears on mobile portal
     useEffect(() => {
@@ -29,6 +32,14 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
             document.body.classList.remove('mobile-viewport')
         }
     }, [])
+
+    // Violet Ledger default vs. the landlord's own brand colour (see mobile.css)
+    useEffect(() => {
+        document.documentElement.classList.toggle('mobile-branded', isCustomBranded)
+        return () => {
+            document.documentElement.classList.remove('mobile-branded')
+        }
+    }, [isCustomBranded])
 
     // Redirect unauthenticated users to login
     useEffect(() => {
@@ -79,7 +90,7 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
     return (
         <div
             className={cn(
-                'mobile-app-root relative h-[100dvh] max-h-[100dvh] min-h-[100dvh] w-full max-w-full sm:max-w-xl md:max-w-2xl mx-auto bg-background text-foreground',
+                'mobile-app-root mobile-ground relative h-[100dvh] max-h-[100dvh] min-h-[100dvh] w-full max-w-full sm:max-w-xl md:max-w-2xl mx-auto text-foreground',
                 'flex flex-col overflow-x-hidden overflow-y-hidden select-none border-x-0 sm:border-x border-slate-200 dark:border-white/10 sm:shadow-2xl'
             )}
         >
@@ -90,6 +101,9 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
 
             {/* Fixed bottom navigation */}
             <BottomTabBar role={role} />
+
+            {/* Slide-down exit for CSS-animated bottom sheets */}
+            <MobileSheetExit />
         </div>
     )
 }

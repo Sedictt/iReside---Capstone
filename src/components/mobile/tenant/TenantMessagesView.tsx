@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { m, AnimatePresence } from 'framer-motion';
+import { bubbleMotion } from '@/components/landlord/messages/bubbleMotion';
 import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
 import { 
@@ -241,11 +243,15 @@ export function TenantMessagesView() {
                             </p>
                         </div>
                     ) : (
-                        messages.map((msg) => {
+                        /* initial={false}: messages already in the thread render in place;
+                           only newly sent / received bubbles pop in */
+                        <AnimatePresence initial={false}>
+                        {messages.map((msg) => {
                             const isMine = msg.senderId === profile?.id;
                             return (
-                                <div
+                                <m.div
                                     key={msg.id}
+                                    {...bubbleMotion(isMine)}
                                     className={cn(
                                         'flex flex-col max-w-[82%]',
                                         isMine ? 'ml-auto items-end' : 'mr-auto items-start'
@@ -280,14 +286,15 @@ export function TenantMessagesView() {
                                         )}
                                         {msg.content && <p>{msg.content}</p>}
                                     </div>
-                                    <span className="text-[9px] text-muted-foreground mt-1 px-1">
+                                    <span className="text-[11px] text-muted-foreground mt-1 px-1">
                                         {msg.createdAt
                                             ? new Date(msg.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
                                             : ''}
                                     </span>
-                                </div>
+                                </m.div>
                             );
-                        })
+                        })}
+                        </AnimatePresence>
                     )}
                     <div ref={messagesEndRef} />
                 </div>

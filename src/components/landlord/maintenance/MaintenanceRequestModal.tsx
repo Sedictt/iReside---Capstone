@@ -27,6 +27,10 @@ import {
  Bot
 } from "lucide-react";
 import type { MaintenanceRequest } from "./MaintenanceDashboard";
+import {
+ MAINTENANCE_PRIORITY_BADGE_CLASSES,
+ MAINTENANCE_PRIORITY_BADGE_TEXT,
+} from "@/lib/maintenance-priority";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { FieldError } from "@/components/ui/field-error";
 import { choiceRule } from "@/lib/validation/rules";
@@ -570,13 +574,10 @@ export function MaintenanceRequestModal({
  {t(request.status)}
  </span>
  <span className={cn(
- "px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-widest backdrop-blur-md",
- request.priority === "Critical" ? "bg-red-500/90 text-white border-red-400" :
- request.priority === "High" ? "bg-orange-500/90 text-white border-orange-400/50" :
- request.priority === "Medium" ? "bg-blue-500/90 text-white border-blue-400/50" :
- "bg-neutral-800/90 text-neutral-300 border-neutral-600"
+ "px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-widest",
+ MAINTENANCE_PRIORITY_BADGE_CLASSES[request.priority]
  )}>
- {t("{priority} Priority", { priority: t(request.priority) })}
+ {t(MAINTENANCE_PRIORITY_BADGE_TEXT[request.priority])}
  </span>
  </div>
 

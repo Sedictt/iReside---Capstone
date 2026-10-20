@@ -24,9 +24,472 @@
 
 /* Bottom tab bar height token */
 :root {
-    --bottom-tab-height: 64px;
-    --mobile-header-height: 56px;
+    --bottom-tab-height: 72px;
+    --mobile-header-height: 60px;
 }
+
+/* ----------------------------------------------------------
+   Violet Ledger tokens (mobile only)
+   Deep brand heroes on a tinted ground, soft diffuse shadows,
+   28px corners. Status colors are fixed; everything brand-
+   coloured reads the --primary / --brand-primary-* variables
+   that BrandContext injects, so a landlord's own colour still
+   wins (see .mobile-branded below).
+   ---------------------------------------------------------- */
+
+html.mobile-viewport {
+    --m-ground: #f4f3fa;
+    --m-surface: #ffffff;
+    --m-ink: #1c1a3d;
+    --m-muted: #5f5e80;
+
+    --m-coral: #d93b5a;
+    --m-coral-text: #b82a47;
+    --m-coral-tint: #fde7ec;
+    --m-teal: #1aa9b7;
+    --m-teal-text: #0e7f8a;
+    --m-teal-tint: #cff2f5;
+    --m-amber-text: #9a5b00;
+    --m-amber-tint: #fff1d6;
+
+    --m-radius-hero: 28px;
+    --m-radius-card: 22px;
+    --m-radius-tile: 18px;
+    --m-radius-input: 16px;
+
+    --m-shadow-card: 0 10px 28px rgba(49, 37, 120, 0.08);
+    --m-shadow-float: 0 14px 36px rgba(49, 37, 120, 0.14);
+    --m-shadow-hero: 0 18px 40px rgba(var(--primary-rgb), 0.32);
+    --m-shadow-button: 0 12px 28px rgba(var(--primary-rgb), 0.32);
+}
+
+/* Default brand on mobile. BrandContext sets --primary inline on <html>
+   from DEFAULT_BRANDING; !important lets the mobile default beat that
+   inline value only while no landlord brand colour is active. */
+html.mobile-viewport:not(.mobile-branded) {
+    --primary: #5b3fd9 !important;
+    --primary-foreground: #ffffff !important;
+    --primary-rgb: 91, 63, 217 !important;
+    --brand-primary: #5b3fd9 !important;
+    --brand-primary-50: #f4f3fa !important;
+    --brand-primary-100: #eae6fb !important;
+    --brand-primary-900: #2a2460 !important;
+}
+
+.mobile-viewport.dark,
+.mobile-viewport .dark {
+    --m-ground: var(--background);
+    --m-surface: var(--card);
+    --m-ink: var(--foreground);
+    --m-muted: var(--muted-foreground);
+    --m-coral-tint: rgba(217, 59, 90, 0.18);
+    --m-coral-text: #ff8fa3;
+    --m-teal-tint: rgba(26, 169, 183, 0.18);
+    --m-teal-text: #6fe0ea;
+    --m-amber-tint: rgba(245, 158, 11, 0.16);
+    --m-amber-text: #fcd34d;
+    --m-shadow-card: 0 10px 28px rgba(0, 0, 0, 0.35);
+    --m-shadow-float: 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+
+/* The design classes sit in Tailwind's `components` layer so that a utility
+   on the same element (min-h-[48px], text-[13px], size-14 …) still wins. */
+@layer components {
+
+.mobile-ground {
+    background: var(--m-ground);
+}
+
+/* Hero card: brand primary, decorative circles, no gradient wash */
+.m-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--m-radius-hero);
+    background: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow: var(--m-shadow-hero);
+}
+
+.m-hero::before,
+.m-hero::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.m-hero::before {
+    right: -70px;
+    top: -90px;
+    width: 220px;
+    height: 220px;
+    background: rgba(255, 255, 255, 0.10);
+}
+
+.m-hero::after {
+    right: 40px;
+    bottom: -120px;
+    width: 200px;
+    height: 200px;
+    background: rgba(28, 26, 61, 0.22);
+}
+
+.m-hero .m-eyebrow {
+    color: inherit;
+    opacity: 0.85;
+}
+
+.m-hero-deep {
+    background: var(--brand-primary-900);
+    color: #ffffff;
+    box-shadow: 0 18px 40px rgba(28, 26, 61, 0.30);
+}
+
+.m-hero-coral {
+    background: var(--m-coral);
+    color: #ffffff;
+    box-shadow: 0 18px 40px rgba(217, 59, 90, 0.32);
+}
+
+.m-hero-muted {
+    opacity: 0.82;
+}
+
+/* Surface card: no border, the shadow does the separating */
+.m-card {
+    background: var(--m-surface);
+    border-radius: var(--m-radius-card);
+    box-shadow: var(--m-shadow-card);
+}
+
+/* Icon tile */
+.m-tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: var(--m-radius-tile);
+}
+
+.m-tile-brand  { background: var(--brand-primary-100); color: var(--brand-primary-900); }
+.m-tile-deep   { background: var(--brand-primary-900); color: #ffffff; }
+.m-tile-coral  { background: var(--m-coral-tint); color: var(--m-coral-text); }
+.m-tile-teal   { background: var(--m-teal-tint); color: var(--m-teal-text); }
+.m-tile-amber  { background: var(--m-amber-tint); color: var(--m-amber-text); }
+
+.mobile-viewport.dark .m-tile-brand,
+.mobile-viewport .dark .m-tile-brand {
+    background: rgba(var(--primary-rgb), 0.18);
+    color: var(--primary);
+}
+
+/* Type */
+.m-eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--m-muted);
+}
+
+.m-display {
+    font-family: var(--font-display), var(--font-sans), sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.m-amount {
+    font-family: var(--font-display), var(--font-sans), sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+}
+
+/* Pills */
+.m-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.m-pill-brand { background: var(--brand-primary-100); color: var(--brand-primary-900); }
+.m-pill-coral { background: var(--m-coral-tint); color: var(--m-coral-text); }
+.m-pill-teal  { background: var(--m-teal-tint); color: var(--m-teal-text); }
+.m-pill-amber { background: var(--m-amber-tint); color: var(--m-amber-text); }
+.m-pill-ghost { background: rgba(255, 255, 255, 0.18); color: inherit; }
+
+.mobile-viewport.dark .m-pill-brand,
+.mobile-viewport .dark .m-pill-brand {
+    background: rgba(var(--primary-rgb), 0.18);
+    color: var(--primary);
+}
+
+/* Buttons */
+.m-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, filter 0.2s ease, background 0.2s ease;
+}
+
+.m-btn:active { transform: scale(0.97); }
+.m-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.m-btn-primary {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow: var(--m-shadow-button);
+}
+
+.m-btn-primary:hover { filter: brightness(1.05); }
+
+.m-btn-tint {
+    background: var(--brand-primary-100);
+    color: var(--brand-primary-900);
+}
+
+.mobile-viewport.dark .m-btn-tint,
+.mobile-viewport .dark .m-btn-tint {
+    background: rgba(var(--primary-rgb), 0.18);
+    color: var(--primary);
+}
+
+.m-btn-surface {
+    background: var(--m-surface);
+    color: var(--m-ink);
+    box-shadow: 0 6px 18px rgba(49, 37, 120, 0.08);
+}
+
+/* On a hero: white pill with the deep brand shade for text */
+.m-btn-on-hero {
+    background: #ffffff;
+    color: var(--brand-primary-900);
+}
+
+.m-btn-on-hero-ghost {
+    background: rgba(255, 255, 255, 0.18);
+    color: inherit;
+}
+
+/* Input */
+.m-input {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: var(--m-radius-input);
+    border: 1.5px solid rgba(49, 37, 120, 0.12);
+    background: var(--m-ground);
+    color: var(--m-ink);
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+.m-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.18);
+}
+
+/* Progress */
+.m-progress {
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(49, 37, 120, 0.10);
+    overflow: hidden;
+}
+
+.m-hero .m-progress { background: rgba(255, 255, 255, 0.22); }
+
+.m-progress > div {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--m-teal);
+}
+
+.m-hero .m-progress > div { background: #5ee0ea; }
+
+/* Avatar initials */
+.m-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 50%;
+    font-family: var(--font-display), var(--font-sans), sans-serif;
+    font-weight: 800;
+}
+
+/* ----------------------------------------------------------
+   Motion
+   Nothing appears out of thin air: content rises in with a
+   stagger, sheets slide up, badges and FABs pop, bars grow.
+   ---------------------------------------------------------- */
+
+@keyframes m-rise {
+    from { opacity: 0; transform: translate3d(0, 14px, 0); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes m-pop {
+    0%   { opacity: 0; transform: scale(0.6); }
+    60%  { opacity: 1; transform: scale(1.08); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes m-grow {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+}
+
+@keyframes m-sheet-up {
+    from { transform: translate3d(0, 100%, 0); }
+    to   { transform: none; }
+}
+
+@keyframes m-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Generic enter: driven by the --m-enter-* custom properties */
+@keyframes m-enter {
+    from {
+        opacity: var(--m-enter-opacity, 1);
+        transform: translate3d(var(--m-enter-x, 0), var(--m-enter-y, 0), 0) scale(var(--m-enter-scale, 1));
+    }
+}
+
+/* Staggered page content. Fixed overlays rendered as siblings are skipped
+   so a transform never becomes their containing block. */
+.m-stagger > :not(.fixed) {
+    animation: m-rise 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.m-stagger > :nth-child(2) { animation-delay: 40ms; }
+.m-stagger > :nth-child(3) { animation-delay: 80ms; }
+.m-stagger > :nth-child(4) { animation-delay: 120ms; }
+.m-stagger > :nth-child(5) { animation-delay: 160ms; }
+.m-stagger > :nth-child(6) { animation-delay: 200ms; }
+.m-stagger > :nth-child(7) { animation-delay: 240ms; }
+.m-stagger > :nth-child(8) { animation-delay: 280ms; }
+.m-stagger > :nth-child(n + 9) { animation-delay: 320ms; }
+
+.m-progress > div {
+    transform-origin: left center;
+    animation: m-grow 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both;
+}
+
+.mobile-tab-badge {
+    animation: m-pop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.mobile-above-tab-bar {
+    animation: m-pop 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s both;
+}
+
+/* The Tailwind `animate-in` family is used across the mobile sheets but no
+   animation plugin is installed, so these implement it for the mobile portal
+   (sheets are portaled to <body>, hence the body scope). */
+body.mobile-viewport .animate-in {
+    animation: m-enter var(--m-dur, 0.28s) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+body.mobile-viewport .fade-in { --m-enter-opacity: 0; }
+body.mobile-viewport .zoom-in { --m-enter-scale: 0.9; }
+body.mobile-viewport .zoom-in-95 { --m-enter-scale: 0.95; }
+body.mobile-viewport .slide-in-from-bottom { --m-enter-y: 100%; }
+body.mobile-viewport .slide-in-from-bottom-2 { --m-enter-y: 8px; }
+body.mobile-viewport .slide-in-from-bottom-3 { --m-enter-y: 12px; }
+body.mobile-viewport .slide-in-from-bottom-4 { --m-enter-y: 16px; }
+body.mobile-viewport .slide-in-from-bottom-6 { --m-enter-y: 24px; }
+body.mobile-viewport .slide-in-from-bottom-8 { --m-enter-y: 32px; }
+body.mobile-viewport .slide-in-from-top { --m-enter-y: -100%; }
+body.mobile-viewport .slide-in-from-top-2 { --m-enter-y: -8px; }
+body.mobile-viewport .slide-in-from-top-4 { --m-enter-y: -16px; }
+body.mobile-viewport .slide-in-from-right { --m-enter-x: 100%; }
+body.mobile-viewport .slide-in-from-left { --m-enter-x: -100%; }
+body.mobile-viewport .animate-in.duration-150 { --m-dur: 0.15s; }
+body.mobile-viewport .animate-in.duration-200 { --m-dur: 0.2s; }
+body.mobile-viewport .animate-in.duration-300 { --m-dur: 0.3s; }
+body.mobile-viewport .animate-in.duration-500 { --m-dur: 0.5s; }
+
+/* Every bottom sheet slides up and its backdrop fades, whether or not the
+   sheet declares animation classes. */
+/* Spring-like ease (fast start, long soft landing, no overshoot) matching the
+   framer sheets. Sheets and backdrops animate even under reduced motion, as
+   the app's framer-motion sheets already do; only decorative motion is gated. */
+/* Sheets that framer-motion drives carry an inline transform (or the
+   data-framer-sheet marker); those keep their own enter/exit. */
+body.mobile-viewport .fixed :is(div, form, section)[class*="rounded-t-2xl"]:not([data-framer-sheet]):not([style*="transform"]),
+body.mobile-viewport .fixed :is(div, form, section)[class*="rounded-t-3xl"]:not([data-framer-sheet]):not([style*="transform"]),
+body.mobile-viewport .fixed :is(div, form, section)[class*="rounded-t-["]:not([data-framer-sheet]):not([style*="transform"]),
+body.mobile-viewport .fixed[class*="rounded-t-2xl"]:not([data-framer-sheet]):not([style*="transform"]),
+body.mobile-viewport .fixed[class*="rounded-t-3xl"]:not([data-framer-sheet]):not([style*="transform"]),
+body.mobile-viewport .fixed[class*="rounded-t-["]:not([data-framer-sheet]):not([style*="transform"]) {
+    animation: m-sheet-up 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+body.mobile-viewport .fixed.inset-0[class*="bg-black/"] {
+    animation: m-fade 0.22s ease-out both;
+}
+
+/* Exit: MobileSheetExit re-inserts an inert clone of a dismissed sheet
+   overlay with .m-sheet-ghost; the sheet slides down, the backdrop fades. */
+@keyframes m-sheet-down {
+    to { transform: translate3d(0, 100%, 0); }
+}
+
+@keyframes m-fade-out {
+    to { opacity: 0; }
+}
+
+.m-sheet-ghost,
+.m-sheet-ghost * {
+    pointer-events: none !important;
+}
+
+.m-sheet-ghost[class*="rounded-t-"],
+.m-sheet-ghost :is(div, form, section)[class*="rounded-t-2xl"],
+.m-sheet-ghost :is(div, form, section)[class*="rounded-t-3xl"],
+.m-sheet-ghost :is(div, form, section)[class*="rounded-t-["] {
+    animation: m-sheet-down 0.3s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
+
+.m-sheet-ghost[class*="bg-black/"],
+.m-sheet-ghost .fixed.inset-0[class*="bg-black/"],
+.m-sheet-ghost [class*="bg-black/"][class*="inset-0"] {
+    animation: m-fade-out 0.28s ease-in forwards !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .m-stagger > *,
+    .m-progress > div,
+    .mobile-tab-badge,
+    .mobile-above-tab-bar,
+    .mobile-tab-item.active .tab-icon {
+        animation: none !important;
+    }
+}
+
+} /* @layer components */
 
 /* Global viewport lock for mobile route - prevents window scrollbars & horizontal dragging */
 html.mobile-viewport,
@@ -77,35 +540,28 @@ body.mobile-viewport::-webkit-scrollbar {
     padding-bottom: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 8px) + 8px);
 }
 
+/* Fixed elements (FABs, toasts) that must clear the floating tab bar:
+   bar height + its 12px bottom margin + safe area + a 16px gap */
+.mobile-above-tab-bar {
+    bottom: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 0px) + 28px);
+}
+
 /* ----------------------------------------------------------
    Mobile Card Overrides (lighter neumorphic)
    Full-depth desktop shadows → flatter, border-led cards
    ---------------------------------------------------------- */
 
 .mobile-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
+    background: var(--m-surface, var(--card));
+    border: 0;
+    border-radius: var(--m-radius-card, 22px);
     padding: 16px;
-
-    /* Lighter neumorphic: gentle single shadow, no heavy layering */
-    box-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.06),
-        0 1px 2px rgba(0, 0, 0, 0.04);
-
-    transition: box-shadow 0.2s ease;
+    box-shadow: var(--m-shadow-card, 0 10px 28px rgba(49, 37, 120, 0.08));
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
 }
 
 .mobile-card:active {
-    box-shadow:
-        0 0 0 1px var(--border),
-        0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-.dark .mobile-card {
-    box-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.2),
-        0 1px 2px rgba(0, 0, 0, 0.16);
+    transform: scale(0.99);
 }
 
 /* ----------------------------------------------------------
@@ -150,40 +606,31 @@ body.mobile-viewport::-webkit-scrollbar {
     gap: 8px;
     width: 100%;
     padding: 14px 20px;
-    border-radius: 14px;
+    border-radius: 999px;
     font-size: 15px;
-    font-weight: 600;
-    background: #5e9a7a;
-    color: #ffffff;
+    font-weight: 700;
+    background: var(--primary);
+    color: var(--primary-foreground);
     border: none;
     cursor: pointer;
-    transition: background 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+    box-shadow: var(--m-shadow-button, none);
+    transition: filter 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
     min-height: 48px; /* WCAG 44×44 touch target */
     -webkit-tap-highlight-color: transparent;
 }
 
 .btn-mobile-primary:hover {
-    background: #4e8469;
+    filter: brightness(1.05);
 }
 
 .btn-mobile-primary:active {
     transform: scale(0.97);
-    background: #426e59;
 }
 
 .btn-mobile-primary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
-}
-
-.dark .btn-mobile-primary {
-    background: #4a7a60;
-    color: #f0faf5;
-}
-
-.dark .btn-mobile-primary:hover {
-    background: #3d6650;
 }
 
 /* Ghost / secondary */
@@ -193,20 +640,21 @@ body.mobile-viewport::-webkit-scrollbar {
     justify-content: center;
     gap: 8px;
     padding: 12px 20px;
-    border-radius: 12px;
+    border-radius: 999px;
     font-size: 15px;
-    font-weight: 500;
-    background: transparent;
+    font-weight: 600;
+    background: var(--m-surface, var(--card));
     color: var(--foreground);
-    border: 1px solid var(--border);
+    border: 0;
+    box-shadow: 0 6px 18px rgba(49, 37, 120, 0.08);
     cursor: pointer;
     min-height: 48px;
     -webkit-tap-highlight-color: transparent;
-    transition: background 0.15s ease;
+    transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .btn-mobile-ghost:active {
-    background: var(--muted);
+    transform: scale(0.97);
 }
 
 /* ----------------------------------------------------------
@@ -217,41 +665,41 @@ body.mobile-viewport::-webkit-scrollbar {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 3px 10px;
-    border-radius: 100px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
 }
 
-.badge-mobile.paid    { background: #d1fae5; color: #065f46; }
-.badge-mobile.pending { background: #fef3c7; color: #92400e; }
-.badge-mobile.overdue { background: #fee2e2; color: #991b1b; }
-.badge-mobile.active  { background: #e0f2fe; color: #0369a1; }
+.badge-mobile.paid    { background: var(--m-teal-tint, #cff2f5); color: var(--m-teal-text, #0e7f8a); }
+.badge-mobile.pending { background: var(--m-amber-tint, #fff1d6); color: var(--m-amber-text, #9a5b00); }
+.badge-mobile.overdue { background: var(--m-coral-tint, #fde7ec); color: var(--m-coral-text, #b82a47); }
+.badge-mobile.active  { background: var(--brand-primary-100); color: var(--brand-primary-900); }
 .badge-mobile.info    { background: var(--muted); color: var(--muted-foreground); }
 
-.dark .badge-mobile.paid    { background: #065f4620; color: #6ee7b7; }
-.dark .badge-mobile.pending { background: #92400e20; color: #fcd34d; }
-.dark .badge-mobile.overdue { background: #991b1b20; color: #fca5a5; }
-.dark .badge-mobile.active  { background: #0369a120; color: #7dd3fc; }
+.dark .badge-mobile.active { background: rgba(var(--primary-rgb), 0.18); color: var(--primary); }
 
 /* ----------------------------------------------------------
    Bottom Tab Bar
    ---------------------------------------------------------- */
 
+/* Floating pill bar: the ground shows around it, so it has no border */
 .mobile-tab-bar {
     position: relative;
     z-index: 60;
     pointer-events: auto;
-    width: 100%;
     flex-shrink: 0;
-    min-height: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 0px));
-    height: auto;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: var(--card);
-    border-top: 1px solid var(--border);
+    box-sizing: border-box;
+    height: var(--bottom-tab-height);
+    margin: 0 12px calc(env(safe-area-inset-bottom, 0px) + 12px) 12px;
+    padding: 6px;
+    border-radius: var(--m-radius-hero, 28px);
+    background: var(--m-surface, var(--card));
+    box-shadow: var(--m-shadow-float, 0 14px 36px rgba(49, 37, 120, 0.14));
     display: flex;
     align-items: stretch;
+    gap: 2px;
 }
 
 .mobile-tab-item {
@@ -263,37 +711,42 @@ body.mobile-viewport::-webkit-scrollbar {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: color 0.15s ease;
-    color: var(--muted-foreground);
-    font-size: 10px;
-    font-weight: 500;
+    color: var(--m-muted, var(--muted-foreground));
     text-decoration: none;
     position: relative;
     min-height: 44px; /* WCAG touch target */
     padding: 4px 2px;
-}
-
-.mobile-tab-item span:last-child {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 10px;
+    border-radius: 20px;
 }
 
 .mobile-tab-item.active {
-    color: #5e9a7a;
+    color: var(--primary);
+}
+
+/* Sliding active pill (framer-motion layoutId moves it between tabs) */
+.mobile-tab-indicator {
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: var(--brand-primary-100);
+    z-index: 0;
+}
+
+.mobile-viewport.dark .mobile-tab-indicator,
+.mobile-viewport .dark .mobile-tab-indicator {
+    background: rgba(var(--primary-rgb), 0.18);
 }
 
 .mobile-tab-item .tab-icon {
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    z-index: 1;
 }
 
 .mobile-tab-item.active .tab-icon {
-    transform: translateY(-1px);
+    animation: m-pop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 /* Badge on tab */
@@ -305,9 +758,9 @@ body.mobile-viewport::-webkit-scrollbar {
     height: 16px;
     padding: 0 4px;
     border-radius: 8px;
-    background: #ef4444;
+    background: var(--m-coral, #d93b5a);
     color: #fff;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -324,8 +777,8 @@ body.mobile-viewport::-webkit-scrollbar {
     z-index: 50;
     min-height: calc(var(--mobile-header-height) + env(safe-area-inset-top, 0px));
     height: auto;
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
+    background: var(--m-ground, var(--background));
+    border-bottom: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -395,8 +848,9 @@ body.mobile-viewport::-webkit-scrollbar {
 }
 
 .mobile-metric-value {
+    font-family: var(--font-display), var(--font-sans), sans-serif;
     font-size: 24px;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: -0.03em;
     color: var(--foreground);
     line-height: 1;
@@ -429,8 +883,8 @@ body.mobile-viewport::-webkit-scrollbar {
 }
 
 .mobile-upload-area:active {
-    border-color: #5e9a7a;
-    background: rgba(94, 154, 122, 0.05);
+    border-color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.06);
 }
 
 /* ----------------------------------------------------------
@@ -440,8 +894,8 @@ body.mobile-viewport::-webkit-scrollbar {
 .chat-bubble-sent {
     max-width: 75%;
     align-self: flex-end;
-    background: #5e9a7a;
-    color: #ffffff;
+    background: var(--primary);
+    color: var(--primary-foreground);
     border-radius: 18px 18px 4px 18px;
     padding: 10px 14px;
     font-size: 14px;
