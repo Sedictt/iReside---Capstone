@@ -75,7 +75,7 @@ export type ApplicationResponse = {
         amount: number;
         dueAt: string | null;
         status: "pending" | "processing" | "completed" | "rejected" | "expired";
-        method: "gcash" | "cash" | null;
+        method: "gcash" | "bank_transfer" | "cash" | null;
         referenceNumber?: string | null;
         transactionReference?: string | null;
         submittedAt: string | null;
@@ -156,7 +156,7 @@ export type PaymentRequestRow = {
     amount: number;
     due_at: string | null;
     status: "pending" | "processing" | "completed" | "rejected" | "expired";
-    method: "gcash" | "cash" | null;
+    method: "gcash" | "bank_transfer" | "cash" | null;
     submitted_at: string | null;
     reviewed_at: string | null;
     payment_proof_url: string | null;

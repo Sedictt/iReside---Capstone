@@ -96,12 +96,12 @@ const FEATURE_INDEX: SearchResult[] = [
     {
         id: "action-gcash",
         type: "action",
-        title: "Configure GCash Payments",
-        subtitle: "Setup GCash number and tenant payment QR code",
+        title: "Set up payment methods",
+        subtitle: "Your GCash number, bank account and payment QR codes",
         href: "/landlord/settings?category=Finance",
         icon: CreditCard,
         badge: "Action",
-        keywords: ["gcash", "qr", "payment", "transfer", "finance", "receive", "payout"]
+        keywords: ["gcash", "bank", "bank transfer", "qr", "payment", "transfer", "finance", "receive", "payout"]
     },
     {
         id: "action-new-maintenance",

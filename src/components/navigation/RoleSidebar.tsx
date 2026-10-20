@@ -63,6 +63,8 @@ interface RoleSidebarProps {
     onLogout: () => void;
     className?: string;
     header?: React.ReactNode;
+    /** Name shown in the sidebar logo instead of the brand name. */
+    brandNameOverride?: string | null;
     footer?: React.ReactNode;
     onClose?: () => void;
     isLocked?: boolean;
@@ -130,6 +132,7 @@ export function RoleSidebar({
     onLogout,
     className,
     header,
+    brandNameOverride,
     footer,
     onClose,
     isLocked = false,
@@ -517,7 +520,7 @@ export function RoleSidebar({
                             isLocked={Boolean((isLocked || lockStage) && lockStage !== "no_tenant")} 
                             lockToastText={t("Onboarding in progress. Complete your property setup first to unlock portal operations.")}
                         >
-                            <BrandLogo size="md" className="w-full min-w-0" />
+                            <BrandLogo size="md" className="w-full min-w-0" nameOverride={brandNameOverride} />
                         </LogoLink>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">

@@ -23,6 +23,7 @@ import {
     longDate,
 } from "./email/layout";
 import { formatPhMobile } from "@/lib/phone";
+import { paymentMethodLabel } from "@/lib/billing/payment-methods";
 
 export async function sendTenantCredentials({
     to,
@@ -979,11 +980,14 @@ export async function sendPaymentProofSubmittedEmail({
 }) {
     const subject = `Payment Proof Submitted — ${propertyName} (${unitName})`;
 
+    const methodLabel = method ? paymentMethodLabel(method) : null;
+    // "GCash Ref" / "Bank Transfer Ref": the number from the tenant's app or deposit slip.
+    const externalLabel = `${methodLabel && method !== "cash" ? methodLabel : "GCash"} Ref`;
     const rows: Array<{ label: string; value: string; mono?: boolean; accent?: boolean; strong?: boolean }> = [
         { label: "Txn Ref", value: systemTransactionReference, mono: true, accent: true },
     ];
-    if (externalReference) rows.push({ label: "GCash Ref", value: externalReference, mono: true });
-    if (method) rows.push({ label: "Method", value: method, strong: false });
+    if (externalReference) rows.push({ label: externalLabel, value: externalReference, mono: true });
+    if (methodLabel) rows.push({ label: "Method", value: methodLabel, strong: false });
 
     const html = renderEmail({
         title: "New Proof of Payment Received",
@@ -1004,7 +1008,7 @@ export async function sendPaymentProofSubmittedEmail({
         `,
     });
 
-    const text = `Payment proof submitted by ${applicantName} for ${propertyName} (${unitName}).\nTotal Amount: ${formattedTotal}\n${method ? `Method: ${method}\n` : ""}Txn Ref: ${systemTransactionReference}${externalReference ? `\nGCash Ref: ${externalReference}` : ""}${reviewUrl ? `\n\nReview: ${reviewUrl}` : ""}\n\n— iReside Property Management`;
+    const text = `Payment proof submitted by ${applicantName} for ${propertyName} (${unitName}).\nTotal Amount: ${formattedTotal}\n${methodLabel ? `Method: ${methodLabel}\n` : ""}Txn Ref: ${systemTransactionReference}${externalReference ? `\n${externalLabel}: ${externalReference}` : ""}${reviewUrl ? `\n\nReview: ${reviewUrl}` : ""}\n\n— iReside Property Management`;
 
     return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }

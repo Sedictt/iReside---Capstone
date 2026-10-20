@@ -26,6 +26,7 @@ import { useState, useEffect } from "react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { RoleSidebar, type SidebarNavSection, type SidebarLockStage } from "@/components/navigation/RoleSidebar";
 import { PropertySelector } from "@/components/landlord/PropertySelector";
+import { useProperty } from "@/context/PropertyContext";
 import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal";
 import { useNotifications } from "@/context/NotificationContext";
 import { useLandlordSetup } from "@/hooks/useLandlordSetup";
@@ -245,6 +246,11 @@ export function Sidebar({
     ];
 
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+    // One property: its name IS the brand, so show it in the logo and drop the
+    // redundant property card. Several properties: brand name + property switcher.
+    const { properties, loading: propertiesLoading } = useProperty();
+    const hasMultipleProperties = properties.length > 1;
+    const singlePropertyName = !propertiesLoading && properties.length === 1 ? properties[0].name : null;
     const [isTourActiveOnNav, setIsTourActiveOnNav] = useState(false);
 
     useEffect(() => {
@@ -264,7 +270,8 @@ export function Sidebar({
         <>
             <RoleSidebar
                 sections={NAV_ITEMS}
-                header={
+                brandNameOverride={singlePropertyName}
+                header={!hasMultipleProperties ? undefined : (
                     <div className={cn(
                         "relative transition-all duration-300 rounded-2xl",
                         isTourActiveOnNav && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse z-40"
@@ -277,7 +284,7 @@ export function Sidebar({
                         )}
                         <PropertySelector />
                     </div>
-                }
+                )}
                 onLogout={() => setIsLogoutModalOpen(true)}
                 onClose={onCloseMobile}
                 isLocked={isLocked}

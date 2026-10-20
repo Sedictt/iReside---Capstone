@@ -54,7 +54,7 @@ export interface PreApprovalPaymentSummary {
   amount: number;
   dueAt: string | null;
   status: "pending" | "processing" | "completed" | "rejected" | "expired";
-  method: "gcash" | "cash" | null;
+  method: "gcash" | "bank_transfer" | "cash" | null;
   referenceNumber?: string | null;
   transactionReference?: string | null;
   submittedAt: string | null;

@@ -41,7 +41,8 @@ import type { BillingWorkspace } from "@/lib/billing/server";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
-import { utilityRateRule } from "@/lib/validation/schemas/properties.schema";
+import { bankAccountNameRule, bankAccountNumberRule, bankNameRule, utilityRateRule } from "@/lib/validation/schemas/properties.schema";
+import { normalizeAccountNumber } from "@/lib/billing/payment-methods";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
 import { focusAnchor } from "@/components/settings/settings-ui";
@@ -52,6 +53,8 @@ import {
 	BillingSettingsMessage,
 	GcashSettingsView,
 	UtilityRatesSettingsView,
+	BankTransferSettingsView,
+	type BankSettingsDraft,
 } from "@/components/landlord/settings/BillingSettingsViews";
 
 export type UtilityConfigDraft = {
@@ -122,7 +125,35 @@ type State = {
  qrFile: File | null;
  qrPreview: string | null;
  removeQr: boolean;
+ bank: BankDraft;
 };
+
+/** Bank transfer section of "Payment methods" (one bank account per landlord). */
+type BankDraft = BankSettingsDraft & { qrFile: File | null; removeQr: boolean };
+
+const EMPTY_BANK: BankDraft = {
+ bankName: "",
+ accountName: "",
+ accountNumber: "",
+ isEnabled: true,
+ qrPreview: null,
+ qrFile: null,
+ removeQr: false,
+};
+
+function bankDraftFrom(workspace: BillingWorkspace): BankDraft {
+ const row = workspace.paymentDestinations?.bank_transfer;
+ if (!row) return { ...EMPTY_BANK };
+ return {
+  bankName: row.bank_name ?? "",
+  accountName: row.account_name ?? "",
+  accountNumber: row.account_number ?? "",
+  isEnabled: row.is_enabled ?? true,
+  qrPreview: row.qr_image_url ?? null,
+  qrFile: null,
+  removeQr: false,
+ };
+}
 
 type Action =
  | { type: "SET_WORKSPACE"; payload: BillingWorkspace }
@@ -137,7 +168,8 @@ type Action =
  | { type: "SET_FOOTER_EXPANDED"; payload: boolean }
  | { type: "SET_SHOW_BREAKDOWN"; payload: boolean }
  | { type: "SET_HELP"; payload: { title: string; content: ReactNode } | null }
- | { type: "UPDATE_PAYMENT"; payload: Partial<Pick<State, 'accountName' | 'accountNumber' | 'isEnabled' | 'qrFile' | 'qrPreview' | 'removeQr'>> };
+ | { type: "UPDATE_PAYMENT"; payload: Partial<Pick<State, 'accountName' | 'accountNumber' | 'isEnabled' | 'qrFile' | 'qrPreview' | 'removeQr'>> }
+ | { type: "UPDATE_BANK"; payload: Partial<BankDraft> };
 
 function reducer(state: State, action: Action): State {
  switch (action.type) {
@@ -181,6 +213,8 @@ function reducer(state: State, action: Action): State {
  return { ...state, helpContent: action.payload };
  case "UPDATE_PAYMENT":
  return { ...state, ...action.payload };
+ case "UPDATE_BANK":
+ return { ...state, bank: { ...state.bank, ...action.payload } };
  default:
  return state;
  }
@@ -202,6 +236,7 @@ const initialState: State = {
  qrFile: null,
  qrPreview: null,
  removeQr: false,
+ bank: { ...EMPTY_BANK },
 };
 
 export function BillingOperationsPanel({
@@ -242,7 +277,8 @@ export function BillingOperationsPanel({
 		accountNumber,
 		isEnabled,
 		qrPreview,
-		removeQr
+		removeQr,
+		bank
 	} = state;
 
 	const [mounted, setMounted] = useState(false);
@@ -256,6 +292,8 @@ export function BillingOperationsPanel({
 		isEnabled: boolean;
 		qrPreview: string | null;
 	} | null>(null);
+
+	const initialBankRef = useRef<BankDraft | null>(null);
 
 	const originalConfigsRef = useRef<UtilityConfigDraft[] | null>(null);
 
@@ -315,6 +353,10 @@ export function BillingOperationsPanel({
 
 				originalConfigsRef.current = seededConfigs.map(c => ({ ...c }));
 
+				const seededBank = bankDraftFrom(payload);
+				initialBankRef.current = seededBank;
+				dispatch({ type: "UPDATE_BANK", payload: seededBank });
+
 				dispatch({ type: "SET_WORKSPACE", payload });
 				dispatch({ type: "SET_CONFIGS", payload: seededConfigs });
 				dispatch({ type: "CLEAR_DELETED_CONFIGS" });
@@ -362,6 +404,19 @@ export function BillingOperationsPanel({
 			state.qrFile !== null
 		);
 	}, [accountName, accountNumber, isEnabled, removeQr, state.qrFile]);
+
+	const isBankDirty = useMemo(() => {
+		const init = initialBankRef.current;
+		if (!init) return false;
+		return (
+			bank.bankName !== init.bankName ||
+			bank.accountName !== init.accountName ||
+			normalizeAccountNumber(bank.accountNumber) !== normalizeAccountNumber(init.accountNumber) ||
+			bank.isEnabled !== init.isEnabled ||
+			bank.removeQr ||
+			bank.qrFile !== null
+		);
+	}, [bank]);
 
 	const diff = useMemo(() => {
 		if (!originalConfigsRef.current || !workspace) {
@@ -477,7 +532,7 @@ export function BillingOperationsPanel({
 	}, [configs, state.deletedConfigIds, workspace, t]);
 
 	const isRatesDirty = diff.isDirty;
-	const isPanelDirty = viewMode === "gcash" ? isGcashDirty : isRatesDirty;
+	const isPanelDirty = viewMode === "gcash" ? isGcashDirty || isBankDirty : isRatesDirty;
 
 	useEffect(() => {
 		if (embedded && onDirtyChange) {
@@ -495,8 +550,28 @@ export function BillingOperationsPanel({
 				const cleanName = accountName.trim();
 				// Saved in GCash's own "09…" form so tenants can paste it into the GCash app.
 				const cleanNumber = toPhMobileLocal(accountNumber) ?? "";
+				// Only the sections that changed are sent, so a landlord can set up just one of them.
+				const sendGcash = isGcashDirty || !isBankDirty;
 
-				if (!cleanName || cleanName.length < 2) {
+				if (isBankDirty) {
+					const bankError =
+						bankNameRule(bank.bankName) ??
+						bankAccountNameRule(bank.accountName) ??
+						bankAccountNumberRule(bank.accountNumber);
+					if (bankError) {
+						dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: t(bankError) } });
+						focusAnchor("bank-transfer-settings", "start");
+						return false;
+					}
+					formData.append("bankName", bank.bankName.trim());
+					formData.append("bankAccountName", bank.accountName.trim());
+					formData.append("bankAccountNumber", normalizeAccountNumber(bank.accountNumber));
+					formData.append("bankIsEnabled", String(bank.isEnabled));
+					formData.append("bankRemoveQr", String(bank.removeQr));
+					if (bank.qrFile) formData.append("bankQr", bank.qrFile);
+				}
+
+				if (sendGcash && (!cleanName || cleanName.length < 2)) {
 					dispatch({
 						type: "SET_MESSAGE",
 						payload: { type: "error", value: t("Type the name on your GCash account. Use at least 2 letters.") }
@@ -504,7 +579,7 @@ export function BillingOperationsPanel({
 					return false;
 				}
 
-				if (!cleanNumber) {
+				if (sendGcash && !cleanNumber) {
 					dispatch({
 						type: "SET_MESSAGE",
 						payload: { type: "error", value: t("Type your GCash number: the 10 numbers after +63, like +63 917 123 4567.") }
@@ -512,12 +587,14 @@ export function BillingOperationsPanel({
 					return false;
 				}
 
-				formData.append("saveType", "gcash");
-				formData.append("accountName", cleanName);
-				formData.append("accountNumber", cleanNumber);
-				formData.append("isEnabled", String(isEnabled));
-				formData.append("removeQr", String(removeQr));
-				if (state.qrFile) formData.append("qr", state.qrFile);
+				formData.append("saveType", "payment_methods");
+				if (sendGcash) {
+					formData.append("accountName", cleanName);
+					formData.append("accountNumber", cleanNumber);
+					formData.append("isEnabled", String(isEnabled));
+					formData.append("removeQr", String(removeQr));
+					if (state.qrFile) formData.append("qr", state.qrFile);
+				}
 			} else {
 				formData.append("saveType", "rates");
 				const validConfigs = configs
@@ -555,6 +632,9 @@ export function BillingOperationsPanel({
 				isEnabled: (payload.paymentDestination as any)?.is_enabled ?? isEnabled,
 				qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? qrPreview
 			};
+			const savedBank = bankDraftFrom(payload);
+			initialBankRef.current = savedBank;
+			dispatch({ type: "UPDATE_BANK", payload: savedBank });
 
 			if (viewMode === "rates") {
 				const freshConfigs = payload.utilityConfigs.map((config) =>
@@ -606,7 +686,7 @@ export function BillingOperationsPanel({
 				}
 			});
 			dispatch({ type: "SET_SHOW_BREAKDOWN", payload: false });
-			const successMsg = viewMode === "gcash" ? "GCash settings saved successfully." : "Utility rates saved successfully.";
+			const successMsg = viewMode === "gcash" ? "Payment methods saved successfully." : "Utility rates saved successfully.";
 			if (typeof window !== "undefined") {
 				try {
 					window.localStorage.setItem("ireside.billing_rails_complete", "true");
@@ -628,7 +708,7 @@ export function BillingOperationsPanel({
 		} finally {
 			dispatch({ type: "SET_SAVING", payload: false });
 		}
-	}, [viewMode, accountName, accountNumber, isEnabled, removeQr, state.qrFile, configs, qrPreview, state.deletedConfigIds, onSaved, t]);
+	}, [viewMode, accountName, accountNumber, isEnabled, removeQr, state.qrFile, configs, qrPreview, state.deletedConfigIds, onSaved, t, bank, isGcashDirty, isBankDirty]);
 
 	const discard = useCallback(() => {
 		if (viewMode === "gcash") {
@@ -645,6 +725,9 @@ export function BillingOperationsPanel({
 					}
 				});
 				dispatch({ type: "SET_MESSAGE", payload: null });
+			}
+			if (initialBankRef.current) {
+				dispatch({ type: "UPDATE_BANK", payload: { ...initialBankRef.current } });
 			}
 		} else {
 			if (originalConfigsRef.current) {
@@ -754,13 +837,19 @@ export function BillingOperationsPanel({
 			<>
 				{messageNotice}
 				{viewMode === "gcash" ? (
-					<GcashSettingsView
-						accountName={accountName}
-						accountNumber={accountNumber}
-						isEnabled={isEnabled}
-						qrPreview={qrPreview}
-						onChange={(patch) => dispatch({ type: "UPDATE_PAYMENT", payload: patch })}
-					/>
+					<>
+						<GcashSettingsView
+							accountName={accountName}
+							accountNumber={accountNumber}
+							isEnabled={isEnabled}
+							qrPreview={qrPreview}
+							onChange={(patch) => dispatch({ type: "UPDATE_PAYMENT", payload: patch })}
+						/>
+						<BankTransferSettingsView
+							{...bank}
+							onChange={(patch) => dispatch({ type: "UPDATE_BANK", payload: patch })}
+						/>
+					</>
 				) : (
 					<UtilityRatesSettingsView
 						properties={workspace.properties}

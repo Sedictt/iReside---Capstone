@@ -484,6 +484,22 @@ function SystemMessage({
         );
     }
 
+    // Payment Proof Submitted (GCash) - waiting on the landlord's review
+    if (message.systemType === "payment_submitted") {
+        return (
+            <NotificationCard
+                message={message}
+                icon={<History className="size-6" />}
+                title={t("Payment Under Review")}
+                subtitle={isLandlord ? t("Awaiting Your Review") : t("Waiting for Landlord")}
+                variant="warning"
+                actionLabel={isLandlord ? t("Review Payment") : t("View Invoice")}
+                onAction={isLandlord ? () => onOpenF2F?.(message) : () => router.push("/tenant/payments")}
+                disabled={isActionDisabled}
+            />
+        );
+    }
+
     // Reminder Sent
     if (message.systemType === "reminder_sent") {
         return (

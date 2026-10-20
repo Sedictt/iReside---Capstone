@@ -594,7 +594,7 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
         const contact = updated.find((conversation) => conversation.id === conversationId);
         if (!contact || contact.isArchived || contact.isBlocked) return;
 
-        playSound("message", 0.35);
+        playSound("message");
         void openChat(contact, { minimized: true });
     }, [openChat, refreshConversations, userId]);
 
@@ -653,7 +653,7 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
                         if (isReading) {
                             void markRead(conversationId);
                         } else {
-                            playSound("message", 0.35);
+                            playSound("message");
                             setOpenChats((prev) => prev.map((entry) => (
                                 entry.id === conversationId ? { ...entry, pendingCount: entry.pendingCount + 1, unread: true } : entry
                             )));

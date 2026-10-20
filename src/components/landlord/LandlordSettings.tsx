@@ -1662,7 +1662,7 @@ export function LandlordSettings({ embedded = false }: { embedded?: boolean } = 
         { id: "security", group: "account", icon: KeyRound, title: t("Password and sign-in"), description: t("Change your password, add extra protection, and see where you are signed in.") },
         { id: "business", group: "business", icon: Building2, title: t("Business details"), description: t("Business name, website, business permit and social media.") },
         { id: "branding", group: "business", icon: Palette, title: t("Logo, colors and banner"), description: t("How your business looks to tenants: name, logo, colors and dashboard picture.") },
-        { id: "payments", group: "business", icon: Wallet, title: t("GCash payments"), description: t("The GCash number and QR code your tenants use to pay you.") },
+        { id: "payments", group: "business", icon: Wallet, title: t("Payment methods"), description: t("Your GCash and bank account, where tenants send rent and deposits.") },
         { id: "utilities", group: "business", icon: Zap, title: t("Water and electricity rates"), description: t("How much you charge tenants for water and electricity.") },
         { id: "display", group: "comfort", icon: Type, title: t("Text size and display"), description: t("Make the words bigger, change the language, use a dark screen, and more.") },
         { id: "notifications", group: "comfort", icon: Bell, title: t("Notifications"), description: t("Choose which alerts you get, by email or in the app.") },
@@ -1674,7 +1674,7 @@ export function LandlordSettings({ embedded = false }: { embedded?: boolean } = 
     const quickTasks: SettingsQuickTask<SectionId>[] = [
         { label: t("Make the text bigger"), section: "display", icon: Type, anchor: "settings-text-size" },
         { label: t("Change my password"), section: "security", icon: KeyRound, anchor: "settings-password" },
-        { label: t("Set up GCash payments"), section: "payments", icon: Wallet },
+        { label: t("Set up how tenants pay you"), section: "payments", icon: Wallet },
         { label: t("Change water or electricity rates"), section: "utilities", icon: Zap },
     ];
 

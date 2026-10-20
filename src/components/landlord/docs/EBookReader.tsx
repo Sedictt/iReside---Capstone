@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef, useCallback, forwardRef } from "react";
+import { soundUrl } from "@/hooks/useSound";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -86,7 +87,7 @@ if (typeof window !== "undefined") {
       if (!AudioContextClass) return;
       audioCtx = new AudioContextClass();
 
-      const res = await fetch("/audios/pageturn.mp3");
+      const res = await fetch(soundUrl("pageturn"));
       const arrayBuffer = await res.arrayBuffer();
       pageTurnBuffer = await audioCtx.decodeAudioData(arrayBuffer);
     } catch {
@@ -122,7 +123,7 @@ function playPageFlipSound(isMuted: boolean, mode: "realistic" | "fast" = "reali
       return;
     }
 
-    const audio = new Audio("/audios/pageturn.mp3");
+    const audio = new Audio(soundUrl("pageturn"));
     audio.volume = 0.6;
     audio.currentTime = 0;
     audio.play().catch(() => {});

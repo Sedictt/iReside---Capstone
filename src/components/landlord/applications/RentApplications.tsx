@@ -148,7 +148,7 @@ interface RentApplication {
  amount: number;
  dueAt: string | null;
  status: "pending" | "processing" | "completed" | "rejected" | "expired";
- method: "gcash" | "cash" | null;
+ method: "gcash" | "bank_transfer" | "cash" | null;
  referenceNumber?: string | null;
  transactionReference?: string | null;
  submittedAt: string | null;
@@ -1485,7 +1485,7 @@ export function RentApplications() {
 
                             {req.referenceNumber && (
                               <div className="rounded-xl neumorphic-inset p-3">
-                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">{t("GCash Ref No.")}</span>
+                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">{req.method === "bank_transfer" ? t("Bank Ref No.") : t("GCash Ref No.")}</span>
                                 <span className="font-mono text-xs font-black text-foreground">{req.referenceNumber}</span>
                               </div>
                             )}

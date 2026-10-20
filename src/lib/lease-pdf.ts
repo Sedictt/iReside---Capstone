@@ -150,6 +150,8 @@ export interface LeasePdfData {
   tenantSignature?: string;
   tenantSignedAt?: string;
   landlordSignature?: string;
+  /** Signing view: leave unsigned slots blank so ink is never drawn over placeholder text. */
+  blankUnsignedSlots?: boolean;
   landlordSignedAt?: string;
 }
 
@@ -452,7 +454,7 @@ export async function generateLeasePdf(data: LeasePdfData): Promise<Blob> {
     doc.setFont("times", "italic");
     doc.setFontSize(8.5);
     doc.setTextColor(140, 140, 140);
-    doc.text("Pending signature", margin, sigBoxY + 8);
+    if (!data.blankUnsignedSlots) doc.text("Pending signature", margin, sigBoxY + 8);
   }
   doc.setDrawColor(180, 180, 180);
   doc.setLineWidth(0.3);
@@ -477,7 +479,7 @@ export async function generateLeasePdf(data: LeasePdfData): Promise<Blob> {
     doc.setFont("times", "italic");
     doc.setFontSize(8.5);
     doc.setTextColor(140, 140, 140);
-    doc.text("Pending signature", landlordX, sigBoxY + 8);
+    if (!data.blankUnsignedSlots) doc.text("Pending signature", landlordX, sigBoxY + 8);
   }
   doc.setDrawColor(180, 180, 180);
   doc.setLineWidth(0.3);

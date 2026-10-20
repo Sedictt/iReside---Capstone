@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { isPhMobile, phMobileDigits } from "@/lib/phone";
+import { maskAccountNumber } from "@/lib/billing/payment-methods";
 
 export type AuditCategory = "billing" | "security" | "settings" | "properties" | "maintenance" | "general";
 export type AuditSeverity = "info" | "warning" | "critical";
@@ -46,6 +47,12 @@ function sanitizeMetadata(obj: Record<string, any>): Record<string, any> {
             sanitized[key] = digits
                 ? `+63${digits.slice(0, 3)}****${digits.slice(7)}`
                 : value.replace(/^(\+?\d{2,4})?(\d{3})\d{4}(\d{3,4})$/, "$1$2****$3");
+            continue;
+        }
+
+        // Mask bank account numbers ("1234567890" → "•••• 7890")
+        if (typeof value === "string" && (lowerKey.includes("accountnumber") || lowerKey.includes("account_number"))) {
+            sanitized[key] = maskAccountNumber(value) || value;
             continue;
         }
 

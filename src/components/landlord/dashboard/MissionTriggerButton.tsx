@@ -3,10 +3,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Check, Compass } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-    getOverallQuestProgress,
-    type LandlordProductTourState
-} from "@/lib/landlord-product-tour";
+import { type LandlordProductTourState } from "@/lib/landlord-product-tour";
+import { getMissionProgressPercent } from "@/lib/missions-config";
 import { useLanguage } from "@/hooks/useLanguage";
 
 interface MissionTriggerButtonProps {
@@ -50,7 +48,7 @@ export function MissionTriggerButton({ onOpen, className }: MissionTriggerButton
         };
     }, [fetchState]);
 
-    const progress = getOverallQuestProgress(state);
+    const progress = getMissionProgressPercent(state?.metadata);
     const isCompleted = progress === 100;
     const radius = 14;
     const circumference = 2 * Math.PI * radius;

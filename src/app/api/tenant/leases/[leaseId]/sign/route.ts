@@ -19,7 +19,21 @@ type SignLeaseBody = {
   tenantSignature?: string;
   signing_token?: string;
   signingToken?: string;
+  signed_pdf_base64?: string;
+  signedPdfBase64?: string;
 };
+
+/** Decode the client's signed PDF; returns null unless it really is a PDF. */
+function decodeSignedPdf(base64: string | undefined): ArrayBuffer | null {
+  if (!base64) return null;
+  try {
+    const buffer = Buffer.from(base64, "base64");
+    if (buffer.byteLength === 0 || buffer.subarray(0, 5).toString("latin1") !== "%PDF-") return null;
+    return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * POST /api/tenant/leases/[leaseId]/sign
@@ -56,6 +70,7 @@ export async function POST(
 
   const signatureInput = body.tenant_signature || body.tenantSignature;
   const tokenInput = body.signing_token || body.signingToken;
+  const clientSignedPdf = decodeSignedPdf(body.signed_pdf_base64 || body.signedPdfBase64);
 
   // Validate required fields
   if (!signatureInput || !tokenInput) {
@@ -301,88 +316,98 @@ export async function POST(
     // Non-blocking error, continue with response
   }
 
-  // Generate and store tenant-signed PDF document in vault
-  // This ensures the landlord sees the exact PDF the tenant signed.
+  // Store the tenant-signed PDF in the vault and link it on the lease, so the landlord
+  // countersigns the exact document the tenant signed. The client's copy is preferred:
+  // it carries the ink at the size and position the tenant drew it. The server copy
+  // (signature fitted into the slot) is only a fallback.
   try {
     const adminClient = createAdminClient();
 
-    // Fetch full lease details for PDF generation
-    const { data: leaseData } = await adminClient
-      .from("leases")
-      .select(`
-        id,
-        start_date,
-        end_date,
-        term_type,
-        monthly_rent,
-        security_deposit,
-        terms,
-        tenant_id,
-        landlord_id,
-        tenant_signature,
-        tenant_signed_at,
-        units (
+    const storeTenantSignedPdf = async (pdf: ArrayBuffer, landlordId: string) => {
+      const fileName = `leases/${landlordId}/${leaseId}/tenant-signed-${Date.now()}.pdf`;
+      const { error: uploadError } = await adminClient
+        .storage
+        .from("landlord-documents")
+        .upload(fileName, pdf, { contentType: "application/pdf", upsert: true });
+      if (uploadError) {
+        console.error("[sign-lease] Document upload error:", uploadError);
+        return;
+      }
+      const { data: { publicUrl } } = adminClient.storage.from("landlord-documents").getPublicUrl(fileName);
+      await adminClient
+        .from("leases")
+        .update({ signed_document_url: publicUrl, signed_document_path: fileName })
+        .eq("id", leaseId);
+      console.log("[sign-lease] Tenant-signed document stored in vault:", fileName);
+    };
+
+    if (clientSignedPdf) {
+      await storeTenantSignedPdf(clientSignedPdf, lease.landlord_id);
+    } else {
+      // Fetch full lease details for PDF generation
+      const { data: leaseData } = await adminClient
+        .from("leases")
+        .select(`
           id,
-          name,
-          properties (
+          start_date,
+          end_date,
+          term_type,
+          monthly_rent,
+          security_deposit,
+          terms,
+          tenant_id,
+          landlord_id,
+          tenant_signature,
+          tenant_signed_at,
+          units (
             id,
             name,
-            address,
-            house_rules,
-            contract_template
+            properties (
+              id,
+              name,
+              address,
+              house_rules,
+              contract_template
+            )
           )
-        )
-      `)
-      .eq("id", leaseId)
-      .single();
-
-    if (leaseData && !('error' in leaseData)) {
-      // Fetch tenant profile
-      const { data: tProfile } = await adminClient
-        .from("profiles")
-        .select("email, full_name")
-        .eq("id", leaseData.tenant_id)
+        `)
+        .eq("id", leaseId)
         .single();
 
-      // Fetch landlord profile  
-      const { data: lProfile } = await adminClient
-        .from("profiles")
-        .select("email, full_name")
-        .eq("id", leaseData.landlord_id)
-        .single();
+      if (leaseData && !('error' in leaseData)) {
+        // Fetch tenant profile
+        const { data: tProfile } = await adminClient
+          .from("profiles")
+          .select("email, full_name")
+          .eq("id", leaseData.tenant_id)
+          .single();
 
-      if (tProfile && lProfile) {
-        const pdfBlob = await generateLeasePdf({
-          id: leaseData.id,
-          startDate: new Date(leaseData.start_date).toLocaleDateString(),
-          // Open-ended leases have no end date; the PDF renders the month-to-month clause.
-          endDate: leaseData.end_date ? new Date(leaseData.end_date).toLocaleDateString() : null,
-          termType: normalizeTermType(leaseData.term_type),
-          monthlyRent: leaseData.monthly_rent,
-          securityDeposit: leaseData.security_deposit,
-          property: (leaseData as any).units?.properties,
-          unit: (leaseData as any).units,
-          landlord: { name: lProfile.full_name || "Landlord", email: lProfile.email },
-          tenant: { name: tProfile.full_name || "Tenant", email: tProfile.email },
-          terms: leaseData.terms,
-          tenantSignature: sanitizedSignature,
-          tenantSignedAt: signedAt,
-        });
+        // Fetch landlord profile  
+        const { data: lProfile } = await adminClient
+          .from("profiles")
+          .select("email, full_name")
+          .eq("id", leaseData.landlord_id)
+          .single();
 
-        const arrayBuffer = await pdfBlob.arrayBuffer();
-        const fileName = `leases/${leaseData.landlord_id}/${leaseId}/tenant-signed-${Date.now()}.pdf`;
-        const { error: uploadError } = await adminClient
-          .storage
-          .from("landlord-documents")
-          .upload(fileName, arrayBuffer, {
-            contentType: "application/pdf",
-            upsert: true,
+        if (tProfile && lProfile) {
+          const pdfBlob = await generateLeasePdf({
+            id: leaseData.id,
+            startDate: new Date(leaseData.start_date).toLocaleDateString(),
+            // Open-ended leases have no end date; the PDF renders the month-to-month clause.
+            endDate: leaseData.end_date ? new Date(leaseData.end_date).toLocaleDateString() : null,
+            termType: normalizeTermType(leaseData.term_type),
+            monthlyRent: leaseData.monthly_rent,
+            securityDeposit: leaseData.security_deposit,
+            property: (leaseData as any).units?.properties,
+            unit: (leaseData as any).units,
+            landlord: { name: lProfile.full_name || "Landlord", email: lProfile.email },
+            tenant: { name: tProfile.full_name || "Tenant", email: tProfile.email },
+            terms: leaseData.terms,
+            tenantSignature: sanitizedSignature,
+            tenantSignedAt: signedAt,
           });
 
-        if (uploadError) {
-          console.error("[sign-lease] Document upload error:", uploadError);
-        } else {
-          console.log("[sign-lease] Tenant-signed preliminary document stored in vault:", fileName);
+          await storeTenantSignedPdf(await pdfBlob.arrayBuffer(), leaseData.landlord_id);
         }
       }
     }

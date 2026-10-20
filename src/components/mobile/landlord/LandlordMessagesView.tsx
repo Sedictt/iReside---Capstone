@@ -425,6 +425,7 @@ export function LandlordMessagesView() {
             if (systemType === "awaiting_in_person") formattedContent = t("A face-to-face cash payment has been initiated. The landlord can now verify and confirm the receipt of funds using the interface below.");
             else if (systemType === "reminder_sent") formattedContent = t("A payment reminder has been sent for this invoice. You can settle it quickly using the button below.");
             else if (systemType === "in_person_intent_expired") formattedContent = t("The face-to-face payment request has expired. The invoice status has been reverted to pending.");
+            else if (systemType === "payment_submitted") formattedContent = t("Payment proof submitted for invoice {invoice}. Status is now Under Review.", { invoice: typeof metadata?.invoiceNumber === "string" ? metadata.invoiceNumber : "" });
             else if (systemType === "landlord_review") {
                 if (workflowStatus === "rejected") formattedContent = t("The payment request has been rejected. Reason: {reason}", { reason: typeof metadata?.rejectionReason === "string" ? metadata.rejectionReason : t("No reason provided.") });
                 else if (workflowStatus === "confirmed" || workflowStatus === "receipted") formattedContent = t("The payment has been confirmed.");

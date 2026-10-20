@@ -647,4 +647,9 @@ export const mobileTenantShared: TranslationDictionary = {
   "Quiet hours, garbage schedules & emergency hotlines": "Quiet hours, iskedyul ng basura at mga emergency hotline",
   "Sign Out of iReside?": "Mag-sign Out sa iReside?",
   "Are you sure you want to sign out? You will need to log back in to view your lease, pay rent, or request maintenance.": "Sigurado ka bang mag-sign out? Kailangan mong mag-login ulit para makita ang kontrata, magbayad ng upa, o magpaayos.",
+  // Invoice type labels on the Pay tab
+  "Adjusted Invoice": "Inayos na Invoice",
+  "Utility Invoice": "Invoice sa Kuryente at Tubig",
+  "1 payment is waiting for your landlord to confirm.": "May 1 bayad na hinihintay pang kumpirmahin ng landlord mo.",
+  "{count} payments are waiting for your landlord to confirm.": "May {count} bayad na hinihintay pang kumpirmahin ng landlord mo.",
 };

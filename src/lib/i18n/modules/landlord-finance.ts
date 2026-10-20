@@ -625,4 +625,6 @@ export const landlordFinance: TranslationDictionary = {
   "Notice: Rate is set to ₱0.00. Enter your standard rate so monthly usage is calculated automatically.": "Paalala: ₱0.00 ang rate. Ilagay ang iyong standard na rate para awtomatikong makuwenta ang buwanang konsumo.",
   "You pay the main utility bill and bill each room based on submeter readings each month.": "Ikaw ang nagbabayad ng main bill at sinisingil mo ang bawat kwarto batay sa submeter buwan-buwan.",
   "Tenants pay the utility provider directly with their own account. Charges will not appear on their rent bill.": "Diretsong nagbabayad ang mga tenant sa utility provider gamit ang sarili nilang account. Hindi ito lalabas sa kanilang bill sa upa.",
+  // Bank transfer payments
+  "The tenant has requested a refund for the excess payment. Please send it to their bank account below.": "Humiling ang tenant ng refund para sa sobrang bayad. Pakipadala ito sa bank account nila sa ibaba.",
 };

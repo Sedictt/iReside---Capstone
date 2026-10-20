@@ -7,6 +7,39 @@ import { resolveLeaseBillingDueDate } from "@/lib/billing/utils";
 
 export const dynamic = "force-dynamic";
 
+async function getTenantPaymentDestinations(
+  adminClient: ReturnType<typeof createServiceRoleSupabaseClient>,
+  tenantId: string,
+) {
+  const { data: lease } = await adminClient
+    .from("leases")
+    .select("landlord_id")
+    .eq("tenant_id", tenantId)
+    .eq("status", "active")
+    .limit(1)
+    .maybeSingle();
+  if (!lease?.landlord_id) return { gcash: null, bank_transfer: null };
+
+  const { data: rows } = await adminClient
+    .from("landlord_payment_destinations")
+    .select("provider, bank_name, account_name, account_number, qr_image_url, is_enabled")
+    .eq("landlord_id", lease.landlord_id)
+    .in("provider", ["gcash", "bank_transfer"]);
+
+  const pick = (provider: "gcash" | "bank_transfer") => {
+    const row = (rows ?? []).find((item) => item.provider === provider);
+    if (!row || !row.is_enabled) return null;
+    return {
+      bankName: row.bank_name ?? null,
+      accountName: row.account_name,
+      accountNumber: row.account_number,
+      qrImageUrl: row.qr_image_url ?? null,
+    };
+  };
+
+  return { gcash: pick("gcash"), bank_transfer: pick("bank_transfer") };
+}
+
 export async function GET(request: Request) {
   const authContext = await requireAuthenticatedUser(request);
   if (!("userId" in authContext)) return authContext as Response;
@@ -67,7 +100,10 @@ export async function GET(request: Request) {
             });
         }
         
-        return NextResponse.json({ ...overview, upcomingMonths });
+        // Where to send money (GCash and/or bank), for screens that show it outside a single invoice.
+        const paymentDestinations = await getTenantPaymentDestinations(adminClient, userId);
+
+        return NextResponse.json({ ...overview, upcomingMonths, paymentDestinations });
     } catch (error) {
         console.error("Error fetching tenant payments:", error);
         return NextResponse.json({ error: "Failed to load payments." }, { status: 500 });

@@ -51,7 +51,7 @@ export async function POST(request: Request, context: RouteContext) {
     selectedReadingIds: formData.get("selectedReadingIds"),
   });
   if (!parsed.ok) return parsed.response;
-  const { referenceNumber: trimmedReference, note, partialAmount: requestedAmount, selectedItemIds, selectedReadingIds } = parsed.data;
+  const { method, referenceNumber: trimmedReference, note, partialAmount: requestedAmount, selectedItemIds, selectedReadingIds } = parsed.data;
 
   const fileEntry = formData.get("receipt");
   const file = fileEntry instanceof File && fileEntry.size > 0 ? fileEntry : null;
@@ -124,6 +124,22 @@ export async function POST(request: Request, context: RouteContext) {
             );
         }
 
+        // Bank transfers need a bank account the landlord has turned on.
+        if (method === "bank_transfer") {
+            const { data: bankDestination } = await adminClient
+                .from("landlord_payment_destinations")
+                .select("id, is_enabled")
+                .eq("landlord_id", payment.landlord_id)
+                .eq("provider", "bank_transfer")
+                .maybeSingle();
+            if (!bankDestination?.is_enabled) {
+                return NextResponse.json(
+                    { error: "Your landlord has not set up bank transfer yet. Please choose another payment method." },
+                    { status: 400 },
+                );
+            }
+        }
+
         // Selected line items / readings must belong to this invoice.
         if (selectedItemIds.length > 0) {
             const { data: ownedItems, error: itemsError } = await adminClient
@@ -159,9 +175,9 @@ export async function POST(request: Request, context: RouteContext) {
         const { data: updatedPayment, error: updateError } = await adminClient
             .from("payments")
             .update({
-                method: "gcash",
+                method,
                 workflow_status: "under_review",
-                intent_method: "gcash",
+                intent_method: method,
                 review_action: null,
                 rejection_reason: null,
                 payment_submitted_at: nowIso,
@@ -195,7 +211,10 @@ export async function POST(request: Request, context: RouteContext) {
                 [payment.landlord_id],
                 {
                     title: "Payment proof submitted",
-                    message: `Tenant submitted GCash proof for invoice ${payment.invoice_number ?? payment.id}.`,
+                    message:
+                        method === "bank_transfer"
+                            ? `Tenant submitted bank transfer proof for invoice ${payment.invoice_number ?? payment.id}.`
+                            : `Tenant submitted GCash proof for invoice ${payment.invoice_number ?? payment.id}.`,
                     data: {
                         paymentId: payment.id,
                         workflowStatus: "under_review",
@@ -212,6 +231,7 @@ export async function POST(request: Request, context: RouteContext) {
                     content: `Payment proof submitted for invoice ${payment.invoice_number ?? payment.id}. Status is now Under Review.`,
                     metadata: {
                         event: "payment_submitted",
+                        method,
                         workflowStatus: "under_review",
                         paymentId: payment.id,
                     },
@@ -220,13 +240,14 @@ export async function POST(request: Request, context: RouteContext) {
             insertPaymentAuditEvent(adminClient, {
                 paymentId: payment.id,
                 actorId: userId,
-                action: "tenant_payment_submitted_gcash",
+                action: `tenant_payment_submitted_${method}`,
                 source: "api",
                 beforeState,
                 afterState: toWorkflowSnapshot(updatedPayment),
                 metadata: {
                     referenceNumber: trimmedReference,
                     submittedAmount: partialAmount,
+                    method,
                 },
             }),
         ]);

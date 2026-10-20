@@ -34,6 +34,9 @@ export function CookieConsent() {
   })
 
   useEffect(() => {
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/demo-console")) {
+      return
+    }
     const savedConsent = localStorage.getItem("ireside-consent-v1")
     if (!savedConsent) {
       const appearanceDelay = setTimeout(() => setIsVisible(true), 1200)

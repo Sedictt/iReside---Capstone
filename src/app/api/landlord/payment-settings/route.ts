@@ -7,6 +7,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import type { z } from "zod";
 import { databaseErrorResponse, parseWithSchema } from "@/lib/validation/server";
 import {
+    bankTransferSettingsSchema,
     deletedConfigIdsSchema,
     gcashSettingsSchema,
     inspectImageUpload,
@@ -58,11 +59,14 @@ export async function POST(request: Request) {
         }
         const rawSaveType = formData.get("saveType");
         const saveType = (typeof rawSaveType === "string" && rawSaveType) || (formData.has("accountName") ? "gcash" : "rates");
-        if (!["gcash", "rates", "all"].includes(saveType)) {
+        // "payment_methods" saves the GCash and/or bank sections that were sent (Settings → Payment methods).
+        if (!["gcash", "bank", "payment_methods", "rates", "all"].includes(saveType)) {
             return NextResponse.json({ error: "Unknown settings section.", fieldErrors: { saveType: "Unknown settings section." } }, { status: 400 });
         }
 
-        const shouldSaveGcash = saveType === "gcash" || (saveType === "all" && formData.has("accountName"));
+        const isMethodsSave = saveType === "payment_methods" || saveType === "all";
+        const shouldSaveGcash = saveType === "gcash" || (isMethodsSave && formData.has("accountName"));
+        const shouldSaveBank = saveType === "bank" || (isMethodsSave && formData.has("bankAccountNumber"));
         const shouldSaveUtilities = saveType === "rates" || saveType === "all" || (!formData.has("accountName") && formData.has("utilityConfigs"));
 
         const formString = (key: string) => {
@@ -90,6 +94,29 @@ export async function POST(request: Request) {
                     return NextResponse.json({ error: inspected.error, fieldErrors: { qr: inspected.error } }, { status: 400 });
                 }
                 qrUpload = new File([inspected.bytes], `gcash-qr.${inspected.extension}`, { type: inspected.contentType });
+            }
+        }
+
+        let bank: z.output<typeof bankTransferSettingsSchema> | null = null;
+        let bankQrUpload: File | null = null;
+        if (shouldSaveBank) {
+            const parsedBank = parseWithSchema(bankTransferSettingsSchema, {
+                bankName: formString("bankName") ?? "",
+                accountName: formString("bankAccountName") ?? "",
+                accountNumber: formString("bankAccountNumber") ?? "",
+                isEnabled: formString("bankIsEnabled"),
+                removeQr: formString("bankRemoveQr"),
+            });
+            if (!parsedBank.ok) return parsedBank.response;
+            bank = parsedBank.data;
+
+            const bankQrFile = formData.get("bankQr");
+            if (bankQrFile instanceof File && bankQrFile.size > 0) {
+                const inspected = await inspectImageUpload(bankQrFile, { maxBytes: QR_MAX_BYTES, label: "QR code image" });
+                if (!inspected.ok) {
+                    return NextResponse.json({ error: inspected.error, fieldErrors: { bankQr: inspected.error } }, { status: 400 });
+                }
+                bankQrUpload = new File([inspected.bytes], `bank-qr.${inspected.extension}`, { type: inspected.contentType });
             }
         }
 
@@ -213,6 +240,55 @@ export async function POST(request: Request) {
             if (destinationError) {
                 console.error("Failed to upsert landlord payment destination:", destinationError);
                 return databaseErrorResponse(destinationError, "Failed to save billing settings.");
+            }
+        }
+
+        if (bank) {
+            const { data: existingBank } = await admin
+                .from("landlord_payment_destinations")
+                .select("*")
+                .eq("landlord_id", userId)
+                .eq("provider", "bank_transfer")
+                .maybeSingle();
+
+            let qrPath = existingBank?.qr_image_path ?? null;
+            let qrUrl = existingBank?.qr_image_url ?? null;
+
+            if (bank.removeQr && qrPath) {
+                await removeBillingFile(BILLING_BUCKETS.landlordQr, qrPath);
+                qrPath = null;
+                qrUrl = null;
+            }
+
+            if (bankQrUpload) {
+                const uploaded = await uploadBillingFile({
+                    bucketName: BILLING_BUCKETS.landlordQr,
+                    ownerId: userId,
+                    scope: "bank",
+                    file: bankQrUpload,
+                });
+                qrPath = uploaded.path;
+                qrUrl = uploaded.publicUrl;
+            }
+
+            const { error: bankError } = await admin.from("landlord_payment_destinations").upsert(
+                {
+                    landlord_id: userId,
+                    provider: "bank_transfer",
+                    bank_name: bank.bankName,
+                    account_name: bank.accountName,
+                    account_number: bank.accountNumber,
+                    qr_image_path: qrPath,
+                    qr_image_url: qrUrl,
+                    is_enabled: bank.isEnabled,
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: "landlord_id,provider" },
+            );
+
+            if (bankError) {
+                console.error("Failed to upsert landlord bank destination:", bankError);
+                return databaseErrorResponse(bankError, "Failed to save billing settings.");
             }
         }
 

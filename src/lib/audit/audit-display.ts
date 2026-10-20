@@ -123,6 +123,13 @@ export function describeAuditEvent(item: AuditDisplaySource, t: AuditTranslate =
                     ? t("A tenant says they paid bill {bill} by GCash. Please check your GCash and confirm it.", { bill })
                     : t("A tenant says they paid by GCash. Please check your GCash and confirm it."),
             };
+        case "tenant_payment_submitted_bank_transfer":
+            return {
+                title: t("Tenant paid by bank transfer"),
+                description: bill
+                    ? t("A tenant says they paid bill {bill} by bank transfer. Please check your bank account and confirm it.", { bill })
+                    : t("A tenant says they paid by bank transfer. Please check your bank account and confirm it."),
+            };
         case "tenant_in_person_intent_submitted":
             return {
                 title: t("Tenant will pay in person"),

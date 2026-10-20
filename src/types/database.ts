@@ -15,7 +15,7 @@ export type LeaseTermType = 'open_ended' | 'fixed'
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded'
 export type PaymentMethod = 'credit_card' | 'debit_card' | 'gcash' | 'maya' | 'bank_transfer' | 'cash'
 export type PaymentWorkflowStatus = 'pending' | 'reminder_sent' | 'intent_submitted' | 'under_review' | 'awaiting_in_person' | 'confirmed' | 'rejected' | 'receipted'
-type PaymentIntentMethod = 'gcash' | 'in_person'
+type PaymentIntentMethod = 'gcash' | 'bank_transfer' | 'in_person'
 type PaymentAmountTag = 'exact' | 'partial' | 'overpaid' | 'short_paid'
 type PaymentReviewAction = 'accept_partial' | 'request_completion' | 'reject' | 'confirm_received'
 export type UtilityType = 'water' | 'electricity'
@@ -1260,6 +1260,7 @@ export interface Database {
                     provider: string
                     account_name: string
                     account_number: string
+                    bank_name: string | null
                     qr_image_path: string | null
                     qr_image_url: string | null
                     is_enabled: boolean
@@ -1272,6 +1273,7 @@ export interface Database {
                     provider: string
                     account_name: string
                     account_number: string
+                    bank_name?: string | null
                     qr_image_path?: string | null
                     qr_image_url?: string | null
                     is_enabled?: boolean
@@ -1284,6 +1286,7 @@ export interface Database {
                     provider?: string
                     account_name?: string
                     account_number?: string
+                    bank_name?: string | null
                     qr_image_path?: string | null
                     qr_image_url?: string | null
                     is_enabled?: boolean

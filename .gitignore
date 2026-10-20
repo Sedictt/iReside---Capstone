@@ -150,3 +150,6 @@ output/uat-video-src/
 
 # Defense demo seed output (contains a signing token)
 output/defense-demo-ids.json
+
+# Sound generator WAV masters (regenerable: python scripts/sounds/generate-sounds.py)
+scripts/sounds/out/

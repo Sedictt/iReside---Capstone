@@ -1,9 +1,11 @@
 # iReside Defense Demo — Navigation Guide
 
-**Client:** John Peter Gonzales · **Property:** Fernando Gonzales Dormitory (12 rooms, 3 floors, Marulas, Valenzuela City)
+**Client:** John Peter Gonzales · **Property:** Fernando Gonzales Dormitory (24 rooms, 3 floors, Marulas, Valenzuela City)
 **Password for every demo account:** `Defense2026!`
 
-> Keep this open on a second screen. Find the panel's question in **Section 3**, log in as the account it names, follow the click path.
+> **Fastest way: open `/demo-console`.** It is a private launcher with one button per scenario below. A click signs you in as the right account and opens the screen in a second "demo" window (shift-click opens it in the same tab). It also has a **Reset demo data** button. The page only exists while `DEMO_CONSOLE_ENABLED=true` is in `.env` (already set locally); never set that on a public deployment because the page carries the demo password.
+>
+> Keep this document open as the fallback. Find the panel's question in **Section 3**, log in as the account it names, follow the click path.
 > Before the defense (and after every rehearsal) run the reset in **Section 5** so every scenario is back at its starting point.
 
 ---
@@ -22,7 +24,9 @@
 | Angelo Fernandez | `angelo.fernandez@ireside.ph` | 302 | **Cash / in-person payment intent** for October (landlord must collect). **Unit transfer request** to Room 303 pending. |
 | Daniel Ocampo | `daniel.ocampo@ireside.ph` | 303 (former) | **Archived.** Moved out Aug 31; completed move-out with inspection + deposit refund breakdown. Use for "what happens after a tenant leaves". |
 
-Rooms without app accounts (realistic): 104 Bernard Mendoza and 204 Aljon Rivera are occupied walk-in residents not yet onboarded; 103 and 303 are vacant; 304 is under maintenance (repainting).
+Other residents (settled, all paid up, same password, use them only if the panel wants "another tenant"): 105 Jericho Navarro, 106 Lea Marie Castillo, 108 Ramon Aquino Jr., 205 Hazel Ann Domingo, 207 Kristoffer Santiago, 208 Ma. Theresa Gutierrez, 305 Vincent Tan, 306 Bea Concepcion, 307 Arvin Salvador, 308 Nicole Ramos. Their logins are `firstname.lastname@ireside.ph` (for example `jericho.navarro@ireside.ph`).
+
+Rooms without app accounts (realistic): 104 Bernard Mendoza and 204 Aljon Rivera are occupied walk-in residents not yet onboarded. 103, 107, 206 and 303 are vacant; 304 is under maintenance (repainting).
 
 **Prospects (no login needed):**
 
@@ -163,7 +167,7 @@ Landlord: `/landlord/tenants` → Angelo → transfer request → approve/deny.
 
 ### F. Property, unit map, environment
 
-**"Show the property / floor plan."** `/landlord/unit-map` → floors Ground / Second / Third → click **Room 101** (Maria) → status, tenant, lease, open tickets. Vacant rooms are green; 304 is under maintenance. Show **Floor Overview** and the layout presets / building blocks on the right.
+**"Show the property / floor plan."** `/landlord/unit-map` → floors Ground / Second / Third, 8 rooms each along a central hallway with the stairs at the east end → click **Room 101** (Maria) → status, tenant, lease, open tickets. Vacant rooms are green; 304 is under maintenance. Show **Floor Overview** and the layout presets / building blocks on the right.
 `/landlord/properties` → Fernando Gonzales Dormitory → amenities, house rules, contract template, environment policy.
 
 **"Dormitory rules (curfew, visitors)?"** `/landlord/properties/<id>/environment` → environment mode **Dormitory**, curfew 11 PM, visitor cut-off 9 PM, quiet hours 10 PM – 6 AM, max 2 occupants, utilities sub-metered. These rules are injected into the generated lease.
@@ -183,7 +187,7 @@ Say: iRis only reads the landlord's own data; if the API key is missing the widg
 
 ### H. Analytics, reports, documents, calendar
 
-**"Analytics / reports?"** `/landlord/analytics` → occupancy (10 of 12), collections, expenses, trend charts → **Export Report** (CSV/PDF, simplified or detailed).
+**"Analytics / reports?"** `/landlord/analytics` → occupancy (19 of 24), collections, expenses, trend charts → **Export Report** (CSV/PDF, simplified or detailed).
 
 **"Calendar?"** `/landlord/calendar` → October: rent due dates, lease milestones (Katrina move-in Nov 1, Christine end Nov 30, Ronald move-out), maintenance visits.
 
@@ -227,13 +231,13 @@ Landlord tour / quests: `/landlord/dashboard` → **Quick Tools** → **Mission 
 
 | Item | Value |
 |---|---|
-| Rooms | 12 (Ground ₱4,500 · Second ₱5,000 · Third A/C ₱5,500), 2 beds each |
-| Occupancy | 10 of 12 (103, 303 vacant; 304 maintenance) |
+| Rooms | 24, 8 per floor (Ground ₱4,500 · Second ₱5,000 · Third A/C ₱5,500), 2 beds each |
+| Occupancy | 19 of 24 (103, 107, 206, 303 vacant; 304 maintenance) |
 | Utilities | ₱13.50/kWh electricity, ₱35/m³ water, sub-metered per room |
 | Due day / late fee | 5th / ₱200 |
 | Advance + deposit | 1 month + 1 month |
-| October status | Paid: 101 Maria (GCash), 203 Christine (cash), 301 Mark (move-in). Under review: 102 Joshua. Overdue + reminded: 202 Ronald. Cash intent: 302 Angelo. |
-| Collected last 30 days | ≈ ₱22.7k (Finance Hub) |
+| October status | 12 of 15 invoices paid. Outstanding: 102 Joshua (GCash under review), 202 Ronald (overdue, reminded), 302 Angelo (cash intent). Mark (301) moved in Oct 10; his first invoice is November. |
+| Collected last 30 days | ≈ ₱84k (Finance Hub) |
 | Expenses YTD | ₱44,630 (12 entries) |
 
 ---

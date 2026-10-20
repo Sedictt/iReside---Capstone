@@ -86,9 +86,10 @@ import {
     UNIT_SIZE_BY_BEDS, unitTypeFromBeds, dbUnitToCanvasUnit, 
     parseFloorNumber, getFloorDisplayLabel, formatFloorWatermark, 
     QUICK_ACTIONS_BY_STATUS, QUICK_ACTION_META, evaluateQuickAction,
-    getUnitDimensions, getPlacementDimensions,
+    getUnitDimensions, getPlacementDimensions, getUnitVisualStatus,
     STANDARD_UNIT_WIDTH, STANDARD_UNIT_HEIGHT
 } from "./utils";
+import { playSound } from "@/hooks/useSound";
 import { 
     INITIAL_UNITS, LEGEND_VISIBILITY_STORAGE_KEY, FLOOR_LAYOUTS_STORAGE_KEY, 
     ACTIVE_FLOOR_STORAGE_KEY, UNIT_NOTES_STORAGE_KEY, EMPTY_FLOOR_LAYOUT, 
@@ -1020,6 +1021,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const flipSelectedItem = useCallback((axis: 'x' | 'y') => {
         if (!selectedItem) return;
+        playSound("map_rotate");
         if (selectedItem.kind === "unit") {
             setUnits(prev => prev.map(u => u.id === selectedItem.id ? { ...u, [axis === 'x' ? 'flipX' : 'flipY']: !u[axis === 'x' ? 'flipX' : 'flipY'] } : u));
         } else if (selectedItem.kind === "structure") {
@@ -1114,6 +1116,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const performUndo = useCallback(() => {
         if (historyIndexRef.current <= 0) return;
+        playSound("map_undo");
 
         // Mark as undoing so the effect doesn't record this state change as a new action
         isUndoingRef.current = true;
@@ -1504,6 +1507,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         const startPointerY = e.clientY;
         const startItemX = itemX;
         const startItemY = itemY;
+        // Sound state: lift only once the pointer really moves (a plain click stays silent),
+        // tick when the item enters a new grid cell, snap when it locks onto a neighbour.
+        const LIFT_THRESHOLD_PX = 4;
+        let hasLifted = false;
+        const startCellKey = `${itemX},${itemY}`;
+        let lastCellKey = startCellKey;
+        let wasMagnetic = false;
 
         setDragPointerAnchor(kind, id, itemX, itemY, startPointerX, startPointerY);
         setDragPlacementIndicator(kind, id, true, false);
@@ -1541,6 +1551,23 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
             updateTrashHotState(moveEvt.clientX, moveEvt.clientY);
             setDragPlacementIndicator(kind, id, placement.isValid, placement.isMagnetic);
+
+            if (!hasLifted && Math.hypot(moveEvt.clientX - startPointerX, moveEvt.clientY - startPointerY) > LIFT_THRESHOLD_PX) {
+                hasLifted = true;
+                playSound("map_pickup");
+            }
+            if (hasLifted) {
+                const cellKey = `${placement.x},${placement.y}`;
+                // A room resting against its neighbours already counts as "magnetic", so only
+                // snap once it has left its starting spot.
+                if (placement.isMagnetic && !wasMagnetic && cellKey !== startCellKey) {
+                    playSound("map_snap");
+                } else if (cellKey !== lastCellKey) {
+                    playSound("map_slide");
+                }
+                lastCellKey = cellKey;
+                wasMagnetic = placement.isMagnetic && cellKey !== startCellKey;
+            }
 
             // Auto-expand canvas bounds smoothly if moving near or beyond edges
             if (rawX + itemW > BLUEPRINT_WIDTH - 100 || rawY + itemH > BLUEPRINT_HEIGHT - 100) {
@@ -1597,8 +1624,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             );
 
             if (!placement.isValid) {
+                if (hasLifted) playSound("map_invalid");
                 triggerOverlapToast();
             } else {
+                if (hasLifted) playSound("map_drop");
                 updateCanvasDimensions({
                     kind,
                     id,
@@ -2314,6 +2343,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const confirmDeleteItem = () => {
         if (!pendingDelete) return;
+        playSound("map_remove");
         deleteCanvasItem(pendingDelete.item);
         setSelectedItem(current => current?.kind === pendingDelete.item.kind && current.id === pendingDelete.item.id ? null : current);
         setPendingDelete(null);
@@ -2342,6 +2372,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     };
 
     const rotateSelectedItem = (item: SelectedCanvasItem) => {
+        playSound("map_rotate");
         const rotateRect = (rect: { x: number; y: number; w: number; h: number }) => {
             const nextWidth = rect.h;
             const nextHeight = rect.w;
@@ -2856,10 +2887,12 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         const dropRect = { x: clampedX, y: clampedY, w: blockWidth, h: blockHeight };
 
         if (hasCollisionWithPlacedItems(dropRect)) {
+            playSound("map_invalid");
             triggerOverlapToast();
             return;
         }
 
+        playSound("map_add");
         updateCanvasDimensions({
             kind: parsed.blockType === "corridor" ? "corridor" : (parsed.blockType?.includes("stair") || parsed.blockType === "elevator") ? "structure" : "unit",
             id: "temp-drop-check",
@@ -3250,7 +3283,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             const maxTopH = topUnits.length > 0 ? Math.max(...topUnits.map(u => getUnitDimensions(u?.beds).h)) : 140;
             const maxBottomH = bottomUnits.length > 0 ? Math.max(...bottomUnits.map(u => getUnitDimensions(u?.beds).h)) : 140;
 
-            const contentW = Math.max(topRowW, bottomRowW, 800);
+            const contentW = Math.max(topRowW, bottomRowW, 0);
             const corridorW = contentW + 80;
             const MARGIN = 80;
             const startX = MARGIN;
@@ -3295,7 +3328,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 rowW += dims.w + (i > 0 ? GAP : 0);
             }
             const maxUnitH = floorPool.length > 0 ? Math.max(...floorPool.map(u => getUnitDimensions(u?.beds).h)) : 140;
-            const contentW = Math.max(rowW, 800);
+            const contentW = rowW;
             const corridorW = contentW + 80;
             const MARGIN = 80;
             const startX = MARGIN;
@@ -3354,13 +3387,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             const leftCorridorX = nLeft > 0 ? westUnitsStartX + maxLeftW + GAP : MARGIN;
             const topCorridorX = leftCorridorX;
             // North corridor width spans from left corridor through top units to right corridor
-            const topCorridorW = Math.max(topW + (nRight > 0 ? CORRIDOR_H + GAP * 2 : 80), 640);
+            const topCorridorW = topW + (nRight > 0 ? CORRIDOR_H + GAP * 2 : 80);
             const topUnitsStartX = topCorridorX + Math.max(GAP, Math.round((topCorridorW - topW) / 2));
 
             const startY = MARGIN;
             const topCorridorY = startY + maxTopH + GAP;
             const sideUnitsStartY = topCorridorY + CORRIDOR_H + GAP;
-            const maxSideH = Math.max(leftH, rightH, 420);
+            const maxSideH = Math.max(leftH, rightH);
             const sideCorridorH = maxSideH + CORRIDOR_H + GAP;
 
             // 1. Top row units
@@ -3450,13 +3483,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             const westUnitsStartX = MARGIN;
             const leftCorridorX = westUnitsStartX + maxLeftW + GAP;
             const topCorridorX = leftCorridorX;
-            const topCorridorW = Math.max(topW + 80, 600);
+            const topCorridorW = topW + 80;
             const topUnitsStartX = topCorridorX + Math.max(GAP, Math.round((topCorridorW - topW) / 2));
 
             const startY = MARGIN;
             const topCorridorY = startY + maxTopH + GAP;
             const sideUnitsStartY = topCorridorY + CORRIDOR_H + GAP;
-            const sideCorridorH = Math.max(leftH, 420) + CORRIDOR_H + GAP;
+            const sideCorridorH = leftH + CORRIDOR_H + GAP;
 
             // Top row
             let curTopX = topUnitsStartX;
@@ -4551,7 +4584,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                })}
 
 {units.map((unit) => {
-                                        const isFiltered = !statusFilters.includes(unit.status);
+                                        const visualStatus = getUnitVisualStatus(unit);
+                                        const isFiltered = !statusFilters.includes(visualStatus);
                                         const isDragging = activeDragItem?.kind === "unit" && activeDragItem?.id === unit.id;
                                         const displayX = isDragging ? activeDragItem.currentX : unit.x;
                                         const displayY = isDragging ? activeDragItem.currentY : unit.y;
@@ -4673,9 +4707,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                             ? (isDark ? 'bg-zinc-800/40 opacity-100' : 'bg-zinc-300/40 opacity-100')
                                                             : `opacity-[0.18] group-hover:opacity-[0.3] ${
                                                                 isCurrentTenantUnit ? 'bg-primary' :
-                                                                unit.status === 'occupied' ? 'bg-blue-500' :
-                                                                unit.status === 'vacant' ? 'bg-emerald-500' :
-                                                                unit.status === 'maintenance' ? 'bg-red-500' : 'bg-amber-500'
+                                                                visualStatus === 'occupied' ? 'bg-blue-500' :
+                                                                visualStatus === 'vacant' ? 'bg-emerald-500' :
+                                                                visualStatus === 'maintenance' ? 'bg-red-500' : 'bg-amber-500'
                                                             }`
                                                     }`}></div>
 
@@ -4685,9 +4719,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                 ? 'bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb,59,130,246),0.9)] animate-pulse'
                                                                 : isFiltered
                                                                 ? (isDark ? 'bg-zinc-500 border border-zinc-400/40 shadow-none' : 'bg-zinc-400 border border-zinc-500/40 shadow-none')
-                                                                : unit.status === 'occupied' ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.9)]'
-                                                                : unit.status === 'vacant' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.9)]'
-                                                                : unit.status === 'maintenance' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]'
+                                                                : visualStatus === 'occupied' ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.9)]'
+                                                                : visualStatus === 'vacant' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.9)]'
+                                                                : visualStatus === 'maintenance' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]'
                                                                 : 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.9)]'
                                                         }`}></div>
 
@@ -4718,28 +4752,28 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                             </span>
                                                         ) : (
                                                             <>
-                                                                {unit.status === 'vacant' && (
+                                                                {visualStatus === 'vacant' && (
                                                                     <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
                                                                         isFiltered
                                                                             ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
                                                                             : (isDark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-400/60 bg-emerald-100/90 text-emerald-800')
                                                                     }`}>{t("Vacant")}</span>
                                                                 )}
-                                                                {unit.status === 'occupied' && (
+                                                                {visualStatus === 'occupied' && (
                                                                     <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
                                                                         isFiltered
                                                                             ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
                                                                             : (isDark ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' : 'border-blue-400/60 bg-blue-100/90 text-blue-800')
                                                                     }`}>{t("Occupied")}</span>
                                                                 )}
-                                                                {unit.status === 'maintenance' && (
+                                                                {visualStatus === 'maintenance' && (
                                                                     <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
                                                                         isFiltered
                                                                             ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
                                                                             : (isDark ? 'border-red-500/30 bg-red-500/10 text-red-400' : 'border-red-400/60 bg-red-100/90 text-red-800')
                                                                     }`}>{t("Maint")}</span>
                                                                 )}
-                                                                {unit.status === 'neardue' && (
+                                                                {visualStatus === 'neardue' && (
                                                                     <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
                                                                         isFiltered
                                                                             ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
@@ -4978,7 +5012,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         <div className="flex items-center gap-4 px-1 py-0.5">
                                             <div className="flex flex-col">
                                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("Live Units")}</span>
-                                                <span className="font-mono text-base font-bold leading-none mt-1">{units.filter(u => statusFilters.includes(u.status)).length}</span>
+                                                <span className="font-mono text-base font-bold leading-none mt-1">{units.filter(u => statusFilters.includes(getUnitVisualStatus(u))).length}</span>
                                             </div>
                                             <div className={`h-7 w-px ${isDark ? 'bg-white/10' : 'bg-border'}`} />
                                             <div className="flex flex-col">
@@ -5095,7 +5129,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     ></div>
 
                                                     {units.map((unit) => {
-                                                        const isMinimapFiltered = !statusFilters.includes(unit.status);
+                                                        const minimapStatus = getUnitVisualStatus(unit);
+                                                        const isMinimapFiltered = !statusFilters.includes(minimapStatus);
                                                         const isCurrentMinimapUnit = Boolean(readOnly && currentUnitId && (unit.id === currentUnitId || unit.dbId === currentUnitId));
                                                         return (
                                                             <div
@@ -5105,9 +5140,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                         ? 'bg-primary ring-1 ring-white shadow-[0_0_8px_rgba(var(--primary-rgb,59,130,246),0.9)] z-10'
                                                                         : isMinimapFiltered
                                                                         ? (isDark ? 'bg-zinc-600 border border-zinc-500/40' : 'bg-zinc-400 border border-zinc-500/40')
-                                                                        : unit.status === 'occupied' ? 'bg-blue-500/85'
-                                                                        : unit.status === 'vacant' ? 'bg-emerald-500/85'
-                                                                        : unit.status === 'maintenance' ? 'bg-red-500/85'
+                                                                        : minimapStatus === 'occupied' ? 'bg-blue-500/85'
+                                                                        : minimapStatus === 'vacant' ? 'bg-emerald-500/85'
+                                                                        : minimapStatus === 'maintenance' ? 'bg-red-500/85'
                                                                         : 'bg-amber-500/85'
                                                                 }`}
                                                                 style={{
@@ -6325,9 +6360,9 @@ const UnitDetailsPanel = ({
                         </div>
                         <div className={`flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40`}>
                             <div className={`size-2 rounded-full animate-pulse ${
-                                unit.status === 'occupied' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' :
-                                unit.status === 'vacant' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
-                                unit.status === 'maintenance' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
+                                getUnitVisualStatus(unit) === 'occupied' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' :
+                                getUnitVisualStatus(unit) === 'vacant' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
+                                getUnitVisualStatus(unit) === 'maintenance' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
                                 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
                             }`} />
                             <span className="text-[11px] font-black tracking-wide text-zinc-800 dark:text-zinc-100 uppercase">{t(currentStatus.label)}</span>
@@ -6551,10 +6586,10 @@ const UnitDetailsPanel = ({
                                 onClick={() => setTenantActionMenu((current) => ({ isOpen: !current.isOpen }))}
                                 className="group relative flex w-full flex-col rounded-3xl border border-zinc-200 bg-white p-5 text-left transition-all hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 dark:border-white/5 dark:bg-zinc-900/60 dark:hover:bg-zinc-900"
                             >
-                                <div className="flex items-center gap-5">
-                                    <div className="relative">
-                                        <div className="relative size-16 rounded-[22px] border-2 border-primary/20 p-1 transition-transform group-hover:scale-105">
-                                            <div className="h-full w-full overflow-hidden rounded-[18px] bg-zinc-100 dark:bg-zinc-800 relative" style={unit.tenantAvatarBgColor ? { backgroundColor: unit.tenantAvatarBgColor } : undefined}>
+                                <div className="flex items-center gap-3 pr-7">
+                                    <div className="relative shrink-0">
+                                        <div className="relative size-14 rounded-[20px] border-2 border-primary/20 p-1 transition-transform group-hover:scale-105">
+                                            <div className="h-full w-full overflow-hidden rounded-[16px] bg-zinc-100 dark:bg-zinc-800 relative" style={unit.tenantAvatarBgColor ? { backgroundColor: unit.tenantAvatarBgColor } : undefined}>
                                                 {unit.tenantAvatarUrl ? (
                                                     <Image
                                                         src={unit.tenantAvatarUrl}
@@ -6574,16 +6609,16 @@ const UnitDetailsPanel = ({
                                             <div className="absolute -bottom-1 -right-1 size-5 rounded-full border-4 border-white bg-emerald-500 shadow-sm dark:border-black"></div>
                                         </div>
                                     </div>
-                                    <div className="flex-1">
-                                        <p className="text-xl font-black tracking-tight text-zinc-900 dark:text-white">{unit.tenant || t("VACANT UNIT")}</p>
-                                        <div className="mt-1 flex items-center gap-2">
-                                            <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{unit.tenant ? t("Active Tenant") : t("Ready for Move-in")}</span>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="line-clamp-2 text-base font-black leading-snug tracking-tight text-zinc-900 dark:text-white" title={unit.tenant || undefined}>{unit.tenant || t("VACANT UNIT")}</p>
+                                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                            <span className="whitespace-nowrap text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{unit.tenant ? t("Active Tenant") : t("Ready for Move-in")}</span>
                                             <div className="size-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                                            <span className="text-[11px] font-black text-primary tracking-wide">ID-{unit.id.slice(0, 5).toUpperCase()}</span>
+                                            <span className="whitespace-nowrap text-[11px] font-black text-primary tracking-wide">ID-{unit.id.slice(0, 5).toUpperCase()}</span>
                                         </div>
                                     </div>
-                                    <div className="flex size-10 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-400 group-hover:bg-primary/10 group-hover:text-primary dark:bg-black/40">
-                                        <span className="material-icons-round text-xl">more_vert</span>
+                                    <div className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-xl bg-zinc-100 text-zinc-400 group-hover:bg-primary/10 group-hover:text-primary dark:bg-black/40">
+                                        <span className="material-icons-round text-lg">more_vert</span>
                                     </div>
                                 </div>
                             </button>
