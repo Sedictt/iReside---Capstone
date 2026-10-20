@@ -108,6 +108,8 @@ const LANDLORD = {
   name: "John Peter Gonzales",
   phone: "+639171112222",
   gcash: "09171112222",
+  // Bank account for transfers above GCash's ₱50,000 limit (and tenants who prefer their bank).
+  bank: { name: "BDO Unibank", account: "005930123456" },
   avatar: AVATAR(7),
 };
 
@@ -194,6 +196,15 @@ async function makeCardPng({ title, subtitle, lines = [], accent = "#2f6f5e", w 
     <text x="70" y="${h - 60}" font-family="Segoe UI, Arial" font-size="24" fill="#6b7280">iReside demo artifact · ${esc(PROPERTY_NAME)}</text>
   </svg>`;
   return sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+// Real evidence photos live in scripts/defense-demo-photos/. When one is missing the
+// seeder falls back to the generated text card so the dataset still builds.
+const PHOTO_DIR = path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(\w:)/, "$1")), "defense-demo-photos");
+async function photoOrCard(fileName, card) {
+  const file = path.join(PHOTO_DIR, fileName);
+  if (!fs.existsSync(file)) return makeCardPng(card);
+  return sharp(file).rotate().resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true }).png().toBuffer();
 }
 
 async function uploadPng(bucket, objectPath, buffer) {
@@ -331,13 +342,12 @@ async function main() {
   step("Brand assets & evidence images");
   const logoSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect width="512" height="512" rx="96" fill="#2f6f5e"/><text x="256" y="300" text-anchor="middle" font-family="Georgia, serif" font-size="200" font-weight="700" fill="#ffffff">FG</text><text x="256" y="400" text-anchor="middle" font-family="Segoe UI, Arial" font-size="56" fill="#cfe7dd">DORMITORY</text></svg>`;
   const logo = await uploadPng("brand-logos", `landlords/${LANDLORD.id}/fgd-logo.png`, await sharp(Buffer.from(logoSvg)).png().toBuffer());
-  const gcashProofFor = async (amount) => uploadPng("payment-proofs", `${TENANTS.joshua.id}/demo/gcash-october-2026.png`, await makeCardPng({
+  const gcashProofFor = async (amount) => uploadPng("payment-proofs", `${TENANTS.joshua.id}/demo/gcash-october-2026.png`, await photoOrCard("gcash-receipt-sample.png", {
     title: "GCash", subtitle: "Send Money — Successful", accent: "#0b63f6",
     lines: [`Amount          ${peso(amount)}`, "To              JO** PE** G.", "Mobile No.      0917 111 2222", "Ref No.         1023 4477 8812", "Date            Oct 12, 2026 · 8:41 PM", "", "Note: Room 102 rent + utilities Oct 2026"],
   }));
-  const leakPhoto1 = await uploadPng("maintenance-images", `${TENANTS.joshua.id}/demo/room102-faucet-leak-1.png`, await makeCardPng({ title: "Room 102 · Lavatory", subtitle: "Photo evidence · Oct 14, 2026 · 7:12 AM", accent: "#b45309", lines: ["Water dripping from the faucet base", "even when closed. Bucket fills in ~3 hrs.", "", "Submitted by: Joshua Miguel Dela Cruz"] }));
-  const leakPhoto2 = await uploadPng("maintenance-images", `${TENANTS.joshua.id}/demo/room102-faucet-leak-2.png`, await makeCardPng({ title: "Room 102 · Lavatory", subtitle: "Close-up of the leaking joint", accent: "#b45309", lines: ["Corroded compression nut on the supply line."] }));
-  const outletPhoto = await uploadPng("maintenance-images", `${TENANTS.mark.id}/demo/room301-outlet.png`, await makeCardPng({ title: "Room 301 · Wall Outlet", subtitle: "Photo evidence · Oct 17, 2026 · 10:30 PM", accent: "#991b1b", lines: ["Sparks and a burning smell when the", "aircon is plugged in. Outlet cover is", "discolored. Not using it for now.", "", "Submitted by: Mark Anthony Lim"] }));
+  const leakPhoto1 = await uploadPng("maintenance-images", `${TENANTS.joshua.id}/demo/room102-faucet-leak-1.png`, await photoOrCard("room102-faucet-leak.webp", { title: "Room 102 · Lavatory", subtitle: "Photo evidence · Oct 14, 2026 · 7:12 AM", accent: "#b45309", lines: ["Water dripping from the faucet base", "even when closed. Bucket fills in ~3 hrs.", "", "Submitted by: Joshua Miguel Dela Cruz"] }));
+  const outletPhoto = await uploadPng("maintenance-images", `${TENANTS.mark.id}/demo/room301-outlet.png`, await photoOrCard("room301-outlet.webp", { title: "Room 301 · Wall Outlet", subtitle: "Photo evidence · Oct 17, 2026 · 10:30 PM", accent: "#991b1b", lines: ["Sparks and a burning smell when the", "aircon is plugged in. Outlet cover is", "discolored. Not using it for now.", "", "Submitted by: Mark Anthony Lim"] }));
   const albumPhoto1 = await uploadPng("community-images", `${PROPERTY_ID}/demo/fiesta-1.png`, await makeCardPng({ title: "Marulas Fiesta 2026", subtitle: "Boodle fight at the rooftop", accent: "#7c3aed", lines: ["Thank you to everyone who joined!"], w: 1200, h: 900 }));
   const albumPhoto2 = await uploadPng("community-images", `${PROPERTY_ID}/demo/fiesta-2.png`, await makeCardPng({ title: "Marulas Fiesta 2026", subtitle: "Karaoke night, ground-floor lounge", accent: "#7c3aed", lines: ["Winner: Room 203 (Christine) — Tagumpay Nating Lahat"], w: 1200, h: 900 }));
   ok("Logo, GCash proof, maintenance photos and album images uploaded");
@@ -464,17 +474,18 @@ async function main() {
     property_id: PROPERTY_ID, environment_mode: "dormitory", max_occupants_per_unit: 2,
     curfew_enabled: true, curfew_time: "23:00:00", visitor_cutoff_enabled: true, visitor_cutoff_time: "21:00:00",
     quiet_hours_start: "22:00:00", quiet_hours_end: "06:00:00", gender_restriction_mode: "none", utility_policy_mode: "tenant_paid",
-    payment_profile_defaults: { due_day: DUE_DAY, late_fee: LATE_FEE, allow_partial: false, accepted_methods: ["gcash", "cash"] },
+    payment_profile_defaults: { due_day: DUE_DAY, late_fee: LATE_FEE, allow_partial: false, accepted_methods: ["gcash", "bank_transfer", "cash"] },
     needs_review: false, reviewed_at: "2026-01-12T02:30:00.000Z", reviewed_by: LANDLORD.id,
   }], "environment policy");
   await insert("utility_configs", [
     { id: uid("ucfg:elec"), landlord_id: LANDLORD.id, property_id: PROPERTY_ID, unit_id: null, utility_type: "electricity", billing_mode: "tenant_paid", rate_per_unit: ELEC_RATE, unit_label: "kwh", is_active: true, effective_from: "2026-01-01", note: "Meralco pass-through rate, sub-metered per room" },
     { id: uid("ucfg:water"), landlord_id: LANDLORD.id, property_id: PROPERTY_ID, unit_id: null, utility_type: "water", billing_mode: "tenant_paid", rate_per_unit: WATER_RATE, unit_label: "cubic_meter", is_active: true, effective_from: "2026-01-01", note: "Maynilad pass-through rate, sub-metered per room" },
   ], "utility configs");
-  await insert("landlord_payment_destinations", [{
-    id: uid("gcash:dest"), landlord_id: LANDLORD.id, provider: "gcash", account_name: LANDLORD.name, account_number: LANDLORD.gcash, is_enabled: true,
-  }], "GCash destination");
-  ok(`Property + ${UNITS.length} rooms + map + policies + utility rates + GCash`);
+  await insert("landlord_payment_destinations", [
+    { id: uid("gcash:dest"), landlord_id: LANDLORD.id, provider: "gcash", bank_name: null, account_name: LANDLORD.name, account_number: LANDLORD.gcash, is_enabled: true },
+    { id: uid("bank:dest"), landlord_id: LANDLORD.id, provider: "bank_transfer", bank_name: LANDLORD.bank.name, account_name: LANDLORD.name, account_number: LANDLORD.bank.account, is_enabled: true },
+  ], "payment destinations");
+  ok(`Property + ${UNITS.length} rooms + map + policies + utility rates + GCash + bank account`);
 
   // ---- leases -------------------------------------------------------------
   step("Leases");
@@ -538,7 +549,7 @@ async function main() {
 
   /**
    * Build one monthly invoice.
-   * mode: "paid_gcash" | "paid_cash" | "pending" | "under_review" | "awaiting_cash" | "reminder_sent"
+   * mode: "paid_gcash" | "paid_bank" | "paid_cash" | "pending" | "under_review" | "awaiting_cash" | "reminder_sent"
    */
   function monthlyInvoice(t, year, month, mode, opts = {}) {
     const u = unitByName[t.unit];
@@ -552,7 +563,7 @@ async function main() {
     const amount = Number((subtotal + lateFee).toFixed(2));
     const due = ymd(year, month, DUE_DAY);
     const periodEnd = ymd(year, month, new Date(year, month, 0).getDate());
-    const paid = mode === "paid_gcash" || mode === "paid_cash";
+    const paid = mode === "paid_gcash" || mode === "paid_bank" || mode === "paid_cash";
     const paidDay = opts.paidDay ?? (t.key === "maria" ? 2 : t.key === "christine" ? 4 : 5);
     const paidAt = paid ? `${ymd(year, month, paidDay)}T${t.key === "christine" ? "09:15" : "12:40"}:00.000Z` : null;
     const m = meters[t.key];
@@ -572,14 +583,21 @@ async function main() {
     };
     let row;
     if (paid) {
-      const method = mode === "paid_gcash" ? "gcash" : "cash";
-      row = { ...base, status: "completed", workflow_status: "receipted", method, intent_method: method === "gcash" ? "gcash" : "in_person", amount_tag: "exact", review_action: "confirm_received",
+      const method = mode === "paid_gcash" ? "gcash" : mode === "paid_bank" ? "bank_transfer" : "cash";
+      const withProof = method !== "cash";
+      const reference = method === "gcash"
+        ? `${1000 + month * 37 + t.key.length}${String(year).slice(2)}${pad(month)}${pad(paidDay)}`
+        : method === "bank_transfer" ? `IP${String(year).slice(2)}${pad(month)}${pad(paidDay)}${String(400000 + month * 7919 + t.key.length * 13).slice(-6)}` : null;
+      const receiptNote = method === "gcash" ? "GCash transfer verified against reference number."
+        : method === "bank_transfer" ? `InstaPay transfer to ${LANDLORD.bank.name} verified against the bank statement.`
+        : "Cash received at the caretaker's office.";
+      row = { ...base, status: "completed", workflow_status: "receipted", method, intent_method: withProof ? method : "in_person", amount_tag: "exact", review_action: "confirm_received",
         paid_amount: amount, balance_remaining: 0, paid_at: paidAt, payment_submitted_at: paidAt, landlord_confirmed: true, last_action_at: paidAt, last_action_by: LANDLORD.id,
-        reference_number: method === "gcash" ? `${1000 + month * 37 + t.key.length}${String(year).slice(2)}${pad(month)}${pad(paidDay)}` : null,
+        reference_number: reference,
         receipt_number: receiptNo(pid, paidAt.slice(0, 10)) };
-      receipts.push({ id: uid(`rcpt:${pid}`), payment_id: pid, landlord_id: LANDLORD.id, tenant_id: t.id, receipt_number: row.receipt_number, amount, issued_at: paidAt, issued_by: LANDLORD.id, method, amount_breakdown: { rent: u.rent, electricity: elec, water, late_fee: lateFee }, notes: method === "gcash" ? "GCash transfer verified against reference number." : "Cash received at the caretaker's office.", created_at: paidAt });
-      wfEvents.push({ payment_id: pid, actor_id: t.id, action: method === "gcash" ? "tenant_payment_submitted_gcash" : "tenant_in_person_intent_submitted", source: "api", before_state: { workflow_status: "pending" }, after_state: { workflow_status: method === "gcash" ? "under_review" : "awaiting_in_person" }, created_at: paidAt },
-        { payment_id: pid, actor_id: LANDLORD.id, action: "confirm_received", source: "api", before_state: { workflow_status: method === "gcash" ? "under_review" : "awaiting_in_person" }, after_state: { workflow_status: "receipted", receipt_number: row.receipt_number }, created_at: paidAt });
+      receipts.push({ id: uid(`rcpt:${pid}`), payment_id: pid, landlord_id: LANDLORD.id, tenant_id: t.id, receipt_number: row.receipt_number, amount, issued_at: paidAt, issued_by: LANDLORD.id, method, amount_breakdown: { rent: u.rent, electricity: elec, water, late_fee: lateFee }, notes: receiptNote, created_at: paidAt });
+      wfEvents.push({ payment_id: pid, actor_id: t.id, action: withProof ? `tenant_payment_submitted_${method}` : "tenant_in_person_intent_submitted", source: "api", before_state: { workflow_status: "pending" }, after_state: { workflow_status: withProof ? "under_review" : "awaiting_in_person" }, created_at: paidAt },
+        { payment_id: pid, actor_id: LANDLORD.id, action: "confirm_received", source: "api", before_state: { workflow_status: withProof ? "under_review" : "awaiting_in_person" }, after_state: { workflow_status: "receipted", receipt_number: row.receipt_number }, created_at: paidAt });
     } else if (mode === "under_review") {
       const submittedAt = opts.submittedAt;
       row = { ...base, status: "pending", workflow_status: "under_review", intent_method: "gcash", method: "gcash", paid_amount: 0, balance_remaining: amount, payment_submitted_at: submittedAt, reference_number: "1023447788812", payment_note: "Paid via GCash po, Room 102 rent + utilities. Sorry for the delay, late salary release.", payment_proof_path: opts.proof?.path ?? null, payment_proof_url: opts.proof?.url ?? null, last_action_at: submittedAt, last_action_by: t.id, updated_at: submittedAt };
@@ -615,8 +633,8 @@ async function main() {
   // Ronald: Jan–Sep paid (cash); October unpaid, reminder already sent
   for (let m = 1; m <= 9; m++) monthlyInvoice(TENANTS.ronald, 2026, m, "paid_cash", { paidDay: 5 });
   const ronaldOct = monthlyInvoice(TENANTS.ronald, 2026, 10, "reminder_sent", { lateFee: LATE_FEE, reminderAt: "2026-10-08T01:30:00.000Z" });
-  // Christine: Jan–Oct all paid in cash at the office
-  for (let m = 1; m <= 10; m++) monthlyInvoice(TENANTS.christine, 2026, m, "paid_cash");
+  // Christine: Jan–May paid in cash at the office; since June she pays by bank transfer (InstaPay to BDO)
+  for (let m = 1; m <= 10; m++) monthlyInvoice(TENANTS.christine, 2026, m, m >= 6 ? "paid_bank" : "paid_cash");
   // Angelo: Feb–Sep paid; October — told the system he will pay cash (awaiting in-person collection)
   for (let m = 2; m <= 9; m++) monthlyInvoice(TENANTS.angelo, 2026, m, m % 2 ? "paid_gcash" : "paid_cash");
   const angeloOct = monthlyInvoice(TENANTS.angelo, 2026, 10, "awaiting_cash", { lateFee: LATE_FEE, submittedAt: hoursAgo(20), expiresAt: iso(new Date(Date.now() + 52 * 3600_000)) });
@@ -671,7 +689,7 @@ async function main() {
   // ---- maintenance --------------------------------------------------------
   step("Maintenance tickets");
   await insert("maintenance_requests", [
-    { id: uid("mr:joshua:faucet"), unit_id: unitByName["102"].id, tenant_id: TENANTS.joshua.id, landlord_id: LANDLORD.id, title: "Leaking lavatory faucet", description: "Tumutulo po yung gripo sa lababo kahit nakasara. Umaabot ng kalahating timba sa loob ng 3 oras. Nag-corrode na ata yung supply line.", status: "in_progress", priority: "high", category: "plumbing", images: [leakPhoto1?.url, leakPhoto2?.url].filter(Boolean), repair_method: "third_party", third_party_name: "Mang Dodong Plumbing Services (Marulas)", photo_requested: true, tenant_repair_status: "personnel_arrived", tenant_provided_photos: [leakPhoto1?.url].filter(Boolean), ai_triage_priority: "high", ai_triage_sentiment: "negative", ai_triage_reason: "Continuous water loss and risk of damage to the vanity; plumbing issue that worsens if deferred.", ai_triage_confidence: 0.91, ai_triage_version: "v2", ai_triaged_at: "2026-10-14T00:15:00.000Z", created_at: "2026-10-13T23:12:00.000Z", updated_at: hoursAgo(5) },
+    { id: uid("mr:joshua:faucet"), unit_id: unitByName["102"].id, tenant_id: TENANTS.joshua.id, landlord_id: LANDLORD.id, title: "Leaking lavatory faucet", description: "Tumutulo po yung gripo sa lababo kahit nakasara. Umaabot ng kalahating timba sa loob ng 3 oras. Nag-corrode na ata yung supply line.", status: "in_progress", priority: "high", category: "plumbing", images: [leakPhoto1?.url].filter(Boolean), repair_method: "third_party", third_party_name: "Mang Dodong Plumbing Services (Marulas)", photo_requested: true, tenant_repair_status: "personnel_arrived", tenant_provided_photos: [leakPhoto1?.url].filter(Boolean), ai_triage_priority: "high", ai_triage_sentiment: "negative", ai_triage_reason: "Continuous water loss and risk of damage to the vanity; plumbing issue that worsens if deferred.", ai_triage_confidence: 0.91, ai_triage_version: "v2", ai_triaged_at: "2026-10-14T00:15:00.000Z", created_at: "2026-10-13T23:12:00.000Z", updated_at: hoursAgo(5) },
     { id: uid("mr:mark:outlet"), unit_id: unitByName["301"].id, tenant_id: TENANTS.mark.id, landlord_id: LANDLORD.id, title: "Wall outlet sparking when aircon is plugged in", description: "May spark at amoy sunog sa outlet malapit sa aircon. Hindi ko muna ginagamit. Discolored na po yung cover.", status: "open", priority: "urgent", category: "electrical", images: [outletPhoto?.url].filter(Boolean), ai_triage_priority: "urgent", ai_triage_sentiment: "distressed", ai_triage_reason: "Electrical arcing and burning smell indicate a fire hazard; isolate the circuit and dispatch an electrician immediately.", ai_triage_confidence: 0.97, ai_triage_version: "v2", ai_triaged_at: hoursAgo(10), created_at: hoursAgo(11), updated_at: hoursAgo(10) },
     { id: uid("mr:christine:wifi"), unit_id: unitByName["203"].id, tenant_id: TENANTS.christine.id, landlord_id: LANDLORD.id, title: "Weak Wi-Fi signal on the 2nd floor", description: "Isang bar lang po ang Wi-Fi sa Room 203 tuwing gabi. Nahihirapan ako sa online classes ng kapatid ko pag bumibisita.", status: "assigned", priority: "medium", category: "internet", images: [], repair_method: "landlord", ai_triage_priority: "medium", ai_triage_sentiment: "neutral", ai_triage_reason: "Connectivity degradation; not safety-related. Suggest adding a mesh node on the 2nd floor.", ai_triage_confidence: 0.84, ai_triage_version: "v2", ai_triaged_at: daysAgo(3), created_at: daysAgo(3), updated_at: daysAgo(2) },
     { id: uid("mr:maria:lock"), unit_id: unitByName["101"].id, tenant_id: TENANTS.maria.id, landlord_id: LANDLORD.id, title: "Door knob loose / hard to lock", description: "Maluwag na yung door knob at minsan hindi nala-lock mula sa labas.", status: "resolved", priority: "medium", category: "carpentry", images: [], repair_method: "landlord", tenant_repair_status: "done", resolved_at: "2026-09-21T06:30:00.000Z", ai_triage_priority: "medium", ai_triage_sentiment: "neutral", ai_triage_reason: "Security-related hardware fault; replace the lockset.", ai_triage_confidence: 0.88, ai_triage_version: "v2", ai_triaged_at: "2026-09-19T03:00:00.000Z", created_at: "2026-09-19T02:48:00.000Z", updated_at: "2026-09-21T06:30:00.000Z" },
@@ -683,7 +701,7 @@ async function main() {
   // ---- applications & invites ---------------------------------------------
   step("Applications, invites, prospect payment portal");
   const checklist = (o = {}) => ({ valid_id: false, income_verified: false, background_checked: false, application_completed: false, inspection_done: false, lease_signed: false, payment_received: false, ...o });
-  const inviteOnline = { id: uid("invite:online"), landlord_id: LANDLORD.id, property_id: PROPERTY_ID, unit_id: null, mode: "property", public_token: "fgd-apply-online-2026", token_hash: sha256("fgd-apply-online-2026"), status: "active", max_uses: 50, use_count: 3, application_type: "online", required_requirements: ["valid_id", "proof_of_income", "application_form"], payment_terms: { advance_rent_months: 1, security_deposit_months: 1, accepted_methods: ["gcash", "cash"] }, expires_at: iso(new Date(Date.now() + 60 * 86400_000)), last_used_at: daysAgo(2), created_at: "2026-09-01T02:00:00.000Z" };
+  const inviteOnline = { id: uid("invite:online"), landlord_id: LANDLORD.id, property_id: PROPERTY_ID, unit_id: null, mode: "property", public_token: "fgd-apply-online-2026", token_hash: sha256("fgd-apply-online-2026"), status: "active", max_uses: 50, use_count: 3, application_type: "online", required_requirements: ["valid_id", "proof_of_income", "application_form"], payment_terms: { advance_rent_months: 1, security_deposit_months: 1, accepted_methods: ["gcash", "bank_transfer", "cash"] }, expires_at: iso(new Date(Date.now() + 60 * 86400_000)), last_used_at: daysAgo(2), created_at: "2026-09-01T02:00:00.000Z" };
   const inviteWalkin = { id: uid("invite:walkin103"), landlord_id: LANDLORD.id, property_id: PROPERTY_ID, unit_id: unitByName["103"].id, mode: "unit", public_token: "fgd-room103-walkin-2026", token_hash: sha256("fgd-room103-walkin-2026"), status: "active", max_uses: 1, use_count: 0, application_type: "face_to_face", required_requirements: ["valid_id", "application_form", "move_in_payment"], payment_terms: { advance_rent_months: 1, security_deposit_months: 1, accepted_methods: ["cash"] }, expires_at: iso(new Date(Date.now() + 14 * 86400_000)), created_at: daysAgo(4) };
   const inviteExisting = { id: uid("invite:existing104"), landlord_id: LANDLORD.id, property_id: PROPERTY_ID, unit_id: unitByName["104"].id, mode: "unit", public_token: "fgd-room104-existing-2026", token_hash: sha256("fgd-room104-existing-2026"), status: "active", max_uses: 1, use_count: 0, application_type: "existing_tenant", required_requirements: [], payment_terms: null, expires_at: iso(new Date(Date.now() + 30 * 86400_000)), created_at: daysAgo(6) };
   await insert("tenant_intake_invites", [inviteOnline, inviteWalkin, inviteExisting], "invites");
@@ -824,7 +842,51 @@ async function main() {
   // ---- messaging ----------------------------------------------------------
   step("Messages");
   const convs = [], parts = [], msgs = [];
-  const chat = (t, lines) => {
+  // Interactive payment cards, written with the same metadata the live APIs use
+  // (sendPaymentSystemMessage + AttachInvoiceModal) so they render as real cards.
+  const payById = new Map(payments.map((p) => [p.id, p]));
+  const shiftMin = (at, min) => iso(new Date(new Date(at).getTime() + min * 60_000));
+  const cards = {};
+  const card = (t, who, payment, at, content, metadata) => (cards[t.key] ??= []).push([who, content, at, {
+    type: "system",
+    metadata: { ...metadata, actorName: who === "L" ? "Landlord" : "Tenant", paymentId: payment.id, invoiceNumber: payment.invoice_number, conversationId: uid(`conv:${t.key}`) },
+  }]);
+  const submittedCard = (t, p, at) => card(t, "T", p, at, `Payment proof submitted for invoice ${p.invoice_number}. Status is now Under Review.`, { event: "payment_submitted", workflowStatus: "under_review" });
+  const cashIntentCard = (t, p, at, expiresAt) => card(t, "T", p, at, "A face-to-face cash payment has been initiated. The landlord can now verify and confirm the receipt of funds using the interface below.", { event: "awaiting_in_person", workflowStatus: "awaiting_in_person", expiresAt, landlordTransactionPath: `/landlord/invoices?invoiceId=${p.id}` });
+  const reminderCard = (t, p, at) => card(t, "L", p, at, "A payment reminder has been sent for this invoice. You can settle it quickly using the button below.", { event: "reminder_sent", actionLabel: "Pay Now", payNowPath: `/tenant/payments/${p.id}/checkout` });
+  const confirmedCard = (t, p, at) => card(t, "L", p, at, "The payment has been confirmed and a digital receipt has been issued.", { event: "landlord_review", workflowStatus: "receipted", reviewAction: "confirm_received", amountTag: "exact", rejectionReason: null });
+  const receiptCard = (t, p, at, description) => card(t, "L", p, at, `Invoice for ${description} (${peso(p.amount)}) has been attached.`, {
+    systemType: "invoice", invoiceId: p.id, amount: Number(p.amount).toLocaleString("en-PH"), description, status: "Paid",
+    date: new Date(p.paid_at).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Manila" }),
+    unit: `Room ${t.unit}`, tenantName: t.name, landlordName: LANDLORD.name, propertyName: PROPERTY_NAME, actionLabel: "View Receipt", payNowPath: `/tenant/payments/${p.id}/checkout`,
+  });
+  // A settled invoice: tenant pays (GCash proof or cash intent) → landlord confirms → receipt attached.
+  const settledCards = (t, cycle) => {
+    const p = payById.get(uid(`pay:${t.key}:${cycle}`));
+    if (!p) return;
+    if (p.method === "gcash" || p.method === "bank_transfer") submittedCard(t, p, shiftMin(p.paid_at, -45));
+    else cashIntentCard(t, p, shiftMin(p.paid_at, -18 * 60), shiftMin(p.paid_at, 54 * 60));
+    confirmedCard(t, p, p.paid_at);
+    receiptCard(t, p, shiftMin(p.paid_at, 2), `${MONTH_NAMES[Number(cycle.slice(5, 7)) - 1]} ${cycle.slice(0, 4)} Rent & Utilities`);
+  };
+  settledCards(TENANTS.maria, "2026-09-01");
+  settledCards(TENANTS.maria, "2026-10-01");
+  settledCards(TENANTS.christine, "2026-10-01");
+  settledCards(TENANTS.joshua, "2026-09-01");
+  settledCards(TENANTS.ronald, "2026-09-01");
+  settledCards(TENANTS.angelo, "2026-09-01");
+  // Live states the panel can act on from chat.
+  submittedCard(TENANTS.joshua, joshuaOct, joshuaOct.payment_submitted_at);
+  reminderCard(TENANTS.ronald, ronaldOct, ronaldOct.reminder_sent_at);
+  cashIntentCard(TENANTS.angelo, angeloOct, angeloOct.payment_submitted_at, angeloOct.in_person_intent_expires_at);
+  // Mark's move-in payments: confirmed in person, both receipts sent to chat.
+  for (const [kind, description] of [["advance", "Advance Rent (1 month)"], ["deposit", "Security Deposit"]]) {
+    const p = payById.get(uid(`pay:mark:movein:${kind}`));
+    if (kind === "advance") confirmedCard(TENANTS.mark, p, p.paid_at);
+    receiptCard(TENANTS.mark, p, shiftMin(p.paid_at, kind === "advance" ? 2 : 3), description);
+  }
+  const chat = (t, ownLines) => {
+    const lines = [...ownLines, ...(cards[t.key] ?? [])].sort((a, b) => a[2].localeCompare(b[2]));
     const cid = uid(`conv:${t.key}`);
     convs.push({ id: cid, created_at: lines[0][2], updated_at: lines[lines.length - 1][2] });
     parts.push({ conversation_id: cid, user_id: LANDLORD.id }, { conversation_id: cid, user_id: t.id });
