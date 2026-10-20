@@ -3,11 +3,13 @@
  */
 import type { Database, MaintenancePriority, MaintenanceStatus } from "@/types/database";
 import type { MaintenanceSentiment } from "@/lib/maintenance-triage";
+import type { MaintenancePriorityLabel } from "@/lib/maintenance-priority";
+
+export type { MaintenancePriorityLabel };
 
 export type MaintenanceRequestRow = Database["public"]["Tables"]["maintenance_requests"]["Row"];
 
 export type MaintenanceStatusLabel = "Pending" | "Assigned" | "In Progress" | "Resolved";
-export type MaintenancePriorityLabel = "Critical" | "High" | "Medium" | "Low";
 export type MaintenanceSentimentLabel = "Distressed" | "Negative" | "Neutral" | "Positive";
 
 export interface MaintenanceRequestItem {

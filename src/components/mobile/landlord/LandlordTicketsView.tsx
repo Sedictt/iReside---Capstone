@@ -19,6 +19,7 @@ import {
     Image as ImageIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MAINTENANCE_PRIORITY_BADGE_TEXT, MAINTENANCE_PRIORITY_SOFT_CLASSES, toPriorityLabel } from '@/lib/maintenance-priority';
 import { useLanguageContext } from '@/context/LanguageContext';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModal';
@@ -38,13 +39,6 @@ interface MaintenanceRequest {
     created_at: string;
     ai_triage_notes?: string;
 }
-
-const PRIORITY_LABELS: Record<string, string> = {
-    low: 'Low Priority',
-    medium: 'Medium Priority',
-    high: 'High Priority',
-    urgent: 'Urgent Priority',
-};
 
 function fillRich(text: string, nodes: Record<string, ReactNode>) {
     return text.split(/(\{\w+\})/g).map((part, i) => {
@@ -307,7 +301,7 @@ export function LandlordTicketsView() {
                     filteredTickets.map((ticket) => {
                         const isExpanded = expandedId === ticket.id;
                         const hasImages = Boolean(ticket.images && ticket.images.length > 0);
-                        const priority = ticket.priority?.toLowerCase() || 'medium';
+                        const priorityLabel = toPriorityLabel(ticket.priority);
                         const normStatus = normalizeStatus(ticket.status);
 
                         return (
@@ -339,12 +333,9 @@ export function LandlordTicketsView() {
 
                                         <span className={cn(
                                             "inline-block px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border",
-                                            priority === 'urgent' && "border-red-500/30 bg-red-500/10 text-red-500",
-                                            priority === 'high' && "border-amber-500/30 bg-amber-500/10 text-amber-500",
-                                            priority === 'medium' && "border-blue-500/30 bg-blue-500/10 text-blue-500",
-                                            priority === 'low' && "border-border bg-muted/30 text-muted-foreground"
+                                            MAINTENANCE_PRIORITY_SOFT_CLASSES[priorityLabel]
                                         )}>
-                                            {PRIORITY_LABELS[priority] ? t(PRIORITY_LABELS[priority]) : t('{priority} Priority', { priority })}
+                                            {t(MAINTENANCE_PRIORITY_BADGE_TEXT[priorityLabel])}
                                         </span>
                                     </div>
                                 </div>

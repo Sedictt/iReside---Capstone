@@ -20,9 +20,14 @@ import { ViewToggle } from "@/components/shared/ViewToggle";
 import { useViewMode } from "@/hooks/useViewMode";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { ART } from "@/lib/art/abstract-art";
+import {
+    MAINTENANCE_PRIORITY_BADGE_CLASSES,
+    MAINTENANCE_PRIORITY_BADGE_TEXT,
+    type MaintenancePriorityLabel,
+} from "@/lib/maintenance-priority";
 
 type MaintenanceStatus = "Pending" | "Assigned" | "In Progress" | "Resolved";
-type Priority = "Critical" | "High" | "Medium" | "Low";
+type Priority = MaintenancePriorityLabel;
 
 interface MaintenanceRequest {
     id: string;
@@ -616,20 +621,14 @@ function TenantMaintenanceListRow({ request, onClick }: { request: MaintenanceRe
 
 function PriorityBadge({ priority }: { priority: Priority }) {
     const { t } = useLanguageContext();
-    const config = {
-        Critical: "bg-red-500 text-white border-red-400 shadow-sm",
-        High: "bg-orange-500/90 backdrop-blur-md text-white border-orange-400/50 shadow-sm",
-        Medium: "bg-blue-500/90 backdrop-blur-md text-white border-blue-400/50 shadow-sm",
-        Low: "bg-zinc-200/90 dark:bg-neutral-800/90 backdrop-blur-md text-zinc-700 dark:text-neutral-300 border-zinc-300 dark:border-neutral-600 shadow-sm",
-    };
 
     return (
         <span className={cn(
-            "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5",
-            config[priority]
+            "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm",
+            MAINTENANCE_PRIORITY_BADGE_CLASSES[priority]
         )}>
             {priority === "Critical" && <AlertTriangle className="size-3" />}
-            {t("{priority} Priority", { priority: t(priority) })}
+            {t(MAINTENANCE_PRIORITY_BADGE_TEXT[priority])}
         </span>
     );
 }

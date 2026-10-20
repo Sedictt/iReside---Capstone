@@ -10,13 +10,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { Unit } from "../types";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
-
-const PRIORITY_LABELS: Record<string, string> = {
-    low: "Low",
-    medium: "Medium",
-    high: "High",
-    urgent: "Urgent",
-};
+import { MAINTENANCE_PRIORITY_BADGE_TEXT, toPriorityLabel } from "@/lib/maintenance-priority";
 
 export interface UnitHistoryModalProps {
     isOpen: boolean;
@@ -412,7 +406,7 @@ export const UnitHistoryModal = ({
                                                         {item.priority && item.priority !== "normal" && (
                                                             <>
                                                                 <span>&bull;</span>
-                                                                <span className="uppercase text-rose-500">{t("{priority} priority", { priority: t(PRIORITY_LABELS[item.priority] ?? item.priority) })}</span>
+                                                                <span className="uppercase text-rose-500">{t(MAINTENANCE_PRIORITY_BADGE_TEXT[toPriorityLabel(item.priority)])}</span>
                                                             </>
                                                         )}
                                                         {item.tenantName && (
