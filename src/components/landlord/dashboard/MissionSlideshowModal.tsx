@@ -10,10 +10,7 @@ import {
     ExternalLink, 
     Maximize2, 
     Minimize2, 
-    Sparkles, 
-    Image as ImageIcon,
-    HelpCircle,
-    RotateCcw
+    Sparkles,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -23,6 +20,7 @@ import {
     MISSION_ICONS 
 } from "@/lib/missions-config";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { toast } from "sonner";
 
 interface MissionSlideshowModalProps {
     mission: MissionConfig | null;
@@ -77,19 +75,16 @@ export function MissionSlideshowModal({
         if (!mission) return;
         setIsCompleting(true);
         try {
-            // Call tour step completion API if needed
-            const res = await fetch("/api/landlord/tour/quest/start", {
+            const res = await fetch("/api/landlord/tour/quest/complete", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ questId: mission.id }),
             });
+            if (!res.ok) throw new Error(`Mission progress was not saved (${res.status})`);
 
-            // Mark mission completed in client
-            if (onCompleteMission) {
-                onCompleteMission(mission.id);
-            }
+            onCompleteMission?.(mission.id);
 
-            // Dispatch global event for trigger button & other components to refresh
+            // Lets the trigger button and other listeners refresh their progress
             window.dispatchEvent(new CustomEvent("quest-progress-updated"));
 
             setJustCompleted(true);
@@ -98,6 +93,7 @@ export function MissionSlideshowModal({
             }, 1200);
         } catch (err) {
             console.error("Failed to complete mission:", err);
+            toast.error(t("Could not save your progress. Please try again."));
             setIsCompleting(false);
         }
     };
@@ -237,24 +233,14 @@ export function MissionSlideshowModal({
                                         />
                                     </div>
                                 ) : (
-                                    /* Graceful Placeholder when image file has not yet been placed */
+                                    /* Shown only if a picture fails to load */
                                     <div className="flex max-w-md flex-col items-center justify-center rounded-3xl border border-dashed border-primary/30 bg-primary/5 p-8 text-center backdrop-blur-md">
                                         <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                                            <ImageIcon className="size-7" />
+                                            <Icon className="size-7" />
                                         </div>
-                                        <h3 className="mb-1 text-base font-black tracking-tight text-foreground">
+                                        <h3 className="text-base font-black tracking-tight text-foreground">
                                             {currentSlide ? t(currentSlide.title) : null}
                                         </h3>
-                                        <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-                                            {t("Custom screenshot ready for upload. Drop your annotated image at:")}
-                                        </p>
-                                        <code className="mb-4 rounded-xl border border-white/10 bg-black/50 px-3 py-1.5 font-mono text-[11px] text-primary select-all">
-                                            {currentSlide?.image}
-                                        </code>
-                                        <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground/70">
-                                            <HelpCircle className="size-3.5" />
-                                            <span>{t("Place arrows and highlights directly on your screenshot file.")}</span>
-                                        </div>
                                     </div>
                                 )}
                             </motion.div>
@@ -302,6 +288,11 @@ export function MissionSlideshowModal({
                                 <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
                                     {currentSlide ? t(currentSlide.description) : null}
                                 </p>
+                                {currentSlide?.tip && (
+                                    <p className="text-[11px] font-medium leading-relaxed text-amber-600 dark:text-amber-400 sm:text-xs">
+                                        {t(currentSlide.tip)}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Action Buttons & Step Dots */}
@@ -319,7 +310,7 @@ export function MissionSlideshowModal({
                                                     ? "w-6 bg-primary" 
                                                     : idx < currentSlideIndex 
                                                         ? "w-2 bg-primary/40" 
-                                                        : "w-2 bg-white/10 hover:bg-white/20"
+                                                        : "w-2 bg-foreground/15 hover:bg-foreground/25"
                                             )}
                                         />
                                     ))}
