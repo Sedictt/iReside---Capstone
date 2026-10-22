@@ -138,20 +138,28 @@ export function MobileNotificationsView() {
                     }
                     break;
                 }
-                case 'lease':
                 case 'lease_renewal_request':
                 case 'lease_renewal_approved':
-                case 'lease_renewal_rejected':
+                case 'lease_renewal_rejected': {
+                    if (data.signingUrl) {
+                        window.location.href = data.signingUrl;
+                    } else {
+                        router.push('/mobile/landlord/leases?tab=renewals');
+                    }
+                    break;
+                }
                 case 'move_out_approved':
                 case 'move_out_denied':
                 case 'move_out_inspection_completed':
                 case 'move_out_finalized': {
-                    // If the notification carries a signing URL, open it directly
+                    router.push('/mobile/landlord/move-out');
+                    break;
+                }
+                case 'lease': {
                     if (data.signingUrl) {
                         window.location.href = data.signingUrl;
                     } else {
-                        // Redirect to Profile page which surfaces the lease details
-                        router.push('/mobile/landlord/profile');
+                        router.push('/mobile/landlord/leases');
                     }
                     break;
                 }
@@ -205,13 +213,15 @@ export function MobileNotificationsView() {
                 case 'move_out_denied':
                 case 'move_out_inspection_completed':
                 case 'move_out_finalized': {
-                    // If the notification carries a signing URL, open it directly
                     if (data.signingUrl) {
                         window.location.href = data.signingUrl;
                     } else {
-                        // Redirect to Profile page which has the Active Lease Details section
-                        router.push('/mobile/tenant/profile');
+                        router.push('/mobile/tenant/lease');
                     }
+                    break;
+                }
+                case 'announcement': {
+                    router.push('/mobile/tenant/calendar');
                     break;
                 }
                 default: {
