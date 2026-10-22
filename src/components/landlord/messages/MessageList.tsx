@@ -1,8 +1,10 @@
 "use client";
 
 import { useRef, useEffect, useMemo } from "react";
+import { m, AnimatePresence } from "framer-motion";
 import { UiMessage } from "./types";
 import { MessageBubble } from "./MessageBubble";
+import { bubbleMotion } from "./bubbleMotion";
 import { MessageListSkeleton } from "./MessageListSkeleton";
 import { MessageSquare, Loader2, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -131,29 +133,38 @@ export function MessageList({
                     </div>
                 ) : (
                     <div className="space-y-2">
+                        {/* initial={false}: the loaded thread renders in place; only bubbles
+                            added afterwards (sent or received) pop in, iMessage-style */}
+                        <AnimatePresence initial={false}>
                         {groupedMessages.map((msg, idx) => {
                             // Find if there is any landlord review (confirm or reject) for this same invoiceId that comes AFTER this message
-                            const hasSubsequentReview = msg.invoiceId ? groupedMessages.slice(idx + 1).some(m => 
-                                m.invoiceId === msg.invoiceId && 
-                                m.systemType === "landlord_review"
+                            const hasSubsequentReview = msg.invoiceId ? groupedMessages.slice(idx + 1).some(other =>
+                                other.invoiceId === msg.invoiceId &&
+                                other.systemType === "landlord_review"
                             ) : false;
+                            const isMe = msg.type === viewerRole;
 
                             return (
-                                <MessageBubble
+                                <m.div
                                     key={msg.id || `msg-${msg.createdAt || idx}-${idx}`}
-                                    message={msg}
-                                    isMe={msg.type === viewerRole}
-                                    viewerRole={viewerRole}
-                                    onDownloadImage={onDownloadImage}
-                                    onOpenF2F={onOpenF2F}
-                                    onImageClick={onImageClick}
-                                    isDownloading={isDownloading}
-                                    onReportMessage={onReportMessage}
-                                    isActionDisabled={hasSubsequentReview}
-                                    onResolveIssue={onResolveIssue}
-                                />
+                                    {...bubbleMotion(isMe)}
+                                >
+                                    <MessageBubble
+                                        message={msg}
+                                        isMe={isMe}
+                                        viewerRole={viewerRole}
+                                        onDownloadImage={onDownloadImage}
+                                        onOpenF2F={onOpenF2F}
+                                        onImageClick={onImageClick}
+                                        isDownloading={isDownloading}
+                                        onReportMessage={onReportMessage}
+                                        isActionDisabled={hasSubsequentReview}
+                                        onResolveIssue={onResolveIssue}
+                                    />
+                                </m.div>
                             );
                         })}
+                        </AnimatePresence>
                         <div ref={messagesEndRef} className="h-1" />
                     </div>
                 )}

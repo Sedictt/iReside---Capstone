@@ -435,36 +435,36 @@ export function LandlordOverviewView() {
 
     return (
         <PullToRefresh onRefresh={loadAll} className="h-full flex flex-col">
-            <div className="flex-1 min-h-0 flex flex-col gap-4 px-3.5 pt-2.5 pb-32 overflow-y-auto custom-scrollbar-premium">
+            <div className="m-stagger flex-1 min-h-0 flex flex-col gap-4 px-3.5 pt-2.5 pb-32 overflow-y-auto custom-scrollbar-premium">
                 {/* 1. Property Selector */}
                 <div className="shrink-0">
                     <MobilePropertySelector />
                 </div>
 
                 {/* 2. Hero Card with Branded Background & Mobile Digital Clock */}
-                <div className="group relative rounded-[2rem] neumorphic-panel p-4 flex flex-col gap-3.5 shadow-sm shrink-0 overflow-hidden">
+                <div className="m-hero group p-5 flex flex-col gap-4 shrink-0">
                     {/* Background Layer with Custom Banner */}
-                    <div className="absolute inset-0 overflow-hidden rounded-[2rem] pointer-events-none">
+                    <div className="absolute inset-0 overflow-hidden rounded-[var(--m-radius-hero)] pointer-events-none">
                         <Image
                             src={activeBanner}
                             alt={t("Property Skyline")}
                             fill
                             priority
                             sizes="(max-width: 768px) 100vw, 500px"
-                            className="object-cover opacity-40 dark:opacity-20 transition-transform duration-[2000ms] group-hover:scale-105"
+                            className="object-cover opacity-25 mix-blend-luminosity transition-transform duration-[2000ms] group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
                     </div>
 
                     {/* Top Row: Date Pill & Manila Digital Clock + Banner Customizer */}
                     <div className="relative z-10 flex items-center justify-between gap-2">
                         {/* Date Pill with Live Indicator */}
-                        <div className="flex items-center gap-1.5 rounded-full neumorphic-inset-card px-2.5 py-1">
-                            <div className="relative">
-                                <div className="size-1.5 rounded-full bg-primary animate-ping" />
-                                <div className="absolute inset-0 size-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]" />
-                            </div>
-                            <span className="text-[9px] font-black uppercase tracking-[0.14em] text-foreground/80">
+                        <div className="m-pill m-pill-ghost gap-2">
+                            <span className="relative flex size-2">
+                                <span className="absolute inline-flex h-full w-full rounded-full bg-[#5ee0ea] opacity-75 animate-ping" />
+                                <span className="relative inline-flex size-2 rounded-full bg-[#5ee0ea]" />
+                            </span>
+                            <span>
                                 {currentTime.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' })}
                             </span>
                         </div>
@@ -474,37 +474,36 @@ export function LandlordOverviewView() {
                             <button
                                 type="button"
                                 onClick={toggleTimeFormat}
-                                className="flex items-center gap-1 px-2.5 py-1 rounded-full neumorphic-inset-card font-mono text-[11px] font-black text-foreground tabular-nums select-none active:scale-95 transition-all"
+                                className="m-pill m-pill-ghost font-mono tabular-nums select-none active:scale-95 transition-all min-h-[32px]"
                                 title={is24Hour ? t('Tap to switch to 12-hour format') : t('Tap to switch to 24-hour format')}
                                 aria-label={t("Digital clock toggle")}
                             >
                                 <span>{hours}:{minutes}</span>
                                 {period ? (
-                                    <span className="text-[9px] font-black uppercase text-primary">{period}</span>
+                                    <span className="text-[11px] opacity-85">{period}</span>
                                 ) : (
-                                    <span className="text-[8px] font-bold text-muted-foreground">24H</span>
+                                    <span className="text-[11px] opacity-85">24H</span>
                                 )}
                             </button>
 
                             <button
                                 type="button"
                                 onClick={() => setIsCustomizerOpen(true)}
-                                className="size-7 rounded-full neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95"
+                                className="size-8 rounded-full bg-white/18 text-inherit flex items-center justify-center transition-all active:scale-95"
                                 title={t("Customize banner photo")}
                                 aria-label={t("Customize banner photo")}
                             >
-                                <Camera className="size-3 text-primary" />
+                                <Camera className="size-4" />
                             </button>
                         </div>
                     </div>
 
                     {/* Middle Row: Full-Width Prominent Greeting */}
-                    <div className="relative z-10 flex flex-col gap-0.5">
-                        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground leading-tight">
+                    <div className="relative z-10 flex flex-col gap-1">
+                        <h1 className="m-display text-[24px] sm:text-[28px]">
                             {t('Welcome back, {name}', { name: formattedFirstName })}
-                            <span className="text-primary prose-invert">.</span>
                         </h1>
-                        <p className="text-xs font-medium text-muted-foreground line-clamp-1">
+                        <p className="m-hero-muted text-sm line-clamp-1">
                             {overdueCount > 0
                                 ? (overdueCount > 1
                                     ? t('⚠️ {count} payments are overdue for review', { count: overdueCount })
@@ -514,15 +513,15 @@ export function LandlordOverviewView() {
                     </div>
 
                     {/* Primary Companion Action Grid (4-Column Balanced Grid) */}
-                    <div className="relative z-10 grid grid-cols-4 gap-2 mt-1">
+                    <div className="relative z-10 grid grid-cols-4 gap-2">
                         {/* 1. Collect Payment */}
                         <button
                             type="button"
                             onClick={() => setIsCollectPaymentModalOpen(true)}
-                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 hover:bg-emerald-500/15 p-2 min-h-[58px] active:scale-95 transition-all text-emerald-600 dark:text-emerald-400 group shadow-2xs"
+                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-white/14 p-2 min-h-[64px] active:scale-95 transition-all text-inherit group/action"
                         >
-                            <Banknote className="size-5 text-emerald-500 group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">{t("Collect")}</span>
+                            <Banknote className="size-[22px] group-hover/action:scale-110 transition-transform" />
+                            <span className="text-xs font-semibold">{t("Collect")}</span>
                         </button>
 
                         {/* 2. Walk-in App */}
@@ -532,56 +531,56 @@ export function LandlordOverviewView() {
                                 setSelectedWalkInUnitId(undefined);
                                 setIsWalkInModalOpen(true);
                             }}
-                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-primary/25 bg-primary/10 hover:bg-primary/15 p-2 min-h-[58px] active:scale-95 transition-all text-primary group shadow-2xs"
+                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-white/14 p-2 min-h-[64px] active:scale-95 transition-all text-inherit group/action"
                         >
-                            <UserPlus className="size-5 text-primary group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">{t("Walk-In")}</span>
+                            <UserPlus className="size-[22px] group-hover/action:scale-110 transition-transform" />
+                            <span className="text-xs font-semibold">{t("Walk-In")}</span>
                         </button>
 
                         {/* 3. Invite Resident */}
                         <button
                             type="button"
                             onClick={() => setIsInviteModalOpen(true)}
-                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-violet-500/25 bg-violet-500/10 hover:bg-violet-500/15 p-2 min-h-[58px] active:scale-95 transition-all text-violet-600 dark:text-violet-400 group shadow-2xs"
+                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-white/14 p-2 min-h-[64px] active:scale-95 transition-all text-inherit group/action"
                         >
-                            <QrCode className="size-5 text-violet-500 group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">{t("Invite")}</span>
+                            <QrCode className="size-[22px] group-hover/action:scale-110 transition-transform" />
+                            <span className="text-xs font-semibold">{t("Invite")}</span>
                         </button>
 
                         {/* 4. Building Calendar */}
                         <Link
                             href="/mobile/landlord/calendar"
-                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-sky-500/25 bg-sky-500/10 hover:bg-sky-500/15 p-2 min-h-[58px] active:scale-95 transition-all text-sky-600 dark:text-sky-400 group shadow-2xs text-center"
+                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-white/14 p-2 min-h-[64px] active:scale-95 transition-all text-inherit group/action text-center"
                         >
-                            <Calendar className="size-5 text-sky-500 group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">{t("Calendar")}</span>
+                            <Calendar className="size-[22px] group-hover/action:scale-110 transition-transform" />
+                            <span className="text-xs font-semibold">{t("Calendar")}</span>
                         </Link>
                     </div>
 
                     {/* Secondary Mobile Utility Strip (Touch-Accessible >= 44px) */}
-                    <div className="relative z-10 flex items-center justify-between gap-1.5 pt-1.5 border-t border-border/40">
+                    <div className="relative z-10 flex items-center justify-between gap-2 pt-3 border-t border-white/15">
                         <Link
                             href="/mobile/landlord/tickets"
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-border/50 bg-card/60 text-muted-foreground hover:text-foreground text-[10px] font-bold active:scale-95 transition-all"
+                            className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-2 rounded-full bg-white/14 text-inherit text-xs font-bold active:scale-95 transition-all"
                         >
-                            <Wrench className="size-3.5 text-amber-500" />
+                            <Wrench className="size-4" />
                             <span>{t('Tickets')}</span>
                         </Link>
 
                         <button
                             type="button"
                             onClick={() => setIsFlyerModalOpen(true)}
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-border/50 bg-card/60 text-muted-foreground hover:text-foreground text-[10px] font-bold active:scale-95 transition-all"
+                            className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-2 rounded-full bg-white/14 text-inherit text-xs font-bold active:scale-95 transition-all"
                         >
-                            <Printer className="size-3.5 text-foreground" />
+                            <Printer className="size-4" />
                             <span>{t('Flyer')}</span>
                         </button>
 
                         <Link
                             href="/mobile/tenant/manual"
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-border/50 bg-card/60 text-muted-foreground hover:text-foreground text-[10px] font-bold active:scale-95 transition-all"
+                            className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-2 rounded-full bg-white/14 text-inherit text-xs font-bold active:scale-95 transition-all"
                         >
-                            <FolderSearch2 className="size-3.5 text-indigo-400" />
+                            <FolderSearch2 className="size-4" />
                             <span>{t('Manual')}</span>
                         </Link>
                     </div>
@@ -589,11 +588,11 @@ export function LandlordOverviewView() {
 
                 {/* 3. Intelligence Hub (4 Status Badges in 2x2 Grid) */}
                 <div className="flex flex-col gap-2 shrink-0">
-                    <div className="flex items-center gap-2 px-1">
-                        <div className="flex size-6 items-center justify-center rounded-lg neumorphic-inset-card text-primary shrink-0">
-                            <ShieldCheck className="size-3.5" />
+                    <div className="flex items-center gap-2.5 px-1">
+                        <div className="m-tile m-tile-brand size-8 rounded-xl">
+                            <ShieldCheck className="size-4" />
                         </div>
-                        <h2 className="text-xs font-black uppercase tracking-wider text-foreground">
+                        <h2 className="m-display text-[18px] text-foreground">
                             {t('Intelligence Hub')}
                         </h2>
                     </div>
@@ -603,20 +602,19 @@ export function LandlordOverviewView() {
                         <button
                             type="button"
                             onClick={() => setOpenPaymentModal('Overdue')}
-                            className="neumorphic-extruded rounded-2xl p-3 flex items-center justify-between active:scale-95 transition-all text-left group hover:border-red-500/40"
+                            className="m-card p-3.5 flex items-center justify-between gap-2 active:scale-95 transition-all text-left"
                         >
                             <div className="min-w-0">
-                                <span className="text-[9px] font-black uppercase tracking-wider text-red-400 flex items-center gap-1">
-                                    <Zap className="size-2.5 text-red-500 fill-red-500" />
+                                <span className="m-eyebrow text-[11px] text-[var(--m-coral-text)] flex items-center gap-1">
                                     {t('Overdue')}
                                 </span>
-                                <h3 className="text-xl font-black text-foreground mt-0.5 tabular-nums">
+                                <h3 className="m-amount text-[26px] text-foreground mt-1.5 tabular-nums">
                                     {paymentsState.loading ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : overdueCount}
                                 </h3>
-                                <p className="text-[9px] text-muted-foreground truncate">{t("Tap to review")}</p>
+                                <p className="text-xs text-muted-foreground truncate mt-1">{t("Tap to review")}</p>
                             </div>
-                            <div className="neumorphic-inset-card flex size-8 items-center justify-center rounded-xl text-red-500 shrink-0">
-                                <Zap className="size-4" />
+                            <div className="m-tile m-tile-coral size-10">
+                                <Zap className="size-[18px]" />
                             </div>
                         </button>
 
@@ -624,20 +622,19 @@ export function LandlordOverviewView() {
                         <button
                             type="button"
                             onClick={() => setOpenPaymentModal('Near Due')}
-                            className="neumorphic-extruded rounded-2xl p-3 flex items-center justify-between active:scale-95 transition-all text-left group hover:border-amber-500/40"
+                            className="m-card p-3.5 flex items-center justify-between gap-2 active:scale-95 transition-all text-left"
                         >
                             <div className="min-w-0">
-                                <span className="text-[9px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1">
-                                    <TrendingUp className="size-2.5 text-amber-500" />
+                                <span className="m-eyebrow text-[11px] text-[var(--m-amber-text)] flex items-center gap-1">
                                     {t('Near Due')}
                                 </span>
-                                <h3 className="text-xl font-black text-foreground mt-0.5 tabular-nums">
+                                <h3 className="m-amount text-[26px] text-foreground mt-1.5 tabular-nums">
                                     {paymentsState.loading ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : nearDueCount}
                                 </h3>
-                                <p className="text-[9px] text-muted-foreground truncate">{t("Next 7 days")}</p>
+                                <p className="text-xs text-muted-foreground truncate mt-1">{t("Next 7 days")}</p>
                             </div>
-                            <div className="neumorphic-inset-card flex size-8 items-center justify-center rounded-xl text-amber-500 shrink-0">
-                                <TrendingUp className="size-4" />
+                            <div className="m-tile m-tile-amber size-10">
+                                <TrendingUp className="size-[18px]" />
                             </div>
                         </button>
 
@@ -645,20 +642,19 @@ export function LandlordOverviewView() {
                         <button
                             type="button"
                             onClick={() => setIsVacantUnitsModalOpen(true)}
-                            className="neumorphic-extruded rounded-2xl p-3 flex items-center justify-between active:scale-95 transition-all text-left group hover:border-sky-500/40"
+                            className="m-card p-3.5 flex items-center justify-between gap-2 active:scale-95 transition-all text-left"
                         >
                             <div className="min-w-0">
-                                <span className="text-[9px] font-black uppercase tracking-wider text-sky-400 flex items-center gap-1">
-                                    <Building2 className="size-2.5 text-sky-500" />
+                                <span className="m-eyebrow text-[11px] text-[var(--m-teal-text)] flex items-center gap-1">
                                     {t('Vacant')}
                                 </span>
-                                <h3 className="text-xl font-black text-foreground mt-0.5 tabular-nums">
+                                <h3 className="m-amount text-[26px] text-foreground mt-1.5 tabular-nums">
                                     {loadingUnits ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : openUnitsCount}
                                 </h3>
-                                <p className="text-[9px] text-muted-foreground truncate">{t("Available units")}</p>
+                                <p className="text-xs text-muted-foreground truncate mt-1">{t("Available units")}</p>
                             </div>
-                            <div className="neumorphic-inset-card flex size-8 items-center justify-center rounded-xl text-sky-500 shrink-0">
-                                <Building2 className="size-4" />
+                            <div className="m-tile m-tile-teal size-10">
+                                <Building2 className="size-[18px]" />
                             </div>
                         </button>
 
@@ -666,47 +662,46 @@ export function LandlordOverviewView() {
                         <button
                             type="button"
                             onClick={() => setIsInviteModalOpen(true)}
-                            className="neumorphic-extruded rounded-2xl p-3 flex items-center justify-between active:scale-95 transition-all text-left group hover:border-violet-500/40"
+                            className="m-card p-3.5 flex items-center justify-between gap-2 active:scale-95 transition-all text-left"
                         >
                             <div className="min-w-0">
-                                <span className="text-[9px] font-black uppercase tracking-wider text-violet-400 flex items-center gap-1">
-                                    <QrCode className="size-2.5 text-violet-500" />
+                                <span className="m-eyebrow text-[11px] text-[var(--brand-primary-900)] dark:text-primary flex items-center gap-1">
                                     {t('Invites')}
                                 </span>
-                                <h3 className="text-xl font-black text-foreground mt-0.5 tabular-nums">
+                                <h3 className="m-amount text-[26px] text-foreground mt-1.5 tabular-nums">
                                     {loadingInvites ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : activeInviteCount}
                                 </h3>
-                                <p className="text-[9px] text-muted-foreground truncate">{t("Active referral tokens")}</p>
+                                <p className="text-xs text-muted-foreground truncate mt-1">{t("Active referral tokens")}</p>
                             </div>
-                            <div className="neumorphic-inset-card flex size-8 items-center justify-center rounded-xl text-violet-500 shrink-0">
-                                <QrCode className="size-4" />
+                            <div className="m-tile m-tile-brand size-10">
+                                <QrCode className="size-[18px]" />
                             </div>
                         </button>
                     </div>
                 </div>
 
                 {/* 4. Smart Action Center: Next Priorities & Urgent Tasks */}
-                <div className="flex flex-col gap-2 shrink-0">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">
-                        {t('ACTION CENTER & PRIORITIES')}
+                <div className="flex flex-col gap-2.5 shrink-0">
+                    <h3 className="m-display text-[18px] text-foreground px-1">
+                        {t('Action Center')}
                     </h3>
 
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2.5">
                         {/* High Priority: Lease Renewal Requests Alert */}
                         {pendingRenewalsCount > 0 ? (
-                            <div className="neumorphic-panel rounded-2xl p-3 border-l-4 border-l-blue-500 flex items-center justify-between gap-3">
-                                <div className="min-w-0 flex-1">
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded">
+                            <div className="m-card p-3.5 flex items-center justify-between gap-3">
+                                <div className="min-w-0 flex-1 flex flex-col gap-1.5 items-start">
+                                    <span className="m-pill m-pill-brand text-[11px] py-1 px-2.5">
                                         {t('Lease Renewal')}
                                     </span>
-                                    <h4 className="text-xs font-black text-foreground mt-1 truncate">
+                                    <h4 className="text-[15px] font-bold text-foreground truncate w-full">
                                         {t('{count} Pending Lease Renewal Request{s}', { count: pendingRenewalsCount, s: pendingRenewalsCount > 1 ? 's' : '' })}
                                     </h4>
-                                    <p className="text-[10px] text-muted-foreground">{t('Tenant submitted extension terms. Review & approve.')}</p>
+                                    <p className="text-[13px] text-muted-foreground">{t('Tenant submitted extension terms. Review & approve.')}</p>
                                 </div>
                                 <Link
                                     href="/mobile/landlord/leases?tab=renewals"
-                                    className="shrink-0 px-3 py-1.5 rounded-xl neumorphic-primary text-[10px] font-black uppercase text-primary-foreground tracking-wider active:scale-95"
+                                    className="m-btn m-btn-primary min-h-[40px] px-4 text-[13px] shrink-0"
                                 >
                                     {t('Review')}
                                 </Link>
@@ -715,19 +710,19 @@ export function LandlordOverviewView() {
 
                         {/* High Priority: Move-Out Notice Alert */}
                         {pendingMoveOutCount > 0 ? (
-                            <div className="neumorphic-panel rounded-2xl p-3 border-l-4 border-l-amber-500 flex items-center justify-between gap-3">
-                                <div className="min-w-0 flex-1">
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                            <div className="m-card p-3.5 flex items-center justify-between gap-3">
+                                <div className="min-w-0 flex-1 flex flex-col gap-1.5 items-start">
+                                    <span className="m-pill m-pill-amber text-[11px] py-1 px-2.5">
                                         Move-Out Notice
                                     </span>
-                                    <h4 className="text-xs font-black text-foreground mt-1 truncate">
+                                    <h4 className="text-[15px] font-bold text-foreground truncate w-full">
                                         {pendingMoveOutCount} Pending Move-Out Request{pendingMoveOutCount > 1 ? 's' : ''}
                                     </h4>
-                                    <p className="text-[10px] text-muted-foreground">Tenant notice submitted. Review & schedule inspection.</p>
+                                    <p className="text-[13px] text-muted-foreground">Tenant notice submitted. Review & schedule inspection.</p>
                                 </div>
                                 <Link
                                     href="/mobile/landlord/move-out"
-                                    className="shrink-0 px-3 py-1.5 rounded-xl neumorphic-primary text-[10px] font-black uppercase text-primary-foreground tracking-wider active:scale-95"
+                                    className="m-btn m-btn-primary min-h-[40px] px-4 text-[13px] shrink-0"
                                 >
                                     Review
                                 </Link>
@@ -736,19 +731,19 @@ export function LandlordOverviewView() {
 
                         {/* High Priority: Overdue Invoices Alert */}
                         {overdueCount > 0 ? (
-                            <div className="neumorphic-panel rounded-2xl p-3 border-l-4 border-l-red-500 flex items-center justify-between gap-3">
-                                <div className="min-w-0 flex-1">
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded">
+                            <div className="m-card p-3.5 flex items-center justify-between gap-3">
+                                <div className="min-w-0 flex-1 flex flex-col gap-1.5 items-start">
+                                    <span className="m-pill m-pill-coral text-[11px] py-1 px-2.5">
                                         {t('High Priority')}
                                     </span>
-                                    <h4 className="text-xs font-black text-foreground mt-1 truncate">
+                                    <h4 className="text-[15px] font-bold text-foreground truncate w-full">
                                         {overdueCount > 1 ? t('{count} Overdue Rent Invoices', { count: overdueCount }) : t('{count} Overdue Rent Invoice', { count: overdueCount })}
                                     </h4>
-                                    <p className="text-[10px] text-muted-foreground">{t("Immediate follow-up required with tenants.")}</p>
+                                    <p className="text-[13px] text-muted-foreground">{t("Immediate follow-up required with tenants.")}</p>
                                 </div>
                                 <button
                                     onClick={() => setOpenPaymentModal('Overdue')}
-                                    className="shrink-0 px-3 py-1.5 rounded-xl neumorphic-primary text-[10px] font-black uppercase text-primary-foreground tracking-wider active:scale-95"
+                                    className="m-btn m-btn-primary min-h-[40px] px-4 text-[13px] shrink-0"
                                 >
                                     {t('Review')}
                                 </button>
@@ -757,9 +752,9 @@ export function LandlordOverviewView() {
 
                         {/* Medium Priority: Vacant Units Occupancy */}
                         {openUnitsCount > 0 ? (
-                            <div className="neumorphic-panel rounded-2xl p-3 border-l-4 border-l-amber-500 flex items-center justify-between gap-3">
-                                <div className="min-w-0 flex-1">
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                            <div className="m-card p-3.5 flex items-center justify-between gap-3">
+                                <div className="min-w-0 flex-1 flex flex-col gap-1.5 items-start">
+                                    <span className="m-pill m-pill-amber text-[11px] py-1 px-2.5">
                                         {t('Occupancy')}
                                     </span>
                                     <h4 className="text-xs font-black text-foreground mt-1 truncate">

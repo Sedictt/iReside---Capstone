@@ -1378,7 +1378,7 @@ export function LandlordAnalyticsView() {
 
             {/* Toast Notification */}
             {toastMessage && (
-                <div className="fixed bottom-20 left-4 right-4 z-[200] neumorphic-inset-card rounded-2xl px-4 py-3 text-center text-xs font-black text-emerald-400 shadow-xl border border-emerald-500/20 animate-in slide-in-from-bottom-3 duration-200">
+                <div className="mobile-above-tab-bar m-card fixed left-4 right-4 z-[200] px-4 py-3 text-center text-sm font-bold text-[var(--m-teal-text)] animate-in slide-in-from-bottom-3 duration-200">
                     {toastMessage}
                 </div>
             )}
