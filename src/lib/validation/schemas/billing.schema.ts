@@ -33,6 +33,7 @@ import {
 } from "../rules";
 import { zIsoDate, zMoney, zOptionalText, zRequiredText, zUuid } from "../zod-fields";
 import { isPhMobileEmpty, phMobileError, toPhMobileLocal } from "@/lib/phone";
+import { PROOF_METHODS, isProofMethod } from "@/lib/billing/payment-methods";
 
 // ---------------------------------------------------------------------------
 // Enums (exact Postgres enum values)
@@ -51,7 +52,7 @@ export const PAYMENT_WORKFLOW_STATUSES = [
 ] as const;
 export const PAYMENT_REVIEW_ACTIONS = ["accept_partial", "request_completion", "reject", "confirm_received"] as const;
 export const PAYMENT_AMOUNT_TAGS = ["exact", "partial", "overpaid", "short_paid"] as const;
-export const PAYMENT_INTENT_METHODS = ["gcash", "in_person"] as const;
+export const PAYMENT_INTENT_METHODS = ["gcash", "bank_transfer", "in_person"] as const;
 export const UTILITY_TYPES = ["water", "electricity"] as const;
 /** expenses_category_check */
 export const EXPENSE_CATEGORIES = ["maintenance", "utilities", "taxes", "other"] as const;
@@ -95,7 +96,7 @@ export const MAX_METER_READING = 9_999_999_999.99;
 const MB = 1024 * 1024;
 /** Server-side upload limits (client pickers may be stricter). */
 export const PROOF_LIMITS = {
-    /** Tenant GCash proof (payment-proofs bucket limit is 8 MB). */
+    /** Tenant GCash / bank transfer proof (payment-proofs bucket limit is 8 MB). */
     paymentProofMaxBytes: 8 * MB,
     /** The existing "unreadable proof" floor for tenant GCash screenshots. */
     paymentProofMinBytes: 2048,
@@ -430,19 +431,39 @@ export function outstandingBalance(payment: { amount: unknown; paid_amount?: unk
 // Tenant payments
 // ---------------------------------------------------------------------------
 
+/** Bank account numbers in the Philippines are 10–16 digits (spaces and dashes are stripped first). */
+export const BANK_ACCOUNT_NUMBER_PATTERN = /^\d{10,16}$/;
+export const BANK_ACCOUNT_NUMBER_MESSAGE = "Type the bank account number: 10 to 16 numbers, no letters.";
+export const REFERENCE_REQUIRED_MESSAGE = "Reference number is required for GCash submissions.";
+export const BANK_REFERENCE_REQUIRED_MESSAGE = "Reference number is required for bank transfer submissions.";
+
 /** POST /api/tenant/payments/[id]/submit (FormData → object). */
-export const tenantPaymentSubmitSchema = z.object({
-    method: z.literal("gcash", { error: "Use the in-person intent action for face-to-face payments." }),
-    referenceNumber: z
-        .string({ error: "Reference number is required for GCash submissions." })
-        .trim()
-        .min(1, "Reference number is required for GCash submissions.")
-        .max(BILLING_LIMITS.reference, `Reference number cannot exceed ${BILLING_LIMITS.reference} characters.`),
-    note: zOptionalText("Note", BILLING_LIMITS.paymentNote),
-    partialAmount: z.preprocess(emptyToUndefined, zMoney("Payment amount", { positive: true }).optional()),
-    selectedItemIds: zJsonUuidList("Selected items"),
-    selectedReadingIds: zJsonUuidList("Selected readings"),
-});
+export const tenantPaymentSubmitSchema = z
+    .object({
+        method: z.preprocess(
+            // Older offline-queued submissions were sent without a method; they were all GCash.
+            (value) => (value === undefined || value === null || value === "" ? "gcash" : value),
+            z.enum(PROOF_METHODS, { error: "Use the in-person intent action for face-to-face payments." }),
+        ),
+        referenceNumber: z
+            .string()
+            .nullish()
+            .transform((value) => (value ?? "").trim())
+            .pipe(z.string().max(BILLING_LIMITS.reference, `Reference number cannot exceed ${BILLING_LIMITS.reference} characters.`)),
+        note: zOptionalText("Note", BILLING_LIMITS.paymentNote),
+        partialAmount: z.preprocess(emptyToUndefined, zMoney("Payment amount", { positive: true }).optional()),
+        selectedItemIds: zJsonUuidList("Selected items"),
+        selectedReadingIds: zJsonUuidList("Selected readings"),
+    })
+    .superRefine((value, ctx) => {
+        if (!value.referenceNumber) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["referenceNumber"],
+                message: value.method === "bank_transfer" ? BANK_REFERENCE_REQUIRED_MESSAGE : REFERENCE_REQUIRED_MESSAGE,
+            });
+        }
+    });
 
 export type TenantPaymentSubmitInput = z.output<typeof tenantPaymentSubmitSchema>;
 
@@ -471,20 +492,39 @@ export const advancePaymentSchema = z.object({
 });
 
 /** POST /api/tenant/payments/[id]/refund-info (FormData → object; the QR file is checked separately). */
-export const refundInfoSchema = z.object({
-    action: z.enum(REFUND_ACTIONS, { error: "Choose whether to credit or refund the excess." }),
-    gcashNumber: z
-        .string()
-        .trim()
-        .max(25, "That number is too long. Type only the 10 numbers after +63.")
-        .nullish()
-        .superRefine((value, ctx) => {
-            const error = gcashNumberRule(value);
-            if (error) ctx.addIssue({ code: "custom", message: error });
-        })
-        // GCash's own "09…" form, ready to send the refund to.
-        .transform((value) => toPhMobileLocal(value) ?? null),
-});
+export const refundInfoSchema = z
+    .object({
+        action: z.enum(REFUND_ACTIONS, { error: "Choose whether to credit or refund the excess." }),
+        refundMethod: z.preprocess(
+            (value) => (value === undefined || value === null || value === "" ? "gcash" : value),
+            z.enum(PROOF_METHODS, { error: "Choose GCash or bank transfer for your refund." }),
+        ),
+        bankName: zOptionalText("Bank name", 60),
+        bankAccountName: zOptionalText("Account name", 60),
+        bankAccountNumber: z
+            .string()
+            .nullish()
+            .transform((value) => (value ? value.replace(/[\s-]/g, "") : null))
+            .refine((value) => value === null || value === "" || BANK_ACCOUNT_NUMBER_PATTERN.test(value), BANK_ACCOUNT_NUMBER_MESSAGE)
+            .transform((value) => (value ? value : null)),
+        gcashNumber: z
+            .string()
+            .trim()
+            .max(25, "That number is too long. Type only the 10 numbers after +63.")
+            .nullish()
+            .superRefine((value, ctx) => {
+                const error = gcashNumberRule(value);
+                if (error) ctx.addIssue({ code: "custom", message: error });
+            })
+            // GCash's own "09…" form, ready to send the refund to.
+            .transform((value) => toPhMobileLocal(value) ?? null),
+    })
+    .superRefine((value, ctx) => {
+        if (value.action !== "refund" || value.refundMethod !== "bank_transfer") return;
+        if (!value.bankName) ctx.addIssue({ code: "custom", path: ["bankName"], message: "Choose your bank." });
+        if (!value.bankAccountName) ctx.addIssue({ code: "custom", path: ["bankAccountName"], message: "Type the name on your bank account." });
+        if (!value.bankAccountNumber) ctx.addIssue({ code: "custom", path: ["bankAccountNumber"], message: BANK_ACCOUNT_NUMBER_MESSAGE });
+    });
 
 export const REFUND_DETAILS_REQUIRED = "Enter your GCash number or upload a GCash QR code to receive the refund.";
 
@@ -503,14 +543,18 @@ export const applicationPaymentSubmitSchema = z
             .transform((value) => (value ? value : "all")),
         method: z.preprocess(
             (value) => (typeof value === "string" ? value.trim().toLowerCase() : value),
-            z.enum(["gcash", "cash"], { error: "Method must be either GCash or Cash." }),
+            z.enum(["gcash", "bank_transfer", "cash"], { error: "Method must be GCash, Bank Transfer or Cash." }),
         ),
         referenceNumber: zOptionalText("Reference number", BILLING_LIMITS.reference),
         note: zOptionalText("Note", BILLING_LIMITS.applicationNote),
     })
     .superRefine((value, ctx) => {
-        if (value.method === "gcash" && !value.referenceNumber) {
-            ctx.addIssue({ code: "custom", path: ["referenceNumber"], message: "Reference number is required for GCash submissions." });
+        if (isProofMethod(value.method) && !value.referenceNumber) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["referenceNumber"],
+                message: value.method === "bank_transfer" ? BANK_REFERENCE_REQUIRED_MESSAGE : REFERENCE_REQUIRED_MESSAGE,
+            });
         }
     });
 

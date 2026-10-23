@@ -20,17 +20,14 @@ import {
     MapPin
 } from "lucide-react";
 import { ART } from "@/lib/art/abstract-art";
+import {
+    MAINTENANCE_PRIORITY_BADGE_CLASSES,
+    MAINTENANCE_PRIORITY_BADGE_TEXT,
+    type MaintenancePriorityLabel,
+} from "@/lib/maintenance-priority";
 
 type MaintenanceStatus = "Pending" | "Assigned" | "In Progress" | "Resolved";
-type Priority = "Critical" | "High" | "Medium" | "Low";
-
-// English display labels for the priority badge; translated at render.
-const PRIORITY_LABELS: Record<Priority, string> = {
-    Critical: "Critical Priority",
-    High: "High Priority",
-    Medium: "Medium Priority",
-    Low: "Low Priority",
-};
+type Priority = MaintenancePriorityLabel;
 
 interface MaintenanceRequest {
     id: string;
@@ -153,13 +150,10 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                         {/* Location HUD Overlay */}
                         <div className="absolute top-4 left-4 flex flex-col gap-2">
                             <span className={cn(
-                                "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border backdrop-blur-md shadow-sm w-fit",
-                                request.priority === "Critical" ? "bg-red-500/90 text-white border-red-400" :
-                                request.priority === "High" ? "bg-orange-500/90 text-white border-orange-400" :
-                                request.priority === "Medium" ? "bg-blue-500/90 text-white border-blue-400" :
-                                "bg-neutral-800/90 text-neutral-300 border-neutral-600"
+                                "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-sm w-fit",
+                                MAINTENANCE_PRIORITY_BADGE_CLASSES[request.priority]
                             )}>
-                                {PRIORITY_LABELS[request.priority] ? t(PRIORITY_LABELS[request.priority]) : `${request.priority} Priority`}
+                                {t(MAINTENANCE_PRIORITY_BADGE_TEXT[request.priority])}
                             </span>
                             <div className="px-3 py-2 rounded-xl flex flex-col gap-1 w-fit neumorphic-panel">
                                 <div className="flex items-center gap-1.5 text-muted-foreground">

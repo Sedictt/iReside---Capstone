@@ -1,1872 +1,1387 @@
 "use client";
 
-import { useEffect, useState, useRef, type ReactNode } from "react";
-import Image from "next/image";
-import { 
-    CheckCircle2, Clock3, Loader2, QrCode, Receipt, Send, X, XCircle, 
-    FileText, User, Building2, Hash, ArrowUpRight, ShieldCheck, 
-    AlertTriangle, Info, ChevronRight, ChevronDown, MessageSquare, History,
-    CheckCircle, AlertCircle, HelpCircle, Wallet
-} from "lucide-react";
-import { createPortal } from "react-dom";
-import { m as motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
-import { Tooltip } from "@/components/ui/tooltip";
-import { useLanguageContext } from "@/context/LanguageContext";
+/**
+ * One invoice, opened from the Finance Hub, the dashboard or a chat message.
+ *
+ * Built for older landlords who are not confident with apps, so it is one scrolling
+ * page in a fixed order, with no tabs and nothing hidden behind hover:
+ *   1. Who and how much, with a plain-words status: what is happening right now.
+ *   2. "What to do now": at most two text buttons. Confirming money asks once, with the
+ *      amount, tenant and method restated, and the buttons name the outcome.
+ *   3. What the tenant sent (method, reference number, receipt photo, account paid into).
+ *   4. What the bill is for, meter readings, and a plain history.
+ * After an action the page stays open and says what happened and what comes next;
+ * it never closes by itself.
+ *
+ * The tenant sees the same page without the landlord's buttons, plus "Pay now".
+ */
 
-import { formatDateLong, formatPhpCurrency, getInvoiceDisplayStatus } from "@/lib/billing/utils";
-import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
-import { Upload, Camera, Trash2 } from "lucide-react";
+import { useEffect, useId, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import * as Dialog from "@radix-ui/react-dialog";
+import {
+    AlertCircle,
+    AlertTriangle,
+    ArrowLeft,
+    Bell,
+    CheckCircle2,
+    HandCoins,
+    Loader2,
+    Trash2,
+    Upload,
+    X,
+    ZoomIn,
+    type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
+
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
+import { playSound } from "@/hooks/useSound";
+import { FieldError } from "@/components/ui/field-error";
+import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
+import { INVOICE_TONE_CLASSES, describeInvoice, resolveInvoicePlainState, type InvoicePlainStatus } from "@/lib/billing/invoice-plain-status";
+import { formatAccountNumber, maskAccountNumber, paymentMethodLabel } from "@/lib/billing/payment-methods";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
-import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { moneyRule } from "@/lib/validation/rules";
 import { BILLING_LIMITS, rejectionReasonRule, roundCentavos } from "@/lib/validation/schemas/billing.schema";
-import { tr } from "@/hooks/useLanguage";
+import { cn } from "@/lib/utils";
+
+function ModalButton({
+    variant = "primary",
+    size = "md",
+    icon: Icon,
+    loading = false,
+    disabled = false,
+    onClick,
+    children,
+    className,
+    type = "button",
+}: {
+    variant?: "primary" | "secondary" | "danger";
+    size?: "sm" | "md" | "lg";
+    icon?: LucideIcon;
+    loading?: boolean;
+    disabled?: boolean;
+    onClick?: () => void;
+    children?: React.ReactNode;
+    className?: string;
+    type?: "button" | "submit";
+}) {
+    const variantStyles = {
+        primary: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs font-bold",
+        secondary: "bg-card text-foreground border border-border hover:bg-muted font-bold shadow-xs",
+        danger: "bg-rose-600 text-white hover:bg-rose-700 shadow-xs font-bold",
+    };
+    const sizeStyles = {
+        sm: "min-h-9 px-3.5 py-1.5 text-xs rounded-xl",
+        md: "min-h-11 px-4 py-2 text-sm rounded-xl",
+        lg: "min-h-12 px-5 py-2.5 text-base rounded-2xl",
+    };
+    return (
+        <button
+            type={type}
+            disabled={disabled || loading}
+            onClick={onClick}
+            className={cn(
+                "inline-flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
+                variantStyles[variant] ?? variantStyles.primary,
+                sizeStyles[size] ?? sizeStyles.md,
+                className
+            )}
+        >
+            {loading ? <Loader2 className="size-4 animate-spin" /> : Icon ? <Icon className="size-4 shrink-0" /> : null}
+            <span>{children}</span>
+        </button>
+    );
+}
+
+function ModalNotice({
+    tone = "info",
+    title,
+    children,
+    action,
+}: {
+    tone?: "info" | "warning" | "danger" | "success";
+    title?: string;
+    children?: React.ReactNode;
+    action?: React.ReactNode;
+    live?: boolean;
+}) {
+    const toneStyles = {
+        info: "border-sky-300 bg-sky-50 text-sky-950 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200",
+        warning: "border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200",
+        danger: "border-rose-300 bg-rose-50 text-rose-950 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200",
+        success: "border-emerald-300 bg-emerald-50 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200",
+    };
+    return (
+        <div className={cn("rounded-2xl border p-4 text-sm flex items-start justify-between gap-3 shadow-xs", toneStyles[tone])}>
+            <div>
+                {title && <p className="font-bold text-base mb-1">{title}</p>}
+                <div className="leading-relaxed text-sm opacity-90">{children}</div>
+            </div>
+            {action && <div className="shrink-0">{action}</div>}
+        </div>
+    );
+}
+
+function modalInputClass(hasError = false, extra = ""): string {
+    return cn(
+        "w-full rounded-xl border bg-background px-4 py-2.5 text-base text-foreground transition-all outline-none",
+        "focus:border-primary focus:ring-2 focus:ring-primary/20",
+        hasError ? "border-rose-500 ring-rose-500/20" : "border-border hover:border-slate-400 dark:hover:border-zinc-700",
+        extra
+    );
+}
+
+const SettingsButton = ModalButton;
+const SettingsNotice = ModalNotice;
+const settingsInputClass = modalInputClass;
 
 type InvoiceDetail = Awaited<ReturnType<typeof import("@/lib/billing/server").getInvoiceDetailForActor>>;
+type Invoice = NonNullable<InvoiceDetail>;
+
+type ReviewAction = "confirm" | "confirm_received" | "reject" | "request_completion";
+type IssueType = "insufficient_amount" | "excessive_amount" | "not_received" | "invalid_proof" | "other";
+type NonExactAction = "accept_partial" | "request_completion" | "reject";
+
+interface ReviewPayload {
+    action: ReviewAction;
+    note?: string;
+    amountTag: string;
+    acceptedAmount: number;
+    mismatchResolution?: NonExactAction;
+    rejectionReason?: string;
+    paymentDiscrepancyType?: IssueType;
+    shortfallAmount?: number;
+}
+
+/** A money action waiting for the landlord's "yes". */
+interface PendingAction {
+    /** "review" posts the payload to /review; "refund" calls /mark-refunded instead. */
+    kind: "review" | "refund";
+    payload: ReviewPayload;
+    title: string;
+    /** Facts restated so the landlord checks them before pressing yes. */
+    facts: Array<{ label: string; value: string }>;
+    whatHappens: string;
+    confirmLabel: string;
+    tone: "primary" | "danger";
+}
+
+interface DoneState {
+    title: string;
+    detail: string;
+}
+
+const PROOF_MAX_BYTES = 5 * 1024 * 1024;
+
+/** Where the tenant wants an overpayment sent back (payments.metadata.refund_preference). */
+interface RefundPreference {
+    method?: string | null;
+    gcash_number?: string | null;
+    qr_url?: string | null;
+    bank_name?: string | null;
+    bank_account_name?: string | null;
+    bank_account_number?: string | null;
+}
+
+function invoiceMetadata(invoice: Invoice | null): Record<string, unknown> {
+    const value = invoice?.metadata;
+    return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function refundPreference(invoice: Invoice | null): RefundPreference | null {
+    const value = invoiceMetadata(invoice).refund_preference;
+    return value && typeof value === "object" ? (value as RefundPreference) : null;
+}
+
+function refundProofUrl(invoice: Invoice | null): string | null {
+    const value = invoiceMetadata(invoice).refund_proof_url;
+    return typeof value === "string" && value ? value : null;
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+    return error instanceof Error && error.message ? error.message : fallback;
+}
 
 export function InvoiceModal({
     invoiceId,
     onClose,
     onUpdated,
     role = "landlord",
-    refundMessage
+    refundMessage,
 }: {
     invoiceId: string | null;
     onClose: () => void;
     onUpdated: () => void;
     role?: "landlord" | "tenant";
-    refundMessage?: any;
+    /** The chat message that opened this bill, when it carries the tenant's refund details. */
+    refundMessage?: { hasRefundDetails?: boolean } | Record<string, unknown> | null;
 }) {
     const { t } = useLanguageContext();
-    const [invoice, setInvoice] = useState<InvoiceDetail>(null);
+    const [invoice, setInvoice] = useState<Invoice | null>(null);
     const [loading, setLoading] = useState(false);
-    const [processingAction, setProcessingAction] = useState<"confirm" | "confirm_received" | "reject" | "request_completion" | "remind" | null>(null);
-    const [pendingAction, setPendingAction] = useState<{ type: any; label: string; desc: string; isCrucial?: boolean } | null>(null);
-    const [confirmCountdown, setConfirmCountdown] = useState(0);
-    const [tenantComment, setTenantComment] = useState("");
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
+
+    const [mode, setMode] = useState<"actions" | "problem">("actions");
+    const [note, setNote] = useState("");
+    const [processing, setProcessing] = useState<ReviewAction | "remind" | "refund" | null>(null);
+    const [pending, setPending] = useState<PendingAction | null>(null);
+    const [done, setDone] = useState<DoneState | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
     const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-    const [rejectionReason, setRejectionReason] = useState("");
-    const [paymentDiscrepancyType, setPaymentDiscrepancyType] = useState<"insufficient_amount" | "excessive_amount" | "not_received" | "invalid_proof" | "other" | "">("");
-    const [shortfallAmount, setShortfallAmount] = useState<number | "">("");
-    const [showRejectionWarning, setShowRejectionWarning] = useState(false);
-    const [mismatchResolution, setMismatchResolution] = useState<"accept_partial" | "request_completion" | "reject">("accept_partial");
-    const [activeTab, setActiveTab] = useState<"approve" | "issue">("approve");
     const [refundProofFile, setRefundProofFile] = useState<File | null>(null);
 
-    // Scroll Detection & Indicators
-    const leftPanelRef = useRef<HTMLDivElement>(null);
-    const rightPanelRef = useRef<HTMLDivElement>(null);
-    const [leftCanScroll, setLeftCanScroll] = useState(false);
-    const [rightCanScroll, setRightCanScroll] = useState(false);
-
-    const checkScroll = (el: HTMLElement | null, setter: (val: boolean) => void) => {
-        if (!el) {
-            setter(false);
-            return;
-        }
-        const hasMore = el.scrollHeight - el.scrollTop - el.clientHeight > 24;
-        setter(hasMore);
-    };
-
-    const handleLeftScroll = () => checkScroll(leftPanelRef.current, setLeftCanScroll);
-    const handleRightScroll = () => checkScroll(rightPanelRef.current, setRightCanScroll);
-
-    useEffect(() => {
-        const updateScroll = () => {
-            checkScroll(leftPanelRef.current, setLeftCanScroll);
-            checkScroll(rightPanelRef.current, setRightCanScroll);
-        };
-
-        const timer = setTimeout(updateScroll, 120);
-
-        const leftEl = leftPanelRef.current;
-        const rightEl = rightPanelRef.current;
-
-        let observer: ResizeObserver | null = null;
-        if (typeof ResizeObserver !== "undefined") {
-            observer = new ResizeObserver(() => {
-                updateScroll();
-            });
-            if (leftEl) observer.observe(leftEl);
-            if (rightEl) observer.observe(rightEl);
-        }
-
-        return () => {
-            clearTimeout(timer);
-            observer?.disconnect();
-        };
-    }, [invoice, activeTab, pendingAction, loading]);
-
+    // Everything starts fresh each time a different invoice opens.
     useEffect(() => {
         if (!invoiceId) return;
-        
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMode("actions");
+        setNote("");
+        setPending(null);
+        setDone(null);
+        setActionError(null);
         setRefundProofFile(null);
-        setTenantComment("");
-        setRejectionReason("");
-        setPaymentDiscrepancyType("");
-        setShortfallAmount("");
-        setMismatchResolution("accept_partial");
-        setActiveTab("approve");
-        setPendingAction(null);
-        setConfirmCountdown(0);
-        setShowRejectionWarning(false);
-        
-        let alive = true;
+        setLightboxUrl(null);
+        setLoadError(null);
         setLoading(true);
-        document.body.style.overflow = "hidden";
 
+        let alive = true;
         const load = async () => {
             try {
-                // Handle Preview Mode / Mock Data for Demonstration
                 if (invoiceId.startsWith("preview-") || invoiceId.startsWith("selective-") || invoiceId === "demo-invoice") {
-                    const mock = mockInvoice(invoiceId);
-                    if (alive) {
-                        setInvoice(mock);
-                        setLoading(false);
-                    }
+                    if (alive) setInvoice(mockInvoice(invoiceId));
                     return;
                 }
-
-                const endpoint = role === "landlord" 
-                    ? `/api/landlord/invoices/${invoiceId}` 
-                    : `/api/tenant/payments/${invoiceId}`;
+                const endpoint = role === "landlord" ? `/api/landlord/invoices/${invoiceId}` : `/api/tenant/payments/${invoiceId}`;
                 const response = await fetch(endpoint, { cache: "no-store" });
-                
-                if (!response.ok) {
-                    console.warn(`[InvoiceModal] Failed to fetch invoice ${invoiceId}: ${response.status}`);
-                    // Fallback to mock if API fails in dev/preview environments
-                    if (alive) {
-                        setInvoice(mockInvoice(invoiceId));
-                        setLoading(false);
-                    }
-                    return;
-                }
-
+                if (!response.ok) throw new Error(String(response.status));
                 const payload = await response.json();
-                if (alive) {
-                    setInvoice(payload.invoice ?? null);
-                    if (payload.invoice?.amountTag !== "exact") {
-                        setMismatchResolution("accept_partial");
-                    }
-                }
+                if (alive) setInvoice(payload.invoice ?? null);
             } catch (error) {
-                console.error("[InvoiceModal] Load Error:", error);
-                if (alive) setInvoice(mockInvoice(invoiceId));
+                console.error("[InvoiceModal] Load error:", error);
+                if (alive) {
+                    setInvoice(null);
+                    setLoadError(t("We could not open this bill. Check your internet connection and try again."));
+                }
             } finally {
                 if (alive) setLoading(false);
             }
         };
-
         void load();
         return () => {
             alive = false;
-            document.body.style.overflow = "unset";
         };
-    }, [invoiceId]);
-
-    // Safety Timer Logic
-    useEffect(() => {
-        if (confirmCountdown > 0) {
-            const timer = setTimeout(() => setConfirmCountdown(c => c - 1), 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [confirmCountdown]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [invoiceId, role, reloadKey]);
 
     if (!invoiceId) return null;
 
-    const performAction = async (action: "confirm" | "confirm_received" | "reject" | "request_completion" | "remind") => {
-        // Intercept if not already confirmed
-        if (!pendingAction && action !== "remind") {
-            const config = {
-                confirm: { label: t("Issue Official Receipt"), desc: t("This will officially record the payment and generate a permanent receipt for the tenant. This action is financially binding."), isCrucial: true },
-                confirm_received: { label: t("Confirm Cash Received"), desc: t("By clicking this, you confirm you have physically received the cash amount. This will update the property ledger immediately."), isCrucial: true },
-                reject: { label: t("Reject This Payment"), desc: t("The tenant's submission will be cancelled. They will be notified to correct their proof or amount and resubmit."), isCrucial: true },
-                request_completion: { label: t("Request Missing Balance"), desc: t("The tenant will be notified that they still owe a balance, but their current payment will be recorded."), isCrucial: true },
-                remind: { label: t("Send Gentle Nudge"), desc: t("Sends a notification without changing status."), isCrucial: false }
-            };
-            const c = config[action];
-            setPendingAction({ type: action, ...c });
-            if (c.isCrucial) setConfirmCountdown(3);
-            else setConfirmCountdown(0);
-            return;
-        }
+    const tenantName = invoice?.tenant?.full_name?.trim() || t("The tenant");
+    const refund = refundPreference(invoice);
+    const refundDone = !!refundProofUrl(invoice);
+    const plain: InvoicePlainStatus | null = invoice
+        ? describeInvoice(
+              {
+                  ...invoice,
+                  amount: invoice.totalAmount,
+                  tenantName: invoice.tenant?.full_name,
+                  hasRefundRequest: !!refund || !!(refundMessage as { hasRefundDetails?: boolean } | null | undefined)?.hasRefundDetails,
+                  refundSent: refundDone,
+                  hasReceipt: invoice.receipts.length > 0,
+              },
+              t,
+              role,
+          )
+        : null;
 
-        if (processingAction) return; // double-click guard
+    const isCash = invoice?.paymentMethod === "in_person" || invoice?.paymentMethod === "cash" || invoice?.workflowStatus === "awaiting_in_person";
+    const isSettled = plain?.group === "paid";
+    const canSendReminder = !!invoice && !isSettled && invoice.workflowStatus !== "confirmed" && invoice.workflowStatus !== "receipted";
 
-        const needsRejectionReason = action === "reject" || action === "request_completion" || mismatchResolution === "reject" || mismatchResolution === "request_completion";
-        if (action !== "remind" && rejectionReasonRule(rejectionReason, { required: needsRejectionReason })) {
-            setShowRejectionWarning(true);
-            return;
-        }
-
-        setShowRejectionWarning(false);
-        setProcessingAction(action);
-        console.log("[InvoiceModal] performAction called:", action, "pendingAction:", pendingAction, "refundProofFile:", !!refundProofFile);
+    const refreshInvoice = async () => {
+        if (!invoiceId) return;
         try {
-            const endpoint = action === "remind" ? "reminder" : "review";
-            const amountTag = invoice?.amountTag ?? "exact";
-            const effectiveIssueType = paymentDiscrepancyType || ((invoice?.metadata as any)?.refund_preference ? "excessive_amount" : undefined);
-            
-            const payload = {
-                action,
-                note: tenantComment || undefined,
-                amountTag,
-                // Rounded to centavos: float subtraction must not produce 3+ decimals.
-                acceptedAmount: roundCentavos(shortfallAmount !== ""
-                    ? Number(invoice?.totalAmount ?? 0) - Number(shortfallAmount)
-                    : Number(invoice?.totalAmount ?? 0)),
-                mismatchResolution: amountTag !== "exact" && (action === "confirm" || action === "confirm_received")
-                    ? mismatchResolution
-                    : undefined,
-                rejectionReason:
-                    action === "reject" || action === "request_completion" || mismatchResolution === "reject" || mismatchResolution === "request_completion"
-                        ? rejectionReason || undefined
-                        : undefined,
-                paymentDiscrepancyType: effectiveIssueType,
-                shortfallAmount: shortfallAmount !== "" ? roundCentavos(Number(shortfallAmount)) : undefined,
-            };
-
-            let body: any;
-            let headers: any = undefined;
-
-            if (action === "remind") {
-                body = undefined;
-            } else {
-                const formData = new FormData();
-                formData.append("json", JSON.stringify(payload));
-                if (refundProofFile) {
-                    formData.append("refundProofFile", refundProofFile);
-                }
-                body = formData;
+            const endpoint = role === "landlord" ? `/api/landlord/invoices/${invoiceId}` : `/api/tenant/payments/${invoiceId}`;
+            const response = await fetch(endpoint, { cache: "no-store" });
+            if (response.ok) {
+                const payload = await response.json();
+                if (payload.invoice) setInvoice(payload.invoice);
             }
+        } catch {
+            // The success message already tells the landlord what happened.
+        }
+    };
 
-            const response = await fetch(`/api/landlord/invoices/${invoiceId}/${endpoint}`, {
-                method: "POST",
-                headers,
-                body,
-            });
-            console.log("[InvoiceModal] API Response:", response.status, response.statusText);
+    /** Sends a review to the server. Called only after the landlord said yes. */
+    const submitReview = async (action: PendingAction) => {
+        if (processing || !invoice) return;
+        setProcessing(action.payload.action);
+        setActionError(null);
+        try {
+            const formData = new FormData();
+            formData.append("json", JSON.stringify(action.payload));
+            const response = await fetch(`/api/landlord/invoices/${invoiceId}/review`, { method: "POST", body: formData });
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                if (errorData?.fieldErrors?.rejectionReason) setShowRejectionWarning(true);
-                throw new Error(errorData.error || t("Failed to process review"));
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || t("We could not record this. Please try again."));
             }
-
-            // Reload invoice data to show updated state
-            await new Promise(resolve => setTimeout(resolve, 500));
-            const reloadResponse = await fetch(`/api/landlord/invoices/${invoiceId}`, { cache: "no-store" });
-            if (reloadResponse.ok) {
-                const reloadData = await reloadResponse.json();
-                if (reloadData.invoice) {
-                    setInvoice(reloadData.invoice);
-                }
-            }
-
+            const isMoneyIn = action.payload.action === "confirm" || action.payload.action === "confirm_received";
+            if (isMoneyIn) playSound("payment");
+            setPending(null);
+            setMode("actions");
+            setDone(
+                action.payload.action === "confirm_received"
+                    ? { title: t("Cash payment recorded."), detail: t("{name} got a receipt and this bill is now marked as paid. Nothing more to do.", { name: tenantName }) }
+                    : action.payload.action === "confirm"
+                      ? { title: t("Payment confirmed."), detail: t("{name} got a receipt and this bill is now marked as paid. Nothing more to do.", { name: tenantName }) }
+                      : action.payload.action === "request_completion"
+                        ? { title: t("Message sent."), detail: t("{name} was told how much is still owed. The bill stays open until the rest is paid.", { name: tenantName }) }
+                        : { title: t("Payment not accepted."), detail: t("{name} was told what went wrong and asked to pay again. The bill stays open.", { name: tenantName }) },
+            );
+            await refreshInvoice();
             onUpdated();
-            
-            // Delay closing to show the updated state
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            setRefundProofFile(null);
-            onClose();
-        } catch (error: any) {
-            console.error("[InvoiceModal] Action failed:", error);
-            toast.error(tr(error.message || t("An unexpected error occurred. Please try again.")));
+        } catch (error) {
+            setPending(null);
+            setActionError(tr(errorMessage(error, t("We could not record this. Please try again."))));
         } finally {
-            setProcessingAction(null);
-        }
-        setPendingAction(null);
-    };
-
-    const statusConfig = {
-        paid: {
-            classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-            label: "Paid",
-            dot: "bg-emerald-400"
-        },
-        overdue: {
-            classes: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-            label: "Overdue",
-            dot: "bg-rose-400"
-        },
-        processing: {
-            classes: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-            label: "Processing",
-            dot: "bg-amber-400"
-        },
-        reminder_sent: {
-            classes: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-            label: "Reminder Sent",
-            dot: "bg-blue-400",
-        },
-        intent_submitted: {
-            classes: "bg-primary/10 text-primary border-primary/20",
-            label: "Intent Submitted",
-            dot: "bg-primary",
-        },
-        under_review: {
-            classes: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-            label: "Under Review",
-            dot: "bg-amber-400",
-        },
-        awaiting_in_person: {
-            classes: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
-            label: "Awaiting In-Person",
-            dot: "bg-cyan-400",
-        },
-        confirmed: {
-            classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-            label: "Confirmed",
-            dot: "bg-emerald-400",
-        },
-        rejected: {
-            classes: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-            label: "Rejected",
-            dot: "bg-rose-400",
-        },
-        receipted: {
-            classes: "bg-lime-500/10 text-lime-300 border-lime-500/20",
-            label: "Receipted",
-            dot: "bg-lime-300",
-        },
-        pending: {
-            classes: "bg-zinc-500/10 text-zinc-400 border-white/10",
-            label: "Pending",
-            dot: "bg-zinc-400"
+            setProcessing(null);
         }
     };
 
-    const displayStatus = invoice ? getInvoiceDisplayStatus(invoice) : "pending";
-    const currentStatus = (displayStatus as keyof typeof statusConfig) || "pending";
-    const statusStyle = statusConfig[currentStatus] || statusConfig.pending;
+    const sendReminder = async () => {
+        if (processing) return;
+        setProcessing("remind");
+        setActionError(null);
+        try {
+            const response = await fetch(`/api/landlord/invoices/${invoiceId}/reminder`, { method: "POST" });
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || t("We could not send the reminder. Please try again."));
+            }
+            setDone({ title: t("Reminder sent."), detail: t("{name} got a message and a notification about this bill. Nothing on the bill changed.", { name: tenantName }) });
+            await refreshInvoice();
+            onUpdated();
+        } catch (error) {
+            setActionError(tr(errorMessage(error, t("We could not send the reminder. Please try again."))));
+        } finally {
+            setProcessing(null);
+        }
+    };
 
-     const handleClose = () => {
-         setRefundProofFile(null);
-         onClose();
-     };
+    const markRefunded = async () => {
+        if (processing) return;
+        setProcessing("refund");
+        setActionError(null);
+        try {
+            const formData = new FormData();
+            if (refundProofFile) formData.append("refundProofFile", refundProofFile);
+            const response = await fetch(`/api/landlord/invoices/${invoiceId}/mark-refunded`, { method: "POST", body: formData });
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || t("We could not record the refund. Please try again."));
+            }
+            setRefundProofFile(null);
+            setPending(null);
+            setDone({ title: t("Refund recorded."), detail: t("{name} was told the refund is on its way. This bill is now settled.", { name: tenantName }) });
+            await refreshInvoice();
+            onUpdated();
+        } catch (error) {
+            setPending(null);
+            setActionError(tr(errorMessage(error, t("We could not record the refund. Please try again."))));
+        } finally {
+            setProcessing(null);
+        }
+    };
 
-     const content = (
-         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-             <motion.div 
-                 initial={{ opacity: 0 }}
-                 animate={{ opacity: 1 }}
-                 exit={{ opacity: 0 }}
-                 className="absolute inset-0 bg-black/80 backdrop-blur-md" 
-                 onClick={handleClose}
-             />
-             
-             <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-surface-0 shadow-[0_32px_120px_-20px_rgba(0,0,0,0.8)]"
-            >
-                
-                {/* Header Section */}
-                <div className="relative shrink-0 overflow-hidden border-b border-white/5 bg-surface-1/50 px-8 py-8">
-                    <div className="absolute top-0 right-0 -mr-20 -mt-20 size-64 rounded-full bg-primary/5 blur-3xl transition-opacity animate-pulse" />
-                    
-                    <div className="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="flex size-10 items-center justify-center rounded-xl bg-surface-2 border border-white/10 shadow-inner">
-                                    <FileText className="size-5 text-text-medium" />
-                                </div>
-                                <span className="text-xs font-black uppercase tracking-[0.25em] text-text-medium">{t("Invoice Specification")}</span>
-                            </div>
-                            
-                            <h2 className="text-4xl font-black tracking-tight text-text-high">
-                                {invoice?.invoiceNumber ?? t("Loading...")}
-                            </h2>
-                            
-                            {invoice && (
-                                <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-text-medium">
-                                    <span className="flex items-center gap-2 rounded-full bg-surface-2/50 px-3 py-1 text-text-high border border-white/5 shadow-sm">
-                                        <User className="size-3.5 text-primary" />
-                                        {invoice.tenant?.full_name}
-                                    </span>
-                                    <div className="size-1 rounded-full bg-white/10" />
-                                    <span className="flex items-center gap-2 rounded-full bg-surface-2/50 px-3 py-1 border border-white/5 shadow-sm">
-                                        <Building2 className="size-3.5 text-text-disabled" />
-                                        {invoice.property?.name}
-                                    </span>
-                                    <div className="size-1 rounded-full bg-white/10" />
-                                    <span className="rounded-full bg-surface-2/50 px-3 py-1 border border-white/5 shadow-sm">
-                                        {t("Unit {unit}", { unit: invoice.unit?.name ?? "" })}
-                                    </span>
-                                    {invoice.paymentSubmittedAt && (
-                                        <>
-                                            <div className="size-1 rounded-full bg-white/10" />
-                                            <span className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-primary border border-primary/20 shadow-sm animate-in fade-in slide-in-from-left-2 duration-500">
-                                                <Clock3 className="size-3.5" />
-                                                {t("Paid on {date}", { date: formatDateLong(invoice.paymentSubmittedAt) })}
-                                            </span>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                        
-                        <div className="flex items-center gap-4">
-                            {invoice && (
-                                <div className={cn("flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] shadow-lg", statusStyle.classes)}>
-                                    <span className={cn("size-1.5 rounded-full animate-pulse", statusStyle.dot)} />
-                                    {t(statusStyle.label)}
-                                </div>
-                             )}
-                             <button 
-                                 onClick={handleClose} 
-                                 aria-label={t("Close")}
-                                 className="group flex size-10 items-center justify-center rounded-full border border-white/10 bg-surface-2 text-text-medium transition-all hover:bg-surface-3 hover:text-text-high active:scale-95 shadow-lg"
-                             >
-                                 <X className="size-5 transition-transform group-hover:rotate-90" />
-                             </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid flex-1 gap-0 overflow-hidden lg:grid-cols-[1.1fr_0.9fr]">
-                    {/* Left Column: Details & Items */}
-                    <div className="relative flex flex-col min-h-0 overflow-hidden bg-surface-0">
-                        <div 
-                            ref={leftPanelRef}
-                            onScroll={handleLeftScroll}
-                            className="flex-1 space-y-8 p-8 overflow-y-auto custom-scrollbar-premium"
-                        >
-                        {loading || !invoice ? (
-                            <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-text-medium text-center">
-                                <div className="relative">
-                                    <Loader2 className="size-12 animate-spin text-primary" />
-                                    <div className="absolute inset-0 blur-xl bg-primary/20 animate-pulse rounded-full" />
-                                </div>
-                                <p className="text-sm font-medium">{t("Synchronizing ledger details...")}</p>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="space-y-1">
-                                    <h3 className="text-xl font-black text-text-high tracking-tight">{t("Financial Overview")}</h3>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Ledger Reconciliation")}</p>
-                                </div>
-
-                                <section className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-text-high">
-                                            <Hash className="size-4 text-primary" />
-                                            {t("Itemized Breakdown")}
-                                        </h3>
-                                    </div>
-                                    <div className="grid gap-3">
-                                        {invoice.lineItems.map((item) => (
-                                            <div key={item.id} className="group flex items-center justify-between rounded-2xl border border-white/5 bg-surface-1 p-5 transition-all hover:bg-surface-2 hover:border-white/10 shadow-sm">
-                                                <div className="space-y-1">
-                                                    <p className="text-sm font-black text-text-high">{item.label}</p>
-                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-disabled">{t(item.category)}</p>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="text-base font-black text-text-high">{formatPhpCurrency(item.amount)}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-
-                                        {invoice.paidAmount === 0 && (
-                                            <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 shadow-inner">
-                                                <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">{t("Total Payable")}</p>
-                                                <p className="text-lg font-black text-primary">{formatPhpCurrency(invoice.totalAmount)}</p>
-                                            </div>
-                                        )}
-
-                                        {invoice.paidAmount > 0 && (
-                                            <>
-                                                <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-surface-2/30 px-5 py-3 mt-4">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Paid to Date")}</p>
-                                                    <p className="text-sm font-black text-emerald-400">-{formatPhpCurrency(invoice.paidAmount)}</p>
-                                                </div>
-                                                <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 shadow-inner">
-                                                    <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">{t("Remaining Balance")}</p>
-                                                    <p className="text-lg font-black text-primary">{formatPhpCurrency(invoice.balanceRemaining)}</p>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                </section>
-
-                                <section className="space-y-4">
-                                    <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-text-high">
-                                        <Clock3 className="size-4 text-primary" />
-                                        {t("Utility Consumption")}
-                                    </h3>
-                                    <div className="grid gap-4">
-                                        {invoice.readings.length === 0 && (
-                                            <div className="rounded-3xl border-2 border-dashed border-white/5 bg-surface-1/30 p-8 text-center">
-                                                <p className="text-sm font-medium text-text-disabled">{t("No metered readings associated with this period.")}</p>
-
-                                            </div>
-                                        )}
-                                        {invoice.readings.map((reading) => (
-                                            <div key={reading.id} className="overflow-hidden rounded-3xl border border-white/5 bg-surface-1 shadow-sm">
-                                                <div className="flex items-center justify-between bg-surface-2/50 px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="size-2 rounded-full bg-primary" />
-                                                        <p className="text-sm font-black capitalize text-text-high">{t("{utility} Service", { utility: t(reading.utility_type) })}</p>
-                                                    </div>
-                                                    <span className={cn("rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider", reading.billing_mode === "included_in_rent" ? "bg-white/5 text-text-medium" : "bg-primary/10 text-primary")}>
-                                                        {reading.billing_mode === "included_in_rent" ? t("Bundled") : t("Unit Standard")}
-                                                    </span>
-                                                </div>
-                                                <div className="p-6">
-                                                    <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
-                                                        <ReadingField label={t("Prev")} value={reading.previous_reading} />
-                                                        <ReadingField label={t("Curr")} value={reading.current_reading} />
-                                                        <ReadingField label={t("Usage")} value={reading.usage} highlight />
-                                                        <ReadingField label={t("Charge")} value={formatPhpCurrency(reading.computed_charge)} highlight />
-                                                    </div>
-                                                    <div className="mt-5 border-t border-white/5 pt-4">
-                                                        <p className="text-[10px] font-medium uppercase tracking-widest text-text-disabled">
-                                                            {t("Billing Period:")} {formatDateLong(reading.billing_period_start)} â€“ {formatDateLong(reading.billing_period_end)}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </section>
-
-                                <section className="space-y-4 pt-4 border-t border-white/5">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-text-high">
-                                            <Receipt className="size-4 text-primary" />
-                                            {t("Proof of Payment")}
-                                        </h3>
-                                    </div>
-
-                                    {invoice.paymentProofUrl ? (
-                                        <button 
-                                            type="button"
-                                            onClick={() => setLightboxUrl(invoice.paymentProofUrl)}
-                                            className="group relative flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-white/10 bg-surface-1 p-3 transition-all hover:bg-surface-2 hover:border-primary/40 text-left shadow-sm cursor-zoom-in"
-                                        >
-                                            <div className="relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-surface-2">
-                                                <Image
-                                                    src={invoice.paymentProofUrl}
-                                                    alt={t("Proof of Payment Thumbnail")}
-                                                    fill
-                                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                                />
-                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <ArrowUpRight className="size-5 text-white" />
-                                                </div>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <p className="text-sm font-black text-text-high">{t("Uploaded Receipt")}</p>
-                                                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                                                        {t("Click to expand")}
-                                                    </span>
-                                                </div>
-                                                <p className="text-xs text-text-medium mt-1">{t("Click thumbnail to inspect high-resolution image")}</p>
-                                            </div>
-                                            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-text-disabled transition-all group-hover:bg-primary/10 group-hover:text-primary">
-                                                <ArrowUpRight className="size-4" />
-                                            </div>
-                                        </button>
-                                    ) : (
-                                        <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-white/5 bg-surface-1/30 p-6 text-center group transition-all hover:border-white/10">
-                                            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent opacity-20" />
-                                            <div className="relative flex flex-col items-center gap-3">
-                                                <div className="flex size-12 items-center justify-center rounded-xl bg-surface-2 border border-white/5 text-text-disabled shadow-inner group-hover:scale-105 transition-transform">
-                                                    <Receipt className="size-6 opacity-25" />
-                                                </div>
-                                                <div className="space-y-0.5">
-                                                    <p className="text-xs font-black text-text-medium">{t("No Proof Attached")}</p>
-                                                    <p className="text-[10px] font-medium text-text-disabled max-w-[200px] mx-auto leading-relaxed">
-                                                        {t("The tenant has not uploaded a digital receipt for this transaction yet.")}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {(invoice.metadata as any)?.refund_proof_url && (
-                                        <div className="space-y-4 pt-6 border-t border-white/5 text-left">
-                                            <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-text-high">
-                                                <Wallet className="size-4 text-amber-400" />
-                                                {t("Proof of Refund")}
-                                            </h3>
-                                            <button 
-                                                type="button"
-                                                onClick={() => setLightboxUrl((invoice.metadata as any).refund_proof_url)}
-                                                className="group relative flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 transition-all hover:bg-amber-500/10 hover:border-amber-500/40 cursor-zoom-in text-left shadow-sm"
-                                            >
-                                                <div className="relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-xl border border-amber-500/20 bg-surface-2">
-                                                    <Image
-                                                        src={(invoice.metadata as any).refund_proof_url}
-                                                        alt={t("Proof of Refund Thumbnail")}
-                                                        fill
-                                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                                    />
-                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                        <ArrowUpRight className="size-5 text-white" />
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="text-sm font-black text-text-high">{t("Refund Receipt")}</p>
-                                                        <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                                                            {t("Click to expand")}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-xs text-text-medium mt-1">{t("Click thumbnail to inspect high-resolution image")}</p>
-                                                </div>
-                                                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/20 transition-colors">
-                                                    <ArrowUpRight className="size-4" />
-                                                </div>
-                                            </button>
-                                        </div>
-                                    )}
-                                </section>
-                            </>
-                        )}
-                        </div>
-
-                        {/* Bottom Gradient Fade & Scroll Indicator for Left Panel */}
-                        <div 
-                            className={cn(
-                                "pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-surface-0 to-transparent transition-opacity duration-300 z-10",
-                                leftCanScroll ? "opacity-100" : "opacity-0"
-                            )} 
-                        />
-                        <AnimatePresence>
-                            {leftCanScroll && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20"
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={() => leftPanelRef.current?.scrollBy({ top: 220, behavior: "smooth" })}
-                                        className="flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-2/95 hover:bg-surface-3 px-3 py-1.5 text-[11px] font-bold text-text-medium hover:text-text-high shadow-xl backdrop-blur-md transition-all cursor-pointer hover:scale-105"
-                                    >
-                                        <span>{t("Scroll for details")}</span>
-                                        <ChevronDown className="size-3.5 text-primary animate-bounce" />
-                                    </button>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-
-                    {/* Right Column: Decisions Hub (Hidden for Tenants) */}
-                    {role === "landlord" && (
-                        <div className="relative flex flex-col min-h-0 overflow-hidden border-l border-white/5 bg-surface-1/40 backdrop-blur-xl">
-                            <div 
-                                ref={rightPanelRef}
-                                onScroll={handleRightScroll}
-                                className="flex-1 overflow-y-auto custom-scrollbar-premium"
-                            >
-                                <div className="space-y-6 p-8 pb-12">
-                                {invoice && (
-                                    <>
-                                        {/* Verification Section */}
-                                        <section className="space-y-4">
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">{t("Payment Verification")}</h3>
-                                                {invoice.paymentProofUrl && (
-                                                    <span className="flex items-center gap-1.5 text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                                                        <ShieldCheck className="size-3" />
-                                                        {t("Attachment Provided")}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            
-                                            <div className="grid gap-3">
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    <StatusLine label={t("Payment Method")} value={invoice.paymentMethod ?? t("Not specified")} icon={<CreditCardIcon className="size-3.5" />} />
-                                                    <StatusLine label={t("Reference #")} value={invoice.referenceNumber ?? t("None")} icon={<Hash className="size-3.5" />} />
-                                                </div>
-
-                                                {invoice.paymentDestination && (
-                                                    <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-3 shadow-sm">
-                                                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-disabled">
-                                                            <QrCode className="size-3.5" />
-                                                            {t("Paid To")}
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm font-black text-text-high">{(invoice.paymentDestination as any)?.account_name}</p>
-                                                            <p className="text-xs font-black text-primary mt-0.5 tracking-wider">{(invoice.paymentDestination as any)?.account_number}</p>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </section>
-
-                                    {/* Decisions Hub */}
-                                    <section className="space-y-4 pt-4 border-t border-white/5">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">{t("Action Center")}</h3>
-                                            <div className="flex bg-surface-2 p-1 rounded-xl border border-white/5 shadow-inner">
-                                                <button 
-                                                    onClick={() => setActiveTab("approve")}
-                                                    className={cn(
-                                                        "px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all",
-                                                        activeTab === "approve" ? "bg-primary text-primary-foreground shadow-sm" : "text-text-disabled hover:text-text-medium"
-                                                    )}
-                                                >
-                                                    {t("Confirm")}
-                                                </button>
-                                                <button 
-                                                    onClick={() => setActiveTab("issue")}
-                                                    className={cn(
-                                                        "px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all",
-                                                        activeTab === "issue" ? "bg-amber-500 text-white shadow-sm" : "text-text-disabled hover:text-text-medium"
-                                                    )}
-                                                >
-                                                    {t("Report Issue")}
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <AnimatePresence mode="wait">
-                                            {activeTab === "approve" ? (
-                                                <motion.div 
-                                                    key="approve-tab"
-                                                    initial={{ opacity: 0, x: -10 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    exit={{ opacity: 0, x: -10 }}
-                                                    className="space-y-4"
-                                                >
-                                                    {(invoice.metadata as any)?.refund_preference || refundMessage?.hasRefundDetails ? (
-                                                        <RefundCenter 
-                                                            invoice={invoice} 
-                                                            performAction={performAction} 
-                                                            isActionProcessing={processingAction}
-                                                            proofFile={refundProofFile}
-                                                            onProofChange={setRefundProofFile}
-                                                            refundMessage={refundMessage}
-                                                            onRefundSuccess={() => {
-                                                                setRefundProofFile(null);
-                                                                onUpdated();
-                                                                setTimeout(() => onClose(), 1200);
-                                                            }}
-                                                        />
-                                                    ) : invoice.paymentMethod === "in_person" || invoice.paymentMethod === "cash" ? (
-                                                        <F2FActionCenter 
-                                                            invoice={invoice}
-                                                            performAction={performAction}
-                                                            isActionProcessing={processingAction}
-                                                            tenantComment={tenantComment}
-                                                            setTenantComment={setTenantComment}
-                                                        />
-                                                    ) : (
-                                                        <>
-                                                            <div className="rounded-2xl bg-emerald-500/5 border border-emerald-500/20 p-5 space-y-3">
-                                                                <div className="flex items-start gap-3">
-                                                                    <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-                                                                        <CheckCircle className="size-3" />
-                                                                    </div>
-                                                                    <div className="space-y-1">
-                                                                        <p className="text-xs font-black text-text-high leading-tight">{t("Proceed with Confirmation")}</p>
-                                                                        <p className="text-[10px] text-text-medium font-medium leading-relaxed">{t("Everything looks correct. Confirming will finalize the payment and issue a formal receipt to the tenant.")}</p>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
- 
-                                                            <div className="space-y-4">
-                                                                <div className="relative group">
-                                                                    <textarea maxLength={500} 
-                                                                        value={tenantComment} 
-                                                                        onChange={(event) => setTenantComment(event.target.value)} 
-                                                                        rows={3} 
-                                                                        className="w-full resize-none rounded-2xl border border-white/10 bg-surface-2 px-5 py-4 text-sm text-text-high placeholder:text-text-disabled focus:border-primary/50 focus:ring-4 focus:ring-primary/10 outline-none transition-all shadow-inner" 
-                                                                        placeholder={t("Add an optional message for the tenant (e.g. 'Thank you for the prompt payment!')")} 
-                                                                    />
-                                                                    <div className="absolute right-4 bottom-4 opacity-30 group-focus-within:opacity-100 transition-opacity">
-                                                                        <MessageSquare className="size-4 text-primary" />
-                                                                    </div>
-                                                                </div>
- 
-                                                                <div className="space-y-3">
-                                                                    <ActionButton 
-                                                                        onClick={() => performAction("confirm")} 
-                                                                        loading={processingAction === "confirm"} 
-                                                                        variant="primary"
-                                                                        fullWidth
-                                                                        icon={<CheckCircle2 className="size-5" />}
-                                                                    >
-                                                                        {t("Confirm & Issue Receipt")}
-                                                                    </ActionButton>
-                                                                </div>
-                                                            </div>
-                                                        </>
-                                                    )}
-                                                </motion.div>
-                                            ) : (
-                                                <motion.div 
-                                                    key="issue-tab"
-                                                    initial={{ opacity: 0, scale: 0.98 }}
-                                                    animate={{ opacity: 1, scale: 1 }}
-                                                    exit={{ opacity: 0, scale: 0.98 }}
-                                                    className="space-y-6"
-                                                >
-                                                    <div className="space-y-1">
-                                                        <h4 className="text-sm font-black text-text-high">{t("Resolution Wizard")}</h4>
-                                                        <p className="text-[10px] font-medium text-text-disabled uppercase tracking-widest">{t("Step-by-step issue management")}</p>
-                                                    </div>
-
-                                                    <WizardFlow 
-                                                        invoice={invoice} 
-                                                        performAction={performAction} 
-                                                        isActionProcessing={processingAction}
-                                                        tenantComment={tenantComment}
-                                                        setTenantComment={setTenantComment}
-                                                        rejectionReason={rejectionReason}
-                                                        setRejectionReason={setRejectionReason}
-                                                        mismatchResolution={mismatchResolution}
-                                                        setMismatchResolution={setMismatchResolution}
-                                                        showRejectionWarning={showRejectionWarning}
-                                                        setShowRejectionWarning={setShowRejectionWarning}
-                                                        paymentDiscrepancyType={paymentDiscrepancyType}
-                                                        setPaymentDiscrepancyType={setPaymentDiscrepancyType}
-                                                        shortfallAmount={shortfallAmount}
-                                                        setShortfallAmount={setShortfallAmount}
-                                                    />
-
-                                                    <div className="pt-4 border-t border-white/5">
-                                                        <Tooltip
-                                                            content={
-                                                                <div className="flex gap-2.5 items-start max-w-xs text-left py-0.5">
-                                                                    <div className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
-                                                                        <Info className="size-3" />
-                                                                    </div>
-                                                                    <p className="text-[11px] leading-relaxed text-slate-200 dark:text-zinc-200">
-                                                                        {t("This sends a message to the tenant")} <span className="text-amber-400 font-bold">{t("without changing anything")}</span>. {t("Use this if you just want to tell them you're still reviewing their payment.")}
-                                                                    </p>
-                                                                </div>
-                                                            }
-                                                            side="top"
-                                                            sideOffset={8}
-                                                        >
-                                                            <button 
-                                                                onClick={() => performAction("remind")}
-                                                                disabled={!!processingAction}
-                                                                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-surface-2/30 py-3 text-[10px] font-black uppercase tracking-widest text-text-medium transition-all hover:bg-surface-3 hover:text-text-high hover:border-white/20 group"
-                                                            >
-                                                                {processingAction === "remind" ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />}
-                                                                {t("Send a Gentle Nudge")}
-                                                                <HelpCircle className="size-3 text-text-disabled group-hover:text-amber-400 transition-colors" />
-                                                            </button>
-                                                        </Tooltip>
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </section>
-
-                                    {/* History Section */}
-                                    <section className="space-y-4 pt-4 border-t border-white/5">
-                                        <div className="flex items-center gap-2">
-                                            <History className="size-3.5 text-text-disabled" />
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">{t("Audit History")}</h3>
-                                        </div>
-                                        <div className="space-y-3">
-                                            {invoice.receipts.length === 0 && (
-                                                <div className="rounded-2xl bg-surface-2/30 border border-white/5 p-6 text-center">
-                                                    <p className="text-[10px] italic text-text-disabled">{t("No transactions recorded yet for this invoice.")}</p>
-                                                </div>
-                                            )}
-                                            {invoice.receipts.map((receipt) => (
-                                                <div key={receipt.id} className="group flex items-center justify-between rounded-2xl border border-white/5 bg-surface-2/50 px-5 py-4 transition-all hover:bg-surface-3 shadow-sm">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                                        <div>
-                                                            <p className="text-[11px] font-black text-text-high tracking-tight">{(receipt as any).receipt_number}</p>
-                                                            <p className="text-[9px] font-medium uppercase tracking-wider text-text-disabled mt-0.5">{formatDateLong((receipt as any).issued_at)}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="text-xs font-black text-text-high">{formatPhpCurrency((receipt as any).amount)}</p>
-                                                        <p className="text-[8px] font-black uppercase text-emerald-400 mt-0.5">{t("Verified")}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </section>
-                                </>
-                            )}
-                                </div>
-                            </div>
-
-                            {/* Bottom Gradient Fade & Scroll Indicator for Right Panel */}
-                            <div 
-                                className={cn(
-                                    "pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-surface-1 to-transparent transition-opacity duration-300 z-10",
-                                    rightCanScroll ? "opacity-100" : "opacity-0"
-                                )} 
-                            />
-                            <AnimatePresence>
-                                {rightCanScroll && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20"
-                                    >
-                                        <button
-                                            type="button"
-                                            onClick={() => rightPanelRef.current?.scrollBy({ top: 220, behavior: "smooth" })}
-                                            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-2/95 hover:bg-surface-3 px-3 py-1.5 text-[11px] font-bold text-text-medium hover:text-text-high shadow-xl backdrop-blur-md transition-all cursor-pointer hover:scale-105"
-                                        >
-                                            <span>{t("Scroll for actions")}</span>
-                                            <ChevronDown className="size-3.5 text-primary animate-bounce" />
-                                        </button>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    )}
-
-                    {role === "tenant" && (
-                        <div className="relative border-l border-white/5 bg-surface-1/40 backdrop-blur-xl flex flex-col items-center justify-center p-12 text-center">
-                            <div className="space-y-8">
-                                <div className="flex justify-center">
-                                    <div className="size-20 rounded-[2rem] bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner">
-                                        <ShieldCheck className="size-10" />
-                                    </div>
-                                </div>
-                                <div className="space-y-3">
-                                    <h3 className="text-2xl font-black text-text-high tracking-tight">{t("Verified Statement")}</h3>
-                                    <p className="text-sm text-text-medium leading-relaxed max-w-[280px]">
-                                        {t("This invoice has been officially logged in the iReside ledger. You can download a digital copy or pay through the checkout.")}
-                                    </p>
-                                </div>
-                                {invoice?.status !== 'paid' && (
-                                    <Link 
-                                        href={`/tenant/payments/${invoiceId}/checkout`}
-                                        className="w-full bg-primary hover:bg-primary-dark text-white py-5 px-8 rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-3"
-                                    >
-                                        {t("Proceed to Payment")} <ArrowUpRight
- className="size-5" />
-                                    </Link>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </motion.div>
-
-            {/* Safety Confirmation Dialog Overlay */}
-            <AnimatePresence>
-                {pendingAction && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
-                        <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/60 backdrop-blur-xl"
-                            onClick={() => setPendingAction(null)}
-                        />
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] border border-white/10 bg-surface-1 shadow-[0_40px_100px_rgba(0,0,0,0.6)]"
-                        >
-                            <div className="p-10 space-y-8">
-                                <div className="flex justify-center">
-                                    <div className="flex size-20 items-center justify-center rounded-3xl bg-amber-500/10 text-amber-400 shadow-inner">
-                                        <ShieldCheck className="size-10" />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3 text-center">
-                                    <h3 className="text-2xl font-black text-text-high tracking-tight">{t("Confirm Action")}</h3>
-                                    <p className="text-sm font-medium leading-relaxed text-text-medium">
-                                        {t("You are about to")} <span className="text-amber-400 font-black underline decoration-amber-500/30 underline-offset-4">{pendingAction.label}</span>.{" "}
-                                        {pendingAction.desc}
-                                    </p>
-                                </div>
-
-                                <div className="grid gap-3">
-                                    <button 
-                                        disabled={confirmCountdown > 0}
-                                        onClick={() => performAction(pendingAction.type)}
-                                        className={cn(
-                                            "relative flex items-center justify-center gap-2.5 h-14 overflow-hidden rounded-2xl text-sm font-black uppercase tracking-widest transition-all active:scale-[0.98]",
-                                            confirmCountdown > 0 
-                                                ? "bg-white/5 text-text-disabled cursor-not-allowed" 
-                                                : pendingAction.type === "reject"
-                                                    ? "bg-rose-600 text-white hover:bg-rose-500 shadow-lg shadow-rose-600/25"
-                                                    : "bg-primary text-primary-foreground hover:brightness-110 shadow-lg shadow-primary/25"
-                                        )}
-                                    >
-                                        {confirmCountdown > 0 ? (
-                                            <>
-                                                <Clock3 className="size-4 animate-pulse shrink-0" />
-                                                <span>{t("Hold to Confirm ({seconds}s)", { seconds: confirmCountdown })}</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <CheckCircle2 className="size-4 shrink-0" />
-                                                <span>{t("Yes, Proceed")}</span>
-                                            </>
-                                        )}
-                                    </button>
-                                    <button 
-                                        onClick={() => setPendingAction(null)}
-                                        className="flex items-center justify-center h-14 rounded-2xl border border-white/10 bg-transparent text-sm font-black text-text-medium transition-all hover:bg-white/5"
-                                    >
-                                        {t("Cancel")}
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
-
-            {/* Lightbox for Proof of Payment */}
-            <AnimatePresence>
-                {lightboxUrl && (
-                    <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 sm:p-10">
-                        <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/90 backdrop-blur-2xl"
-                            onClick={() => setLightboxUrl(null)}
-                        />
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            className="relative max-h-full max-w-full overflow-hidden rounded-3xl border border-white/10 shadow-[0_40px_120px_rgba(0,0,0,0.8)]"
-                        >
-                            <Image src={lightboxUrl} alt={t("Enlarged Proof")} width={1200} height={900} className="object-contain" style={{maxHeight: '85vh', width: 'auto'}} />
-                            <div className="absolute top-4 right-4">
-                                <button 
-                                    onClick={() => setLightboxUrl(null)}
-                                    aria-label={t("Close")}
-                                    className="flex size-12 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10 hover:bg-black/60 transition-all shadow-lg"
-                                >
-                                    <X className="size-6" />
-                                </button>
-                            </div>
-                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none">
-                                <p className="text-xs font-semibold text-white/90 bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 shadow-lg">
-                                    {t("Proof of Payment")}
-                                </p>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
-
-    return typeof window === "undefined" ? null : createPortal(content, document.body);
-}
-
-function F2FActionCenter({ 
-    invoice, 
-    performAction, 
-    isActionProcessing, 
-    tenantComment, 
-    setTenantComment 
-}: {
-    invoice: NonNullable<InvoiceDetail>;
-    performAction: (action: any) => void;
-    isActionProcessing: any;
-    tenantComment: string;
-    setTenantComment: (value: string) => void;
-}) {
-    const { t } = useLanguageContext();
-    return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="rounded-[2rem] border border-cyan-500/20 bg-cyan-500/10 p-6 text-center space-y-4">
-                <div className="flex justify-center">
-                    <div className="flex size-14 items-center justify-center rounded-2xl bg-cyan-400/20 text-cyan-400 shadow-inner">
-                        <Building2 className="size-7" />
-                    </div>
-                </div>
-                <div className="space-y-1">
-                    <p className="text-sm font-black text-white">{t("Physical Cash Collection")}</p>
-                    <p className="text-[10px] font-medium text-cyan-100/60 leading-relaxed uppercase tracking-wider">{t("Face-to-Face Transaction")}</p>
-                </div>
-            </div>
-
-            <div className="space-y-5">
-                <div className="rounded-2xl border border-white/5 bg-surface-2 p-5 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Amount to Receive")}</p>
-                        <p className="text-sm font-black text-primary">{formatPhpCurrency(invoice?.balanceRemaining ?? 0)}</p>
-                    </div>
-                    <div className="h-[1px] bg-white/5" />
-                    <div className="space-y-2">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Handover Status")}</p>
-                        <div className="grid grid-cols-2 gap-2">
-                            <div className="rounded-xl border border-primary/20 bg-primary/10 p-3 text-center">
-                                <p className="text-[10px] font-black text-primary">{t("In Person")}</p>
-                            </div>
-                            <div className="rounded-xl border border-white/5 bg-surface-3 p-3 text-center opacity-40">
-                                <p className="text-[10px] font-black text-text-disabled">{t("Other")}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="relative group">
-                    <textarea maxLength={500} 
-                        value={tenantComment} 
-                        onChange={(event) => setTenantComment(event.target.value)} 
-                        rows={2} 
-                        className="w-full resize-none rounded-2xl border border-white/10 bg-surface-2 px-5 py-4 text-sm text-text-high placeholder:text-text-disabled focus:border-primary/50 outline-none transition-all" 
-                        placeholder={t("Note (e.g. 'Received at unit 202')")} 
-                    />
-                </div>
-
-                <ActionButton 
-                    onClick={() => performAction("confirm_received")} 
-                    loading={isActionProcessing === "confirm_received"} 
-                    variant="primary"
-                    fullWidth
-                    icon={<ShieldCheck className="size-5" />}
-                >
-                    {t("Confirm Cash Received")}
-                </ActionButton>
-            </div>
-        </div>
-    );
-}
-
-function WizardFlow({ 
-    invoice, 
-    performAction, 
-    isActionProcessing, 
-    tenantComment, 
-    setTenantComment, 
-    rejectionReason, 
-    setRejectionReason, 
-    mismatchResolution, 
-    setMismatchResolution,
-    showRejectionWarning,
-    setShowRejectionWarning,
-    paymentDiscrepancyType,
-    setPaymentDiscrepancyType,
-    shortfallAmount,
-    setShortfallAmount
-}: {
-    invoice: NonNullable<InvoiceDetail>;
-    performAction: (action: any) => void;
-    isActionProcessing: any;
-    tenantComment: string;
-    setTenantComment: (value: string) => void;
-    rejectionReason: string;
-    setRejectionReason: (value: string) => void;
-    mismatchResolution: string;
-    setMismatchResolution: (value: any) => void;
-    showRejectionWarning: boolean;
-    setShowRejectionWarning: (value: boolean) => void;
-    paymentDiscrepancyType: string;
-    setPaymentDiscrepancyType: (value: any) => void;
-    shortfallAmount: number | "";
-    setShortfallAmount: (value: number | "") => void;
-}) {
-    const { t } = useLanguageContext();
-    const [step, setStep] = useState<"diagnose" | "adjust" | "resolve" | "communicate">("diagnose");
-    const [diagnosis, setDiagnosis] = useState<"amount" | "proof" | "other" | null>(null);
-    const [receivedAmount, setReceivedAmount] = useState<number | "">("");
-    const [receivedTouched, setReceivedTouched] = useState(false);
-    const receivedError = moneyRule(receivedAmount, { label: "Amount received", positive: true });
-    const rejectionReasonError = rejectionReasonRule(rejectionReason, {
-        required: mismatchResolution === "reject" || mismatchResolution === "request_completion",
+    const basePayload = (action: ReviewAction): ReviewPayload => ({
+        action,
+        note: note.trim() || undefined,
+        amountTag: invoice?.amountTag ?? "exact",
+        acceptedAmount: roundCentavos(Number(invoice?.totalAmount ?? 0)),
+        mismatchResolution: invoice?.amountTag && invoice.amountTag !== "exact" ? "accept_partial" : undefined,
+        paymentDiscrepancyType: refund ? "excessive_amount" : undefined,
     });
 
-    const handleDiagnosis = (d: "amount" | "proof" | "other") => {
-        setDiagnosis(d);
-        if (d === "proof") {
-            setMismatchResolution("reject");
-            setStep("communicate");
-        } else if (d === "amount") {
-            setStep("adjust");
-        } else {
-            setMismatchResolution("reject");
-            setStep("communicate");
-        }
+    const methodLabel = invoice?.paymentMethod ? t(paymentMethodLabel(invoice.paymentMethod)) : null;
+
+    const askConfirmPayment = () => {
+        if (!invoice) return;
+        setPending({
+            kind: "review",
+            payload: basePayload("confirm"),
+            title: t("Confirm this payment?"),
+            facts: [
+                { label: t("invoice.fact.from", undefined, "From"), value: tenantName },
+                { label: t("Amount"), value: formatPhpCurrency(invoice.paidAmount > 0 ? invoice.paidAmount : invoice.totalAmount) },
+                { label: t("Paid with"), value: methodLabel ?? t("Not specified") },
+                { label: t("Reference number"), value: invoice.referenceNumber || t("None") },
+            ],
+            whatHappens: t("The bill will be marked as paid and {name} will get a receipt. You cannot undo this from here.", { name: tenantName }),
+            confirmLabel: t("Yes, the payment is correct"),
+            tone: "primary",
+        });
     };
 
+    const askConfirmCash = () => {
+        if (!invoice) return;
+        setPending({
+            kind: "review",
+            payload: basePayload("confirm_received"),
+            title: t("Did you receive the cash?"),
+            facts: [
+                { label: t("invoice.fact.from", undefined, "From"), value: tenantName },
+                { label: t("Amount"), value: formatPhpCurrency(invoice.balanceRemaining > 0 ? invoice.balanceRemaining : invoice.totalAmount) },
+                { label: t("Paid with"), value: t("Cash") },
+            ],
+            whatHappens: t("Only press yes if the money is already in your hands. The bill will be marked as paid and {name} will get a receipt.", { name: tenantName }),
+            confirmLabel: t("Yes, I received the cash"),
+            tone: "primary",
+        });
+    };
+
+    const askMarkRefunded = () => {
+        if (!invoice || !refund) return;
+        setPending({
+            kind: "refund",
+            payload: basePayload("confirm"), // not sent; markRefunded() runs instead
+            title: t("Did you send the refund?"),
+            facts: [
+                { label: t("invoice.fact.to", undefined, "To"), value: tenantName },
+                { label: t("Sent with"), value: t(paymentMethodLabel(refund.method ?? "gcash")) },
+                { label: t("Account"), value: refund.method === "bank_transfer" ? formatAccountNumber(refund.bank_account_number ?? "") : refund.gcash_number || t("Shown on the QR code") },
+            ],
+            whatHappens: t("Only press yes if you already sent the money. {name} will be told the refund is on its way.", { name: tenantName }),
+            confirmLabel: t("Yes, I sent the refund"),
+            tone: "primary",
+        });
+    };
+
+    const handleClose = () => {
+        setRefundProofFile(null);
+        onClose();
+    };
+
+    const headerSubtitle = invoice
+        ? [invoice.unit?.name ? t("Unit {unit}", { unit: invoice.unit.name }) : null, invoice.property?.name ?? null].filter(Boolean).join(" · ")
+        : "";
+
     return (
-        <div className="min-h-[300px]">
-            <AnimatePresence mode="wait">
-                {step === "diagnose" && (
-                    <motion.div 
-                        key="step-diagnose"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="space-y-4"
-                    >
-                        <p className="text-[11px] font-black text-text-medium">{t("What seems to be the problem?")}</p>
-                        <div className="grid gap-3">
-                            <DiagnosisCard 
-                                icon={<AlertTriangle className="size-5" />}
-                                title={t("Amount is Incorrect")}
-                                description={t("The tenant paid more or less than required")}
-                                onClick={() => handleDiagnosis("amount")}
-                            />
-                            <DiagnosisCard 
-                                icon={<FileText className="size-5" />}
-                                title={t("Invalid Proof")}
-                                description={t("Receipt is blurry, fake, or incorrect")}
-                                onClick={() => handleDiagnosis("proof")}
-                            />
-                            <DiagnosisCard 
-                                icon={<MessageSquare className="size-5" />}
-                                title={t("Something Else")}
-                                description={t("Another issue not listed above")}
-                                onClick={() => handleDiagnosis("other")}
-                            />
+        <Dialog.Root open={!!invoiceId} onOpenChange={(open) => { if (!open && !processing) handleClose(); }}>
+            <Dialog.Portal>
+                <Dialog.Overlay className="fixed inset-0 z-[150] bg-black/70" />
+                <Dialog.Content
+                    aria-describedby={undefined}
+                    onEscapeKeyDown={(event) => { if (processing || pending || lightboxUrl) event.preventDefault(); }}
+                    onPointerDownOutside={(event) => { if (processing || pending || lightboxUrl) event.preventDefault(); }}
+                    className={cn(
+                        "fixed inset-0 z-[151] flex flex-col bg-background focus:outline-none",
+                        "sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[94vh] sm:w-[calc(100vw-2rem)] sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border sm:border-border sm:bg-card sm:shadow-2xl",
+                    )}
+                >
+                    {/* Top bar: where am I, and the way out. Always visible. */}
+                    <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border/50 bg-card/60 px-6 py-5 sm:rounded-t-[2.5rem]">
+                        <div className="min-w-0">
+                            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">{t("Rent Bill")}</p>
+                            <Dialog.Title className="truncate text-2xl font-black text-foreground sm:text-3xl mt-0.5">
+                                {loading ? t("Loading…") : invoice ? invoice.tenant?.full_name || t("Unknown tenant") : t("Bill")}
+                            </Dialog.Title>
+                            {headerSubtitle && <p className="truncate text-xs sm:text-sm text-muted-foreground mt-0.5">{headerSubtitle}</p>}
                         </div>
-                    </motion.div>
-                )}
-
-                {step === "adjust" && (
-                    <motion.div 
-                        key="step-adjust"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="space-y-4"
-                    >
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => setStep("diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
-                                <ChevronRight className="size-4 rotate-180" />
+                        <Dialog.Close asChild>
+                            <button
+                                type="button"
+                                disabled={!!processing}
+                                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 cursor-pointer"
+                                aria-label={t("Close")}
+                            >
+                                <X className="size-5" aria-hidden />
                             </button>
-                            <p className="text-[11px] font-black text-text-medium">{t("Enter actual payment details")}</p>
-                        </div>
+                        </Dialog.Close>
+                    </div>
 
-                        <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-4 shadow-inner">
-                            <div className="flex items-center justify-between">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Expected Amount")}</p>
-                                <p className="text-sm font-black text-text-high">{formatPhpCurrency(invoice.balanceRemaining)}</p>
-                            </div>
-                            <div className="h-[1px] bg-white/5" />
-                            <div className="space-y-2">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Actual Amount Received")}</p>
-                                <div className="relative group">
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-disabled group-focus-within:text-primary transition-colors font-black text-sm">₱</div>
-                                    <input min={0} max={9999999.99} step="0.01"
-                                        type="number"
-                                        inputMode="decimal"
-                                        aria-label={t("Actual amount received")}
-                                        aria-invalid={receivedTouched && receivedError ? true : undefined}
-                                        aria-describedby={receivedTouched && receivedError ? "invoice-received-amount-error" : undefined}
-                                        value={receivedAmount}
-                                        onChange={(e) => setReceivedAmount(e.target.value ? Number(e.target.value) : "")}
-                                        onBlur={() => setReceivedTouched(true)}
-                                        className={cn("w-full rounded-xl border border-white/10 bg-surface-3 pl-8 pr-4 py-3 text-sm font-black text-text-high outline-none focus:border-primary/50 transition-all", receivedTouched && receivedError && fieldErrorClass)}
-                                        placeholder="0.00"
-                                    />
-                                </div>
-                                <FieldError id="invoice-received-amount-error" message={receivedTouched ? receivedError : undefined} />
-                            </div>
-                        </div>
-
-                        <ActionButton 
-                            onClick={() => {
-                                setReceivedTouched(true);
-                                if (receivedAmount === "" || receivedError) return;
-                                const diff = roundCentavos(invoice.balanceRemaining - receivedAmount);
-                                setShortfallAmount(diff);
-                                setStep("resolve");
-                            }}
-                            disabled={receivedAmount === ""}
-                            variant="primary"
-                            fullWidth
-                            icon={<ChevronRight className="size-4" />}
-                        >
-                            {t("Continue to Resolution")}
-                        </ActionButton>
-                    </motion.div>
-                )}
-
-                {step === "resolve" && (
-                    <motion.div 
-                        key="step-resolve"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="space-y-4"
-                    >
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => setStep(diagnosis === "amount" ? "adjust" : "diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
-                                <ChevronRight className="size-4 rotate-180" />
-                            </button>
-                            <p className="text-[11px] font-black text-text-medium">{t("How would you like to handle this?")}</p>
-                        </div>
-                        <div className="grid gap-3">
-                            {diagnosis === "amount" && (
-                                <>
-                                    <div className="rounded-xl bg-surface-2 p-3 flex items-center justify-between border border-white/5">
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-text-disabled">{t("Adjustment")}</p>
-                                        <p className={cn(
-                                            "text-[10px] font-black",
-                                            (shortfallAmount as number) > 0 ? "text-amber-400" : "text-emerald-400"
-                                        )}>
-                                            {(shortfallAmount as number) > 0 
-                                                ? t("Shortfall: {amount}", { amount: formatPhpCurrency(shortfallAmount as number) }) 
-                                                : t("Excess: {amount}", { amount: formatPhpCurrency(Math.abs(shortfallAmount as number)) })}
-                                        </p>
-                                    </div>
-
-                                    {(shortfallAmount as number) > 0 && (
-                                        <ResolutionCard 
-                                            active={paymentDiscrepancyType === "insufficient_amount"}
-                                            title={t("Insufficient Amount")}
-                                            description={t("Ask the tenant to pay the remaining balance.")}
-                                            onClick={() => { 
-                                                setPaymentDiscrepancyType("insufficient_amount"); 
-                                                setMismatchResolution("request_completion"); 
-                                                setRejectionReason(t("The payment amount is insufficient. Please pay the remaining balance of {amount}.", { amount: formatPhpCurrency(shortfallAmount as number) }));
-                                                setStep("communicate"); 
-                                            }}
-                                        />
-                                    )}
-
-                                    {(shortfallAmount as number) < 0 && (
-                                        <ResolutionCard 
-                                            active={paymentDiscrepancyType === "excessive_amount"}
-                                            title={t("Too Much Amount")}
-                                            description={t("Credit the overpayment to next month.")}
-                                            onClick={() => { 
-                                                setPaymentDiscrepancyType("excessive_amount"); 
-                                                setMismatchResolution("accept_partial"); 
-                                                setRejectionReason(t("The payment amount is excessive by {amount}. We will credit the excess to your next month's rent.", { amount: formatPhpCurrency(Math.abs(shortfallAmount as number)) }));
-                                                setStep("communicate"); 
-                                            }}
-                                        />
-                                    )}
-                                </>
-                            )}
-                            {diagnosis === "proof" && (
-                                <ResolutionCard 
-                                    active={paymentDiscrepancyType === "not_received"}
-                                    title={t("Not Received")}
-                                    description={t("The funds haven't arrived in the account.")}
-                                    onClick={() => { 
-                                        setPaymentDiscrepancyType("not_received"); 
-                                        setMismatchResolution("reject"); 
-                                        setRejectionReason(t("We did not receive the payment in our records. Please verify the transaction details and resubmit proof."));
-                                        setStep("communicate"); 
-                                    }}
-                                />
-                            )}
-                            <ResolutionCard 
-                                active={mismatchResolution === "reject" && paymentDiscrepancyType === "invalid_proof"}
-                                title={t("Reject Entirely")}
-                                description={t("Tell the tenant the evidence is invalid")}
-                                onClick={() => { 
-                                    setPaymentDiscrepancyType("invalid_proof");
-                                    setMismatchResolution("reject"); 
-                                    setRejectionReason(t("The proof of payment provided is invalid or unreadable. Please resubmit."));
-                                    setStep("communicate"); 
-                                }}
-                            />
-                        </div>
-                    </motion.div>
-                )}
-
-                {step === "communicate" && (
-                    <motion.div 
-                        key="step-communicate"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="space-y-4"
-                    >
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => setStep(diagnosis === "amount" ? "resolve" : "diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
-                                <ChevronRight className="size-4 rotate-180" />
-                            </button>
-                            <p className="text-[11px] font-black text-text-medium">{t("Finalize and Notify Tenant")}</p>
-                        </div>
-
-                        <div className="rounded-2xl bg-amber-500/5 border border-amber-500/20 p-4 space-y-2">
-                            <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest flex items-center gap-2">
-                                <Info className="size-3" />
-                                {t("Effect of this action")}
-                            </p>
-                            <p className="text-[11px] text-text-medium leading-relaxed font-medium">
-                                {mismatchResolution === "reject" && t("The payment will be cancelled. The tenant will be asked to resubmit a valid payment proof and amount.")}
-                                {mismatchResolution === "request_completion" && t("The tenant will be notified that they still owe a balance, but their current payment will be recorded.")}
-                                {mismatchResolution === "accept_partial" && t("The payment will be accepted and the invoice will be marked as partially paid.")}
-                                {diagnosis === "other" && t("The payment will be flagged with your custom reason and the tenant will be notified.")}
-                            </p>
-                        </div>
-
-                        {showRejectionWarning && (
-                            <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-4 flex items-start gap-3">
-                                <AlertTriangle className="size-5 text-rose-400 shrink-0 mt-0.5" />
-                                <div>
-                                    <p className="text-sm font-medium text-rose-400">{t("Rejection reason required")}</p>
-
-                                    <p className="text-xs text-rose-300/70 mt-1">{t("Please enter a reason for the tenant before rejecting or requesting completion.")}</p>
-                                </div>
+                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-7">
+                        {loading && (
+                            <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 text-center">
+                                <Loader2 className="size-10 animate-spin text-foreground" aria-hidden />
+                                <p className="text-lg font-semibold text-muted-foreground">{t("Opening the bill…")}</p>
                             </div>
                         )}
 
-                        <div className="space-y-4">
-                            <div className="relative group">
-                                <textarea maxLength={BILLING_LIMITS.rejectionReason}
-                                    value={rejectionReason}
-                                    onChange={(event) => setRejectionReason(event.target.value)}
-                                    aria-label={t("Reason for the tenant")}
-                                    aria-invalid={showRejectionWarning && rejectionReasonError ? true : undefined}
-                                    aria-describedby={showRejectionWarning && rejectionReasonError ? "invoice-rejection-reason-error" : undefined}
-                                    rows={3}
-                                    className={cn("w-full resize-none rounded-2xl border border-white/10 bg-surface-2 px-5 py-4 text-sm text-text-high placeholder:text-text-disabled focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all shadow-inner", showRejectionWarning && rejectionReasonError && fieldErrorClass)}
-                                    placeholder={t("Add a reason for the tenant (e.g. 'The receipt is unreadable' or 'The amount is missing ₱100')")}
-                                />
-                                <div className="absolute right-4 bottom-4 opacity-30 group-focus-within:opacity-100 transition-opacity">
-                                    <MessageSquare className="size-4 text-amber-500" />
+                        {!loading && loadError && (
+                            <SettingsNotice tone="danger" live title={t("Something went wrong")} action={<SettingsButton variant="secondary" onClick={() => setReloadKey((key) => key + 1)}>{t("Try again")}</SettingsButton>}>
+                                {loadError}
+                            </SettingsNotice>
+                        )}
+
+                        {!loading && invoice && plain && (
+                            <div className="space-y-8">
+                                {/* 1. What is happening */}
+                                <section aria-labelledby="invoice-status-heading" className={cn("rounded-3xl border-2 p-5 sm:p-6", INVOICE_TONE_CLASSES[plain.tone])}>
+                                    <span className="inline-flex items-center gap-2 rounded-full border-2 border-current/40 bg-background/70 px-3 py-1 text-base font-bold">
+                                        {plain.group === "paid" && <CheckCircle2 className="size-5" aria-hidden />}
+                                        {plain.group === "late" && <AlertCircle className="size-5" aria-hidden />}
+                                        {plain.tag}
+                                    </span>
+                                    <h2 id="invoice-status-heading" className="mt-3 text-2xl font-black leading-tight sm:text-3xl">
+                                        {done ? done.title : plain.headline}
+                                    </h2>
+                                    <p className="mt-2 text-lg leading-relaxed">{done ? done.detail : plain.detail}</p>
+                                    <dl className="mt-5 grid grid-cols-2 gap-4 border-t-2 border-current/15 pt-4 sm:grid-cols-3">
+                                        <div>
+                                            <dt className="text-base font-semibold opacity-80">{t("Bill amount")}</dt>
+                                            <dd className="text-2xl font-black">{formatPhpCurrency(invoice.totalAmount)}</dd>
+                                        </div>
+                                        {invoice.paidAmount > 0 && invoice.balanceRemaining > 0 && (
+                                            <div>
+                                                <dt className="text-base font-semibold opacity-80">{t("Still owed")}</dt>
+                                                <dd className="text-2xl font-black">{formatPhpCurrency(invoice.balanceRemaining)}</dd>
+                                            </div>
+                                        )}
+                                        <div>
+                                            <dt className="text-base font-semibold opacity-80">{t("Due date")}</dt>
+                                            <dd className="text-xl font-bold">{formatDateLong(invoice.dueDate)}</dd>
+                                        </div>
+                                    </dl>
+                                </section>
+
+                                {actionError && (
+                                    <SettingsNotice tone="danger" live title={t("That did not work")}>
+                                        {actionError} {t("Nothing on the bill was changed.")}
+                                    </SettingsNotice>
+                                )}
+
+                                {/* 2. What to do now */}
+                                {done ? (
+                                    <section className="rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
+                                        <h2 className="text-xl font-bold text-foreground">{t("You are done here")}</h2>
+                                        <p className="mt-1 text-base text-muted-foreground">{t("You can close this bill. The list behind it is already up to date.")}</p>
+                                        <SettingsButton size="lg" className="mt-5 w-full sm:w-auto" onClick={handleClose}>{t("Close this bill")}</SettingsButton>
+                                    </section>
+                                ) : role === "landlord" ? (
+                                    <LandlordActions
+                                        invoice={invoice}
+                                        plain={plain}
+                                        tenantName={tenantName}
+                                        refund={refund}
+                                        refundDone={refundDone}
+                                        isCash={isCash}
+                                        canSendReminder={canSendReminder}
+                                        mode={mode}
+                                        setMode={setMode}
+                                        note={note}
+                                        setNote={setNote}
+                                        processing={processing}
+                                        refundProofFile={refundProofFile}
+                                        setRefundProofFile={setRefundProofFile}
+                                        onConfirmPayment={askConfirmPayment}
+                                        onConfirmCash={askConfirmCash}
+                                        onSendReminder={() => void sendReminder()}
+                                        onMarkRefunded={askMarkRefunded}
+                                        onProblemReady={(action) => setPending(action)}
+                                        onOpenImage={setLightboxUrl}
+                                    />
+                                ) : (
+                                    !isSettled && (
+                                        <section className="rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
+                                            <h2 className="text-xl font-bold text-foreground">{t("What to do now")}</h2>
+                                            <p className="mt-1 text-base text-muted-foreground">{t("Pay with GCash, bank transfer, or cash. You will be able to upload your receipt.")}</p>
+                                            <Link href={`/tenant/payments/${invoiceId}/checkout`} className="mt-5 inline-flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-primary px-7 text-lg font-bold text-primary-foreground hover:brightness-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50 sm:w-auto">
+                                                {t("Pay now")}
+                                            </Link>
+                                        </section>
+                                    )
+                                )}
+
+                                {/* 3. What the tenant sent */}
+                                {(invoice.paymentMethod || invoice.paymentProofUrl || invoice.referenceNumber || invoice.paymentSubmittedAt) && (
+                                    <section aria-labelledby="invoice-payment-heading" className="space-y-4 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
+                                        <h2 id="invoice-payment-heading" className="text-xl font-bold text-foreground">{role === "tenant" ? t("Your payment") : t("What the tenant sent")}</h2>
+                                        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                            <Fact label={t("Paid with")} value={methodLabel ?? t("Not specified")} />
+                                            <Fact label={t("Reference number")} help={isCash ? undefined : t("From the GCash or bank text message")} value={invoice.referenceNumber || t("None given")} mono={!!invoice.referenceNumber} />
+                                            {invoice.paymentSubmittedAt && <Fact label={t("Sent on")} value={formatDateLong(invoice.paymentSubmittedAt)} />}
+                                            {invoice.paymentNote && <Fact label={t("Note from the tenant")} value={invoice.paymentNote} />}
+                                        </dl>
+
+                                        <PaidToAccount invoice={invoice} />
+
+                                        {invoice.paymentProofUrl ? (
+                                            <div className="space-y-3">
+                                                <p className="text-lg font-bold text-foreground">{t("Receipt photo")}</p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setLightboxUrl(invoice.paymentProofUrl)}
+                                                    className="group relative block w-full overflow-hidden rounded-2xl border-2 border-foreground/20 bg-muted focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50"
+                                                    aria-label={t("See the receipt photo larger")}
+                                                >
+                                                    <span className="relative block aspect-[4/3] w-full">
+                                                        <Image src={invoice.paymentProofUrl} alt={t("Receipt photo sent by the tenant")} fill className="object-contain" sizes="(max-width: 768px) 100vw, 700px" />
+                                                    </span>
+                                                    <span className="absolute bottom-3 right-3 inline-flex items-center gap-2 rounded-2xl bg-foreground px-4 py-2 text-base font-bold text-background shadow-lg">
+                                                        <ZoomIn className="size-5" aria-hidden />
+                                                        {t("See it larger")}
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            !isCash && (
+                                                <p className="rounded-2xl border-2 border-dashed border-foreground/20 p-4 text-base text-muted-foreground">
+                                                    {t("No receipt photo was sent with this payment.")}
+                                                </p>
+                                            )
+                                        )}
+
+                                        {refundProofUrl(invoice) && (
+                                            <div className="space-y-3 border-t-2 border-foreground/10 pt-4">
+                                                <p className="text-lg font-bold text-foreground">{t("Refund receipt")}</p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setLightboxUrl(refundProofUrl(invoice))}
+                                                    className="relative block w-full overflow-hidden rounded-2xl border-2 border-foreground/20 bg-muted focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50"
+                                                    aria-label={t("See the refund receipt larger")}
+                                                >
+                                                    <span className="relative block aspect-[4/3] w-full">
+                                                        <Image src={refundProofUrl(invoice)!} alt={t("Refund receipt")} fill className="object-contain" sizes="(max-width: 768px) 100vw, 700px" />
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        )}
+                                    </section>
+                                )}
+
+                                {/* 4. What the bill is for */}
+                                <section aria-labelledby="invoice-items-heading" className="space-y-4 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
+                                    <div>
+                                        <h2 id="invoice-items-heading" className="text-xl font-bold text-foreground">{t("What this bill is for")}</h2>
+                                        <p className="text-base text-muted-foreground">
+                                            {t("Invoice number")} {invoice.invoiceNumber}
+                                            {invoice.invoicePeriodStart && invoice.invoicePeriodEnd ? ` · ${t("For {start} to {end}", { start: formatDateLong(invoice.invoicePeriodStart), end: formatDateLong(invoice.invoicePeriodEnd) })}` : ""}
+                                        </p>
+                                    </div>
+                                    <ul className="divide-y-2 divide-foreground/10 rounded-2xl border border-border/50 bg-card/60">
+                                        {invoice.lineItems.map((item) => (
+                                            <li key={item.id} className="flex items-center justify-between gap-4 px-4 py-3">
+                                                <div className="min-w-0">
+                                                    <p className="text-lg font-semibold text-foreground">{item.label}</p>
+                                                    <p className="text-base capitalize text-muted-foreground">{t(item.category)}</p>
+                                                </div>
+                                                <p className="shrink-0 text-lg font-bold text-foreground">{formatPhpCurrency(item.amount)}</p>
+                                            </li>
+                                        ))}
+                                        {invoice.lineItems.length === 0 && (
+                                            <li className="flex items-center justify-between gap-4 px-4 py-3">
+                                                <p className="text-lg font-semibold text-foreground">{invoice.description || t("Monthly rent")}</p>
+                                                <p className="shrink-0 text-lg font-bold text-foreground">{formatPhpCurrency(invoice.subtotal)}</p>
+                                            </li>
+                                        )}
+                                        <li className="flex items-center justify-between gap-4 bg-muted/60 px-4 py-3">
+                                            <p className="text-lg font-bold text-foreground">{t("Total")}</p>
+                                            <p className="text-2xl font-black text-foreground">{formatPhpCurrency(invoice.totalAmount)}</p>
+                                        </li>
+                                        {invoice.paidAmount > 0 && (
+                                            <>
+                                                <li className="flex items-center justify-between gap-4 px-4 py-3">
+                                                    <p className="text-lg font-semibold text-foreground">{t("Paid so far")}</p>
+                                                    <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{formatPhpCurrency(invoice.paidAmount)}</p>
+                                                </li>
+                                                <li className="flex items-center justify-between gap-4 px-4 py-3">
+                                                    <p className="text-lg font-bold text-foreground">{t("Still owed")}</p>
+                                                    <p className="text-2xl font-black text-foreground">{formatPhpCurrency(invoice.balanceRemaining)}</p>
+                                                </li>
+                                            </>
+                                        )}
+                                    </ul>
+                                    {invoice.lateFeeAmount > 0 && (
+                                        <p className="text-base text-muted-foreground">{t("Late fee if paid after the due date: {amount}", { amount: formatPhpCurrency(invoice.lateFeeAmount) })}</p>
+                                    )}
+                                </section>
+
+                                {/* 5. Meter readings */}
+                                {invoice.readings.length > 0 && (
+                                    <section aria-labelledby="invoice-readings-heading" className="space-y-4 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
+                                        <h2 id="invoice-readings-heading" className="text-xl font-bold text-foreground">{t("Meter readings on this bill")}</h2>
+                                        <ul className="space-y-3">
+                                            {invoice.readings.map((reading) => (
+                                                <li key={reading.id} className="rounded-2xl border border-border/50 bg-card/60 p-4">
+                                                    <p className="text-lg font-bold capitalize text-foreground">{t(reading.utility_type)}</p>
+                                                    <p className="text-base text-muted-foreground">
+                                                        {formatDateLong(reading.billing_period_start)} – {formatDateLong(reading.billing_period_end)}
+                                                        {reading.billing_mode === "included_in_rent" ? ` · ${t("Included in the rent")}` : ""}
+                                                    </p>
+                                                    <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                                        <Fact label={t("Previous reading")} value={String(reading.previous_reading)} />
+                                                        <Fact label={t("This reading")} value={String(reading.current_reading)} />
+                                                        <Fact label={t("Used")} value={String(reading.usage)} />
+                                                        <Fact label={t("Charge")} value={formatPhpCurrency(reading.computed_charge)} />
+                                                    </dl>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </section>
+                                )}
+
+                                {/* 6. History */}
+                                <section aria-labelledby="invoice-history-heading" className="space-y-4 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
+                                    <h2 id="invoice-history-heading" className="text-xl font-bold text-foreground">{t("What happened so far")}</h2>
+                                    <ol className="space-y-3">
+                                        <HistoryRow date={invoice.issuedDate} text={t("Bill sent to {name}", { name: tenantName })} />
+                                        {invoice.paymentSubmittedAt && <HistoryRow date={invoice.paymentSubmittedAt} text={methodLabel ? t("{name} sent a payment by {method}", { name: tenantName, method: methodLabel }) : t("{name} sent a payment", { name: tenantName })} />}
+                                        {invoice.rejectionReason && invoice.workflowStatus === "rejected" && <HistoryRow text={t("Problem reported to the tenant: “{reason}”", { reason: invoice.rejectionReason })} />}
+                                        {invoice.receipts.map((receipt) => (
+                                            <HistoryRow key={receipt.id} date={receipt.issued_at} text={t("Receipt {number} issued for {amount}", { number: receipt.receipt_number ?? "", amount: formatPhpCurrency(receipt.amount) })} done />
+                                        ))}
+                                        {refundDone && <HistoryRow text={t("Refund sent to {name}", { name: tenantName })} done />}
+                                    </ol>
+                                </section>
+
+                                <div className="pb-2">
+                                    <SettingsButton variant="secondary" size="lg" icon={ArrowLeft} onClick={handleClose} disabled={!!processing}>
+                                        {t("Back to the list")}
+                                    </SettingsButton>
                                 </div>
                             </div>
-                            <FieldError id="invoice-rejection-reason-error" message={showRejectionWarning ? rejectionReasonError : undefined} />
+                        )}
+                    </div>
+                </Dialog.Content>
+            </Dialog.Portal>
 
-                            <ActionButton 
-                                onClick={() => {
-                                    if (mismatchResolution === "accept_partial") performAction("confirm");
-                                    else if (mismatchResolution === "request_completion") performAction("request_completion");
-                                    else performAction("reject");
-                                }} 
-                                loading={isActionProcessing === "reject" || isActionProcessing === "request_completion" || isActionProcessing === "confirm"} 
-                                variant="danger"
-                                fullWidth
-                                icon={<CheckCircle2 className="size-5" />}
-                            >
-                                {t("Submit Resolution")}
-                            </ActionButton>
+            {/* One question before money changes hands. Facts restated; buttons name the outcome. */}
+            <Dialog.Root open={!!pending} onOpenChange={(open) => { if (!open && !processing) setPending(null); }}>
+                <Dialog.Portal>
+                    <Dialog.Overlay className="fixed inset-0 z-[200] bg-black/60" />
+                    <Dialog.Content
+                        className="fixed left-1/2 top-1/2 z-[201] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-2xl focus:outline-none"
+                        onEscapeKeyDown={(event) => { if (processing) event.preventDefault(); }}
+                        onPointerDownOutside={(event) => { if (processing) event.preventDefault(); }}
+                    >
+                        {pending && (
+                            <>
+                                <div className="flex items-start gap-4">
+                                    <span aria-hidden className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                                        <AlertTriangle className="size-7" />
+                                    </span>
+                                    <div className="min-w-0 space-y-2">
+                                        <Dialog.Title className="text-2xl font-bold text-foreground">{pending.title}</Dialog.Title>
+                                        <Dialog.Description className="text-lg leading-relaxed text-muted-foreground">{t("Please check these details first.")}</Dialog.Description>
+                                    </div>
+                                </div>
+                                <dl className="mt-5 divide-y-2 divide-foreground/10 rounded-2xl border border-border/50 bg-card/60">
+                                    {pending.facts.map((fact) => (
+                                        <div key={fact.label} className="flex items-baseline justify-between gap-4 px-4 py-3">
+                                            <dt className="text-base font-semibold text-muted-foreground">{fact.label}</dt>
+                                            <dd className="text-right text-lg font-bold text-foreground">{fact.value}</dd>
+                                        </div>
+                                    ))}
+                                </dl>
+                                <p className="mt-4 text-base leading-relaxed text-foreground">{pending.whatHappens}</p>
+                                <div className="mt-6 flex flex-col gap-3">
+                                    <SettingsButton
+                                        variant={pending.tone}
+                                        size="lg"
+                                        icon={CheckCircle2}
+                                        loading={!!processing}
+                                        onClick={() => {
+                                            if (pending.kind === "refund") void markRefunded();
+                                            else void submitReview(pending);
+                                        }}
+                                    >
+                                        {pending.confirmLabel}
+                                    </SettingsButton>
+                                    <SettingsButton variant="secondary" size="lg" onClick={() => setPending(null)} disabled={!!processing}>
+                                        {t("No, go back")}
+                                    </SettingsButton>
+                                </div>
+                            </>
+                        )}
+                    </Dialog.Content>
+                </Dialog.Portal>
+            </Dialog.Root>
+
+            {/* Receipt photo, full size */}
+            <Dialog.Root open={!!lightboxUrl} onOpenChange={(open) => { if (!open) setLightboxUrl(null); }}>
+                <Dialog.Portal>
+                    <Dialog.Overlay className="fixed inset-0 z-[250] bg-black/90" />
+                    <Dialog.Content className="fixed inset-0 z-[251] flex flex-col focus:outline-none" aria-describedby={undefined}>
+                        <div className="flex shrink-0 items-center justify-between gap-4 bg-black/60 px-4 py-3">
+                            <Dialog.Title className="text-lg font-bold text-white">{t("Receipt photo")}</Dialog.Title>
+                            <Dialog.Close asChild>
+                                <button type="button" className="inline-flex min-h-12 items-center gap-2 rounded-2xl border-2 border-white/40 bg-black/40 px-4 text-base font-bold text-white hover:bg-black/70 focus:outline-none focus-visible:ring-4 focus-visible:ring-white/60">
+                                    <X className="size-5" aria-hidden />
+                                    <span>{t("Close")}</span>
+                                </button>
+                            </Dialog.Close>
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
+                        <div className="relative min-h-0 flex-1 overflow-auto p-2 sm:p-6">
+                            {lightboxUrl && (
+                                <div className="relative mx-auto h-full w-full max-w-5xl">
+                                    <Image src={lightboxUrl} alt={t("Receipt photo, full size")} fill className="object-contain" sizes="100vw" />
+                                </div>
+                            )}
+                        </div>
+                    </Dialog.Content>
+                </Dialog.Portal>
+            </Dialog.Root>
+        </Dialog.Root>
     );
 }
 
-function DiagnosisCard({ icon, title, description, onClick }: { icon: ReactNode, title: string, description: string, onClick: () => void }) {
-    return (
-        <button 
-            onClick={onClick}
-            className="flex items-center gap-4 w-full p-4 rounded-2xl border border-white/5 bg-surface-2/50 hover:bg-surface-3 hover:border-white/10 transition-all text-left group"
-        >
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/5 text-text-disabled group-hover:text-primary group-hover:bg-primary/10 transition-all">
-                {icon}
-            </div>
-            <div className="space-y-0.5">
-                <p className="text-xs font-black text-text-high">{title}</p>
-                <p className="text-[10px] text-text-disabled font-medium">{description}</p>
-            </div>
-            <ChevronRight className="size-4 text-text-disabled ml-auto group-hover:translate-x-1 transition-transform" />
-        </button>
-    );
+// ---------------------------------------------------------------------------
+// Landlord: what to do now
+// ---------------------------------------------------------------------------
+
+interface LandlordActionsProps {
+    invoice: Invoice;
+    plain: InvoicePlainStatus;
+    tenantName: string;
+    refund: RefundPreference | null;
+    refundDone: boolean;
+    isCash: boolean;
+    canSendReminder: boolean;
+    mode: "actions" | "problem";
+    setMode: (mode: "actions" | "problem") => void;
+    note: string;
+    setNote: (value: string) => void;
+    processing: string | null;
+    refundProofFile: File | null;
+    setRefundProofFile: (file: File | null) => void;
+    onConfirmPayment: () => void;
+    onConfirmCash: () => void;
+    onSendReminder: () => void;
+    onMarkRefunded: () => void;
+    onProblemReady: (action: PendingAction) => void;
+    onOpenImage: (url: string) => void;
 }
 
-function ResolutionCard({ title, description, onClick, active, disabled }: { title: string, description: string, onClick: () => void, active?: boolean, disabled?: boolean }) {
-    return (
-        <button 
-            onClick={onClick}
-            disabled={disabled}
-            className={cn(
-                "flex flex-col items-start w-full p-4 rounded-2xl border transition-all text-left group",
-                active ? "bg-amber-500/10 border-amber-500/40" : "bg-surface-2/50 border-white/5 hover:border-white/10 hover:bg-surface-3",
-                disabled && "opacity-30 grayscale cursor-not-allowed"
-            )}
-        >
-            <div className="flex items-center justify-between w-full">
-                <p className={cn("text-xs font-black", active ? "text-amber-400" : "text-text-high")}>{title}</p>
-                <div className={cn("size-2 rounded-full", active ? "bg-amber-500" : "bg-white/10")} />
-            </div>
-            <p className="text-[10px] text-text-disabled font-medium mt-1">{description}</p>
-        </button>
-    );
-}
-
-function Metric({ label, value, accent, warning }: { label: string; value: string; accent?: boolean; warning?: boolean }) {
-    return (
-        <div className={cn(
-            "relative overflow-hidden rounded-[2.25rem] border p-5 sm:p-6 transition-all duration-500 hover:shadow-xl group",
-            accent ? "border-primary/30 bg-primary/5 shadow-[0_20px_40px_-20px_rgba(109,152,56,0.15)]" : "border-white/5 bg-surface-1",
-            warning && !accent && "border-amber-500/20 bg-amber-500/5 shadow-[0_20px_40px_-20px_rgba(245,158,11,0.1)]"
-        )}>
-            {accent && <div className="absolute -top-6 -right-6 size-24 bg-primary/10 blur-3xl rounded-full animate-pulse" />}
-            <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.3em] text-text-medium group-hover:text-primary transition-colors">{label}</p>
-            <p className={cn(
-                "mt-2 sm:mt-3 text-lg sm:text-xl lg:text-2xl font-black tracking-tight transition-transform group-hover:scale-[1.02] origin-left break-words leading-tight",
-                accent ? "text-primary" : "text-text-high",
-                warning && !accent && "text-amber-400"
-            )}>
-                {value}
-            </p>
-        </div>
-    );
-}
-
-function ReadingField({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
-    return (
-        <div className={cn(
-            "space-y-1.5 rounded-2xl p-4 border transition-all", 
-            highlight ? "bg-surface-2 border-white/10 shadow-sm" : "bg-transparent border-white/5"
-        )}>
-            <p className="text-[9px] font-black uppercase tracking-widest text-text-disabled">{label}</p>
-            <p className={cn("text-sm font-black leading-none", highlight ? "text-primary" : "text-text-high")}>{value}</p>
-        </div>
-    );
-}
-
-function StatusLine({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
-    return (
-        <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-surface-1 p-4 shadow-sm hover:border-white/20 transition-all group">
-            <div className="flex items-center gap-2">
-                <span className="text-text-disabled group-hover:text-primary transition-colors">{icon}</span>
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-text-disabled">{label}</span>
-            </div>
-            <span className="text-xs font-black text-text-high truncate">{value}</span>
-        </div>
-    );
-}
-
-function ActionButton({
-    children,
-    icon,
-    loading = false,
-    onClick,
-    variant = "ghost",
-    fullWidth = false,
-    disabled = false,
-}: {
-    children: ReactNode;
-    icon: ReactNode;
-    loading?: boolean;
-    onClick: () => void;
-    variant?: "primary" | "danger" | "ghost";
-    fullWidth?: boolean;
-    disabled?: boolean;
-}) {
-    const variants = {
-        primary: "bg-primary text-primary-foreground hover:brightness-110 shadow-[0_12px_24px_-8px_rgba(109,152,56,0.5)] border-t border-white/20",
-        danger: "bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20",
-        ghost: "bg-transparent border border-white/10 text-text-medium hover:bg-surface-2 hover:text-text-high shadow-sm",
-    };
-
-    return (
-        <button 
-            onClick={onClick} 
-            disabled={loading || disabled} 
-            className={cn(
-                "group relative flex items-center justify-center gap-3 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40 overflow-hidden", 
-                fullWidth ? "w-full" : "",
-                variants[variant]
-            )}
-        >
-            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-            {loading ? <Loader2 className="size-5 animate-spin" /> : (
-                <>
-                    <span className="relative z-10 transition-transform group-hover:scale-110">{icon}</span>
-                    <span className="relative z-10">{children}</span>
-                </>
-            )}
-        </button>
-    );
-}
-
-function RefundCenter({ 
-    invoice, 
-    performAction, 
-    isActionProcessing,
-    proofFile,
-    onProofChange,
-    refundMessage,
-    onRefundSuccess
-}: { 
-    invoice: InvoiceDetail; 
-    performAction: (action: any) => void;
-    isActionProcessing: string | null;
-    proofFile: File | null;
-    onProofChange: (file: File | null) => void;
-    refundMessage?: any;
-    onRefundSuccess?: () => void;
-}) {
+function LandlordActions(props: LandlordActionsProps) {
     const { t } = useLanguageContext();
-    if (!invoice) return null;
-    const refund = (invoice.metadata as any)?.refund_preference;
-    if (!refund) return null;
+    const { invoice, plain, tenantName, refund, refundDone, isCash, canSendReminder, mode, setMode, note, setNote, processing, onConfirmPayment, onConfirmCash, onSendReminder, onMarkRefunded, onProblemReady } = props;
+    const noteId = useId();
 
-    const refundProofUrl = (invoice.metadata as any)?.refund_proof_url;
-    const isAlreadyRefunded = !!refundProofUrl;
+    if (plain.group === "paid" && !(refund && !refundDone)) return null;
 
-    if (isAlreadyRefunded) {
+    // Refund owed to the tenant (they paid too much and gave their account).
+    if (refund && !refundDone) {
         return (
-            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
-                <div className="rounded-[2rem] border border-emerald-500/20 bg-emerald-500/10 p-8 text-center space-y-4">
-                    <div className="flex justify-center">
-                        <div className="flex size-16 items-center justify-center rounded-2xl bg-emerald-400/20 text-emerald-400 shadow-inner">
-                            <CheckCircle2 className="size-8" />
+            <section aria-labelledby="invoice-actions-heading" className="space-y-5 rounded-3xl border-2 border-amber-600/50 bg-card p-5 sm:p-6 dark:border-amber-400/50">
+                <div>
+                    <h2 id="invoice-actions-heading" className="text-xl font-bold text-foreground">{t("What to do now")}</h2>
+                    <p className="mt-1 text-base text-muted-foreground">{t("Send the extra money back to {name} using the details below. Then come back here and press the button.", { name: tenantName })}</p>
+                </div>
+                <dl className="divide-y-2 divide-foreground/10 rounded-2xl border border-border/50 bg-card/60">
+                    <FactRow label={t("Send with")} value={t(paymentMethodLabel(refund.method ?? "gcash"))} />
+                    {refund.method === "bank_transfer" && refund.bank_name && <FactRow label={t("Bank")} value={refund.bank_name} />}
+                    {refund.method === "bank_transfer" && refund.bank_account_name && <FactRow label={t("Account name")} value={refund.bank_account_name} />}
+                    <FactRow label={t("Account number")} value={refund.method === "bank_transfer" ? formatAccountNumber(refund.bank_account_number ?? "") : refund.gcash_number || t("Shown on the QR code")} mono />
+                </dl>
+                {refund.qr_url && (
+                    <div className="space-y-2">
+                        <p className="text-lg font-bold text-foreground">{t("Tenant's GCash QR code")}</p>
+                        <div className="relative mx-auto aspect-square w-full max-w-[260px] overflow-hidden rounded-2xl border-2 border-foreground/20 bg-white p-2">
+                            <Image src={refund.qr_url} alt={t("Tenant's GCash QR code")} fill className="object-contain" sizes="260px" />
                         </div>
                     </div>
-                    <div className="space-y-1">
-                        <p className="text-lg font-black text-white">{t("Refund Processed")}</p>
-                        <p className="text-xs font-medium text-emerald-100/60 leading-relaxed uppercase tracking-widest">{t("Transaction Reconciled")}</p>
-                    </div>
-                </div>
-
-                <div className="space-y-3">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled ml-1">{t("Submitted Proof")}</p>
-                    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-surface-2 shadow-lg">
-                        <Image
-                            src={refundProofUrl}
-                            alt={t("Refund Proof")}
-                            fill
-                            className="object-cover"
-                        />
-                    </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-surface-2 border border-white/5 text-center">
-                    <p className="text-[10px] text-text-medium font-medium leading-relaxed">
-                        {t("The refund has been officially recorded. No further action is required for this reconciliation.")}
-                    </p>
-                </div>
-            </div>
+                )}
+                <RefundProofPicker file={props.refundProofFile} onChange={props.setRefundProofFile} />
+                <SettingsButton size="lg" icon={CheckCircle2} className="w-full sm:w-auto" onClick={onMarkRefunded} loading={processing === "refund"} disabled={!!processing && processing !== "refund"}>
+                    {t("Mark refund as sent")}
+                </SettingsButton>
+            </section>
         );
     }
 
-    return (
-        <div className="space-y-4">
-            <div className="rounded-2xl bg-amber-500/5 border border-amber-500/20 p-5 space-y-4">
-                <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
-                        <Wallet className="size-3" />
-                    </div>
-                    <div className="space-y-1">
-                        <p className="text-xs font-black text-text-high leading-tight">{t("Tenant Refund Request")}</p>
-                        <p className="text-[10px] text-text-medium font-medium leading-relaxed">
-                            {t("The tenant has requested a refund for the excess payment. Please process this via GCash.")}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="grid gap-3 p-3 rounded-xl bg-surface-2 border border-white/5 shadow-inner">
-                    <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Method")}</p>
-                        <p className="text-[10px] font-black text-text-high uppercase tracking-widest">GCash</p>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Account Number")}</p>
-                        <p className="text-sm font-black text-primary tracking-wider font-mono">
-                            {refund.gcash_number || t("Provided via QR")}
-                        </p>
-                    </div>
-                    {refund.qr_url && (
-                        <div className="pt-2">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled mb-2">{t("Recipient QR Code")}</p>
-                            <div className="relative group aspect-square w-full max-w-[200px] mx-auto overflow-hidden rounded-xl border border-white/10 bg-white p-2">
-                                <Image
-                                    src={refund.qr_url}
-                                    alt={t("Tenant GCash QR")}
-                                    fill
-                                    className="object-contain"
-                                />
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <p className="text-[10px] font-black text-white uppercase tracking-widest">{t("View Full Size")}</p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            <div className="space-y-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled ml-1">{t("Upload Proof of Refund")}</p>
-                <div className="relative">
-                    {!proofFile ? (
-                        <label className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/10 bg-surface-1 py-8 text-text-disabled transition-all hover:border-primary/30 hover:bg-surface-2 cursor-pointer group">
-                            <div className="p-3 rounded-full bg-surface-3 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                <Upload className="size-5" />
-                            </div>
-                            <div className="text-center">
-                                <p className="text-xs font-black text-text-high group-hover:text-primary transition-colors">{t("Select Proof Image")}</p>
-                                <p className="text-[10px] font-medium">{t("PNG, JPG or WebP (Max 5MB)")}</p>
-                            </div>
-                            <input 
-                                type="file" 
-                                className="hidden" 
-                                accept={MEDIA_ACCEPT_STRINGS.image}
-                                onChange={(event) => {
-                                    const file = handleMediaSelection(event, {
-                                        preset: "image",
-                                        maxSizeBytes: 5 * 1024 * 1024,
-                                        notify: (msg, desc) => toast.error(tr(msg), { description: desc }),
-                                    });
-                                    onProofChange(file);
-                                }}
-                            />
-                        </label>
-                    ) : (
-                        <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-surface-2">
-                            <Image
-                                src={URL.createObjectURL(proofFile)}
-                                alt={t("Refund Proof Preview")}
-                                fill
-                                className="object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                <button 
-                                    onClick={() => onProofChange(null)}
-                                    className="p-3 rounded-2xl bg-red-500 text-white shadow-xl active:scale-90 transition-all"
-                                    title={t("Remove Image")}
-                                >
-                                    <Trash2 className="size-5" />
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            <RefundSubmitButton
-                invoiceId={(invoice as any)?.id}
-                proofFile={proofFile}
-                onProofChange={onProofChange}
-                onSuccess={onRefundSuccess}
+    if (mode === "problem") {
+        return (
+            <ProblemFlow
+                invoice={invoice}
+                tenantName={tenantName}
+                note={note}
+                onCancel={() => setMode("actions")}
+                onReady={onProblemReady}
             />
-        </div>
-    );
-}
+        );
+    }
 
-function RefundSubmitButton({
-    invoiceId,
-    proofFile,
-    onProofChange,
-    onSuccess
-}: {
-    invoiceId: string;
-    proofFile: File | null;
-    onProofChange: (file: File | null) => void;
-    onSuccess?: () => void;
-}) {
-    const { t } = useLanguageContext();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const handleSubmit = async () => {
-        if (isSubmitting) return;
-        setIsSubmitting(true);
-        setError(null);
-
-        try {
-            const formData = new FormData();
-            if (proofFile) {
-                formData.append("refundProofFile", proofFile);
-            }
-
-            const response = await fetch(
-                `/api/landlord/invoices/${invoiceId}/mark-refunded`,
-                { method: "POST", body: formData }
-            );
-
-            if (!response.ok) {
-                const responseData = await response.json().catch(() => ({}));
-                throw new Error(responseData.error || t("Failed to mark refund as processed."));
-            }
-
-            onProofChange(null);
-            onSuccess?.();
-        } catch (error: any) {
-            setError(tr(error.message || t("Something went wrong. Please try again.")));
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+    const state = resolveInvoicePlainState({ ...invoice, amount: invoice.totalAmount, hasRefundRequest: !!refund, refundSent: refundDone });
+    const underReview = state === "under_review";
+    const cashToConfirm = state === "cash_to_confirm";
 
     return (
-        <div className="space-y-3 pt-2">
-            {error && (
-                <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-3 flex items-start gap-2">
-                    <AlertTriangle className="size-4 text-rose-400 shrink-0 mt-0.5" />
-                    <p className="text-[10px] font-medium text-rose-400 leading-relaxed">{error}</p>
+        <section aria-labelledby="invoice-actions-heading" className="space-y-5 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
+            <div>
+                <h2 id="invoice-actions-heading" className="text-xl font-bold text-foreground">{t("What to do now")}</h2>
+                <p className="mt-1 text-base text-muted-foreground">
+                    {underReview
+                        ? t("Look at the receipt photo and the reference number below. Compare them with your own GCash or bank record.")
+                        : cashToConfirm
+                          ? t("Wait for {name} to hand you the cash. Press the button only once the money is in your hands.", { name: tenantName })
+                          : t("Pick one of the buttons. Each one tells you what it does.")}
+                </p>
+            </div>
+
+            {(underReview || cashToConfirm) && (
+                <div className="space-y-2">
+                    <label htmlFor={noteId} className="block text-lg font-bold text-foreground">
+                        {t("Message to {name}", { name: tenantName })} <span className="text-base font-semibold text-muted-foreground">({t("optional")})</span>
+                    </label>
+                    <textarea
+                        id={noteId}
+                        value={note}
+                        maxLength={BILLING_LIMITS.reviewNote}
+                        onChange={(event) => setNote(event.target.value)}
+                        rows={2}
+                        placeholder={t("For example: Thank you for paying on time.")}
+                        className={settingsInputClass(false, "min-h-0 resize-y")}
+                    />
                 </div>
             )}
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled text-center mb-1">{t("Finalize Resolution")}</p>
-            <ActionButton
-                onClick={handleSubmit}
-                loading={isSubmitting}
-                variant="primary"
-                fullWidth
-                icon={<CheckCircle2 className="size-5" />}
-            >
-                {t("Mark as Refunded")}
-            </ActionButton>
-            <p className="text-[9px] text-text-disabled text-center leading-relaxed px-4">
-                {t("By clicking this, you confirm that you have manually sent the refund to the tenant's provided details.")}
 
-            </p>
+            <div className="flex flex-col gap-3">
+                {underReview && !isCash && (
+                    <>
+                        <SettingsButton size="lg" icon={CheckCircle2} onClick={onConfirmPayment} loading={processing === "confirm"} disabled={!!processing && processing !== "confirm"}>
+                            {t("Yes, the payment is correct")}
+                        </SettingsButton>
+                        <SettingsButton size="lg" variant="secondary" icon={AlertTriangle} onClick={() => setMode("problem")} disabled={!!processing}>
+                            {t("No, there is a problem with it")}
+                        </SettingsButton>
+                    </>
+                )}
+                {(cashToConfirm || (underReview && isCash)) && (
+                    <>
+                        <SettingsButton size="lg" icon={HandCoins} onClick={onConfirmCash} loading={processing === "confirm_received"} disabled={!!processing && processing !== "confirm_received"}>
+                            {t("Confirm cash received")}
+                        </SettingsButton>
+                        {underReview && (
+                            <SettingsButton size="lg" variant="secondary" icon={AlertTriangle} onClick={() => setMode("problem")} disabled={!!processing}>
+                                {t("There is a problem with this payment")}
+                            </SettingsButton>
+                        )}
+                    </>
+                )}
+                {!underReview && !cashToConfirm && canSendReminder && (
+                    <>
+                        <SettingsButton size="lg" icon={Bell} onClick={onSendReminder} loading={processing === "remind"} disabled={!!processing && processing !== "remind"}>
+                            {t("Send {name} a reminder", { name: tenantName })}
+                        </SettingsButton>
+                        <p className="text-base text-muted-foreground">{t("This sends a message and a notification about this bill. It does not change the bill.")}</p>
+                        <SettingsButton size="lg" variant="secondary" icon={HandCoins} onClick={onConfirmCash} loading={processing === "confirm_received"} disabled={!!processing && processing !== "confirm_received"}>
+                            {t("{name} paid me in cash", { name: tenantName })}
+                        </SettingsButton>
+                        <p className="text-base text-muted-foreground">{t("Use this if you already received the full amount in cash. The bill will be marked as paid.")}</p>
+                    </>
+                )}
+            </div>
+        </section>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// "There is a problem with this payment" — three short steps, Back at every step
+// ---------------------------------------------------------------------------
+
+type ProblemType = "amount" | "proof" | "not_received" | "other";
+type AmountChoice = "request_rest" | "credit_next" | "reject";
+
+function ProblemFlow({ invoice, tenantName, note, onCancel, onReady }: { invoice: Invoice; tenantName: string; note: string; onCancel: () => void; onReady: (action: PendingAction) => void }) {
+    const { t } = useLanguageContext();
+    const [step, setStep] = useState<1 | 2 | 3>(1);
+    const [problem, setProblem] = useState<ProblemType | null>(null);
+    const [received, setReceived] = useState<string>("");
+    const [receivedTouched, setReceivedTouched] = useState(false);
+    const [amountChoice, setAmountChoice] = useState<AmountChoice | null>(null);
+    const [reason, setReason] = useState("");
+    const [reasonTouched, setReasonTouched] = useState(false);
+    const receivedId = useId();
+    const reasonId = useId();
+
+    const billTotal = roundCentavos(Number(invoice.totalAmount));
+    const receivedNumber = received === "" ? null : Number(received);
+    const receivedError = moneyRule(received, { label: "Amount received", positive: true });
+    const difference = receivedNumber === null || receivedError ? null : roundCentavos(billTotal - receivedNumber);
+    const isShort = difference !== null && difference > 0;
+    const isOver = difference !== null && difference < 0;
+    const isExact = difference !== null && difference === 0;
+
+    const needsReason = problem !== "amount" || amountChoice !== "credit_next";
+    const reasonError = rejectionReasonRule(reason, { required: needsReason });
+
+    const prefillReason = (type: ProblemType, choice: AmountChoice | null) => {
+        if (type === "proof") return t("The receipt you sent is unreadable or does not match this bill. Please send a clear photo of the correct receipt.");
+        if (type === "not_received") return t("We could not find your payment in our account. Please check the transaction and send the proof again.");
+        if (type === "amount" && choice === "request_rest" && difference) return t("Thank you. The payment was {short} less than the bill. Please pay the remaining {short}.", { short: formatPhpCurrency(difference) });
+        if (type === "amount" && choice === "credit_next" && difference) return t("Thank you. You paid {extra} more than the bill. We will count it toward your next month's rent.", { extra: formatPhpCurrency(Math.abs(difference)) });
+        if (type === "amount" && choice === "reject") return t("The amount you sent does not match this bill. Please pay the exact amount of {amount}.", { amount: formatPhpCurrency(billTotal) });
+        return "";
+    };
+
+    const goToMessage = (type: ProblemType, choice: AmountChoice | null) => {
+        setReason(prefillReason(type, choice));
+        setReasonTouched(false);
+        setStep(3);
+    };
+
+    const finish = () => {
+        setReasonTouched(true);
+        if (reasonError) return;
+        const base = { amountTag: invoice.amountTag ?? "exact", note: note.trim() || undefined };
+        let payload: ReviewPayload;
+        let title: string;
+        let whatHappens: string;
+        let confirmLabel: string;
+        let tone: "primary" | "danger" = "danger";
+
+        if (problem === "amount" && amountChoice === "request_rest" && difference) {
+            payload = { ...base, action: "request_completion", acceptedAmount: roundCentavos(receivedNumber ?? 0), rejectionReason: reason.trim(), paymentDiscrepancyType: "insufficient_amount", shortfallAmount: difference };
+            title = t("Ask for the remaining {amount}?", { amount: formatPhpCurrency(difference) });
+            whatHappens = t("The {received} you received will be recorded. {name} will get your message and the bill stays open for the rest.", { received: formatPhpCurrency(receivedNumber ?? 0), name: tenantName });
+            confirmLabel = t("Yes, send this message");
+            tone = "primary";
+        } else if (problem === "amount" && amountChoice === "credit_next" && difference) {
+            payload = { ...base, action: "confirm", acceptedAmount: roundCentavos(receivedNumber ?? 0), mismatchResolution: "accept_partial", paymentDiscrepancyType: "excessive_amount", shortfallAmount: difference, note: reason.trim() || base.note };
+            title = t("Accept the payment and credit the extra?");
+            whatHappens = t("The bill will be marked as paid and {name} will get a receipt and your message. Remember to lower next month's bill by {extra}.", { name: tenantName, extra: formatPhpCurrency(Math.abs(difference)) });
+            confirmLabel = t("Yes, accept and credit the extra");
+            tone = "primary";
+        } else {
+            const issue: IssueType = problem === "proof" ? "invalid_proof" : problem === "not_received" ? "not_received" : problem === "amount" ? (isShort ? "insufficient_amount" : "excessive_amount") : "other";
+            payload = { ...base, action: "reject", acceptedAmount: billTotal, rejectionReason: reason.trim(), paymentDiscrepancyType: issue, shortfallAmount: difference ?? undefined };
+            title = t("Send the payment back for correction?");
+            whatHappens = t("The payment will not be accepted. {name} will get your message and will be asked to pay again. The bill stays open.", { name: tenantName });
+            confirmLabel = t("Yes, do not accept it");
+        }
+
+        onReady({
+            kind: "review",
+            payload,
+            title,
+            facts: [
+                { label: t("Tenant"), value: tenantName },
+                { label: t("Bill amount"), value: formatPhpCurrency(billTotal) },
+                ...(receivedNumber !== null && problem === "amount" ? [{ label: t("You received"), value: formatPhpCurrency(receivedNumber) }] : []),
+                { label: t("Your message"), value: reason.trim() ? reason.trim() : t("None") },
+            ],
+            whatHappens,
+            confirmLabel,
+            tone,
+        });
+    };
+
+    const stepTitle = step === 1 ? t("What is wrong with the payment?") : step === 2 ? t("How much did you actually receive?") : t("Your message to {name}", { name: tenantName });
+
+    return (
+        <section aria-labelledby="invoice-problem-heading" className="space-y-5 rounded-3xl border-2 border-amber-600/50 bg-card p-5 sm:p-6 dark:border-amber-400/50">
+            <div>
+                <p className="text-base font-semibold text-muted-foreground">{t("Report a problem · Step {step} of {total}", { step, total: problem === "amount" ? 3 : 2 })}</p>
+                <h2 id="invoice-problem-heading" className="mt-1 text-xl font-bold text-foreground">{stepTitle}</h2>
+            </div>
+
+            {step === 1 && (
+                <>
+                    <ChoiceList<ProblemType>
+                        legend={t("Choose one")}
+                        value={problem}
+                        onChange={setProblem}
+                        options={[
+                            { value: "amount", label: t("The amount is wrong"), description: t("{name} paid more or less than the bill.", { name: tenantName }) },
+                            { value: "proof", label: t("The receipt is unreadable or wrong"), description: t("The photo is blurry, cut off, or for a different payment.") },
+                            { value: "not_received", label: t("The money did not arrive"), description: t("You cannot find this payment in your GCash or bank account.") },
+                            { value: "other", label: t("Something else"), description: t("You will write what is wrong in the next step.") },
+                        ]}
+                    />
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                        <SettingsButton size="lg" disabled={!problem} onClick={() => { if (problem === "amount") setStep(2); else if (problem) goToMessage(problem, null); }}>
+                            {t("Continue")}
+                        </SettingsButton>
+                        <SettingsButton size="lg" variant="secondary" icon={ArrowLeft} onClick={onCancel}>{t("Cancel, go back")}</SettingsButton>
+                    </div>
+                </>
+            )}
+
+            {step === 2 && (
+                <>
+                    <p className="text-base text-muted-foreground">{t("The bill is {amount}. Type the amount that really arrived in your account or hands.", { amount: formatPhpCurrency(billTotal) })}</p>
+                    <div className="space-y-2">
+                        <label htmlFor={receivedId} className="block text-lg font-bold text-foreground">{t("Amount received")}</label>
+                        <div className="relative">
+                            <span aria-hidden className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground">₱</span>
+                            <input
+                                id={receivedId}
+                                type="number"
+                                inputMode="decimal"
+                                min={0}
+                                step="0.01"
+                                value={received}
+                                onChange={(event) => setReceived(event.target.value)}
+                                onBlur={() => setReceivedTouched(true)}
+                                aria-invalid={receivedTouched && receivedError ? true : undefined}
+                                aria-describedby={receivedTouched && receivedError ? `${receivedId}-error` : undefined}
+                                className={settingsInputClass(!!(receivedTouched && receivedError), "pl-10 text-2xl font-bold")}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <FieldError id={`${receivedId}-error`} message={receivedTouched ? receivedError : undefined} className="text-base" />
+                    </div>
+
+                    {difference !== null && (
+                        <SettingsNotice tone={isExact ? "success" : "info"} live>
+                            {isShort && t("That is {amount} less than the bill.", { amount: formatPhpCurrency(difference) })}
+                            {isOver && t("That is {amount} more than the bill.", { amount: formatPhpCurrency(Math.abs(difference)) })}
+                            {isExact && t("That is the full amount. If the payment is correct, go back and press “Yes, the payment is correct”.")}
+                        </SettingsNotice>
+                    )}
+
+                    {(isShort || isOver) && (
+                        <ChoiceList<AmountChoice>
+                            legend={t("What do you want to do?")}
+                            value={amountChoice}
+                            onChange={setAmountChoice}
+                            options={
+                                isShort
+                                    ? [
+                                          { value: "request_rest", label: t("Keep it and ask for the rest"), description: t("Record the {received} and ask {name} to pay the remaining {short}.", { received: formatPhpCurrency(receivedNumber ?? 0), name: tenantName, short: formatPhpCurrency(difference ?? 0) }) },
+                                          { value: "reject", label: t("Do not accept it"), description: t("Ask {name} to pay the full {amount} again.", { name: tenantName, amount: formatPhpCurrency(billTotal) }) },
+                                      ]
+                                    : [
+                                          { value: "credit_next", label: t("Accept it and credit the extra"), description: t("Mark the bill as paid and count the extra {extra} toward next month.", { extra: formatPhpCurrency(Math.abs(difference ?? 0)) }) },
+                                          { value: "reject", label: t("Do not accept it"), description: t("Ask {name} to send the exact {amount} instead.", { name: tenantName, amount: formatPhpCurrency(billTotal) }) },
+                                      ]
+                            }
+                        />
+                    )}
+
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                        <SettingsButton size="lg" disabled={!amountChoice || !(isShort || isOver)} onClick={() => goToMessage("amount", amountChoice)}>
+                            {t("Continue")}
+                        </SettingsButton>
+                        <SettingsButton size="lg" variant="secondary" icon={ArrowLeft} onClick={() => setStep(1)}>{t("Back")}</SettingsButton>
+                    </div>
+                </>
+            )}
+
+            {step === 3 && (
+                <>
+                    <p className="text-base text-muted-foreground">{t("{name} will see this message. You can change the words.", { name: tenantName })}</p>
+                    <div className="space-y-2">
+                        <label htmlFor={reasonId} className="block text-lg font-bold text-foreground">
+                            {t("invoice.field.message", undefined, "Message")} {!needsReason && <span className="text-base font-semibold text-muted-foreground">({t("optional")})</span>}
+                        </label>
+                        <textarea
+                            id={reasonId}
+                            value={reason}
+                            maxLength={BILLING_LIMITS.rejectionReason}
+                            onChange={(event) => setReason(event.target.value)}
+                            onBlur={() => setReasonTouched(true)}
+                            rows={4}
+                            aria-invalid={reasonTouched && reasonError ? true : undefined}
+                            aria-describedby={reasonTouched && reasonError ? `${reasonId}-error` : undefined}
+                            className={settingsInputClass(!!(reasonTouched && reasonError), "min-h-0 resize-y")}
+                        />
+                        <FieldError id={`${reasonId}-error`} message={reasonTouched ? reasonError : undefined} className="text-base" />
+                    </div>
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                        <SettingsButton size="lg" icon={CheckCircle2} onClick={finish}>{t("Continue")}</SettingsButton>
+                        <SettingsButton size="lg" variant="secondary" icon={ArrowLeft} onClick={() => setStep(problem === "amount" ? 2 : 1)}>{t("Back")}</SettingsButton>
+                    </div>
+                </>
+            )}
+        </section>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Small pieces
+// ---------------------------------------------------------------------------
+
+function ChoiceList<V extends string>({ legend, value, onChange, options }: { legend: string; value: V | null; onChange: (value: V) => void; options: Array<{ value: V; label: string; description?: string }> }) {
+    const name = useId();
+    return (
+        <fieldset className="space-y-3">
+            <legend className="text-lg font-bold text-foreground">{legend}</legend>
+            <div className="grid grid-cols-1 gap-3">
+                {options.map((option) => {
+                    const selected = option.value === value;
+                    return (
+                        <label
+                            key={option.value}
+                            className={cn(
+                                "relative flex min-h-16 cursor-pointer items-start gap-3 rounded-2xl border-2 p-4 transition-colors",
+                                "has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary/50",
+                                selected ? "border-foreground/70 bg-primary/20" : "border-foreground/15 bg-background hover:border-foreground/40",
+                            )}
+                        >
+                            <input type="radio" name={name} value={option.value} checked={selected} onChange={() => onChange(option.value)} className="sr-only" />
+                            <span aria-hidden className={cn("mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border-2", selected ? "border-foreground bg-foreground text-background" : "border-foreground/40 bg-background")}>
+                                {selected && <CheckCircle2 className="size-5" />}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                                <span className="block text-lg font-bold text-foreground">{option.label}</span>
+                                {option.description && <span className="mt-0.5 block text-base leading-snug text-muted-foreground">{option.description}</span>}
+                            </span>
+                        </label>
+                    );
+                })}
+            </div>
+        </fieldset>
+    );
+}
+
+function Fact({ label, value, help, mono }: { label: string; value: string; help?: string; mono?: boolean }) {
+    return (
+        <div className="rounded-2xl border border-border/50 bg-card/60 px-4 py-3">
+            <dt className="text-base font-semibold text-muted-foreground">
+                {label}
+                {help && <span className="block text-sm font-normal">{help}</span>}
+            </dt>
+            <dd className={cn("mt-0.5 break-words text-lg font-bold text-foreground", mono && "font-mono tracking-wide")}>{value}</dd>
         </div>
     );
 }
-function CreditCardIcon({ className }: { className?: string }) {
+
+function FactRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
     return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-            <rect width="20" height="14" x="2" y="5" rx="2" />
-            <line x1="2" x2="22" y1="10" y2="10" />
-        </svg>
+        <div className="flex items-baseline justify-between gap-4 px-4 py-3">
+            <dt className="text-base font-semibold text-muted-foreground">{label}</dt>
+            <dd className={cn("text-right text-lg font-bold text-foreground", mono && "font-mono tracking-wide")}>{value}</dd>
+        </div>
     );
 }
 
-function mockInvoice(targetInvoiceId: string): any {
+function HistoryRow({ date, text, done }: { date?: string | null; text: string; done?: boolean }) {
+    const Icon: LucideIcon = done ? CheckCircle2 : AlertCircle;
+    return (
+        <li className="flex items-start gap-3">
+            <Icon className={cn("mt-1 size-5 shrink-0", done ? "text-emerald-700 dark:text-emerald-300" : "text-muted-foreground")} aria-hidden />
+            <div>
+                {date && <p className="text-base font-semibold text-muted-foreground">{formatDateLong(date)}</p>}
+                <p className="text-lg text-foreground">{text}</p>
+            </div>
+        </li>
+    );
+}
+
+/** The account the tenant says they paid into: the bank for transfers, GCash otherwise. */
+function PaidToAccount({ invoice }: { invoice: Invoice }) {
+    const { t } = useLanguageContext();
+    if (!invoice.paymentMethod || invoice.paymentMethod === "cash" || invoice.paymentMethod === "in_person") return null;
+    const isBank = invoice.paymentMethod === "bank_transfer";
+    const paidTo = isBank ? invoice.paymentDestinations?.bank_transfer : invoice.paymentDestination;
+    if (!paidTo) return null;
+    return (
+        <div className="rounded-2xl border border-border/50 bg-card/60 px-4 py-3">
+            <p className="text-base font-semibold text-muted-foreground">{t("Paid into your account")}</p>
+            {isBank && paidTo.bank_name && <p className="text-lg font-bold text-foreground">{paidTo.bank_name}</p>}
+            <p className="text-lg font-bold text-foreground">{paidTo.account_name}</p>
+            <p className="font-mono text-lg tracking-wide text-foreground">{isBank ? maskAccountNumber(paidTo.account_number) : paidTo.account_number}</p>
+        </div>
+    );
+}
+
+function RefundProofPicker({ file, onChange }: { file: File | null; onChange: (file: File | null) => void }) {
+    const { t } = useLanguageContext();
+    const inputId = useId();
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!file) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setPreviewUrl(null);
+            return;
+        }
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+        return () => URL.revokeObjectURL(url);
+    }, [file]);
+
+    return (
+        <div className="space-y-2">
+            <p className="text-lg font-bold text-foreground">
+                {t("Photo of the refund receipt")} <span className="text-base font-semibold text-muted-foreground">({t("optional")})</span>
+            </p>
+            <p className="text-base text-muted-foreground">{t("A screenshot of the GCash or bank transfer helps the tenant see that the refund was sent.")}</p>
+            {file && previewUrl ? (
+                <div className="space-y-3">
+                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border-2 border-foreground/20 bg-muted">
+                        <Image src={previewUrl} alt={t("Refund receipt you chose")} fill className="object-contain" sizes="(max-width: 768px) 100vw, 700px" />
+                    </div>
+                    <SettingsButton variant="secondary" icon={Trash2} onClick={() => onChange(null)}>{t("Remove this photo")}</SettingsButton>
+                </div>
+            ) : (
+                <label htmlFor={inputId} className="flex min-h-16 cursor-pointer items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-foreground/30 bg-background px-4 text-lg font-bold text-foreground hover:border-foreground/60 hover:bg-muted has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary/50">
+                    <Upload className="size-6" aria-hidden />
+                    <span>{t("Choose a photo")}</span>
+                    <input
+                        id={inputId}
+                        type="file"
+                        className="sr-only"
+                        accept={MEDIA_ACCEPT_STRINGS.image}
+                        onChange={(event) => {
+                            const picked = handleMediaSelection(event, {
+                                preset: "image",
+                                maxSizeBytes: PROOF_MAX_BYTES,
+                                notify: (message, description) => toast.error(tr(message), { description }),
+                            });
+                            onChange(picked);
+                        }}
+                    />
+                </label>
+            )}
+        </div>
+    );
+}
+
+/** Demo data for preview ids (unit-map previews, docs). */
+function mockInvoice(targetInvoiceId: string): Invoice {
     const now = new Date().toISOString();
     const isSelective = targetInvoiceId.includes("selective");
     const isF2FPreview = targetInvoiceId.includes("preview") || targetInvoiceId.includes("in_person");
-    
     return {
         id: targetInvoiceId,
         invoiceNumber: isSelective ? "INV-SEL-2026-MOCK" : `INV-PREVIEW-${targetInvoiceId.slice(0, 4).toUpperCase()}`,
         status: "pending",
         workflowStatus: isF2FPreview ? "awaiting_in_person" : "pending",
-        totalAmount: isSelective ? 52020.50 : 14070,
-        balanceRemaining: isSelective ? 52020.50 : 14070,
+        totalAmount: isSelective ? 52020.5 : 14070,
+        subtotal: isSelective ? 52020.5 : 14070,
+        balanceRemaining: isSelective ? 52020.5 : 14070,
         paidAmount: 0,
         dueDate: "2026-06-01",
         issuedDate: now,
         billingCycle: "2026-05-01",
         invoicePeriodStart: "2026-05-01",
         invoicePeriodEnd: "2026-05-31",
-        tenant: {
-            full_name: isSelective ? "Selective Payment Demo" : "Tenant Preview",
-            email: "demo@ireside.local",
-            avatar_url: null,
-        },
-        property: {
-            name: "Skyline Heights Apartments",
-            address: "88 Orchid Blvd",
-        },
-        unit: {
-            name: isSelective ? "Unit 42A" : "Unit 4B",
-            floor: 42,
-        },
+        tenant: { full_name: isSelective ? "Selective Payment Demo" : "Tenant Preview", email: "demo@ireside.local", avatar_url: null } as unknown as Invoice["tenant"],
+        landlord: null,
+        property: { name: "Skyline Heights Apartments", address: "88 Orchid Blvd" } as unknown as Invoice["property"],
+        unit: { name: isSelective ? "Unit 42A" : "Unit 4B", floor: 42 } as unknown as Invoice["unit"],
         paymentMethod: isF2FPreview ? "in_person" : null,
         lineItems: [
             { id: "1", label: isSelective ? "Parking Slot B12" : "Monthly rent", amount: isSelective ? 5000 : 12500, category: isSelective ? "parking" : "rent" },
             { id: "2", label: "Water Consumption", amount: 540, category: "water" },
-            { id: "3", label: "Electricity Consumption", amount: 1480.50, category: "electricity" }
-        ],
+            { id: "3", label: "Electricity Consumption", amount: 1480.5, category: "electricity" },
+        ] as unknown as Invoice["lineItems"],
         readings: [],
         receipts: [],
         paymentSubmittedAt: null,
         paymentProofUrl: null,
-        amountTag: isSelective ? "partial" : "exact"
-    };
+        paymentNote: null,
+        referenceNumber: null,
+        receiptNumber: null,
+        amountTag: isSelective ? "partial" : "exact",
+        reviewAction: null,
+        rejectionReason: null,
+        intentMethod: null,
+        inPersonIntentExpiresAt: null,
+        landlordConfirmed: false,
+        lateFeeAmount: 0,
+        allowPartialPayments: false,
+        description: null,
+        metadata: {},
+        paymentDestination: null,
+        paymentDestinations: { gcash: null, bank_transfer: null },
+        leaseTermsSummary: { dueDay: 5, lateFeeAmount: 0, allowPartialPayments: false, utilitiesDescription: null },
+    } as unknown as Invoice;
 }
 

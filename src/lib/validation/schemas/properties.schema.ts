@@ -27,6 +27,8 @@ import {
 } from "../rules";
 import { zInteger, zMoney, zOptionalText, zRequiredText, zUuid } from "../zod-fields";
 import { isPhMobileEmpty, phMobileError, toPhMobileLocal } from "@/lib/phone";
+import { OTHER_BANK, normalizeAccountNumber } from "@/lib/billing/payment-methods";
+import { BANK_ACCOUNT_NUMBER_MESSAGE, BANK_ACCOUNT_NUMBER_PATTERN } from "./billing.schema";
 import { DEFAULT_PROPERTY_AMENITIES, isAmenityDuplicate, normalizeAmenityName } from "@/lib/constants/amenities";
 import { DEFAULT_PROPERTY_RULES, isRuleDuplicate, normalizeRuleText } from "@/lib/constants/rules";
 
@@ -106,6 +108,7 @@ export const RENEWAL_LIMITS = {
 export const PAYMENT_SETTING_LIMITS = {
   accountNameMin: 2,
   accountNameMax: 60,
+  bankNameMax: 60,
   noteMax: TEXT_LIMITS.reason,
   maxUtilityConfigs: 500,
 } as const;
@@ -194,6 +197,7 @@ export const renewalRuleTextRule = (value: unknown, existing: readonly string[] 
 
 /** GCash account name as the billing panel accepts it. */
 const ACCOUNT_NAME_PATTERN = /^[\p{L}\s.,'’-]+$/u;
+const BANK_NAME_PATTERN = /^[\p{L}\d\s.&'’-]+$/u;
 export function gcashAccountNameRule(value: unknown): FieldRuleResult {
   const base = textRule(value, {
     label: "GCash account name",
@@ -205,6 +209,41 @@ export function gcashAccountNameRule(value: unknown): FieldRuleResult {
   if (!ACCOUNT_NAME_PATTERN.test(String(value).trim())) {
     return "GCash account name can only contain letters, spaces, periods, commas, apostrophes, and hyphens.";
   }
+  return undefined;
+}
+
+/** Name on the landlord's bank account (same characters a bank prints on the account). */
+export function bankAccountNameRule(value: unknown): FieldRuleResult {
+  const base = textRule(value, {
+    label: "Bank account name",
+    required: true,
+    min: PAYMENT_SETTING_LIMITS.accountNameMin,
+    max: PAYMENT_SETTING_LIMITS.accountNameMax,
+  });
+  if (base) return base;
+  if (!ACCOUNT_NAME_PATTERN.test(String(value).trim())) {
+    return "Bank account name can only contain letters, spaces, periods, commas, apostrophes, and hyphens.";
+  }
+  return undefined;
+}
+
+/** Bank picked from the list, or typed in when the landlord chose "Other". */
+export function bankNameRule(value: unknown): FieldRuleResult {
+  const name = typeof value === "string" ? value.trim() : "";
+  if (!name || name === OTHER_BANK) return "Choose your bank.";
+  if (name.length > PAYMENT_SETTING_LIMITS.bankNameMax) {
+    return `Bank name cannot exceed ${PAYMENT_SETTING_LIMITS.bankNameMax} characters.`;
+  }
+  if (!BANK_NAME_PATTERN.test(name)) return "Bank name can only contain letters, numbers, spaces, periods, ampersands, and hyphens.";
+  return undefined;
+}
+
+/** 10–16 digits once spaces and dashes are removed. */
+export function bankAccountNumberRule(value: unknown): FieldRuleResult {
+  const raw = typeof value === "string" ? value.trim() : "";
+  if (!raw) return "Type your bank account number.";
+  if (/[^\d\s-]/.test(raw)) return "Use numbers only for the bank account number.";
+  if (!BANK_ACCOUNT_NUMBER_PATTERN.test(normalizeAccountNumber(raw))) return BANK_ACCOUNT_NUMBER_MESSAGE;
   return undefined;
 }
 
@@ -638,6 +677,25 @@ export const gcashSettingsSchema = z.object({
     .superRefine(ruleRefine(gcashNumberRule))
     // Kept in GCash's own "09…" form: tenants copy it straight into the GCash app.
     .transform((value) => toPhMobileLocal(value) ?? value.replace(/\D/g, "")),
+  isEnabled: zBooleanString(true),
+  removeQr: zBooleanString(false),
+});
+
+/** POST /api/landlord/payment-settings, bank section (fields arrive prefixed with "bank"). */
+export const bankTransferSettingsSchema = z.object({
+  bankName: z
+    .string({ error: "Choose your bank." })
+    .trim()
+    .superRefine(ruleRefine(bankNameRule)),
+  accountName: z
+    .string({ error: "Type the name on your bank account." })
+    .trim()
+    .superRefine(ruleRefine(bankAccountNameRule)),
+  accountNumber: z
+    .string({ error: "Type your bank account number." })
+    .superRefine(ruleRefine(bankAccountNumberRule))
+    // Digits only: tenants paste it straight into their bank app.
+    .transform((value) => normalizeAccountNumber(value)),
   isEnabled: zBooleanString(true),
   removeQr: zBooleanString(false),
 });

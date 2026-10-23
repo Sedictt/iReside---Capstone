@@ -20,6 +20,7 @@ import {
     Tag 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MAINTENANCE_PRIORITY_BADGE_TEXT, MAINTENANCE_PRIORITY_LABELS, MAINTENANCE_PRIORITY_SOFT_CLASSES, toPriorityLabel } from '@/lib/maintenance-priority';
 import { triggerHaptic } from '@/lib/haptics';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { useLanguageContext } from '@/context/LanguageContext';
@@ -46,13 +47,6 @@ const CATEGORIES = [
     'Pest Control',
     'Other'
 ];
-
-const PRIORITY_LABELS: Record<string, string> = {
-    low: 'Low',
-    medium: 'Medium',
-    high: 'High',
-    urgent: 'Urgent',
-};
 
 const STATUS_LABELS: Record<string, string> = {
     pending: 'Pending',
@@ -285,7 +279,7 @@ export function TenantMaintenanceView() {
                     ) : (
                         filteredRequests.map((req) => {
                             const isExpanded = expandedId === req.id;
-                            const isUrgent = req.priority === 'urgent' || req.priority === 'high';
+                            const priorityLabel = toPriorityLabel(req.priority);
                             const hasImages = Boolean(req.images && req.images.length > 0);
 
                             return (
@@ -300,10 +294,10 @@ export function TenantMaintenanceView() {
                                                     {t(req.category)}
                                                 </span>
                                                 <span className={cn(
-                                                    "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-tight",
-                                                    isUrgent ? "bg-red-500/15 text-red-500" : "bg-blue-500/15 text-blue-500"
+                                                    "px-2 py-0.5 rounded-md border text-[9px] font-black uppercase tracking-tight",
+                                                    MAINTENANCE_PRIORITY_SOFT_CLASSES[priorityLabel]
                                                 )}>
-                                                    {t(PRIORITY_LABELS[req.priority] ?? req.priority)}
+                                                    {t(MAINTENANCE_PRIORITY_BADGE_TEXT[priorityLabel])}
                                                 </span>
                                             </div>
                                             <h4 className="text-xs font-bold text-foreground">{req.title}</h4>
@@ -434,7 +428,7 @@ export function TenantMaintenanceView() {
                                         <option value="low">{t('Low (Standard)')}</option>
                                         <option value="medium">{t('Medium')}</option>
                                         <option value="high">{t('High')}</option>
-                                        <option value="urgent">{t('Urgent')}</option>
+                                        <option value="urgent">{t(MAINTENANCE_PRIORITY_LABELS.urgent)}</option>
                                     </select>
                                 </div>
                             </div>

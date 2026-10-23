@@ -97,6 +97,8 @@ export type InvoiceListItem = {
     reviewAction: Payment["review_action"] | null;
     inPersonIntentExpiresAt: string | null;
     hasRefundRequest: boolean;
+    /** True once the landlord uploaded proof that the refund was sent. */
+    refundSent: boolean;
 };
 
 export type InvoiceReadingDetail = Pick<
@@ -151,7 +153,9 @@ export type InvoiceDetail = {
     lineItems: PaymentItem[];
     readings: InvoiceReadingDetail[];
     receipts: PaymentReceipt[];
+    /** The landlord's GCash destination (kept for older screens; same as paymentDestinations.gcash). */
     paymentDestination: LandlordPaymentDestination | null;
+    paymentDestinations: PaymentDestinations;
     leaseTermsSummary: {
         dueDay: number;
         lateFeeAmount: number;
@@ -160,8 +164,26 @@ export type InvoiceDetail = {
     };
 };
 
+/** One destination per provider; rows are returned even when turned off (check is_enabled). */
+export type PaymentDestinations = {
+    gcash: LandlordPaymentDestination | null;
+    bank_transfer: LandlordPaymentDestination | null;
+};
+
+const EMPTY_DESTINATIONS: PaymentDestinations = { gcash: null, bank_transfer: null };
+
+function groupDestinations(rows: LandlordPaymentDestination[]): PaymentDestinations {
+    const grouped: PaymentDestinations = { ...EMPTY_DESTINATIONS };
+    for (const row of rows) {
+        if (row.provider === "gcash" || row.provider === "bank_transfer") grouped[row.provider] = row;
+    }
+    return grouped;
+}
+
 export type BillingWorkspace = {
+    /** GCash destination (kept for older screens; same as paymentDestinations.gcash). */
     paymentDestination: LandlordPaymentDestination | null;
+    paymentDestinations: PaymentDestinations;
     properties: Array<
         Property & {
             units: Unit[];
@@ -357,17 +379,21 @@ async function getReceiptMap(supabase: AppSupabaseClient, paymentIds: string[]) 
 }
 
 async function getDestinationMap(supabase: AppSupabaseClient, landlordIds: string[]) {
-    if (landlordIds.length === 0) return new Map<string, LandlordPaymentDestination>();
+    const map = new Map<string, PaymentDestinations>();
+    if (landlordIds.length === 0) return map;
 
     const { data, error } = await supabase
         .from("landlord_payment_destinations")
         .select("*")
         .in("landlord_id", landlordIds)
-        .eq("provider", "gcash");
+        .in("provider", ["gcash", "bank_transfer"]);
 
     if (error) throw error;
 
-    return new Map((data ?? []).map((item) => [item.landlord_id, item]));
+    for (const landlordId of landlordIds) {
+        map.set(landlordId, groupDestinations((data ?? []).filter((row) => row.landlord_id === landlordId)));
+    }
+    return map;
 }
 
 function buildInvoiceListItem(
@@ -412,6 +438,7 @@ function buildInvoiceListItem(
         reviewAction: payment.review_action,
         inPersonIntentExpiresAt: payment.in_person_intent_expires_at,
         hasRefundRequest: !!(payment.metadata as any)?.refund_preference,
+        refundSent: !!(payment.metadata as any)?.refund_proof_url,
     };
 }
 
@@ -442,6 +469,17 @@ export async function listLandlordInvoices(
         buildInvoiceListItem(payment, readingMap.get(payment.id) ?? [], receiptMap.get(payment.id) ?? []),
     );
 
+    // "Collected (30d)" only counts invoices settled in the last 30 days, not all-time history.
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const settledRecently = new Set(
+        payments
+            .filter((payment) => {
+                const settledAt = payment.paid_at ?? payment.updated_at;
+                return settledAt ? new Date(settledAt).getTime() >= thirtyDaysAgo : false;
+            })
+            .map((payment) => payment.id),
+    );
+
     const metrics = invoices.reduce(
         (acc, invoice) => {
             if (
@@ -459,7 +497,7 @@ export async function listLandlordInvoices(
             if (invoice.status === "overdue") {
                 acc.overdueAmount += invoice.balanceRemaining;
             }
-            if (invoice.status === "paid" || invoice.status === "receipted") {
+            if ((invoice.status === "paid" || invoice.status === "receipted") && settledRecently.has(invoice.id)) {
                 acc.collectedLast30Days += invoice.amount;
             }
             acc.totalInvoices += 1;
@@ -550,7 +588,8 @@ export async function getInvoiceDetailForActor(
         lineItems: items,
         readings: readingMap.get(payment.id) ?? [],
         receipts,
-        paymentDestination: destinationMap.get(payment.landlord_id) ?? null,
+        paymentDestination: destinationMap.get(payment.landlord_id)?.gcash ?? null,
+        paymentDestinations: destinationMap.get(payment.landlord_id) ?? { ...EMPTY_DESTINATIONS },
         metadata: payment.metadata || {},
         leaseTermsSummary: terms,
     };
@@ -635,8 +674,7 @@ export async function getBillingWorkspace(supabase: AppSupabaseClient, landlordI
             .from("landlord_payment_destinations")
             .select("*")
             .eq("landlord_id", landlordId)
-            .eq("provider", "gcash")
-            .maybeSingle(),
+            .in("provider", ["gcash", "bank_transfer"]),
         supabase
             .from("properties")
             .select("*")
@@ -681,6 +719,7 @@ export async function getBillingWorkspace(supabase: AppSupabaseClient, landlordI
     if (leaseError) throw leaseError;
     if (utilityError) throw utilityError;
 
+    const destinations = groupDestinations(destinationRows ?? []);
     const unitsByProperty = new Map<string, Unit[]>();
     for (const unit of unitRows ?? []) {
         const group = unitsByProperty.get(unit.property_id);
@@ -692,7 +731,8 @@ export async function getBillingWorkspace(supabase: AppSupabaseClient, landlordI
     }
 
     return {
-        paymentDestination: destinationRows ?? null,
+        paymentDestination: destinations.gcash,
+        paymentDestinations: destinations,
         properties: (propertyRows ?? []).map((property) => ({
             ...property,
             units: (unitsByProperty.get(property.id) ?? []).toSorted((a, b) => a.name.localeCompare(b.name)),

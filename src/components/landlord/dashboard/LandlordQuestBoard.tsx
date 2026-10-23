@@ -1,45 +1,21 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { 
-    LANDLORD_QUESTS, 
-    getQuestProgress, 
-    type LandlordProductTourState,
-    type LandlordQuestId
-} from "@/lib/landlord-product-tour";
-import { 
-    ChevronRight, 
-    Map, 
-    Users, 
-    Home, 
-    CreditCard,
+import { type LandlordProductTourState } from "@/lib/landlord-product-tour";
+import {
     Rocket,
     X,
     CheckCircle2,
     ArrowRight,
-    Sparkles,
-    Layout
+    Layout,
+    Sparkles
 } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
-
-import { LayoutDashboard, Building2, Wrench } from "lucide-react";
-
-const ICON_MAP: Record<string, any> = {
-    dashboard: LayoutDashboard,
-    properties: Building2,
-    business: Building2,
-    map: Map,
-    people: Users,
-    tenants: Users,
-    payments: CreditCard,
-    finance: CreditCard,
-    operations: Wrench,
-};
-
-import { 
-    getMissionById,
+import {
+    MISSIONS_CONFIG,
+    MISSION_ICONS,
+    getCompletedMissionIds,
     type MissionConfig
 } from "@/lib/missions-config";
 import { MissionSlideshowModal } from "@/components/landlord/dashboard/MissionSlideshowModal";
@@ -51,7 +27,6 @@ interface LandlordQuestBoardProps {
 }
 
 export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps) {
-    const router = useRouter();
     const { t } = useLanguageContext();
     const [state, setState] = useState<LandlordProductTourState | null>(null);
     const [loading, setLoading] = useState(true);
@@ -78,15 +53,14 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
         }
     }, [isOpen, refreshState]);
 
-    const handleStartQuest = (questId: string) => {
-        const mission = getMissionById(questId);
-        if (mission) {
-            setActiveMission(mission);
-            setIsSlideshowOpen(true);
-        }
+    const completedMissionIds = getCompletedMissionIds(state?.metadata);
+
+    const handleStartQuest = (mission: MissionConfig) => {
+        setActiveMission(mission);
+        setIsSlideshowOpen(true);
     };
 
-    const handleMissionCompleted = (missionId: string) => {
+    const handleMissionCompleted = () => {
         refreshState();
     };
 
@@ -160,63 +134,70 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                                             ))}
                                         </>
                                     ) : (
-                                        LANDLORD_QUESTS.map((quest, idx) => {
-                                        const progress = state ? getQuestProgress(quest.id as LandlordQuestId, state) : 0;
-                                        const Icon = ICON_MAP[quest.icon] || Rocket;
-                                        const isDone = progress === 100;
+                                        MISSIONS_CONFIG.map((mission, idx) => {
+                                        const Icon = MISSION_ICONS[mission.iconName] || Sparkles;
+                                        const isDone = completedMissionIds.includes(mission.id);
 
                                         return (
                                             <motion.div
-                                                key={quest.id}
+                                                key={mission.id}
                                                 initial={{ opacity: 0, x: 20 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
                                                 className={cn(
-                                                    "group relative overflow-hidden rounded-[2rem] border p-6 transition-all duration-500",
-                                                    isDone 
-                                                        ? "border-emerald-500/20 bg-emerald-500/5" 
+                                                    "group relative overflow-hidden rounded-[2rem] border transition-all duration-500",
+                                                    isDone
+                                                        ? "border-emerald-500/20 bg-emerald-500/5"
                                                         : "border-white/5 bg-white/3 hover:border-primary/30 hover:bg-white/5"
                                                 )}
                                             >
-                                                <div className="flex items-start justify-between mb-4">
-                                                    <div className={cn(
-                                                        "flex size-10 items-center justify-center rounded-xl transition-all",
-                                                        isDone 
-                                                            ? "bg-emerald-500/20 text-emerald-500" 
-                                                            : "bg-surface-2 text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary"
-                                                    )}>
-                                                        <Icon className="size-5" />
-                                                    </div>
-                                                    {isDone ? (
-                                                        <CheckCircle2 className="size-5 text-emerald-500" />
-                                                    ) : (
-                                                        <span className="text-[10px] font-black tracking-widest text-primary bg-primary/10 px-2 py-1 rounded-lg">
-                                                            {progress}%
+                                                {/* Cover: the mission's first picture */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleStartQuest(mission)}
+                                                    aria-label={t(mission.title)}
+                                                    className="relative block aspect-[16/7] w-full overflow-hidden border-b border-white/5"
+                                                >
+                                                    <img
+                                                        src={mission.slides[0]?.image}
+                                                        alt=""
+                                                        loading="lazy"
+                                                        className="size-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+                                                    />
+                                                    {isDone && (
+                                                        <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-lg">
+                                                            <CheckCircle2 className="size-3.5" />
+                                                            {t("Done")}
                                                         </span>
                                                     )}
-                                                </div>
+                                                </button>
 
-                                                <div className="space-y-2 mb-6">
-                                                    <h3 className="text-sm font-black tracking-tight text-foreground">{t(quest.title)}</h3>
-                                                    <p className="text-[10px] leading-relaxed text-muted-foreground/70">
-                                                        {t(quest.description)}
-                                                    </p>
-                                                </div>
+                                                <div className="p-6">
+                                                    <div className="mb-4 flex items-start gap-3">
+                                                        <div className={cn(
+                                                            "flex size-10 shrink-0 items-center justify-center rounded-xl transition-all",
+                                                            isDone
+                                                                ? "bg-emerald-500/20 text-emerald-500"
+                                                                : "bg-surface-2 text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary"
+                                                        )}>
+                                                            <Icon className="size-5" />
+                                                        </div>
+                                                        <div className="min-w-0 space-y-1">
+                                                            <h3 className="text-sm font-black tracking-tight text-foreground">{t(mission.title)}</h3>
+                                                            <p className="text-[11px] leading-relaxed text-muted-foreground/80">
+                                                                {t(mission.description)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
 
-                                                <div className="space-y-4">
-                                                    <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/5">
-                                                        <motion.div 
-                                                            initial={{ width: 0 }}
-                                                            animate={{ width: `${progress}%` }}
-                                                            className={cn(
-                                                                "absolute inset-y-0 left-0 rounded-full",
-                                                                isDone ? "bg-emerald-500" : "bg-primary"
-                                                            )}
-                                                        />
+                                                    <div className="mb-4 flex items-center gap-2 text-[10px] font-bold text-muted-foreground/70">
+                                                        <span>{t("{count} steps", { count: mission.slides.length })}</span>
+                                                        <span aria-hidden="true">•</span>
+                                                        <span>{t(mission.estimatedTime)}</span>
                                                     </div>
 
                                                     <button
-                                                        onClick={() => handleStartQuest(quest.id)}
+                                                        onClick={() => handleStartQuest(mission)}
                                                         className={cn(
                                                             "flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
                                                             isDone
@@ -239,7 +220,7 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                                 <div className="flex items-center gap-4 text-muted-foreground/60">
                                     <Layout className="size-4" />
                                     <p className="text-[10px] font-medium leading-relaxed">
-                                        {t("Complete all missions to unlock advanced platform capabilities and professional badges.")}
+                                        {t("Each mission is a short picture guide. You can replay any mission anytime.")}
                                     </p>
                                 </div>
                             </div>
@@ -254,11 +235,7 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
             isOpen={isSlideshowOpen}
             onClose={() => setIsSlideshowOpen(false)}
             onCompleteMission={handleMissionCompleted}
-            isCompleted={
-                activeMission && state 
-                    ? getQuestProgress(activeMission.id as LandlordQuestId, state) === 100 
-                    : false
-            }
+            isCompleted={activeMission ? completedMissionIds.includes(activeMission.id) : false}
         />
         </>
     );

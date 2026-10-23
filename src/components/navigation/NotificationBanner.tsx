@@ -88,7 +88,7 @@ export function NotificationBanner() {
         } else {
             setCurrentIndex((prev) => (prev - 1 + totalCount) % totalCount);
         }
-        playSound("notification", 0.1);
+        playSound("tap");
     };
 
     useEffect(() => {

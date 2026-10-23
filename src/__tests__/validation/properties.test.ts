@@ -6,6 +6,7 @@ import {
     flyerTemplateSaveSchema,
     floorConfigCreateSchema,
     gcashSettingsSchema,
+    bankTransferSettingsSchema,
     houseRuleTextRule,
     imageUploadRule,
     propertyCreateSchema,
@@ -339,6 +340,26 @@ describe("payment settings", () => {
         expect(gcashSettingsSchema.safeParse({ accountName: "Marina", accountNumber: "08171234567" }).success).toBe(false);
         expect(gcashSettingsSchema.safeParse({ accountName: "Marina", accountNumber: "0917123456" }).success).toBe(false);
         expect(gcashSettingsSchema.safeParse({ accountName: "Marina", accountNumber: "09171234567", isEnabled: "maybe" }).success).toBe(false);
+    });
+
+    it("bank: validates bank, account name and a 10–16 digit account number", () => {
+        const ok = bankTransferSettingsSchema.parse({
+            bankName: " BDO Unibank ",
+            accountName: " Marina Reyes ",
+            accountNumber: "0059 3012-3456",
+            isEnabled: "true",
+            removeQr: null,
+        });
+        expect(ok).toEqual({ bankName: "BDO Unibank", accountName: "Marina Reyes", accountNumber: "005930123456", isEnabled: true, removeQr: false });
+        // A bank typed in under "Other" is fine.
+        expect(bankTransferSettingsSchema.safeParse({ bankName: "Bank of Commerce", accountName: "Marina", accountNumber: "1234567890" }).success).toBe(true);
+        expect(bankTransferSettingsSchema.safeParse({ bankName: "", accountName: "Marina", accountNumber: "1234567890" }).success).toBe(false);
+        expect(bankTransferSettingsSchema.safeParse({ bankName: "Other", accountName: "Marina", accountNumber: "1234567890" }).success).toBe(false);
+        expect(bankTransferSettingsSchema.safeParse({ bankName: "BPI", accountName: "M", accountNumber: "1234567890" }).success).toBe(false);
+        expect(bankTransferSettingsSchema.safeParse({ bankName: "BPI", accountName: "Marina", accountNumber: "123456789" }).success).toBe(false);
+        expect(bankTransferSettingsSchema.safeParse({ bankName: "BPI", accountName: "Marina", accountNumber: "12345678901234567" }).success).toBe(false);
+        expect(bankTransferSettingsSchema.safeParse({ bankName: "BPI", accountName: "Marina", accountNumber: "12345abc90" }).success).toBe(false);
+        expect(bankTransferSettingsSchema.safeParse({ bankName: "<script>", accountName: "Marina", accountNumber: "1234567890" }).success).toBe(false);
     });
 
     const config = {

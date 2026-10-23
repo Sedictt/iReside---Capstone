@@ -30,14 +30,6 @@ export async function GET(request: NextRequest) {
     const queryPropertyId = url.searchParams.get("propertyId");
     const queryLandlordId = url.searchParams.get("landlordId");
 
-    const cacheKey = `${queryLandlordId || "auto"}:${queryPropertyId || "auto"}`;
-    const cached = brandingMemoryCache.get(cacheKey);
-    if (cached && Date.now() < cached.expiresAt) {
-      return NextResponse.json(cached.payload, {
-        headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=120" },
-      });
-    }
-
     const admin = createServiceRoleSupabaseClient();
 
     let targetLandlordId: string | null = queryLandlordId || null;
@@ -73,6 +65,17 @@ export async function GET(request: NextRequest) {
       }
     } catch {
       // Unauthenticated caller, will fall back below
+    }
+
+    // Cache by the RESOLVED landlord/property, never by the raw query string: callers
+    // without query params belong to different landlords, and a shared "auto" key
+    // served one landlord's brand to every other signed-in user for 60 seconds.
+    const cacheKey = `${targetLandlordId || "public"}:${targetPropertyId || "any"}`;
+    const cached = brandingMemoryCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return NextResponse.json(cached.payload, {
+        headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=120" },
+      });
     }
 
     let property = null;

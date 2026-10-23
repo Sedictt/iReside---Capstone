@@ -62,6 +62,7 @@ import { MonthPicker } from "@/components/ui/MonthPicker";
 import { UtilityBillingOnboardingModal } from "@/components/landlord/utility/UtilityBillingOnboardingModal";
 import { UtilityBillingTourSpotlight } from "@/components/landlord/utility/UtilityBillingTourSpotlight";
 import { UtilityBillingCompletionModal } from "@/components/landlord/utility/UtilityBillingCompletionModal";
+import { paymentMethodLabel } from "@/lib/billing/payment-methods";
 
 type ReadingDraft = {
 	unitId: string;
@@ -1705,7 +1706,7 @@ export function UtilityBillingDashboard() {
 										<div className="flex items-center justify-between border-t border-border/40 pt-3 text-xs">
 											<div className="flex items-center gap-2">
 												<span className="text-muted-foreground">{t("Method:")}</span>
-												<span className="font-bold text-foreground capitalize">{inv.paymentMethod || "GCash"}</span>
+												<span className="font-bold text-foreground">{t(paymentMethodLabel(inv.paymentMethod, "GCash"))}</span>
 												{inv.referenceNumber && (
 													<span className="font-mono text-[10px] bg-muted px-2 py-0.5 rounded text-foreground font-bold">
 														{t("Ref:")} {inv.referenceNumber}

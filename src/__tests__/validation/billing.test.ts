@@ -293,6 +293,22 @@ describe("tenant payment schemas", () => {
         expect(tenantPaymentSubmitSchema.safeParse({ method: "gcash", referenceNumber: "1", partialAmount: "-5" }).success).toBe(false);
     });
 
+    it("submit: accepts bank transfer with its own reference message", () => {
+        const ok = tenantPaymentSubmitSchema.safeParse({ method: "bank_transfer", referenceNumber: " IP2610040001 " });
+        expect(ok.success).toBe(true);
+        expect(ok.data?.method).toBe("bank_transfer");
+        expect(ok.data?.referenceNumber).toBe("IP2610040001");
+        expect(issuesOf(tenantPaymentSubmitSchema.safeParse({ method: "bank_transfer", referenceNumber: "" }) as never).referenceNumber).toBe(
+            "Reference number is required for bank transfer submissions.",
+        );
+        expect(tenantPaymentSubmitSchema.safeParse({ method: "maya", referenceNumber: "1" }).success).toBe(false);
+    });
+
+    it("submit: older offline submissions without a method are treated as GCash", () => {
+        expect(tenantPaymentSubmitSchema.safeParse({ referenceNumber: "1002938410291" }).data?.method).toBe("gcash");
+        expect(tenantPaymentSubmitSchema.safeParse({ method: "", referenceNumber: "1002938410291" }).data?.method).toBe("gcash");
+    });
+
     it("intent: only UUID lists", () => {
         expect(tenantPaymentIntentSchema.safeParse({ selectedItemIds: [ITEM_ID] }).success).toBe(true);
         expect(tenantPaymentIntentSchema.safeParse({ selectedItemIds: ["1"] }).success).toBe(false);
@@ -312,12 +328,42 @@ describe("tenant payment schemas", () => {
         expect(refundInfoSchema.safeParse({ action: "credit", gcashNumber: null }).success).toBe(true);
     });
 
+    it("refund info: bank refunds need bank, name and a 10–16 digit account number", () => {
+        const ok = refundInfoSchema.safeParse({
+            action: "refund",
+            refundMethod: "bank_transfer",
+            bankName: "BPI",
+            bankAccountName: "Maria Santos",
+            bankAccountNumber: "1234-5678-90",
+        });
+        expect(ok.success).toBe(true);
+        expect(ok.data?.bankAccountNumber).toBe("1234567890");
+
+        const missing = issuesOf(refundInfoSchema.safeParse({ action: "refund", refundMethod: "bank_transfer" }) as never);
+        expect(missing.bankName).toBe("Choose your bank.");
+        expect(missing.bankAccountName).toBe("Type the name on your bank account.");
+        expect(missing.bankAccountNumber).toMatch(/10 to 16 numbers/);
+        expect(refundInfoSchema.safeParse({ action: "refund", refundMethod: "bank_transfer", bankName: "BPI", bankAccountName: "M S", bankAccountNumber: "12345" }).success).toBe(false);
+        // Credit needs no details whatever method was picked.
+        expect(refundInfoSchema.safeParse({ action: "credit", refundMethod: "bank_transfer" }).success).toBe(true);
+        // Missing method keeps the old GCash behaviour.
+        expect(refundInfoSchema.safeParse({ action: "refund", gcashNumber: "09171234567" }).data?.refundMethod).toBe("gcash");
+    });
+
     it("application payment: method enum and GCash reference", () => {
         expect(applicationPaymentSubmitSchema.safeParse({ method: " GCash ", referenceNumber: "123" }).data?.method).toBe("gcash");
         expect(applicationPaymentSubmitSchema.safeParse({ method: "bitcoin" }).success).toBe(false);
         expect(issuesOf(applicationPaymentSubmitSchema.safeParse({ method: "gcash" }) as never).referenceNumber).toMatch(/required/);
         expect(applicationPaymentSubmitSchema.safeParse({ method: "cash", paymentRequestId: "not-a-uuid" }).success).toBe(false);
         expect(applicationPaymentSubmitSchema.safeParse({ method: "cash" }).data?.paymentRequestId).toBe("all");
+    });
+
+    it("application payment: bank transfer needs a reference too", () => {
+        expect(applicationPaymentSubmitSchema.safeParse({ method: "Bank_Transfer", referenceNumber: "IP123" }).data?.method).toBe("bank_transfer");
+        expect(issuesOf(applicationPaymentSubmitSchema.safeParse({ method: "bank_transfer" }) as never).referenceNumber).toBe(
+            "Reference number is required for bank transfer submissions.",
+        );
+        expect(issuesOf(applicationPaymentSubmitSchema.safeParse({ method: "bitcoin" }) as never).method).toBe("Method must be GCash, Bank Transfer or Cash.");
     });
 });
 

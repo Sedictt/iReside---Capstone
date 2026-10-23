@@ -515,6 +515,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                         if (!newNotification.read) {
                             if (newNotification.type === "message") {
                                 playSound("message");
+                            } else if (newNotification.type === "payment" && /receipt|confirmed|received/i.test(`${newNotification.title} ${newNotification.message}`)) {
+                                playSound("payment");
                             } else {
                                 playSound("notification");
                             }

@@ -9,13 +9,33 @@ import { BILLING_BUCKETS, uploadBillingFile } from "@/lib/billing/storage";
 import { NotificationService } from "@/lib/services/notification/notification.service";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseWithSchema } from "@/lib/validation/server";
+import { isProofMethod, paymentMethodLabel } from "@/lib/billing/payment-methods";
 import { PROOF_LIMITS, applicationPaymentSubmitSchema, proofFileRule, proofContentRule } from "@/lib/validation/schemas/billing.schema";
 
 type RouteContext = {
     params: Promise<{ token: string }>;
 };
 
-type PaymentMethodInput = "gcash" | "cash";
+type PaymentMethodInput = "gcash" | "bank_transfer" | "cash";
+
+type DestinationRow = {
+    provider: string;
+    bank_name: string | null;
+    account_name: string | null;
+    account_number: string | null;
+    qr_image_url: string | null;
+    is_enabled: boolean;
+};
+
+function toPortalDestination(row: DestinationRow | undefined) {
+    if (!row || !row.is_enabled) return null;
+    return {
+        bankName: row.bank_name ?? null,
+        accountName: row.account_name ?? null,
+        accountNumber: row.account_number ?? null,
+        qrImageUrl: row.qr_image_url ?? null,
+    };
+}
 
 type PortalApplication = {
     id: string;
@@ -43,7 +63,7 @@ type PortalPaymentRequestRow = {
     amount: number;
     due_at: string | null;
     status: "pending" | "processing" | "completed" | "rejected" | "expired";
-    method: "gcash" | "cash" | null;
+    method: PaymentMethodInput | null;
     reference_number: string | null;
     payment_note: string | null;
     payment_proof_path: string | null;
@@ -161,7 +181,7 @@ async function resolvePortalContext(token: string) {
 }
 
 async function fetchPortalPayload(adminClient: ReturnType<typeof createAdminClient>, application: PortalApplication) {
-    const [{ data: requests }, { data: destination }, { data: landlordProfile }] = await Promise.all([
+    const [{ data: requests }, { data: destinationRows }, { data: landlordProfile }] = await Promise.all([
         (adminClient
             .from("application_payment_requests" as any)
             .select(REQUEST_SELECT) as any)
@@ -169,16 +189,24 @@ async function fetchPortalPayload(adminClient: ReturnType<typeof createAdminClie
             .order("requirement_type", { ascending: true }),
         (adminClient
             .from("landlord_payment_destinations") as any)
-            .select("account_name, account_number, qr_image_url, is_enabled")
+            .select("provider, bank_name, account_name, account_number, qr_image_url, is_enabled")
             .eq("landlord_id", application.landlord_id)
-            .eq("provider", "gcash")
-            .maybeSingle(),
+            .in("provider", ["gcash", "bank_transfer"]),
         adminClient
             .from("profiles")
             .select("business_name, full_name, socials, email")
             .eq("id", application.landlord_id)
             .maybeSingle(),
     ]);
+
+    const rows = (destinationRows ?? []) as DestinationRow[];
+    const gcashDestination = toPortalDestination(rows.find((row) => row.provider === "gcash"));
+    const bankDestination = toPortalDestination(rows.find((row) => row.provider === "bank_transfer"));
+    const methods: PaymentMethodInput[] = [
+        ...(gcashDestination || !bankDestination ? (["gcash"] as const) : []),
+        ...(bankDestination ? (["bank_transfer"] as const) : []),
+        "cash",
+    ];
 
     const propertyDecorations = application.unit?.property?.map_decorations as Record<string, any> | undefined;
     const propertyTheme = propertyDecorations?.branding as Record<string, any> | undefined;
@@ -203,13 +231,8 @@ async function fetchPortalPayload(adminClient: ReturnType<typeof createAdminClie
             logoUrl,
             propertyName,
         },
-        destination: destination && destination.is_enabled
-            ? {
-                  accountName: destination.account_name ?? null,
-                  accountNumber: destination.account_number ?? null,
-                  qrImageUrl: destination.qr_image_url ?? null,
-              }
-            : null,
+        destination: gcashDestination,
+        bankDestination,
         requests: ((requests ?? []) as unknown as (PortalPaymentRequestRow & { metadata?: any })[]).map((request) => ({
             id: request.id,
             requirementType: request.requirement_type,
@@ -231,7 +254,7 @@ async function fetchPortalPayload(adminClient: ReturnType<typeof createAdminClie
             .find((r) => r.metadata?.system_reference_number || r.metadata?.transaction_reference)?.metadata?.system_reference_number
             || ((requests ?? []) as any[]).find((r) => r.metadata?.transaction_reference)?.metadata?.transaction_reference
             || null) as string | null,
-        methods: ["gcash", "cash"] satisfies PaymentMethodInput[],
+        methods,
     };
 }
 
@@ -287,6 +310,20 @@ export async function POST(request: Request, context: RouteContext) {
     const referenceNumber = parsed.data.referenceNumber ?? null;
     const note = parsed.data.note ?? null;
 
+    if (method === "bank_transfer") {
+        const { data: bankRow } = await (adminClient.from("landlord_payment_destinations") as any)
+            .select("is_enabled")
+            .eq("landlord_id", application.landlord_id)
+            .eq("provider", "bank_transfer")
+            .maybeSingle();
+        if (!bankRow?.is_enabled) {
+            return NextResponse.json(
+                { error: "The landlord has not set up bank transfer yet. Please choose another payment method." },
+                { status: 400 }
+            );
+        }
+    }
+
     const proofError = proofFileRule(proofFile, {
         label: "Payment proof",
         maxBytes: PROOF_LIMITS.applicationProofMaxBytes,
@@ -324,8 +361,15 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const hasExistingProof = targetRows.some((r) => Boolean(r.payment_proof_url));
-    if (method === "gcash" && !proofFile && !hasExistingProof) {
-        return NextResponse.json({ error: "Proof upload is required for GCash submissions." }, { status: 400 });
+    if (isProofMethod(method) && !proofFile && !hasExistingProof) {
+        return NextResponse.json(
+            {
+                error: method === "bank_transfer"
+                    ? "Proof upload is required for bank transfer submissions."
+                    : "Proof upload is required for GCash submissions.",
+            },
+            { status: 400 }
+        );
     }
 
     let uploadResult: { path: string; publicUrl: string } | null = null;
@@ -413,7 +457,7 @@ export async function POST(request: Request, context: RouteContext) {
             user_id: application.landlord_id,
             type: "application" as const,
             title: `Payment Proof Submitted - ${application.unit?.property?.name ?? "Property"}`,
-            message: `${application.applicant_name || "Applicant"} submitted payment proof (${formattedTotal}) for ${application.unit?.name ?? "Unit"}. Txn Ref: ${systemTransactionReference}, GCash: ${referenceNumber || "N/A"}.`,
+            message: `${application.applicant_name || "Applicant"} submitted payment proof (${formattedTotal}) for ${application.unit?.name ?? "Unit"}. Txn Ref: ${systemTransactionReference}, ${paymentMethodLabel(method)}: ${referenceNumber || "N/A"}.`,
             data: {
                 applicationId: application.id,
                 propertyId: application.unit?.property?.id,

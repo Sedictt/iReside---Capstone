@@ -819,7 +819,7 @@ export default function LandlordDashboard() {
                                     </h3>
                                     <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 max-w-2xl">
                                         {showBillingSetupCard
-                                            ? t("Set up your GCash QR code and water/electricity tariffs so lease generation and rent billing have valid payment details ready.")
+                                            ? t("Set up your GCash or bank account and water/electricity tariffs so lease generation and rent billing have valid payment details ready.")
                                             : t("Register a tenant to start lease tracking, rent billing, and the rest of your portal.")}
                                     </p>
                                 </div>

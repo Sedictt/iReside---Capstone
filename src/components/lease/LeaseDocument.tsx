@@ -45,6 +45,8 @@ export interface LeaseDocumentProps {
     containerId?: string;
     className?: string;
     disableAnimation?: boolean;
+    /** Signing view: leave unsigned slots blank so ink is never drawn over placeholder text. */
+    blankUnsignedSlots?: boolean;
 }
 
 // The lease body is the legal contract and intentionally stays in English; only
@@ -64,6 +66,7 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
         containerId,
         className,
         disableAnimation = false,
+        blankUnsignedSlots = false,
     } = leaseDataProps;
 
     const parties = {
@@ -262,7 +265,7 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
                                     />
                                 ) : (
                                     <span className="text-[10px] text-zinc-400 italic">
-                                        {leaseDataProps.tenant_signed_at ? "Signed digitally" : "Pending signature"}
+                                        {leaseDataProps.tenant_signed_at ? "Signed digitally" : (blankUnsignedSlots ? " " : "Pending signature")}
                                     </span>
                                 )}
                             </div>
@@ -289,7 +292,7 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
                                     />
                                 ) : (
                                     <span className="text-[10px] text-zinc-400 italic">
-                                        {leaseDataProps.landlord_signed_at ? "Signed digitally" : "Pending signature"}
+                                        {leaseDataProps.landlord_signed_at ? "Signed digitally" : (blankUnsignedSlots ? " " : "Pending signature")}
                                     </span>
                                 )}
                             </div>

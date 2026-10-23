@@ -24,8 +24,14 @@ import Link from "next/link";
 import { useProperty } from "@/context/PropertyContext";
 import { useInstantData } from "@/lib/hooks/useInstantData";
 import { useLanguageContext } from "@/context/LanguageContext";
+import {
+ MAINTENANCE_PRIORITY_BADGE_CLASSES,
+ MAINTENANCE_PRIORITY_BADGE_TEXT,
+ MAINTENANCE_PRIORITY_RANK,
+ type MaintenancePriorityLabel,
+} from "@/lib/maintenance-priority";
 
-type Priority = "Critical" | "High" | "Medium" | "Low";
+type Priority = MaintenancePriorityLabel;
 type Status = "Pending" | "Assigned" | "In Progress" | "Resolved";
 
 export interface MaintenanceRequest {
@@ -134,12 +140,10 @@ export function MaintenanceDashboard() {
    return new Date(a.reportedAt).getTime() - new Date(b.reportedAt).getTime();
   }
   if (sortBy === "priority-desc") {
-   const priorityMap: Record<Priority, number> = { Critical: 3, High: 2, Medium: 1, Low: 0 };
-   return (priorityMap[b.priority] ?? 0) - (priorityMap[a.priority] ?? 0);
+   return (MAINTENANCE_PRIORITY_RANK[b.priority] ?? 0) - (MAINTENANCE_PRIORITY_RANK[a.priority] ?? 0);
   }
   if (sortBy === "priority-asc") {
-   const priorityMap: Record<Priority, number> = { Critical: 3, High: 2, Medium: 1, Low: 0 };
-   return (priorityMap[a.priority] ?? 0) - (priorityMap[b.priority] ?? 0);
+   return (MAINTENANCE_PRIORITY_RANK[a.priority] ?? 0) - (MAINTENANCE_PRIORITY_RANK[b.priority] ?? 0);
   }
   return 0;
  });
@@ -539,20 +543,14 @@ function MaintenanceListRow({ request, onClick }: { request: MaintenanceRequest,
 
 function PriorityBadge({ priority }: { priority: Priority }) {
  const { t } = useLanguageContext();
- const config = {
- Critical: "bg-red-600 border-red-700 text-white",
- High: "bg-amber-500 border-amber-600 text-white",
- Medium: "bg-blue-600 border-blue-700 text-white",
- Low: "bg-emerald-600 border-emerald-700 text-white",
- };
 
  return (
  <span className={cn(
  "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5",
- config[priority]
+ MAINTENANCE_PRIORITY_BADGE_CLASSES[priority]
  )}>
  {priority === "Critical" && <AlertTriangle className="size-3" />}
- {t("{priority} Priority", { priority: t(priority) })}
+ {t(MAINTENANCE_PRIORITY_BADGE_TEXT[priority])}
  </span>
  );
 }
