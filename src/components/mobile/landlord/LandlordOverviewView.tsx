@@ -1025,13 +1025,13 @@ export function LandlordOverviewView() {
                         </p>
                         <div className="flex items-center gap-2 pt-1 border-t border-border/40">
                             <Link
-                                href="/landlord/utility-billing?tab=verify"
+                                href="/mobile/utilities?tab=verify"
                                 className="flex-1 text-center py-2 rounded-xl neumorphic-extruded text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-primary active:scale-95 transition-all"
                             >
                                 {t('Verify Queue')}
                             </Link>
                             <Link
-                                href="/landlord/utility-billing"
+                                href="/mobile/utilities"
                                 className="flex-1 text-center py-2 rounded-xl neumorphic-primary text-[10px] font-black uppercase tracking-wider text-primary-foreground active:scale-95 transition-all"
                             >
                                 {t('Record')}

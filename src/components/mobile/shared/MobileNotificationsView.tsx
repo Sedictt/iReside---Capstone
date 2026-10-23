@@ -132,9 +132,9 @@ export function MobileNotificationsView() {
                 case 'application': {
                     const appId = data.applicationId || targetId;
                     if (appId) {
-                        router.push(`/landlord/applications?id=${encodeURIComponent(appId)}`);
+                        router.push(`/mobile/landlord/applications?id=${encodeURIComponent(appId)}`);
                     } else {
-                        router.push('/landlord/applications');
+                        router.push('/mobile/landlord/applications');
                     }
                     break;
                 }
@@ -197,12 +197,7 @@ export function MobileNotificationsView() {
                     break;
                 }
                 case 'application': {
-                    const appId = data.applicationId || targetId;
-                    if (appId) {
-                        router.push(`/tenant/applications/${encodeURIComponent(appId)}`);
-                    } else {
-                        router.push('/tenant/applications');
-                    }
+                    router.push('/mobile/tenant/lease');
                     break;
                 }
                 case 'lease':
