@@ -38,6 +38,7 @@ interface CollectPaymentModalProps {
     isOpen: boolean;
     onClose: () => void;
     onPaymentRecorded?: () => void;
+    initialInvoiceId?: string | null;
 }
 
 type PaymentMethodType = "cash" | "gcash" | "bank_transfer";
@@ -68,7 +69,7 @@ function formatWithCommas(value: string | number): string {
     return parts.length > 1 ? `${parts[0]}.${parts[1]}` : parts[0];
 }
 
-export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: CollectPaymentModalProps) {
+export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded, initialInvoiceId }: CollectPaymentModalProps) {
     const { selectedPropertyId } = useProperty();
     const { t } = useLanguageContext();
     
@@ -126,8 +127,11 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                 const fetchedInvoices: InvoiceListItem[] = data.invoices || [];
                 setInvoices(fetchedInvoices);
 
-                // Auto-select first unpaid invoice if available
-                const firstCollectible = fetchedInvoices.find(
+                // Pre-select requested invoice if provided, otherwise first unpaid invoice
+                const requestedInvoice = initialInvoiceId
+                    ? fetchedInvoices.find((inv) => inv.id === initialInvoiceId)
+                    : undefined;
+                const firstCollectible = requestedInvoice || fetchedInvoices.find(
                     (inv) => inv.balanceRemaining > 0 || !["paid", "receipted", "confirmed"].includes(inv.status)
                 );
                 if (firstCollectible) {
@@ -144,7 +148,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
         };
 
         fetchInvoices();
-    }, [isOpen, selectedPropertyId]);
+    }, [isOpen, selectedPropertyId, initialInvoiceId]);
 
     // Unpaid / Collectible Invoices Filter
     const collectibleInvoices = useMemo(() => {

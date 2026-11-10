@@ -196,6 +196,7 @@ export default function LandlordDashboard() {
     const [addTenantModalTab, setAddTenantModalTab] = useState<'quick_add' | 'manual' | 'invite' | 'walk_in'>('invite');
     const [isFlyerModalOpen, setIsFlyerModalOpen] = useState(false);
     const [isCollectPaymentModalOpen, setIsCollectPaymentModalOpen] = useState(false);
+    const [collectPaymentInvoiceId, setCollectPaymentInvoiceId] = useState<string | null>(null);
     const [loadingUnits, setLoadingUnits] = useState(true);
     const [loadingInvites, setLoadingInvites] = useState(true);
     const [availableUnits, setAvailableUnits] = useState<Array<{
@@ -1114,6 +1115,11 @@ export default function LandlordDashboard() {
                 onClose={() => setOpenPaymentModal(null)}
                 category={openPaymentModal}
                 paymentsByCategory={paymentsState.paymentsByCategory}
+                onRecordPayment={(invoiceId) => {
+                    setOpenPaymentModal(null);
+                    setCollectPaymentInvoiceId(invoiceId);
+                    setIsCollectPaymentModalOpen(true);
+                }}
             />
 
             <WalkInApplicationModal 
@@ -1203,7 +1209,11 @@ export default function LandlordDashboard() {
             {/* Collect / Record Payment Modal */}
             <CollectPaymentModal
                 isOpen={isCollectPaymentModalOpen}
-                onClose={() => setIsCollectPaymentModalOpen(false)}
+                initialInvoiceId={collectPaymentInvoiceId}
+                onClose={() => {
+                    setIsCollectPaymentModalOpen(false);
+                    setCollectPaymentInvoiceId(null);
+                }}
                 onPaymentRecorded={() => {
                     // Refetch payments overview to update stats and recent rent carousel
                     fetch(`/api/landlord/payments/overview?propertyId=${selectedPropertyId}`)
@@ -1324,10 +1334,16 @@ export default function LandlordDashboard() {
                                         
                                         <div className="flex items-center gap-2">
                                             <button 
-                                                onClick={() => setIsConfirmingAction(true)}
+                                                onClick={() => {
+                                                    const targetId = selectedActionPayment.id;
+                                                    setSelectedActionPayment(null);
+                                                    setIsConfirmingAction(false);
+                                                    setCollectPaymentInvoiceId(targetId);
+                                                    setIsCollectPaymentModalOpen(true);
+                                                }}
                                                 className="flex h-[52px] w-[52px] min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-600 transition-all hover:bg-emerald-500/10 active:scale-[0.92]"
-                                                title={t("Acknowledge Payment")}
-                                                aria-label={t("Acknowledge Payment")}
+                                                title={t("Record Payment")}
+                                                aria-label={t("Record Payment")}
                                             >
                                                 <CheckCircle2 className="size-6" />
                                             </button>

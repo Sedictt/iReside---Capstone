@@ -212,6 +212,7 @@ export function LandlordOverviewView() {
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isFlyerModalOpen, setIsFlyerModalOpen] = useState(false);
     const [isCollectPaymentModalOpen, setIsCollectPaymentModalOpen] = useState(false);
+    const [collectPaymentInvoiceId, setCollectPaymentInvoiceId] = useState<string | null>(null);
     const [isIssueInvoiceDrawerOpen, setIsIssueInvoiceDrawerOpen] = useState(false);
     const [isRecordExpenseDrawerOpen, setIsRecordExpenseDrawerOpen] = useState(false);
     const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
@@ -1079,6 +1080,11 @@ export function LandlordOverviewView() {
                 onPaymentSettled={() => {
                     void loadAll();
                 }}
+                onRecordPayment={(invoiceId) => {
+                    setOpenPaymentModal(null);
+                    setCollectPaymentInvoiceId(invoiceId);
+                    setIsCollectPaymentModalOpen(true);
+                }}
             />
 
             <WalkInApplicationModal
@@ -1171,7 +1177,11 @@ export function LandlordOverviewView() {
             {/* Collect / Record Payment Modal */}
             <MobileCollectPaymentDrawer
                 isOpen={isCollectPaymentModalOpen}
-                onClose={() => setIsCollectPaymentModalOpen(false)}
+                initialInvoiceId={collectPaymentInvoiceId}
+                onClose={() => {
+                    setIsCollectPaymentModalOpen(false);
+                    setCollectPaymentInvoiceId(null);
+                }}
                 onPaymentRecorded={() => {
                     void loadAll();
                 }}
