@@ -31,8 +31,12 @@ import {
 	QrCode,
 	ExternalLink,
 	ArrowRight,
+	ArrowLeft,
+	ChevronLeft,
 	ChevronRight,
-	ChevronDown
+	ChevronDown,
+	Compass,
+	Layers
 } from "lucide-react";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -369,7 +373,16 @@ export function UtilityBillingDashboard() {
 	const [touchedReadings, setTouchedReadings] = useState<Record<string, boolean>>({});
 	const touchReading = (key: string) => setTouchedReadings((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
 	const [searchQuery, setSearchQuery] = useState("");
-	const [filterStatus, setFilterStatus] = useState<"all" | "occupied" | "vacant" | "needs_reading" | "recorded">("all");
+	const [filterStatus, setFilterStatus] = useState<"all" | "occupied" | "vacant" | "needs_reading" | "recorded">("occupied");
+	/** Senior-friendly default: guide one room at a time with paginated unit navigation. */
+	const [viewMode, setViewMode] = useState<"guided" | "list">("guided");
+	const [guidedRoomIndex, setGuidedRoomIndex] = useState(0);
+	const [listPage, setListPage] = useState(0);
+	const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("saved");
+	const [isConfirmSendOpen, setIsConfirmSendOpen] = useState(false);
+	const [liveErrorAnnouncement, setLiveErrorAnnouncement] = useState("");
+	const announceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
 	const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
 	const [selectedHistoryMonth, setSelectedHistoryMonth] = useState<string | null>(null);
@@ -455,16 +468,67 @@ export function UtilityBillingDashboard() {
 		return () => clearTimeout(timer);
 	}, [isBillingStepPending, isBillingStepDeferred, dismissedThisVisit]);
 
-	// Helper to update both state and monthly draft cache
+	// Helper to update both state and monthly draft cache with reassuring auto-save feedback
 	const updateDraftsAndCache = useCallback((newDrafts: ReadingDraft[]) => {
 		setDrafts(newDrafts);
 		monthlyDraftsRef.current[selectedMonth] = newDrafts;
+		setAutoSaveStatus("saving");
+		if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+		autosaveTimerRef.current = setTimeout(() => {
+			setAutoSaveStatus("saved");
+		}, 400);
 		try {
 			OfflineStorage.set("utility_monthly_drafts", monthlyDraftsRef.current, null, "utility");
 		} catch (e) {
 			// Storage quota safety
 		}
 	}, [selectedMonth]);
+
+	const sanitizeMeterInput = useCallback((raw: string): string => {
+		const stripped = raw.replace(/[^0-9.]/g, "");
+		const parts = stripped.split(".");
+		const normalized = parts.length > 1 ? `${parts[0]}.${parts.slice(1).join("")}` : stripped;
+		return normalized.slice(0, 10);
+	}, []);
+
+	const handleMeterValueChange = useCallback((unitId: string, utilityType: "water" | "electricity", rawValue: string) => {
+		const cleaned = sanitizeMeterInput(rawValue);
+		const index = drafts.findIndex((d) => d.unitId === unitId);
+		if (index === -1) return;
+		const target = drafts[index];
+		const updatedCell = {
+			...target[utilityType],
+			current: cleaned,
+			exists: false,
+		};
+		const newDrafts = [...drafts];
+		newDrafts[index] = {
+			...target,
+			[utilityType]: updatedCell,
+		};
+		updateDraftsAndCache(newDrafts);
+
+		const label = utilityType === "water" ? "Water reading" : "Electricity reading";
+		if (!readingCellError(updatedCell, label)) {
+			if (announceTimerRef.current) clearTimeout(announceTimerRef.current);
+			setLiveErrorAnnouncement("");
+		}
+	}, [drafts, sanitizeMeterInput, updateDraftsAndCache]);
+
+	const handleMeterFieldBlur = useCallback((draft: ReadingDraft, utilityType: "water" | "electricity") => {
+		const key = `${draft.unitId}:${utilityType}`;
+		touchReading(key);
+		const cell = draft[utilityType];
+		const label = utilityType === "water" ? "Water reading" : "Electricity reading";
+		const err = readingCellError(cell, label);
+		if (err) {
+			if (announceTimerRef.current) clearTimeout(announceTimerRef.current);
+			setLiveErrorAnnouncement("");
+			announceTimerRef.current = setTimeout(() => {
+				setLiveErrorAnnouncement(`${draft.unitName} ${label}: ${err}`);
+			}, 500);
+		}
+	}, []);
 
 	const fetchData = useCallback(async () => {
 		try {
@@ -668,6 +732,7 @@ export function UtilityBillingDashboard() {
 	}, [drafts, selectedPropertyId]);
 
 	const filteredDrafts = useMemo(() => {
+		const hasAnyOccupiedInScope = filterCounts.occupied > 0;
 		return drafts.filter(d => {
 			const matchesProperty = selectedPropertyId === "all" || d.propertyId === selectedPropertyId;
 			const query = searchQuery.toLowerCase().trim();
@@ -686,13 +751,26 @@ export function UtilityBillingDashboard() {
 			const hasElec = !isNaN(elecCurr) && elecCurr >= elecPrev;
 			const isComplete = (d.water.exists || hasWater) && (d.electricity.exists || hasElec);
 
-			if (filterStatus === "occupied") return isOccupied;
+			if (filterStatus === "occupied") return hasAnyOccupiedInScope ? isOccupied : true;
 			if (filterStatus === "vacant") return !isOccupied;
-			if (filterStatus === "needs_reading") return !isComplete;
-			if (filterStatus === "recorded") return isComplete;
+			if (filterStatus === "needs_reading") return (hasAnyOccupiedInScope ? isOccupied : true) && !isComplete;
+			if (filterStatus === "recorded") return (hasAnyOccupiedInScope ? isOccupied : true) && isComplete;
 			return true;
 		});
-	}, [drafts, selectedPropertyId, searchQuery, filterStatus]);
+	}, [drafts, selectedPropertyId, searchQuery, filterStatus, filterCounts.occupied]);
+
+	const ROOMS_PER_PAGE = 5;
+
+	// Keep guidedRoomIndex and listPage safely clamped when filteredDrafts changes
+	useEffect(() => {
+		if (guidedRoomIndex >= filteredDrafts.length) {
+			setGuidedRoomIndex(Math.max(0, filteredDrafts.length - 1));
+		}
+		const maxListPage = Math.max(0, Math.ceil(filteredDrafts.length / ROOMS_PER_PAGE) - 1);
+		if (listPage > maxListPage) {
+			setListPage(maxListPage);
+		}
+	}, [filteredDrafts.length, guidedRoomIndex, listPage]);
 
 	// Compute real-time progress & consumption totals
 	const readingsSummary = useMemo(() => {
@@ -700,30 +778,36 @@ export function UtilityBillingDashboard() {
 		let totalElecKwh = 0;
 		let totalWaterM3 = 0;
 		let totalEstimatedUtilRevenue = 0;
+		let grandTotalEstimated = 0;
+		const readyDrafts: ReadingDraft[] = [];
+		const missingOccupiedDrafts: ReadingDraft[] = [];
 
 		filteredDrafts.forEach((d) => {
 			const waterPrev = d.water.previous || 0;
 			const waterCurr = parseFloat(d.water.current);
-			const hasWater = !isNaN(waterCurr) && waterCurr >= waterPrev;
-			const waterUsage = hasWater ? waterCurr - waterPrev : 0;
+			const hasWater = d.water.exists || (!isNaN(waterCurr) && waterCurr >= waterPrev && d.water.current.trim() !== "");
+			const waterUsage = !isNaN(waterCurr) && waterCurr >= waterPrev ? waterCurr - waterPrev : 0;
 			const waterCost = waterUsage * (d.water.rate || 0);
 
 			const elecPrev = d.electricity.previous || 0;
 			const elecCurr = parseFloat(d.electricity.current);
-			const hasElec = !isNaN(elecCurr) && elecCurr >= elecPrev;
-			const elecUsage = hasElec ? elecCurr - elecPrev : 0;
+			const hasElec = d.electricity.exists || (!isNaN(elecCurr) && elecCurr >= elecPrev && d.electricity.current.trim() !== "");
+			const elecUsage = !isNaN(elecCurr) && elecCurr >= elecPrev ? elecCurr - elecPrev : 0;
 			const elecCost = elecUsage * (d.electricity.rate || 0);
 
-			const hasAnyRecorded = (d.water.exists || (d.water.current !== "" && !isNaN(waterCurr))) && 
-			                       (d.electricity.exists || (d.electricity.current !== "" && !isNaN(elecCurr)));
+			const isReady = hasWater && hasElec;
 
-			if (hasAnyRecorded) {
+			if (isReady) {
 				recordedCount += 1;
+				readyDrafts.push(d);
+			} else if (d.occupancyStatus === "occupied") {
+				missingOccupiedDrafts.push(d);
 			}
 
 			totalElecKwh += elecUsage;
 			totalWaterM3 += waterUsage;
 			totalEstimatedUtilRevenue += waterCost + elecCost;
+			grandTotalEstimated += (d.occupancyStatus === "occupied" ? d.rentAmount : 0) + waterCost + elecCost;
 		});
 
 		return {
@@ -732,6 +816,9 @@ export function UtilityBillingDashboard() {
 			totalElecKwh,
 			totalWaterM3,
 			totalEstimatedUtilRevenue,
+			grandTotalEstimated,
+			readyDrafts,
+			missingOccupiedDrafts,
 		};
 	}, [filteredDrafts]);
 
@@ -836,7 +923,17 @@ export function UtilityBillingDashboard() {
 			if (readingCellError(d.electricity, "Electricity reading")) invalidKeys.push(`${d.unitId}:electricity`);
 		});
 		if (invalidKeys.length > 0) {
+			setIsConfirmSendOpen(false);
 			setTouchedReadings((prev) => ({ ...prev, ...Object.fromEntries(invalidKeys.map((key) => [key, true])) }));
+			const [firstUnitId, firstType] = invalidKeys[0].split(":");
+			const invalidRoomIdx = filteredDrafts.findIndex((d) => d.unitId === firstUnitId);
+			if (invalidRoomIdx !== -1 && viewMode === "guided") {
+				setGuidedRoomIndex(invalidRoomIdx);
+			}
+			setTimeout(() => {
+				const el = document.getElementById(`reading-input-${firstUnitId}-${firstType}`);
+				el?.focus();
+			}, 60);
 			toast.error(t("Fix the highlighted meter readings before saving."));
 			return;
 		}
@@ -1096,27 +1193,32 @@ export function UtilityBillingDashboard() {
 				propertyName={properties.find((p) => p.id === activePropertyId)?.name}
 			/>
 
-		<div className="flex flex-col space-y-8 pb-20 w-full">
+		<div className="flex flex-col space-y-6 pb-32 w-full">
+			{/* Single Polite Live Region for Accessible Error Announcements */}
+			<div aria-live="polite" className="sr-only">
+				{liveErrorAnnouncement}
+			</div>
+
 			{/* Re-occurring Setup Banner (shows after dismissal until step is complete) */}
 			{isBillingStepPending && (dismissedThisVisit || isBillingStepDeferred) && (
 				<div className="rounded-2xl border border-primary/20 bg-primary/[0.04] px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
 					<div className="flex items-start gap-3.5">
-						<div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0 mt-0.5">
+						<div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0 mt-0.5">
 							<Zap className="size-5" />
 						</div>
 						<div>
-							<div className="flex items-center gap-2">
-								<span className="text-[11px] font-black uppercase tracking-wider text-primary">
+							<div className="flex flex-wrap items-center gap-2">
+								<span className="text-xs font-bold uppercase tracking-wider text-primary">
 									{t("Step 3 of 5 • Onboarding")}
 								</span>
-								<span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+								<span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
 									{t("Water & Electricity Setup")}
 								</span>
 							</div>
-							<p className="text-sm font-bold text-foreground mt-0.5">
+							<p className="text-base font-bold text-foreground mt-1">
 								{t("Set up your water and electric rates")}
 							</p>
-							<p className="text-xs text-muted-foreground leading-snug mt-0.5">
+							<p className="text-sm text-muted-foreground leading-snug mt-0.5">
 								{t("Make sure your rates are set so bills compute automatically, or continue to add your tenants.")}
 							</p>
 						</div>
@@ -1125,87 +1227,84 @@ export function UtilityBillingDashboard() {
 						<button
 							type="button"
 							onClick={() => setActiveTab("rates")}
-							className="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-border/80 bg-card hover:bg-muted text-foreground text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-98"
+							className="flex-1 sm:flex-initial h-11 px-4 rounded-xl border border-border/80 bg-card hover:bg-muted text-foreground text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-98"
 						>
 							{t("Check Rates")}
 						</button>
 						<button
 							type="button"
 							onClick={handleCompleteOnboardingStep}
-							className="flex-1 sm:flex-initial h-10 px-5 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 active:scale-98"
+							className="flex-1 sm:flex-initial h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 active:scale-98"
 						>
 							<span>{t("Next: Add Tenants")}</span>
-							<ArrowRight className="size-3.5" />
+							<ArrowRight className="size-4" />
 						</button>
 					</div>
 				</div>
 			)}
 
-			{/* Page Header */}
+			{/* Page Header — Clean & Decluttered */}
 			<div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
 				<div className="space-y-1">
-					<div className="flex items-center gap-2.5">
-						<span className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-							<Zap className="size-3" />
-							{t("Monthly Billing Cycle")}
-						</span>
-						<span className="text-xs font-medium text-muted-foreground">{formattedCycleMonth}</span>
+					<div className="flex flex-wrap items-center gap-2.5">
+						<h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+							{t("Water & Electricity Billing")}
+						</h1>
+						{activeTab === "readings" && (
+							<span
+								className={cn(
+									"inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold border transition-colors",
+									autoSaveStatus === "saving"
+										? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+										: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+								)}
+							>
+								<Check className="size-3.5" />
+								<span>
+									{autoSaveStatus === "saving"
+										? t("Saving...")
+										: t("Saved automatically")}
+								</span>
+							</span>
+						)}
 					</div>
-					<h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-						{t("Water & Electricity Billing")}
-					</h1>
-					<p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
-						{t("Record room meter readings, compute monthly usage, and send clear itemized bills to your tenants.")}
+					<p className="text-sm text-muted-foreground">
+						{t("Enter each room's new meter numbers below. Bills calculate automatically.")}
 					</p>
 				</div>
 
-				<div className="flex flex-wrap items-center gap-2.5">
-					{activeTab === "readings" && (
-						<>
-							<button 
-								onClick={() => handleSaveReadings(false)}
-								disabled={saving}
-								className={cn(
-									"inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card/60 px-4 text-xs font-semibold text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm relative",
-									isTourOpen && tourStepIndex === 1 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-105 bg-primary/10 border-primary font-bold z-30"
-								)}
-								title={t("Save entered readings without sending bills yet")}
-							>
-								{isTourOpen && tourStepIndex === 1 && (
-									<span className="relative flex size-2 shrink-0">
-										<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-										<span className="relative inline-flex rounded-full size-2 bg-primary"></span>
-									</span>
-								)}
-								<Save className="size-3.5 text-muted-foreground" />
-								<span>{t("Save Readings")}</span>
-							</button>
+				{/* Month Picker directly in header */}
+				<div className="shrink-0 self-start sm:self-center">
+					<MonthPicker
+						value={selectedMonth}
+						onChange={(newMonth) => {
+							if (newMonth === selectedMonth) return;
+							monthlyDraftsRef.current[selectedMonth] = drafts;
+							try {
+								OfflineStorage.set("utility_monthly_drafts", monthlyDraftsRef.current, null, "utility");
+							} catch (e) {}
 
-							<button 
-								onClick={() => handleSaveReadings(true)}
-								disabled={saving}
-								className={cn(
-									"inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer relative",
-									isTourOpen && tourStepIndex === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_35px_rgba(155,119,255,0.95)] animate-pulse scale-105 brightness-110 font-black z-30"
-								)}
-								title={t("Save readings and send monthly bills to your tenants")}
-							>
-								{isTourOpen && tourStepIndex === 2 && (
-									<span className="relative flex size-2 shrink-0">
-										<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-90"></span>
-										<span className="relative inline-flex rounded-full size-2 bg-white"></span>
-									</span>
-								)}
-								{saving ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-								<span>{t("Send Monthly Bills")}</span>
-							</button>
-						</>
-					)}
+							if (workspace) {
+								const optimisticDrafts = buildDraftsFromWorkspace(
+									workspace,
+									{ readings: [] },
+									allReadingsRef.current,
+									newMonth,
+									monthlyDraftsRef.current
+								);
+								setDrafts(optimisticDrafts);
+							}
+							setSelectedMonth(newMonth);
+							setGuidedRoomIndex(0);
+							setListPage(0);
+						}}
+						align="right"
+					/>
 				</div>
 			</div>
 
-			{/* Tab Navigation */}
-			<div className="flex items-center overflow-x-auto scrollbar-none gap-1 p-1 rounded-xl bg-muted/40 border border-border/50">
+			{/* Clean Single-Row Tab Navigation */}
+			<div className="flex items-center overflow-x-auto scrollbar-none gap-1.5 p-1.5 rounded-2xl bg-muted/40 border border-border/60">
 				{[
 					{ 
 						id: "readings", 
@@ -1217,7 +1316,7 @@ export function UtilityBillingDashboard() {
 						id: "verify", 
 						label: "Payment Proofs", 
 						icon: ShieldCheck,
-						badge: pendingInvoices.length > 0 ? pendingInvoices.length.toString() : undefined,
+						badge: pendingInvoices.length > 0 ? t("{count} Waiting", { count: pendingInvoices.length }) : undefined,
 						badgeAlert: pendingInvoices.length > 0
 					},
 					{ 
@@ -1241,12 +1340,13 @@ export function UtilityBillingDashboard() {
 					return (
 					<button
 						key={tab.id}
+						type="button"
 						onClick={() => setActiveTab(tab.id as any)}
 						className={cn(
-							"flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 sm:px-3.5 sm:py-2 text-xs font-medium transition-all whitespace-nowrap cursor-pointer relative",
+							"flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 min-h-[44px] text-sm font-semibold transition-all whitespace-nowrap cursor-pointer relative",
 							activeTab === tab.id
-								? "bg-card text-foreground font-semibold shadow-sm border border-border/80"
-								: "text-muted-foreground hover:text-foreground hover:bg-card/40",
+								? "bg-card text-foreground font-bold shadow-sm border border-border/80"
+								: "text-muted-foreground hover:text-foreground hover:bg-card/50 border border-transparent",
 							isTabHighlighted && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_25px_rgba(155,119,255,0.8)] animate-pulse font-bold z-20"
 						)}
 					>
@@ -1256,13 +1356,13 @@ export function UtilityBillingDashboard() {
 								<span className="relative inline-flex rounded-full size-2 bg-primary"></span>
 							</span>
 						)}
-						<tab.icon className={cn("size-3.5 shrink-0", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
+						<tab.icon className={cn("size-4 shrink-0", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
 						<span>{t(tab.label)}</span>
 						{tab.badge && (
 							<span className={cn(
-								"px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold",
+								"px-2 py-0.5 rounded-full text-xs font-mono font-bold shrink-0",
 								tab.badgeAlert 
-									? "bg-amber-500 text-zinc-950 font-bold animate-pulse" 
+									? "bg-amber-500 text-zinc-950 font-bold" 
 									: activeTab === tab.id 
 										? "bg-primary/15 text-primary" 
 										: "bg-muted text-muted-foreground"
@@ -1275,62 +1375,186 @@ export function UtilityBillingDashboard() {
 				})}
 			</div>
 
-			{/* Contextual Toolbar: Filter + Search + Month (only on Readings tab) */}
-			{activeTab === "readings" && (
-				<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-					{/* Filter Dropdown */}
-					<div className="relative shrink-0">
-						<select
-							value={filterStatus}
-							onChange={(e) => setFilterStatus(e.target.value as any)}
-							className="h-9 w-full sm:w-auto rounded-xl border border-border/70 bg-card pl-3 pr-8 text-xs font-semibold text-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer appearance-none"
-						>
-							<option value="all">{t("All Rooms ({count})", { count: filterCounts.all })}</option>
-							<option value="occupied">{t("Occupied ({count})", { count: filterCounts.occupied })}</option>
-							<option value="vacant">{t("Vacant ({count})", { count: filterCounts.vacant })}</option>
-							<option value="needs_reading">{t("Needs Reading ({count})", { count: filterCounts.needsReading })}</option>
-							<option value="recorded">{t("Recorded ({count})", { count: filterCounts.recorded })}</option>
-						</select>
-						<ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
+			{/* Single-Row Unified Control & Room Navigator Bar (only on Readings tab) */}
+			{activeTab === "readings" && (() => {
+				const safeGuidedIdx = Math.min(guidedRoomIndex, Math.max(0, filteredDrafts.length - 1));
+				const totalPages = Math.max(1, Math.ceil(filteredDrafts.length / ROOMS_PER_PAGE));
+				const safeListPage = Math.min(listPage, totalPages - 1);
+
+				const nextUnfinishedIdx = filteredDrafts.findIndex((d, i) => {
+					if (i === safeGuidedIdx) return false;
+					const wP = d.water.previous || 0;
+					const wC = parseFloat(d.water.current);
+					const wOk = d.water.exists || (!isNaN(wC) && wC >= wP && d.water.current.trim() !== "");
+					const eP = d.electricity.previous || 0;
+					const eC = parseFloat(d.electricity.current);
+					const eOk = d.electricity.exists || (!isNaN(eC) && eC >= eP && d.electricity.current.trim() !== "");
+					return !(wOk && eOk);
+				});
+
+				return (
+					<div className="rounded-2xl border border-border/80 bg-card p-2.5 sm:px-3.5 shadow-2xs flex flex-wrap xl:flex-nowrap items-center justify-between gap-2.5">
+						{/* Left: Compact Mode Switcher */}
+						<div className="inline-flex rounded-xl bg-muted/50 border border-border/70 p-1 shrink-0">
+							<button
+								type="button"
+								onClick={() => setViewMode("guided")}
+								className={cn(
+									"inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer min-h-[38px] whitespace-nowrap",
+									viewMode === "guided"
+										? "bg-primary text-primary-foreground shadow-xs"
+										: "text-muted-foreground hover:text-foreground"
+								)}
+							>
+								<Compass className="size-4 shrink-0" />
+								<span>{t("One Room")}</span>
+							</button>
+							<button
+								type="button"
+								onClick={() => setViewMode("list")}
+								className={cn(
+									"inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer min-h-[38px] whitespace-nowrap",
+									viewMode === "list"
+										? "bg-primary text-primary-foreground shadow-xs"
+										: "text-muted-foreground hover:text-foreground"
+								)}
+							>
+								<Layers className="size-4 shrink-0" />
+								<span>{t("All Rooms")}</span>
+							</button>
+						</div>
+
+						{/* Center: Room Stepper Dropdown (Guided) OR Page Stepper (List) */}
+						{filteredDrafts.length > 0 && (
+							<div className="flex items-center gap-1.5 flex-1 min-w-0 justify-start xl:justify-center">
+								{viewMode === "guided" ? (
+									<>
+										<button
+											type="button"
+											disabled={safeGuidedIdx <= 0}
+											onClick={() => setGuidedRoomIndex((i) => Math.max(0, i - 1))}
+											aria-label={t("Previous room")}
+											className="inline-flex size-10 items-center justify-center rounded-xl border border-border/80 bg-background hover:bg-muted text-foreground transition-all cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed shrink-0"
+										>
+											<ChevronLeft className="size-4" />
+										</button>
+
+										<div className="relative flex-1 min-w-[180px] max-w-[300px]">
+											<select
+												aria-label={t("Jump to room")}
+												value={safeGuidedIdx}
+												onChange={(e) => setGuidedRoomIndex(Number(e.target.value))}
+												className="h-10 w-full rounded-xl border border-border/80 bg-background pl-3 pr-8 text-sm font-bold text-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer appearance-none truncate"
+											>
+												{filteredDrafts.map((item, idx) => {
+													const wP = item.water.previous || 0;
+													const wC = parseFloat(item.water.current);
+													const wOk = item.water.exists || (!isNaN(wC) && wC >= wP && item.water.current.trim() !== "");
+													const eP = item.electricity.previous || 0;
+													const eC = parseFloat(item.electricity.current);
+													const eOk = item.electricity.exists || (!isNaN(eC) && eC >= eP && item.electricity.current.trim() !== "");
+													const readyMark = wOk && eOk ? "✓ " : "";
+													const tenantSuffix = item.tenantName ? ` — ${item.tenantName}` : ` (${t("Vacant")})`;
+													return (
+														<option key={item.unitId} value={idx}>
+															{`${readyMark}${item.unitName}${tenantSuffix} (${idx + 1}/${filteredDrafts.length})`}
+														</option>
+													);
+												})}
+											</select>
+											<ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+										</div>
+
+										<button
+											type="button"
+											disabled={safeGuidedIdx >= filteredDrafts.length - 1}
+											onClick={() => setGuidedRoomIndex((i) => Math.min(filteredDrafts.length - 1, i + 1))}
+											aria-label={t("Next room")}
+											className="inline-flex size-10 items-center justify-center rounded-xl border border-border/80 bg-background hover:bg-muted text-foreground transition-all cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed shrink-0"
+										>
+											<ChevronRight className="size-4" />
+										</button>
+
+										{nextUnfinishedIdx !== -1 && (
+											<button
+												type="button"
+												onClick={() => setGuidedRoomIndex(nextUnfinishedIdx)}
+												title={t("Jump to next room that still needs meter numbers")}
+												className="hidden sm:inline-flex items-center gap-1 h-10 px-3 rounded-xl border border-border/80 bg-background hover:bg-muted text-xs font-bold text-primary cursor-pointer shrink-0 whitespace-nowrap"
+											>
+												<span>{t("Next Unfinished")}</span>
+												<ArrowRight className="size-3.5" />
+											</button>
+										)}
+									</>
+								) : totalPages > 1 ? (
+									<div className="flex items-center gap-1.5">
+										<button
+											type="button"
+											disabled={safeListPage === 0}
+											onClick={() => setListPage((p) => Math.max(0, p - 1))}
+											aria-label={t("Previous page")}
+											className="inline-flex size-10 items-center justify-center rounded-xl border border-border/80 bg-background hover:bg-muted text-foreground transition-all cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed shrink-0"
+										>
+											<ChevronLeft className="size-4" />
+										</button>
+										<span className="text-sm font-bold text-foreground px-2.5 tabular-nums whitespace-nowrap">
+											{t("Page {page} of {total}", { page: safeListPage + 1, total: totalPages })}
+										</span>
+										<button
+											type="button"
+											disabled={safeListPage >= totalPages - 1}
+											onClick={() => setListPage((p) => Math.min(totalPages - 1, p + 1))}
+											aria-label={t("Next page")}
+											className="inline-flex size-10 items-center justify-center rounded-xl border border-border/80 bg-background hover:bg-muted text-foreground transition-all cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed shrink-0"
+										>
+											<ChevronRight className="size-4" />
+										</button>
+									</div>
+								) : null}
+							</div>
+						)}
+
+						{/* Right: Compact Filter + Search */}
+						<div className="flex items-center gap-2 shrink-0 w-full sm:w-auto xl:w-auto">
+							<div className="relative shrink-0">
+								<select
+									aria-label={t("Filter rooms")}
+									value={filterStatus}
+									onChange={(e) => {
+										setFilterStatus(e.target.value as any);
+										setGuidedRoomIndex(0);
+										setListPage(0);
+									}}
+									className="h-10 rounded-xl border border-border/80 bg-background pl-3 pr-8 text-sm font-semibold text-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer appearance-none"
+								>
+									<option value="occupied">{t("Occupied ({count})", { count: filterCounts.occupied })}</option>
+									<option value="needs_reading">{t("Needs Reading ({count})", { count: filterCounts.needsReading })}</option>
+									<option value="recorded">{t("Ready ({count})", { count: filterCounts.recorded })}</option>
+									<option value="all">{t("All Rooms ({count})", { count: filterCounts.all })}</option>
+									<option value="vacant">{t("Vacant ({count})", { count: filterCounts.vacant })}</option>
+								</select>
+								<ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+							</div>
+
+							<div className="relative flex-1 sm:w-44 md:w-48">
+								<Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+								<input
+									maxLength={60}
+									placeholder={t("Search room...")}
+									value={searchQuery}
+									onChange={(e) => {
+										setSearchQuery(e.target.value);
+										setGuidedRoomIndex(0);
+										setListPage(0);
+									}}
+									className="h-10 w-full rounded-xl border border-border/80 bg-background pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all"
+								/>
+							</div>
+						</div>
 					</div>
-
-					{/* Search Input */}
-					<div className="relative flex-1 min-w-0">
-						<Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-						<input maxLength={60} 
-							placeholder={t("Search by room or tenant name...")} 
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							className="h-9 w-full rounded-xl border border-border/70 bg-card pl-8.5 pr-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all"
-						/>
-					</div>
-
-					{/* Month Picker */}
-					<MonthPicker
-						value={selectedMonth}
-						onChange={(newMonth) => {
-							if (newMonth === selectedMonth) return;
-							monthlyDraftsRef.current[selectedMonth] = drafts;
-							try {
-								OfflineStorage.set("utility_monthly_drafts", monthlyDraftsRef.current, null, "utility");
-							} catch (e) {}
-
-							if (workspace) {
-								const optimisticDrafts = buildDraftsFromWorkspace(
-									workspace,
-									{ readings: [] },
-									allReadingsRef.current,
-									newMonth,
-									monthlyDraftsRef.current
-								);
-								setDrafts(optimisticDrafts);
-							}
-							setSelectedMonth(newMonth);
-						}}
-						align="right"
-					/>
-				</div>
-			)}
+				);
+			})()}
 
 			{/* Content Area */}
 			<AnimatePresence mode="wait">
@@ -1340,7 +1564,7 @@ export function UtilityBillingDashboard() {
 						initial={{ opacity: 0, y: 10 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -10 }}
-						className="space-y-6"
+						className="space-y-5"
 					>
 
 						{/* All Rooms Vacant Helpful Callout (removes confusion for empty buildings) */}
@@ -1355,275 +1579,598 @@ export function UtilityBillingDashboard() {
 									<h3 className="text-base font-bold text-foreground">
 										{t("No tenants have moved in yet")}
 									</h3>
-									<p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
-										{t("Meter readings are only recorded once tenants live in the rooms. For now, check your Electricity & Water Rates below, then proceed to add your tenants.")}
+									<p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
+										{t("Meter readings are only recorded once tenants live in the rooms. For now, check your Electricity & Water Rates, then proceed to add your tenants.")}
 									</p>
 								</div>
 								<div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
 									<button
 										type="button"
 										onClick={() => setActiveTab("rates")}
-										className="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-border/80 bg-card hover:bg-muted text-foreground text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-98"
+										className="flex-1 sm:flex-initial h-11 px-4 rounded-xl border border-border/80 bg-card hover:bg-muted text-foreground text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-98"
 									>
 										{t("Check Rates")}
 									</button>
 									<button
 										type="button"
 										onClick={handleCompleteOnboardingStep}
-										className="flex-1 sm:flex-initial h-10 px-5 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 active:scale-98"
+										className="flex-1 sm:flex-initial h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 active:scale-98"
 									>
 										<span>{t("Next: Add Tenants")}</span>
-										<ArrowRight className="size-3.5" />
+										<ArrowRight className="size-4" />
 									</button>
 								</div>
 							</div>
 						)}
 
-						{/* Batch Readings Table */}
-						<div className="rounded-2xl border border-border/80 bg-card overflow-hidden shadow-xs">
-							<div className="overflow-x-auto">
-								<table className="w-full text-left border-collapse">
-									<thead>
-										<tr className="border-b border-border/70 text-xs font-bold text-muted-foreground">
-											<th className="px-6 py-4 bg-muted/30">{t("Room & Rent")}</th>
-											<th className="px-6 py-3.5 text-center bg-sky-500/[0.08] dark:bg-sky-500/[0.12] border-x-2 border-sky-500/20 dark:border-sky-500/30">
-												<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/15 dark:bg-sky-500/25 text-sky-800 dark:text-sky-200 border border-sky-500/30 text-xs font-bold shadow-xs">
-													<Droplets className="size-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
-													<span>{t("Water (m³)")}</span>
+						{/* Empty Filter State */}
+						{filteredDrafts.length === 0 ? (
+							<div className="rounded-2xl border border-border/80 bg-card px-6 py-16 text-center shadow-xs">
+								<div className="flex flex-col items-center gap-3 text-muted-foreground max-w-md mx-auto">
+									<Building2 className="size-12 opacity-30" />
+									<p className="text-lg font-bold text-foreground">{t("No rooms found")}</p>
+									<p className="text-sm text-muted-foreground">
+										{t("No rooms match your current search or filter criteria.")}
+									</p>
+									<button
+										type="button"
+										onClick={() => {
+											setFilterStatus("all");
+											setSearchQuery("");
+											setGuidedRoomIndex(0);
+											setListPage(0);
+										}}
+										className="mt-2 h-11 px-5 rounded-xl bg-card border border-border/80 hover:bg-muted text-sm font-bold text-foreground transition-all cursor-pointer shadow-xs"
+									>
+										{t("Clear All Filters")}
+									</button>
+								</div>
+							</div>
+						) : viewMode === "guided" ? (
+							/* =========================================================
+							   GUIDED MODE: ONE ROOM AT A TIME
+							   ========================================================= */
+							(() => {
+								const safeIdx = Math.min(guidedRoomIndex, filteredDrafts.length - 1);
+								const draft = filteredDrafts[safeIdx];
+
+								const waterPrev = draft.water.previous || 0;
+								const waterCurr = parseFloat(draft.water.current);
+								const hasWater = draft.water.exists || (!isNaN(waterCurr) && waterCurr >= waterPrev && draft.water.current.trim() !== "");
+								const waterUsage = !isNaN(waterCurr) && waterCurr >= waterPrev ? waterCurr - waterPrev : 0;
+								const waterCost = waterUsage * (draft.water.rate || 0);
+								const waterErr = readingCellError(draft.water, "Water reading");
+								const showWaterErr = Boolean(touchedReadings[`${draft.unitId}:water`] && waterErr);
+								const waterHintId = `reading-${draft.unitId}-water-hint`;
+								const waterErrId = `reading-${draft.unitId}-water-error`;
+
+								const elecPrev = draft.electricity.previous || 0;
+								const elecCurr = parseFloat(draft.electricity.current);
+								const hasElec = draft.electricity.exists || (!isNaN(elecCurr) && elecCurr >= elecPrev && draft.electricity.current.trim() !== "");
+								const elecUsage = !isNaN(elecCurr) && elecCurr >= elecPrev ? elecCurr - elecPrev : 0;
+								const elecCost = elecUsage * (draft.electricity.rate || 0);
+								const elecErr = readingCellError(draft.electricity, "Electricity reading");
+								const showElecErr = Boolean(touchedReadings[`${draft.unitId}:electricity`] && elecErr);
+								const elecHintId = `reading-${draft.unitId}-electricity-hint`;
+								const elecErrId = `reading-${draft.unitId}-electricity-error`;
+
+								const roomRent = draft.occupancyStatus === "occupied" ? draft.rentAmount : 0;
+								const totalEst = roomRent + waterCost + elecCost;
+								const isComplete = hasWater && hasElec;
+
+								return (
+									<div>
+										{/* Single Room Focused Card */}
+										<div className="rounded-2xl border border-border/80 bg-card p-6 sm:p-8 space-y-6 shadow-sm">
+											{/* Card Header */}
+											<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-5">
+												<div className="space-y-1.5">
+													<div className="flex flex-wrap items-center gap-2.5">
+														<span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+															{t("Room {current} of {total}", { current: safeIdx + 1, total: filteredDrafts.length })}
+														</span>
+														{draft.occupancyStatus === "occupied" ? (
+															<span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-3 py-1 rounded-full border border-emerald-500/30">
+																{t("Occupied")} {draft.tenantName ? `• ${draft.tenantName}` : ""}
+															</span>
+														) : (
+															<span className="text-xs font-semibold text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border">
+																{t("Vacant Room")}
+															</span>
+														)}
+													</div>
+													<h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+														{draft.unitName}
+													</h2>
+													<p className="text-sm text-muted-foreground">
+														{t("Base Monthly Rent:")}{" "}
+														<strong className="text-foreground font-mono tabular-nums">
+															₱{roomRent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+														</strong>
+													</p>
 												</div>
-												<div className="text-[10px] font-semibold text-sky-700/80 dark:text-sky-300/80 tracking-normal normal-case mt-1">
-													{t("Previous → Current")}
+
+												<div className="flex flex-wrap items-center gap-2.5 self-start sm:self-center">
+													<span
+														className={cn(
+															"inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-bold border",
+															isComplete
+																? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+																: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+														)}
+													>
+														{isComplete ? <CheckCircle2 className="size-4" /> : <Clock className="size-4" />}
+														<span>{isComplete ? t("Ready to Send") : t("Needs Meter Numbers")}</span>
+													</span>
+
+													<button
+														type="button"
+														onClick={() => setSelectedUnitId(draft.unitId)}
+														className="inline-flex items-center gap-2 h-11 px-4 rounded-xl border border-border/80 bg-background hover:bg-muted text-sm font-bold text-foreground transition-all cursor-pointer"
+													>
+														<Edit3 className="size-4 text-muted-foreground" />
+														<span>{t("Room Settings")}</span>
+													</button>
 												</div>
-											</th>
-											<th className="px-6 py-3.5 text-center bg-amber-500/[0.08] dark:bg-amber-500/[0.12] border-r-2 border-amber-500/20 dark:border-amber-500/30">
-												<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 dark:bg-amber-500/25 text-amber-900 dark:text-amber-100 border border-amber-500/30 text-xs font-bold shadow-xs">
-													<Zap className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-													<span>{t("Electricity (kWh)")}</span>
+											</div>
+
+											{/* Two Big Clear Meter Inputs */}
+											<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+												{/* Water Meter Box */}
+												<div className="rounded-2xl border border-sky-500/25 bg-sky-500/[0.03] dark:bg-sky-500/[0.06] p-5 sm:p-6 space-y-4">
+													<div className="flex items-center justify-between gap-2">
+														<div className="flex items-center gap-2">
+															<div className="flex size-9 items-center justify-center rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400">
+																<Droplets className="size-5" />
+															</div>
+															<span className="text-base font-bold text-foreground">{t("Water Meter (m³)")}</span>
+														</div>
+														<span className="text-xs font-bold px-2.5 py-1 rounded-full bg-sky-500/15 text-sky-800 dark:text-sky-200 font-mono">
+															₱{draft.water.rate || 0} / m³
+														</span>
+													</div>
+
+													<div className="rounded-xl bg-background/80 border border-border/70 px-4 py-3 flex items-center justify-between">
+														<span className="text-sm font-medium text-muted-foreground">{t("Last Month's Reading:")}</span>
+														<span className="text-base font-bold font-mono tabular-nums text-foreground">{waterPrev} m³</span>
+													</div>
+
+													<div className="space-y-1.5">
+														<label
+															htmlFor={`reading-input-${draft.unitId}-water`}
+															className="block text-sm font-bold text-foreground"
+														>
+															{t("Type this month's water reading")}
+														</label>
+														<span id={waterHintId} className="block text-xs text-muted-foreground">
+															{t("Enter a number {prev} or higher", { prev: waterPrev })}
+														</span>
+														<div className="relative">
+															<input
+																id={`reading-input-${draft.unitId}-water`}
+																type="text"
+																inputMode="decimal"
+																maxLength={10}
+																value={draft.water.current}
+																placeholder={`${waterPrev}`}
+																aria-invalid={showWaterErr ? "true" : "false"}
+																aria-describedby={showWaterErr ? `${waterHintId} ${waterErrId}` : waterHintId}
+																onBlur={() => handleMeterFieldBlur(draft, "water")}
+																onChange={(e) => handleMeterValueChange(draft.unitId, "water", e.target.value)}
+																className={cn(
+																	"w-full h-14 rounded-xl border-2 border-sky-400/80 dark:border-sky-500/70 bg-background pl-4 pr-14 text-xl font-mono font-bold tabular-nums text-foreground outline-none focus:border-sky-600 focus:ring-4 focus:ring-sky-500/20 transition-all placeholder:text-muted-foreground/40",
+																	showWaterErr && fieldErrorClass
+																)}
+															/>
+															<span className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-xs font-bold bg-sky-500/15 text-sky-700 dark:text-sky-300 pointer-events-none select-none">
+																m³
+															</span>
+														</div>
+														<FieldError
+															id={waterErrId}
+															message={showWaterErr ? waterErr : undefined}
+															className="text-xs"
+														/>
+													</div>
+
+													{hasWater && !showWaterErr && (
+														<div className="rounded-xl bg-sky-500/10 border border-sky-500/25 px-4 py-2.5 flex items-center justify-between text-sm">
+															<span className="font-semibold text-sky-900 dark:text-sky-200">
+																{t("Used:")} <strong className="font-mono">{waterUsage.toFixed(1)} m³</strong>
+															</span>
+															<span className="font-bold font-mono tabular-nums text-sky-950 dark:text-sky-100">
+																₱{waterCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+															</span>
+														</div>
+													)}
 												</div>
-												<div className="text-[10px] font-semibold text-amber-700/80 dark:text-amber-300/80 tracking-normal normal-case mt-1">
-													{t("Previous → Current")}
+
+												{/* Electricity Meter Box */}
+												<div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.03] dark:bg-amber-500/[0.06] p-5 sm:p-6 space-y-4">
+													<div className="flex items-center justify-between gap-2">
+														<div className="flex items-center gap-2">
+															<div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
+																<Zap className="size-5" />
+															</div>
+															<span className="text-base font-bold text-foreground">{t("Electricity Meter (kWh)")}</span>
+														</div>
+														<span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-900 dark:text-amber-200 font-mono">
+															₱{draft.electricity.rate || 0} / kWh
+														</span>
+													</div>
+
+													<div className="rounded-xl bg-background/80 border border-border/70 px-4 py-3 flex items-center justify-between">
+														<span className="text-sm font-medium text-muted-foreground">{t("Last Month's Reading:")}</span>
+														<span className="text-base font-bold font-mono tabular-nums text-foreground">{elecPrev} kWh</span>
+													</div>
+
+													<div className="space-y-1.5">
+														<label
+															htmlFor={`reading-input-${draft.unitId}-electricity`}
+															className="block text-sm font-bold text-foreground"
+														>
+															{t("Type this month's electricity reading")}
+														</label>
+														<span id={elecHintId} className="block text-xs text-muted-foreground">
+															{t("Enter a number {prev} or higher", { prev: elecPrev })}
+														</span>
+														<div className="relative">
+															<input
+																id={`reading-input-${draft.unitId}-electricity`}
+																type="text"
+																inputMode="decimal"
+																maxLength={10}
+																value={draft.electricity.current}
+																placeholder={`${elecPrev}`}
+																aria-invalid={showElecErr ? "true" : "false"}
+																aria-describedby={showElecErr ? `${elecHintId} ${elecErrId}` : elecHintId}
+																onBlur={() => handleMeterFieldBlur(draft, "electricity")}
+																onChange={(e) => handleMeterValueChange(draft.unitId, "electricity", e.target.value)}
+																className={cn(
+																	"w-full h-14 rounded-xl border-2 border-amber-400/80 dark:border-amber-500/70 bg-background pl-4 pr-16 text-xl font-mono font-bold tabular-nums text-foreground outline-none focus:border-amber-600 focus:ring-4 focus:ring-amber-500/20 transition-all placeholder:text-muted-foreground/40",
+																	showElecErr && fieldErrorClass
+																)}
+															/>
+															<span className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 pointer-events-none select-none">
+																kWh
+															</span>
+														</div>
+														<FieldError
+															id={elecErrId}
+															message={showElecErr ? elecErr : undefined}
+															className="text-xs"
+														/>
+													</div>
+
+													{hasElec && !showElecErr && (
+														<div className="rounded-xl bg-amber-500/10 border border-amber-500/25 px-4 py-2.5 flex items-center justify-between text-sm">
+															<span className="font-semibold text-amber-900 dark:text-amber-200">
+																{t("Used:")} <strong className="font-mono">{elecUsage.toFixed(1)} kWh</strong>
+															</span>
+															<span className="font-bold font-mono tabular-nums text-amber-950 dark:text-amber-100">
+																₱{elecCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+															</span>
+														</div>
+													)}
 												</div>
-											</th>
-											<th className="px-6 py-4 text-right bg-muted/30">{t("Total Due")}</th>
-											<th className="px-6 py-4 text-right bg-muted/30">{t("Actions")}</th>
-										</tr>
-									</thead>
-									<tbody className="divide-y divide-border/50">
-										{filteredDrafts.length === 0 ? (
-											<tr>
-												<td colSpan={5} className="px-6 py-16 text-center">
-													<div className="flex flex-col items-center gap-3 text-muted-foreground">
-														<Building2 className="size-10 opacity-30" />
-														<p className="text-sm font-semibold text-foreground">{t("No rooms found")}</p>
-														<p className="text-xs text-muted-foreground">{t("No rooms match your current search or filter criteria.")}</p>
+											</div>
+
+											{/* Plain-English Bill Summary Box */}
+											<div className="rounded-2xl bg-muted/30 border border-border/80 p-5 space-y-3">
+												<div className="text-sm font-bold text-muted-foreground">
+													{t("Bill Summary for {unit}", { unit: draft.unitName })}
+												</div>
+												<div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+													<div className="flex items-center justify-between sm:justify-start sm:gap-2">
+														<span className="text-muted-foreground">{t("Room Rent:")}</span>
+														<strong className="font-mono tabular-nums text-foreground">
+															₱{roomRent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+														</strong>
+													</div>
+													<div className="flex items-center justify-between sm:justify-start sm:gap-2">
+														<span className="text-muted-foreground">{t("Water:")}</span>
+														<strong className="font-mono tabular-nums text-foreground">
+															₱{waterCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+														</strong>
+													</div>
+													<div className="flex items-center justify-between sm:justify-start sm:gap-2">
+														<span className="text-muted-foreground">{t("Electricity:")}</span>
+														<strong className="font-mono tabular-nums text-foreground">
+															₱{elecCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+														</strong>
+													</div>
+												</div>
+												<div className="pt-3 border-t border-border/70 flex items-center justify-between">
+													<span className="text-base font-bold text-foreground">{t("Total Bill:")}</span>
+													<span className="text-2xl font-bold font-mono tabular-nums text-primary">
+														₱{totalEst.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+													</span>
+												</div>
+											</div>
+
+											{/* Step-by-step Navigation Footer */}
+											<div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+												<button
+													type="button"
+													disabled={safeIdx === 0}
+													onClick={() => setGuidedRoomIndex((i) => Math.max(0, i - 1))}
+													className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-xl border border-border bg-background hover:bg-muted text-base font-bold text-foreground transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+												>
+													<ArrowLeft className="size-4" />
+													<span>{t("Previous Room")}</span>
+												</button>
+
+												<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+													{safeIdx < filteredDrafts.length - 1 ? (
 														<button
 															type="button"
-															onClick={() => {
-																setFilterStatus("all");
-																setSearchQuery("");
-															}}
-															className="mt-1 px-4 py-2 rounded-xl bg-card border border-border/80 hover:bg-muted text-xs font-bold text-foreground transition-all cursor-pointer shadow-xs"
+															onClick={() => setGuidedRoomIndex((i) => Math.min(filteredDrafts.length - 1, i + 1))}
+															className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm"
 														>
-															{t("Reset Filters")}
+															<span>{t("Next Room")}</span>
+															<ArrowRight className="size-4" />
 														</button>
-													</div>
-												</td>
-											</tr>
-										) : filteredDrafts.map((draft) => {
+													) : (
+														<button
+															type="button"
+															onClick={() => setIsConfirmSendOpen(true)}
+															className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm"
+														>
+															<Send className="size-4" />
+															<span>{t("Review & Send Bills")}</span>
+														</button>
+													)}
+												</div>
+											</div>
+										</div>
+									</div>
+								);
+							})()
+						) : (
+							/* =========================================================
+							   ALL ROOMS LIST VIEW (Paginated Stacked Room Cards)
+							   ========================================================= */
+							(() => {
+								const totalListPages = Math.max(1, Math.ceil(filteredDrafts.length / ROOMS_PER_PAGE));
+								const safeListPage = Math.min(listPage, totalListPages - 1);
+								const startIdx = safeListPage * ROOMS_PER_PAGE;
+								const endIdx = Math.min(filteredDrafts.length, startIdx + ROOMS_PER_PAGE);
+								const pageItems = filteredDrafts.slice(startIdx, endIdx);
+
+								return (
+									<div className="space-y-4">
+										{pageItems.map((draft, localIdx) => {
+											const globalIdx = startIdx + localIdx;
 											const waterPrev = draft.water.previous || 0;
 											const waterCurr = parseFloat(draft.water.current);
-											const hasWater = !isNaN(waterCurr) && waterCurr >= waterPrev;
-											const waterUsage = hasWater ? waterCurr - waterPrev : 0;
+											const hasWater = draft.water.exists || (!isNaN(waterCurr) && waterCurr >= waterPrev && draft.water.current.trim() !== "");
+											const waterUsage = !isNaN(waterCurr) && waterCurr >= waterPrev ? waterCurr - waterPrev : 0;
 											const waterCost = waterUsage * (draft.water.rate || 0);
+											const waterErr = readingCellError(draft.water, "Water reading");
+											const showWaterErr = Boolean(touchedReadings[`${draft.unitId}:water`] && waterErr);
+											const waterHintId = `list-reading-${draft.unitId}-water-hint`;
+											const waterErrId = `list-reading-${draft.unitId}-water-error`;
 
 											const elecPrev = draft.electricity.previous || 0;
 											const elecCurr = parseFloat(draft.electricity.current);
-											const hasElec = !isNaN(elecCurr) && elecCurr >= elecPrev;
-											const elecUsage = hasElec ? elecCurr - elecPrev : 0;
+											const hasElec = draft.electricity.exists || (!isNaN(elecCurr) && elecCurr >= elecPrev && draft.electricity.current.trim() !== "");
+											const elecUsage = !isNaN(elecCurr) && elecCurr >= elecPrev ? elecCurr - elecPrev : 0;
 											const elecCost = elecUsage * (draft.electricity.rate || 0);
+											const elecErr = readingCellError(draft.electricity, "Electricity reading");
+											const showElecErr = Boolean(touchedReadings[`${draft.unitId}:electricity`] && elecErr);
+											const elecHintId = `list-reading-${draft.unitId}-electricity-hint`;
+											const elecErrId = `list-reading-${draft.unitId}-electricity-error`;
 
-											const totalEst = draft.rentAmount + waterCost + elecCost;
-											const isComplete = (draft.water.exists || hasWater) && (draft.electricity.exists || hasElec);
+											const roomRent = draft.occupancyStatus === "occupied" ? draft.rentAmount : 0;
+											const totalEst = roomRent + waterCost + elecCost;
+											const isComplete = hasWater && hasElec;
 
 											return (
-												<tr key={draft.unitId} className="hover:bg-muted/20 transition-colors">
-													{/* Room Info */}
-													<td className="px-6 py-4">
-														<div className="flex flex-col gap-1">
-															<div className="flex items-center gap-2">
-																<span className="text-sm font-bold text-foreground">{draft.unitName}</span>
+												<div
+													key={draft.unitId}
+													className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 space-y-4 shadow-2xs transition-colors"
+												>
+													{/* Card Top Bar */}
+													<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+														<div className="space-y-1">
+															<div className="flex flex-wrap items-center gap-2.5">
+																<span className="text-lg font-bold text-foreground">{draft.unitName}</span>
 																{draft.occupancyStatus === "occupied" ? (
-																	<span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+																	<span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-3 py-0.5 rounded-full border border-emerald-500/30">
 																		{t("Occupied")} {draft.tenantName ? `• ${draft.tenantName}` : ""}
-
 																	</span>
 																) : (
-																	<span className="text-[11px] font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full border border-border/60">
+																	<span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full border border-border">
 																		{t("Vacant")}
 																	</span>
 																)}
+																<span
+																	className={cn(
+																		"inline-flex items-center gap-1 text-xs font-bold px-3 py-0.5 rounded-full border",
+																		isComplete
+																			? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+																			: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+																	)}
+																>
+																	{isComplete ? <Check className="size-3.5" /> : <Clock className="size-3.5" />}
+																	<span>{isComplete ? t("Ready") : t("Needs Reading")}</span>
+																</span>
 															</div>
-															<span className="text-xs text-muted-foreground">
-																{t("Base Rent:")} ₱{draft.rentAmount.toLocaleString()} {t("/ mo")}
-															</span>
+															<p className="text-sm text-muted-foreground">
+																{t("Base Rent:")}{" "}
+																<strong className="font-mono tabular-nums text-foreground">
+																	₱{roomRent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+																</strong>{" "}
+																{t("/ mo")}
+															</p>
 														</div>
-													</td>
-													
-													{/* Water Reading Column - distinct Sky Blue channel */}
-													<td className="px-6 py-4 bg-sky-500/[0.04] dark:bg-sky-500/[0.08] border-x-2 border-sky-500/20 dark:border-sky-500/30">
-														<div className="flex flex-col items-center gap-1.5">
-															<div className="flex items-center justify-center gap-2">
-																<span className="font-mono text-xs font-bold text-sky-900 dark:text-sky-100 bg-sky-100/90 dark:bg-sky-900/60 px-2 py-1 rounded-lg border border-sky-200 dark:border-sky-800 min-w-[36px] text-center shadow-2xs">
-																	{draft.water.previous}
+
+														<div className="flex flex-wrap items-center gap-3 self-start sm:self-center">
+															<div className="text-left sm:text-right">
+																<span className="block text-xs font-medium text-muted-foreground">{t("Total Bill")}</span>
+																<span className="text-xl font-bold font-mono tabular-nums text-foreground">
+																	₱{totalEst.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 																</span>
-																<span className="text-sky-500 dark:text-sky-400 text-sm font-black">→</span>
-																{draft.water.exists ? (
-																	<span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-sky-800 dark:text-sky-200 bg-sky-500/15 dark:bg-sky-500/25 px-3 py-1.5 rounded-xl border border-sky-500/30 w-32 justify-center shadow-xs">
-																		<Droplets className="size-3 text-sky-500 shrink-0" />
-																		<span>{draft.water.current} m³</span>
-																	</span>
-																) : (
-																		<div className="relative">
-																			<input
-																				min={draft.water.previous || 0}
-																				max={9999999}
-																				step="0.01"
-																				type="number"
-																				inputMode="decimal"
-																				aria-label={t("Water reading for {unit}", { unit: draft.unitName })}
-																				aria-invalid={touchedReadings[`${draft.unitId}:water`] && readingCellError(draft.water, "Water reading") ? true : undefined}
-																				aria-describedby={touchedReadings[`${draft.unitId}:water`] && readingCellError(draft.water, "Water reading") ? `reading-${draft.unitId}-water-error` : undefined}
-																				onBlur={() => touchReading(`${draft.unitId}:water`)}
-																				value={draft.water.current}
-																				placeholder="0.0"
-																			onChange={(e) => {
-																				const newDrafts = [...drafts];
-																				const index = drafts.findIndex(d => d.unitId === draft.unitId);
-																				if (index !== -1) {
-																					newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
-																					updateDraftsAndCache(newDrafts);
-																				}
-																			}}
-																				className={cn("w-32 h-9.5 rounded-xl border-2 border-sky-400 dark:border-sky-500 bg-white dark:bg-zinc-900 pl-3 pr-9 text-center font-mono text-xs font-bold text-sky-950 dark:text-sky-100 outline-none focus:border-sky-600 focus:ring-4 focus:ring-sky-500/20 transition-all placeholder:text-sky-300 dark:placeholder:text-sky-700 shadow-2xs", touchedReadings[`${draft.unitId}:water`] && readingCellError(draft.water, "Water reading") && fieldErrorClass)}
-																			/>
-																		<span className="absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-black bg-sky-500 text-white pointer-events-none select-none shadow-2xs">
-																			m³
-																		</span>
-																	</div>
-																)}
 															</div>
-																<FieldError
-																	id={`reading-${draft.unitId}-water-error`}
-																	message={touchedReadings[`${draft.unitId}:water`] ? readingCellError(draft.water, "Water reading") : undefined}
-																	className="mt-0 max-w-[11rem] text-[10px]"
-																/>
-																{hasWater && waterUsage > 0 && (
-																<span className="text-[10px] font-bold text-sky-800 dark:text-sky-200 bg-sky-500/20 dark:bg-sky-500/30 px-2.5 py-0.5 rounded-full border border-sky-500/40">
-																	+{waterUsage.toFixed(1)} m³ (₱{waterCost.toFixed(2)})
-																</span>
-															)}
-														</div>
-													</td>
-
-													{/* Electricity Reading Column - distinct Amber channel */}
-													<td className="px-6 py-4 bg-amber-500/[0.04] dark:bg-amber-500/[0.08] border-r-2 border-amber-500/20 dark:border-amber-500/30">
-														<div className="flex flex-col items-center gap-1.5">
-															<div className="flex items-center justify-center gap-2">
-																<span className="font-mono text-xs font-bold text-amber-950 dark:text-amber-100 bg-amber-100/90 dark:bg-amber-900/60 px-2 py-1 rounded-lg border border-amber-200 dark:border-amber-800 min-w-[36px] text-center shadow-2xs">
-																	{draft.electricity.previous}
-																</span>
-																<span className="text-amber-500 dark:text-amber-400 text-sm font-black">→</span>
-																{draft.electricity.exists ? (
-																	<span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-amber-900 dark:text-amber-100 bg-amber-500/15 dark:bg-amber-500/25 px-3 py-1.5 rounded-xl border border-amber-500/30 w-32 justify-center shadow-xs">
-																		<Zap className="size-3 text-amber-500 shrink-0" />
-																		<span>{draft.electricity.current} kWh</span>
-																	</span>
-																) : (
-																		<div className="relative">
-																			<input
-																				min={draft.electricity.previous || 0}
-																				max={9999999}
-																				step="0.01"
-																				type="number"
-																				inputMode="decimal"
-																				aria-label={t("Electricity reading for {unit}", { unit: draft.unitName })}
-																				aria-invalid={touchedReadings[`${draft.unitId}:electricity`] && readingCellError(draft.electricity, "Electricity reading") ? true : undefined}
-																				aria-describedby={touchedReadings[`${draft.unitId}:electricity`] && readingCellError(draft.electricity, "Electricity reading") ? `reading-${draft.unitId}-electricity-error` : undefined}
-																				onBlur={() => touchReading(`${draft.unitId}:electricity`)}
-																				value={draft.electricity.current}
-																				placeholder="0.0"
-																			onChange={(e) => {
-																				const newDrafts = [...drafts];
-																				const index = drafts.findIndex(d => d.unitId === draft.unitId);
-																				if (index !== -1) {
-																					newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
-																					updateDraftsAndCache(newDrafts);
-																				}
-																			}}
-																				className={cn("w-32 h-9.5 rounded-xl border-2 border-amber-400 dark:border-amber-500 bg-white dark:bg-zinc-900 pl-3 pr-11 text-center font-mono text-xs font-bold text-amber-950 dark:text-amber-100 outline-none focus:border-amber-600 focus:ring-4 focus:ring-amber-500/20 transition-all placeholder:text-amber-300 dark:placeholder:text-amber-700 shadow-2xs", touchedReadings[`${draft.unitId}:electricity`] && readingCellError(draft.electricity, "Electricity reading") && fieldErrorClass)}
-																			/>
-																		<span className="absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-500 text-zinc-950 pointer-events-none select-none shadow-2xs">
-																			kWh
-																		</span>
-																	</div>
-																)}
-															</div>
-																<FieldError
-																	id={`reading-${draft.unitId}-electricity-error`}
-																	message={touchedReadings[`${draft.unitId}:electricity`] ? readingCellError(draft.electricity, "Electricity reading") : undefined}
-																	className="mt-0 max-w-[11rem] text-[10px]"
-																/>
-																{hasElec && elecUsage > 0 && (
-																<span className="text-[10px] font-bold text-amber-900 dark:text-amber-100 bg-amber-500/20 dark:bg-amber-500/30 px-2.5 py-0.5 rounded-full border border-amber-500/40">
-																	+{elecUsage.toFixed(1)} kWh (₱{elecCost.toFixed(2)})
-																</span>
-															)}
-														</div>
-													</td>
-
-													{/* Total Estimated Calculation */}
-													<td className="px-6 py-4 text-right">
-														<div className="flex flex-col items-end">
-															<span className="text-sm font-bold text-foreground font-mono tabular-nums">
-																₱{(draft.occupancyStatus === "occupied" ? totalEst : (waterCost + elecCost)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-															</span>
-															{draft.occupancyStatus === "occupied" && (waterCost > 0 || elecCost > 0) && (
-																<span className="text-[10px] text-muted-foreground font-medium">
-																	{t("Rent + Utilities")}
-																</span>
-															)}
-														</div>
-													</td>
-
-													{/* Row Status & Quick Edit */}
-													<td className="px-6 py-4 text-right">
-														<div className="flex items-center justify-end gap-2">
-															{isComplete && (
-																<span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20" title={t("Both readings recorded for this cycle")}>
-																	<Check className="size-3" /> {t("Ready")}
-																</span>
-															)}
-															<button 
+															<button
+																type="button"
+																onClick={() => {
+																	setGuidedRoomIndex(globalIdx);
+																	setViewMode("guided");
+																}}
+																className="inline-flex items-center gap-1.5 h-11 px-4 rounded-xl border border-border bg-background hover:bg-muted text-sm font-bold text-foreground transition-all cursor-pointer"
+															>
+																<span>{t("Open Room")}</span>
+															</button>
+															<button
+																type="button"
 																onClick={() => setSelectedUnitId(draft.unitId)}
-																className="inline-flex items-center justify-center size-9 rounded-xl border border-border/80 text-muted-foreground transition-all hover:bg-muted hover:text-foreground cursor-pointer shadow-xs active:scale-95"
+																className="inline-flex items-center gap-1.5 h-11 px-3.5 rounded-xl border border-border/80 text-muted-foreground hover:bg-muted hover:text-foreground text-sm font-semibold transition-all cursor-pointer"
 																title={t("Inspect or adjust room details")}
 															>
 																<Edit3 className="size-4" />
+																<span className="sr-only sm:not-sr-only">{t("Settings")}</span>
 															</button>
 														</div>
-													</td>
-												</tr>
+													</div>
+
+													{/* Two Side-by-Side Meter Inputs */}
+													<div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-border/60">
+														{/* Water Input */}
+														<div className="rounded-xl border border-sky-500/20 bg-sky-500/[0.03] p-4 space-y-2">
+															<div className="flex items-center justify-between text-sm">
+																<span className="inline-flex items-center gap-1.5 font-bold text-foreground">
+																	<Droplets className="size-4 text-sky-500" />
+																	<span>{t("Water (m³)")}</span>
+																</span>
+																<span className="text-muted-foreground">
+																	{t("Last month:")} <strong className="font-mono text-foreground">{waterPrev} m³</strong>
+																</span>
+															</div>
+															<span id={waterHintId} className="block text-xs text-muted-foreground">
+																{t("Enter {prev} or higher", { prev: waterPrev })}
+															</span>
+															<div className="relative">
+																<input
+																	id={`reading-input-${draft.unitId}-water`}
+																	type="text"
+																	inputMode="decimal"
+																	maxLength={10}
+																	aria-label={t("Water reading for {unit}", { unit: draft.unitName })}
+																	aria-invalid={showWaterErr ? "true" : "false"}
+																	aria-describedby={showWaterErr ? `${waterHintId} ${waterErrId}` : waterHintId}
+																	onBlur={() => handleMeterFieldBlur(draft, "water")}
+																	value={draft.water.current}
+																	placeholder={`${waterPrev}`}
+																	onChange={(e) => handleMeterValueChange(draft.unitId, "water", e.target.value)}
+																	className={cn(
+																		"w-full h-12 rounded-xl border-2 border-sky-400/80 dark:border-sky-500/70 bg-background pl-3.5 pr-12 font-mono text-base font-bold tabular-nums text-foreground outline-none focus:border-sky-600 focus:ring-4 focus:ring-sky-500/20 transition-all",
+																		showWaterErr && fieldErrorClass
+																	)}
+																/>
+																<span className="absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded text-xs font-bold bg-sky-500/15 text-sky-700 dark:text-sky-300 pointer-events-none">
+																	m³
+																</span>
+															</div>
+															<FieldError id={waterErrId} message={showWaterErr ? waterErr : undefined} className="text-xs" />
+															{hasWater && !showWaterErr && (
+																<div className="text-xs font-bold text-sky-800 dark:text-sky-200 font-mono tabular-nums">
+																	+{waterUsage.toFixed(1)} m³ = ₱{waterCost.toFixed(2)}
+																</div>
+															)}
+														</div>
+
+														{/* Electricity Input */}
+														<div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.03] p-4 space-y-2">
+															<div className="flex items-center justify-between text-sm">
+																<span className="inline-flex items-center gap-1.5 font-bold text-foreground">
+																	<Zap className="size-4 text-amber-500" />
+																	<span>{t("Electricity (kWh)")}</span>
+																</span>
+																<span className="text-muted-foreground">
+																	{t("Last month:")} <strong className="font-mono text-foreground">{elecPrev} kWh</strong>
+																</span>
+															</div>
+															<span id={elecHintId} className="block text-xs text-muted-foreground">
+																{t("Enter {prev} or higher", { prev: elecPrev })}
+															</span>
+															<div className="relative">
+																<input
+																	id={`reading-input-${draft.unitId}-electricity`}
+																	type="text"
+																	inputMode="decimal"
+																	maxLength={10}
+																	aria-label={t("Electricity reading for {unit}", { unit: draft.unitName })}
+																	aria-invalid={showElecErr ? "true" : "false"}
+																	aria-describedby={showElecErr ? `${elecHintId} ${elecErrId}` : elecHintId}
+																	onBlur={() => handleMeterFieldBlur(draft, "electricity")}
+																	value={draft.electricity.current}
+																	placeholder={`${elecPrev}`}
+																	onChange={(e) => handleMeterValueChange(draft.unitId, "electricity", e.target.value)}
+																	className={cn(
+																		"w-full h-12 rounded-xl border-2 border-amber-400/80 dark:border-amber-500/70 bg-background pl-3.5 pr-14 font-mono text-base font-bold tabular-nums text-foreground outline-none focus:border-amber-600 focus:ring-4 focus:ring-amber-500/20 transition-all",
+																		showElecErr && fieldErrorClass
+																	)}
+																/>
+																<span className="absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded text-xs font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 pointer-events-none">
+																	kWh
+																</span>
+															</div>
+															<FieldError id={elecErrId} message={showElecErr ? elecErr : undefined} className="text-xs" />
+															{hasElec && !showElecErr && (
+																<div className="text-xs font-bold text-amber-800 dark:text-amber-200 font-mono tabular-nums">
+																	+{elecUsage.toFixed(1)} kWh = ₱{elecCost.toFixed(2)}
+																</div>
+															)}
+														</div>
+													</div>
+												</div>
 											);
 										})}
-									</tbody>
-								</table>
-							</div>
-						</div>
+
+										{/* Bottom Pagination Controls */}
+										{totalListPages > 1 && (
+											<div className="rounded-2xl border border-border/80 bg-card px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+												<span className="text-sm font-semibold text-muted-foreground tabular-nums">
+													{t("Page {page} of {total}", { page: safeListPage + 1, total: totalListPages })}
+												</span>
+												<div className="flex items-center gap-2">
+													<button
+														type="button"
+														disabled={safeListPage === 0}
+														onClick={() => {
+															setListPage((p) => Math.max(0, p - 1));
+															window.scrollTo({ top: 0, behavior: "smooth" });
+														}}
+														className="inline-flex items-center gap-1.5 h-11 px-4 rounded-xl border border-border bg-background hover:bg-muted text-sm font-bold text-foreground transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+													>
+														<ChevronLeft className="size-4" />
+														<span>{t("Previous")}</span>
+													</button>
+													<button
+														type="button"
+														disabled={safeListPage >= totalListPages - 1}
+														onClick={() => {
+															setListPage((p) => Math.min(totalListPages - 1, p + 1));
+															window.scrollTo({ top: 0, behavior: "smooth" });
+														}}
+														className="inline-flex items-center gap-1.5 h-11 px-4 rounded-xl border border-border bg-background hover:bg-muted text-sm font-bold text-foreground transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+													>
+														<span>{t("Next")}</span>
+														<ChevronRight className="size-4" />
+													</button>
+												</div>
+											</div>
+										)}
+									</div>
+								);
+							})()
+						)}
 					</motion.div>
 				)}
 
 				{/* Verify Payments Queue Tab */}
-				{(activeTab === "verify") && (
+				{activeTab === "verify" && (
 					<motion.div 
 						key="verify"
 						initial={{ opacity: 0, y: 10 }}
@@ -1632,26 +2179,26 @@ export function UtilityBillingDashboard() {
 						className="space-y-6"
 					>
 						{/* Tab Header Banner */}
-						<div className="rounded-2xl border border-border/50 bg-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+						<div className="rounded-2xl border border-border/70 bg-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 							<div className="space-y-1">
-								<div className="flex items-center gap-2">
-									<h2 className="text-xl font-black text-foreground">{t("Payment Verification Queue")}</h2>
-									<span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-600 border border-amber-500/20">
-										{t("{count} Awaiting Review", { count: pendingInvoices.length })}
+								<div className="flex flex-wrap items-center gap-2.5">
+									<h2 className="text-xl font-bold text-foreground">{t("Check Tenant Payments")}</h2>
+									<span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25">
+										{t("{count} Waiting", { count: pendingInvoices.length })}
 									</span>
 								</div>
-								<p className="text-xs text-muted-foreground">
-									{t("Inspect tenant-uploaded GCash screenshots, verify reference numbers, and issue official receipts in one click.")}
+								<p className="text-sm text-muted-foreground">
+									{t("Check tenant GCash screenshots, verify reference numbers, and confirm payment in one click.")}
 								</p>
 							</div>
 
 							<Link 
 								href="/landlord/settings?category=Finance"
-								className="shrink-0 flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+								className="shrink-0 inline-flex h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm font-bold text-foreground hover:bg-muted transition-all"
 							>
-								<QrCode className="size-3.5 text-primary" />
-								<span>{t("Configure Receiving QR")}</span>
-								<ArrowUpRight className="size-3" />
+								<QrCode className="size-4 text-primary" />
+								<span>{t("My GCash QR Code")}</span>
+								<ArrowUpRight className="size-4" />
 							</Link>
 						</div>
 
@@ -1665,17 +2212,17 @@ export function UtilityBillingDashboard() {
 									<CheckCircle2 className="size-7" />
 								</div>
 								<div className="space-y-1">
-									<h3 className="text-lg font-black text-foreground">{t("All Caught Up!")}</h3>
-									<p className="text-xs text-muted-foreground max-w-sm mx-auto">
-										{t("There are no tenant payments currently awaiting verification. Incoming GCash transaction proofs will appear here automatically.")}
+									<h3 className="text-lg font-bold text-foreground">{t("All Payments Checked!")}</h3>
+									<p className="text-sm text-muted-foreground max-w-sm mx-auto">
+										{t("There are no tenant payments waiting right now. New GCash receipts will appear here automatically.")}
 									</p>
 								</div>
 								<Link 
 									href="/landlord/invoices" 
-									className="mt-2 text-xs font-bold text-primary hover:underline flex items-center gap-1"
+									className="mt-2 text-sm font-bold text-primary hover:underline flex items-center gap-1"
 								>
-									<span>{t("View Full Finance Ledger")}</span>
-									<ChevronRight className="size-3" />
+									<span>{t("View Bills & Receipts")}</span>
+									<ChevronRight className="size-4" />
 								</Link>
 							</div>
 						) : (
@@ -1683,43 +2230,44 @@ export function UtilityBillingDashboard() {
 								{pendingInvoices.map((inv) => (
 									<div 
 										key={inv.id}
-										className="rounded-2xl border border-border/60 bg-card p-5 space-y-4 hover:border-primary/40 transition-all shadow-sm"
+										className="rounded-2xl border border-border/70 bg-card p-5 space-y-4 hover:border-primary/40 transition-all shadow-sm"
 									>
 										<div className="flex items-start justify-between gap-3">
 											<div>
-												<span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider block">
+												<span className="text-xs font-mono text-muted-foreground uppercase tracking-wider block">
 													{inv.invoiceNumber}
 												</span>
-												<h4 className="text-base font-black text-foreground mt-0.5">{inv.tenant}</h4>
-												<p className="text-xs text-muted-foreground">{inv.unit} • {inv.property}</p>
+												<h4 className="text-lg font-bold text-foreground mt-0.5">{inv.tenant}</h4>
+												<p className="text-sm text-muted-foreground">{inv.unit} • {inv.property}</p>
 											</div>
 											<div className="text-right">
-												<span className="text-lg font-black text-foreground font-mono">
+												<span className="text-xl font-bold text-foreground font-mono tabular-nums">
 													₱{inv.amount.toLocaleString()}
 												</span>
-												<span className="block text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full mt-1">
-													{t("Needs Verification")}
+												<span className="block text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-500/15 px-2.5 py-0.5 rounded-full mt-1">
+													{t("Needs Check")}
 												</span>
 											</div>
 										</div>
 
-										<div className="flex items-center justify-between border-t border-border/40 pt-3 text-xs">
-											<div className="flex items-center gap-2">
+										<div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/50 pt-3.5 text-sm">
+											<div className="flex flex-wrap items-center gap-2">
 												<span className="text-muted-foreground">{t("Method:")}</span>
 												<span className="font-bold text-foreground">{t(paymentMethodLabel(inv.paymentMethod, "GCash"))}</span>
 												{inv.referenceNumber && (
-													<span className="font-mono text-[10px] bg-muted px-2 py-0.5 rounded text-foreground font-bold">
+													<span className="font-mono text-xs bg-muted px-2.5 py-1 rounded-lg text-foreground font-bold">
 														{t("Ref:")} {inv.referenceNumber}
 													</span>
 												)}
 											</div>
 
 											<button
+												type="button"
 												onClick={() => setActiveVerifyInvoiceId(inv.id)}
-												className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-black text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all shadow-sm cursor-pointer"
+												className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all shadow-sm cursor-pointer"
 											>
-												<ShieldCheck className="size-3.5" />
-												<span>{t("Review & Confirm")}</span>
+												<ShieldCheck className="size-4" />
+												<span>{t("Review")}</span>
 											</button>
 										</div>
 									</div>
@@ -1759,123 +2307,190 @@ export function UtilityBillingDashboard() {
 						initial={{ opacity: 0, y: 10 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -10 }}
-						className="space-y-12"
+						className="space-y-8"
 					>
-						{/* Hero Header */}
-						<div className="relative overflow-hidden rounded-[2.5rem] neumorphic-panel p-8 md:p-10">
-							<div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-								<div className="space-y-2">
-									<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
-										<BarChart3 className="size-3" />
-										{t("Billing Archives")}
-									</div>
-									<h3 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">{t("Audit Trail & Consumption History")}</h3>
-									<p className="text-xs md:text-sm text-muted-foreground max-w-md leading-relaxed font-medium">
-										{t("Review past billing cycles, inspect historical consumption logs, and track utility recovery rates across your portfolio.")}
-									</p>
+						{/* Plain-English Header */}
+						<div className="rounded-3xl neumorphic-panel p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+							<div className="space-y-1.5">
+								<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">
+									<BarChart3 className="size-3.5" />
+									<span>{t("Monthly Records")}</span>
 								</div>
-								<div className="flex items-center gap-3">
-									<Link 
-										href="/landlord/invoices?tab=ledger"
-										className="h-11 px-5 rounded-2xl bg-foreground text-background text-xs font-black uppercase tracking-wider hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
-									>
-										<span>{t("Full Financial Ledger")}</span>
-										<ArrowUpRight className="size-3.5" />
-									</Link>
-								</div>
+								<h3 className="text-2xl font-bold text-foreground tracking-tight">{t("Past Monthly Bills")}</h3>
+								<p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
+									{t("Click any month below to view the water and electricity readings recorded for your rooms.")}
+								</p>
+							</div>
+							<div className="flex items-center gap-3">
+								<Link 
+									href="/landlord/invoices?tab=ledger"
+									className="h-11 px-5 rounded-xl bg-foreground text-background text-sm font-bold hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
+								>
+									<span>{t("View Bills & Receipts")}</span>
+									<ArrowUpRight className="size-4" />
+								</Link>
 							</div>
 						</div>
 
-						<div className="space-y-4">
-							<div className="flex items-center gap-4 px-2 mb-2">
-								<span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 whitespace-nowrap">{t("Cycle Logs")}</span>
-								<div className="h-px flex-1 bg-border/40" />
-							</div>
+						<div className="space-y-3">
+							{[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => {
+								const d = new Date();
+								d.setDate(1);
+								d.setMonth(d.getMonth() - i);
+								const monthStr = d.toISOString().slice(0, 7);
+								const monthLabel = d.toLocaleDateString(locale, { month: "short" });
+								const yearLabel = d.getFullYear().toString();
+								const reportTitle = d.toLocaleDateString(locale, { month: "long", year: "numeric" });
+								const summary = historySummaries[monthStr];
+								const totalElec = summary?.totalElec ?? 0;
+								const totalWater = summary?.totalWater ?? 0;
+								const readingCount = summary?.readingCount ?? 0;
+								const hasData = readingCount > 0;
+								const isCurrentMonth = i === 0;
 
-							<div className="space-y-3">
-								{[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => {
-									const d = new Date();
-									d.setDate(1);
-									d.setMonth(d.getMonth() - i);
-									const monthStr = d.toISOString().slice(0, 7);
-									const monthLabel = d.toLocaleDateString(locale, { month: 'short' });
-									const yearLabel = d.getFullYear().toString();
-									const reportTitle = d.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
-									const summary = historySummaries[monthStr];
-									const totalElec = summary?.totalElec ?? 0;
-									const totalWater = summary?.totalWater ?? 0;
-									const readingCount = summary?.readingCount ?? 0;
-									const hasData = readingCount > 0;
-									const isCurrentMonth = i === 0;
-
-									return (
-										<button 
-											key={monthStr}
-											onClick={() => setSelectedHistoryMonth(monthStr)}
-											className="group relative w-full grid grid-cols-1 md:grid-cols-12 items-center gap-4 p-5 rounded-2xl neumorphic-panel hover:border-primary/40 hover:bg-primary/[0.01] active:scale-[0.99] text-left transition-all cursor-pointer"
-										>
-											{/* Date Block */}
-											<div className="md:col-span-3 flex items-center gap-4">
-												<div className="size-14 flex items-center justify-center rounded-xl neumorphic-inset group-hover:border-primary/20 group-hover:bg-primary/5 transition-all shrink-0">
-													<div className="text-center">
-														<p className="text-[9px] font-black uppercase leading-none text-muted-foreground group-hover:text-primary transition-colors">{monthLabel}</p>
-														<p className="text-lg font-black mt-0.5 text-foreground">{yearLabel}</p>
-													</div>
-												</div>
-												<div>
-													<h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">
-														{reportTitle}
-													</h4>
-													<span className={cn(
-														"inline-block px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider mt-1",
-														isCurrentMonth 
-															? "bg-blue-500/10 text-blue-600" 
-															: hasData 
-																? "bg-emerald-500/10 text-emerald-600" 
-																: "bg-muted text-muted-foreground"
-													)}>
-														{isCurrentMonth ? t("Active Cycle") : hasData ? t("Closed") : t("No Readings")}
-													</span>
+								return (
+									<button 
+										key={monthStr}
+										type="button"
+										onClick={() => setSelectedHistoryMonth(monthStr)}
+										className="group relative w-full grid grid-cols-1 md:grid-cols-12 items-center gap-4 p-5 rounded-2xl neumorphic-panel hover:border-primary/40 hover:bg-primary/[0.01] active:scale-[0.99] text-left transition-all cursor-pointer"
+									>
+										{/* Date Block */}
+										<div className="md:col-span-4 flex items-center gap-4">
+											<div className="size-14 flex items-center justify-center rounded-xl neumorphic-inset group-hover:border-primary/20 group-hover:bg-primary/5 transition-all shrink-0">
+												<div className="text-center">
+													<p className="text-xs font-bold uppercase leading-none text-muted-foreground group-hover:text-primary transition-colors">{monthLabel}</p>
+													<p className="text-lg font-bold mt-0.5 text-foreground">{yearLabel}</p>
 												</div>
 											</div>
-
-											{/* Metrics */}
-											<div className="md:col-span-7 flex items-center gap-8">
-												<div>
-													<span className="text-[9px] font-bold text-muted-foreground uppercase block">{t("Electricity")}</span>
-													<span className="text-xs font-black text-foreground font-mono">
-														{historySummariesLoading ? "..." : `${totalElec.toFixed(1)} kWh`}
-													</span>
-												</div>
-												<div>
-													<span className="text-[9px] font-bold text-muted-foreground uppercase block">{t("Water")}</span>
-													<span className="text-xs font-black text-foreground font-mono">
-														{historySummariesLoading ? "..." : `${totalWater.toFixed(1)} m³`}
-													</span>
-												</div>
-												<div>
-													<span className="text-[9px] font-bold text-muted-foreground uppercase block">{t("Units Logged")}</span>
-													<span className="text-xs font-black text-foreground font-mono">
-														{historySummariesLoading ? "..." : t("{count} records", { count: readingCount })}
-
-													</span>
-												</div>
+											<div>
+												<h4 className="text-base font-bold text-foreground group-hover:text-primary transition-colors">
+													{reportTitle}
+												</h4>
+												<span className={cn(
+													"inline-block px-2.5 py-0.5 rounded-full text-xs font-bold mt-1",
+													isCurrentMonth 
+														? "bg-blue-500/10 text-blue-600 dark:text-blue-400" 
+														: hasData 
+															? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+															: "bg-muted text-muted-foreground"
+												)}>
+													{isCurrentMonth ? t("Current Month") : hasData ? t("Recorded") : t("No Readings")}
+												</span>
 											</div>
+										</div>
 
-											{/* Action Arrow */}
-											<div className="md:col-span-2 flex justify-end">
-												<div className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground group-hover:text-primary group-hover:border-primary/30 transition-all">
-													<ChevronRight className="size-4" />
-												</div>
+										{/* Metrics */}
+										<div className="md:col-span-6 flex flex-wrap items-center gap-8">
+											<div>
+												<span className="text-xs font-semibold text-muted-foreground block">{t("Electricity")}</span>
+												<span className="text-sm font-bold text-foreground font-mono tabular-nums">
+													{historySummariesLoading ? "..." : `${totalElec.toFixed(1)} kWh`}
+												</span>
 											</div>
-										</button>
-									);
-								})}
-							</div>
+											<div>
+												<span className="text-xs font-semibold text-muted-foreground block">{t("Water")}</span>
+												<span className="text-sm font-bold text-foreground font-mono tabular-nums">
+													{historySummariesLoading ? "..." : `${totalWater.toFixed(1)} m³`}
+												</span>
+											</div>
+											<div>
+												<span className="text-xs font-semibold text-muted-foreground block">{t("Readings Saved")}</span>
+												<span className="text-sm font-bold text-foreground font-mono tabular-nums">
+													{historySummariesLoading ? "..." : t("{count} records", { count: readingCount })}
+												</span>
+											</div>
+										</div>
+
+										{/* Action Arrow */}
+										<div className="md:col-span-2 flex justify-end">
+											<div className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-bold text-muted-foreground group-hover:text-primary group-hover:border-primary/30 transition-all">
+												<span>{t("View")}</span>
+												<ChevronRight className="size-4" />
+											</div>
+										</div>
+									</button>
+								);
+							})}
 						</div>
 					</motion.div>
 				)}
 			</AnimatePresence>
+
+			{/* Sticky Bottom Bar on Readings Tab (Single source of truth for Save Readings & Send Monthly Bills) */}
+			{activeTab === "readings" && filteredDrafts.length > 0 && (
+				<div className="fixed bottom-4 left-4 right-4 lg:left-72 z-40 pointer-events-none pb-[env(safe-area-inset-bottom,0px)]">
+					<div className="max-w-5xl mx-auto rounded-2xl border-2 border-border bg-card/95 backdrop-blur-md px-5 py-3 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 pointer-events-auto">
+						<div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+							<span className="text-sm sm:text-base font-bold text-foreground">
+								{t("{ready} of {total} rooms ready", {
+									ready: readingsSummary.recordedCount,
+									total: readingsSummary.totalUnits,
+								})}
+							</span>
+							<span className="text-sm text-muted-foreground">
+								{t("Estimated Total:")}{" "}
+								<strong className="font-mono tabular-nums text-foreground">
+									₱{readingsSummary.grandTotalEstimated.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+								</strong>
+							</span>
+						</div>
+
+						<div className="flex items-center gap-2.5">
+							<button
+								type="button"
+								onClick={() => handleSaveReadings(false)}
+								disabled={saving}
+								className={cn(
+									"flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl border border-border bg-background hover:bg-muted text-sm font-bold text-foreground transition-all cursor-pointer disabled:opacity-50 relative",
+									isTourOpen && tourStepIndex === 1 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-105 bg-primary/10 border-primary z-30"
+								)}
+							>
+								{isTourOpen && tourStepIndex === 1 && (
+									<span className="relative flex size-2.5 shrink-0">
+										<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+										<span className="relative inline-flex rounded-full size-2.5 bg-primary"></span>
+									</span>
+								)}
+								<Save className="size-4 text-muted-foreground" />
+								<span>{t("Save Readings")}</span>
+							</button>
+							<button
+								type="button"
+								onClick={() => setIsConfirmSendOpen(true)}
+								disabled={saving}
+								className={cn(
+									"flex-[1.5] sm:flex-initial inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm sm:text-base font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm disabled:opacity-50 relative",
+									isTourOpen && tourStepIndex === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_35px_rgba(155,119,255,0.95)] animate-pulse scale-105 brightness-110 font-black z-30"
+								)}
+							>
+								{isTourOpen && tourStepIndex === 2 && (
+									<span className="relative flex size-2.5 shrink-0">
+										<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-90"></span>
+										<span className="relative inline-flex rounded-full size-2.5 bg-white"></span>
+									</span>
+								)}
+								{saving ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+								<span>{t("Send Monthly Bills")}</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Review & Send Bills Confirmation Modal */}
+			<ConfirmSendBillsModal
+				isOpen={isConfirmSendOpen}
+				onClose={() => setIsConfirmSendOpen(false)}
+				onConfirm={() => {
+					setIsConfirmSendOpen(false);
+					void handleSaveReadings(true);
+				}}
+				saving={saving}
+				monthLabel={formattedCycleMonth}
+				readyDrafts={readingsSummary.readyDrafts}
+				missingOccupiedDrafts={readingsSummary.missingOccupiedDrafts}
+			/>
 
 			{/* Unit Detail Modal */}
 			<UnitDetailModal 
@@ -1919,6 +2534,192 @@ export function UtilityBillingDashboard() {
 			)}
 		</div>
 		</>
+	);
+}
+
+function ConfirmSendBillsModal({
+	isOpen,
+	onClose,
+	onConfirm,
+	saving,
+	monthLabel,
+	readyDrafts,
+	missingOccupiedDrafts,
+}: {
+	isOpen: boolean;
+	onClose: () => void;
+	onConfirm: () => void;
+	saving: boolean;
+	monthLabel: string;
+	readyDrafts: ReadingDraft[];
+	missingOccupiedDrafts: ReadingDraft[];
+}) {
+	const { t } = useLanguageContext();
+
+	useEffect(() => {
+		if (!isOpen) return;
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") onClose();
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [isOpen, onClose]);
+
+	const totalBatchAmount = useMemo(() => {
+		return readyDrafts.reduce((sum, d) => {
+			const wPrev = d.water.previous || 0;
+			const wCurr = parseFloat(d.water.current);
+			const wUsage = !isNaN(wCurr) && wCurr >= wPrev ? wCurr - wPrev : 0;
+			const wCost = wUsage * (d.water.rate || 0);
+
+			const ePrev = d.electricity.previous || 0;
+			const eCurr = parseFloat(d.electricity.current);
+			const eUsage = !isNaN(eCurr) && eCurr >= ePrev ? eCurr - ePrev : 0;
+			const eCost = eUsage * (d.electricity.rate || 0);
+
+			const rent = d.occupancyStatus === "occupied" ? d.rentAmount : 0;
+			return sum + rent + wCost + eCost;
+		}, 0);
+	}, [readyDrafts]);
+
+	return (
+		<AnimatePresence>
+			{isOpen && (
+				<div
+					className="fixed inset-0 z-50 flex items-center justify-center p-4"
+					role="dialog"
+					aria-modal="true"
+					aria-labelledby="confirm-send-bills-title"
+				>
+					<motion.div
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+						onClick={onClose}
+					/>
+					<motion.div
+						initial={{ opacity: 0, scale: 0.96, y: 12 }}
+						animate={{ opacity: 1, scale: 1, y: 0 }}
+						exit={{ opacity: 0, scale: 0.96, y: 12 }}
+						className="relative w-full max-w-lg rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-2xl space-y-5 max-h-[85vh] flex flex-col"
+					>
+						<div className="flex items-start justify-between gap-4">
+							<div className="space-y-1">
+								<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">
+									<Send className="size-3.5" />
+									<span>{monthLabel}</span>
+								</span>
+								<h2 id="confirm-send-bills-title" className="text-xl sm:text-2xl font-bold text-foreground">
+									{t("Review & Send Monthly Bills")}
+								</h2>
+								<p className="text-sm text-muted-foreground">
+									{t("Please check the summary below before sending bills to your tenants.")}
+								</p>
+							</div>
+							<button
+								type="button"
+								onClick={onClose}
+								aria-label={t("Close")}
+								className="size-10 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted transition-all cursor-pointer shrink-0"
+							>
+								<X className="size-5" />
+							</button>
+						</div>
+
+						<div className="flex-1 overflow-y-auto space-y-3 pr-1 overscroll-contain">
+							{readyDrafts.length === 0 ? (
+								<div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm font-medium text-amber-800 dark:text-amber-200 flex items-start gap-3">
+									<AlertCircle className="size-5 text-amber-500 shrink-0 mt-0.5" />
+									<div>
+										<p className="font-bold">{t("No rooms are ready to send yet.")}</p>
+										<p className="mt-1">
+											{t("Please enter both water and electricity meter readings for at least one room first.")}
+										</p>
+									</div>
+								</div>
+							) : (
+								<>
+									<div className="space-y-2">
+										{readyDrafts.map((d) => {
+											const wPrev = d.water.previous || 0;
+											const wCurr = parseFloat(d.water.current);
+											const wUsage = !isNaN(wCurr) && wCurr >= wPrev ? wCurr - wPrev : 0;
+											const wCost = wUsage * (d.water.rate || 0);
+
+											const ePrev = d.electricity.previous || 0;
+											const eCurr = parseFloat(d.electricity.current);
+											const eUsage = !isNaN(eCurr) && eCurr >= ePrev ? eCurr - ePrev : 0;
+											const eCost = eUsage * (d.electricity.rate || 0);
+
+											const rent = d.occupancyStatus === "occupied" ? d.rentAmount : 0;
+											const roomTotal = rent + wCost + eCost;
+
+											return (
+												<div
+													key={d.unitId}
+													className="rounded-xl border border-border/80 bg-background px-4 py-3 flex items-center justify-between gap-3"
+												>
+													<div>
+														<div className="text-sm font-bold text-foreground">
+															{d.unitName} {d.tenantName ? `• ${d.tenantName}` : ""}
+														</div>
+														<div className="text-xs text-muted-foreground mt-0.5">
+															{t("Water")} {wUsage.toFixed(1)} m³ + {t("Electric")} {eUsage.toFixed(1)} kWh
+														</div>
+													</div>
+													<div className="text-base font-bold font-mono tabular-nums text-foreground">
+														₱{roomTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+													</div>
+												</div>
+											);
+										})}
+									</div>
+
+									<div className="rounded-xl bg-muted/40 border border-border/80 px-4 py-3 flex items-center justify-between">
+										<span className="text-sm font-bold text-foreground">
+											{t("Total for {count} room(s)", { count: readyDrafts.length })}
+										</span>
+										<span className="text-lg font-bold font-mono tabular-nums text-primary">
+											₱{totalBatchAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+										</span>
+									</div>
+								</>
+							)}
+
+							{missingOccupiedDrafts.length > 0 && (
+								<div className="rounded-xl border border-border bg-muted/20 p-3.5 text-xs text-muted-foreground leading-relaxed">
+									<strong className="text-foreground">{t("Note:")} </strong>
+									{t("{count} occupied room(s) ({rooms}) do not have meter readings yet and will be skipped for now.", {
+										count: missingOccupiedDrafts.length,
+										rooms: missingOccupiedDrafts.map((m) => m.unitName).join(", "),
+									})}
+								</div>
+							)}
+						</div>
+
+						<div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t border-border/60">
+							<button
+								type="button"
+								onClick={onClose}
+								className="flex-1 h-12 px-5 rounded-xl border border-border bg-background hover:bg-muted text-sm font-bold text-foreground transition-all cursor-pointer"
+							>
+								{t("Go Back")}
+							</button>
+							<button
+								type="button"
+								disabled={saving || readyDrafts.length === 0}
+								onClick={onConfirm}
+								className="flex-[1.5] inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+							>
+								{saving ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+								<span>{t("Yes, Send {count} Bills Now", { count: readyDrafts.length })}</span>
+							</button>
+						</div>
+					</motion.div>
+				</div>
+			)}
+		</AnimatePresence>
 	);
 }
 

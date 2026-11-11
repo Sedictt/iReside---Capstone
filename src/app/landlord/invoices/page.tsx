@@ -18,10 +18,12 @@ import {
     AlertCircle,
     ArrowDownRight,
     ArrowRight,
+    ArrowUp,
     ArrowUpRight,
     Banknote,
     CalendarDays,
     CheckCircle2,
+    ChevronLeft,
     ChevronRight,
     Clock,
     Eye,
@@ -169,6 +171,67 @@ export default function InvoicesPage() {
     const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
     const [isIssueInvoiceModalOpen, setIsIssueInvoiceModalOpen] = useState(false);
     const listHeadingRef = useRef<HTMLHeadingElement>(null);
+    const ledgerTopRef = useRef<HTMLDivElement>(null);
+    const expensesTopRef = useRef<HTMLDivElement>(null);
+    const pageRootRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLElement | null>(null);
+
+    // Pagination & Return-to-Top state
+    const [pageSize, setPageSize] = useState<number>(10);
+    const [invoicesPage, setInvoicesPage] = useState<number>(1);
+    const [ledgerPage, setLedgerPage] = useState<number>(1);
+    const [expensesPage, setExpensesPage] = useState<number>(1);
+    const [showReturnToTop, setShowReturnToTop] = useState<boolean>(false);
+
+    useEffect(() => {
+        const findScrollContainer = (): HTMLElement | null => {
+            let el: HTMLElement | null = pageRootRef.current?.parentElement ?? null;
+            while (el) {
+                const style = window.getComputedStyle(el);
+                if (/(auto|scroll)/.test(style.overflowY)) {
+                    return el;
+                }
+                el = el.parentElement;
+            }
+            return document.querySelector("main");
+        };
+
+        const container = findScrollContainer();
+        scrollContainerRef.current = container;
+
+        const onScroll = () => {
+            const containerTop = container?.scrollTop ?? 0;
+            setShowReturnToTop(containerTop > 240 || window.scrollY > 240);
+        };
+        onScroll();
+
+        container?.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => {
+            container?.removeEventListener("scroll", onScroll);
+            window.removeEventListener("scroll", onScroll);
+        };
+    }, []);
+
+    const getScrollBehavior = useCallback((): ScrollBehavior => {
+        if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+            return "auto";
+        }
+        return "smooth";
+    }, []);
+
+    const scrollToPageTop = useCallback(() => {
+        const behavior = getScrollBehavior();
+        scrollContainerRef.current?.scrollTo({ top: 0, behavior });
+        window.scrollTo({ top: 0, behavior });
+    }, [getScrollBehavior]);
+
+    const scrollToRef = useCallback(
+        (ref: React.RefObject<HTMLElement | null>) => {
+            ref.current?.scrollIntoView({ behavior: getScrollBehavior(), block: "start" });
+        },
+        [getScrollBehavior],
+    );
 
     // Sync section with browser URL
     useEffect(() => {
@@ -295,8 +358,62 @@ export default function InvoicesPage() {
     }, [expenses, loadedAt]);
     const netLast30Days = metrics.collectedLast30Days - expensesLast30Days;
 
+    const ledgerEntries = useMemo(() => {
+        return [
+            ...expenses.map((expense) => ({
+                id: `expense-${expense.id}`,
+                type: "expense" as const,
+                date: new Date(expense.date_incurred),
+                amount: expense.amount,
+                title: t(expense.category),
+                detail: expense.description,
+            })),
+            ...invoices
+                .filter((invoice) => getInvoiceAttentionGroup(invoice) === "paid")
+                .map((invoice) => ({
+                    id: `income-${invoice.id}`,
+                    type: "income" as const,
+                    date: new Date(invoice.issuedDate),
+                    amount: invoice.amount,
+                    title: t("Rent Payment: {name}", { name: invoice.tenant }),
+                    detail: t("Unit {unit} • Invoice #{num}", { unit: invoice.unit, num: invoice.invoiceNumber }),
+                })),
+        ].sort((a, b) => b.date.getTime() - a.date.getTime());
+    }, [expenses, invoices, t]);
+
+    // Reset invoice page when filters/search/sort/property change
+    useEffect(() => {
+        setInvoicesPage(1);
+    }, [filter, search, method, sortBy, selectedPropertyId, pageSize]);
+
+    useEffect(() => {
+        setLedgerPage(1);
+        setExpensesPage(1);
+    }, [selectedPropertyId, pageSize]);
+
+    const invoiceTotalPages = Math.max(1, Math.ceil(visibleInvoices.length / pageSize));
+    const safeInvoicesPage = Math.min(invoicesPage, invoiceTotalPages);
+    const paginatedInvoices = useMemo(
+        () => visibleInvoices.slice((safeInvoicesPage - 1) * pageSize, safeInvoicesPage * pageSize),
+        [visibleInvoices, safeInvoicesPage, pageSize],
+    );
+
+    const ledgerTotalPages = Math.max(1, Math.ceil(ledgerEntries.length / pageSize));
+    const safeLedgerPage = Math.min(ledgerPage, ledgerTotalPages);
+    const paginatedLedger = useMemo(
+        () => ledgerEntries.slice((safeLedgerPage - 1) * pageSize, safeLedgerPage * pageSize),
+        [ledgerEntries, safeLedgerPage, pageSize],
+    );
+
+    const expensesTotalPages = Math.max(1, Math.ceil(expenses.length / pageSize));
+    const safeExpensesPage = Math.min(expensesPage, expensesTotalPages);
+    const paginatedExpenses = useMemo(
+        () => expenses.slice((safeExpensesPage - 1) * pageSize, safeExpensesPage * pageSize),
+        [expenses, safeExpensesPage, pageSize],
+    );
+
     return (
-        <div className="mx-auto max-w-[1600px] space-y-8 px-4 py-8 md:px-8 lg:py-10">
+        <div ref={pageRootRef} className="mx-auto max-w-[1600px] space-y-8 px-4 py-8 md:px-8 lg:py-10">
             {/* Header: Financial Center pill + Title + Action buttons */}
             <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
                 <div>
@@ -731,7 +848,7 @@ export default function InvoicesPage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/60">
-                                        {visibleInvoices.map((invoice) => (
+                                        {paginatedInvoices.map((invoice) => (
                                             <InvoiceTableRow
                                                 key={invoice.id}
                                                 invoice={invoice}
@@ -748,7 +865,7 @@ export default function InvoicesPage() {
                     {/* Invoices: Cards View (4-Level Visual Hierarchy) */}
                     {!loading && visibleInvoices.length > 0 && viewMode === "cards" && (
                         <div className="space-y-4">
-                            {visibleInvoices.map((invoice) => (
+                            {paginatedInvoices.map((invoice) => (
                                 <InvoiceCard
                                     key={invoice.id}
                                     invoice={invoice}
@@ -757,12 +874,30 @@ export default function InvoicesPage() {
                             ))}
                         </div>
                     )}
+
+                    {/* Invoices Pagination */}
+                    {!loading && visibleInvoices.length > 0 && (
+                        <PaginationBar
+                            currentPage={safeInvoicesPage}
+                            totalItems={visibleInvoices.length}
+                            pageSize={pageSize}
+                            onPageChange={(nextPage) => {
+                                setInvoicesPage(nextPage);
+                                scrollToRef(listHeadingRef);
+                            }}
+                            onPageSizeChange={(nextSize) => {
+                                setPageSize(nextSize);
+                                setInvoicesPage(1);
+                            }}
+                            onReturnToTop={scrollToPageTop}
+                        />
+                    )}
                 </div>
             )}
 
             {/* TAB 2: UNIFIED LEDGER */}
             {section === "ledger" && (
-                <div className="flex min-h-[50vh] flex-col rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xs animate-in fade-in">
+                <div ref={ledgerTopRef} className="flex min-h-[50vh] flex-col rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xs animate-in fade-in">
                     <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border pb-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
@@ -796,14 +931,15 @@ export default function InvoicesPage() {
                         </div>
                     )}
 
-                    {!loading && expenses.length === 0 && invoices.length === 0 && (
+                    {!loading && ledgerEntries.length === 0 && (
                         <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-12 text-center">
                             <p className="text-lg font-bold text-foreground">{t("No transactions recorded yet.")}</p>
                             <p className="mt-1 text-sm text-slate-600 dark:text-zinc-400">{t("Paid rent bills and recorded expenses will appear here automatically.")}</p>
                         </div>
                     )}
 
-                    {!loading && (expenses.length > 0 || invoices.length > 0) && (
+                    {!loading && ledgerEntries.length > 0 && (
+                        <>
                         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm border-collapse min-w-[640px]">
@@ -824,28 +960,7 @@ export default function InvoicesPage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/60">
-                                        {[
-                                            ...expenses.map((expense) => ({
-                                                id: `expense-${expense.id}`,
-                                                type: "expense" as const,
-                                                date: new Date(expense.date_incurred),
-                                                amount: expense.amount,
-                                                title: t(expense.category),
-                                                detail: expense.description,
-                                            })),
-                                            ...invoices
-                                                .filter((invoice) => getInvoiceAttentionGroup(invoice) === "paid")
-                                                .map((invoice) => ({
-                                                    id: `income-${invoice.id}`,
-                                                    type: "income" as const,
-                                                    date: new Date(invoice.issuedDate),
-                                                    amount: invoice.amount,
-                                                    title: t("Rent Payment: {name}", { name: invoice.tenant }),
-                                                    detail: t("Unit {unit} • Invoice #{num}", { unit: invoice.unit, num: invoice.invoiceNumber }),
-                                                })),
-                                        ]
-                                            .sort((a, b) => b.date.getTime() - a.date.getTime())
-                                            .map((entry) => (
+                                        {paginatedLedger.map((entry) => (
                                                 <tr
                                                     key={entry.id}
                                                     className="group transition-colors hover:bg-muted/40"
@@ -913,13 +1028,29 @@ export default function InvoicesPage() {
                                 </table>
                             </div>
                         </div>
+
+                        <PaginationBar
+                            currentPage={safeLedgerPage}
+                            totalItems={ledgerEntries.length}
+                            pageSize={pageSize}
+                            onPageChange={(nextPage) => {
+                                setLedgerPage(nextPage);
+                                scrollToRef(ledgerTopRef);
+                            }}
+                            onPageSizeChange={(nextSize) => {
+                                setPageSize(nextSize);
+                                setLedgerPage(1);
+                            }}
+                            onReturnToTop={scrollToPageTop}
+                        />
+                        </>
                     )}
                 </div>
             )}
 
             {/* TAB 3: EXPENSES */}
             {section === "expenses" && (
-                <div className="flex min-h-[50vh] flex-col rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xs animate-in fade-in">
+                <div ref={expensesTopRef} className="flex min-h-[50vh] flex-col rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xs animate-in fade-in">
                     <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border pb-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
@@ -965,6 +1096,7 @@ export default function InvoicesPage() {
                     )}
 
                     {!loading && expenses.length > 0 && (
+                        <>
                         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm border-collapse min-w-[640px]">
@@ -985,7 +1117,7 @@ export default function InvoicesPage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/60">
-                                        {expenses.map((expense) => (
+                                        {paginatedExpenses.map((expense) => (
                                             <tr
                                                 key={expense.id}
                                                 className="group transition-colors hover:bg-muted/40"
@@ -1011,8 +1143,37 @@ export default function InvoicesPage() {
                                 </table>
                             </div>
                         </div>
+
+                        <PaginationBar
+                            currentPage={safeExpensesPage}
+                            totalItems={expenses.length}
+                            pageSize={pageSize}
+                            onPageChange={(nextPage) => {
+                                setExpensesPage(nextPage);
+                                scrollToRef(expensesTopRef);
+                            }}
+                            onPageSizeChange={(nextSize) => {
+                                setPageSize(nextSize);
+                                setExpensesPage(1);
+                            }}
+                            onReturnToTop={scrollToPageTop}
+                        />
+                        </>
                     )}
                 </div>
+            )}
+
+            {/* Floating Return to Top Button */}
+            {showReturnToTop && (
+                <button
+                    type="button"
+                    onClick={scrollToPageTop}
+                    aria-label={t("Back to Top")}
+                    className="fixed bottom-6 right-6 md:right-24 z-40 inline-flex h-11 items-center gap-2 rounded-full border border-border bg-card/95 backdrop-blur-sm px-4 text-xs sm:text-sm font-bold text-foreground shadow-lg transition-all hover:bg-muted hover:border-primary/50 active:scale-95 cursor-pointer mb-[env(safe-area-inset-bottom,0px)]"
+                >
+                    <ArrowUp className="size-4 text-primary" />
+                    <span>{t("Back to Top")}</span>
+                </button>
             )}
 
             {/* Modals */}
@@ -1343,5 +1504,128 @@ function InvoiceCard({ invoice, onOpen }: { invoice: InvoiceListItem; onOpen: ()
                 </div>
             </div>
         </button>
+    );
+}
+
+/** Shared accessible pagination bar used across Invoices, Unified Ledger, and Expenses. */
+function PaginationBar({
+    currentPage,
+    totalItems,
+    pageSize,
+    onPageChange,
+    onPageSizeChange,
+    onReturnToTop,
+}: {
+    currentPage: number;
+    totalItems: number;
+    pageSize: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange: (size: number) => void;
+    onReturnToTop?: () => void;
+}) {
+    const { t } = useLanguageContext();
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const start = (currentPage - 1) * pageSize + 1;
+    const end = Math.min(totalItems, currentPage * pageSize);
+
+    // Build compact page number list with ellipsis when > 7 pages
+    const pageNumbers: Array<number | "ellipsis"> = [];
+    if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+    } else {
+        pageNumbers.push(1);
+        if (currentPage > 3) pageNumbers.push("ellipsis");
+        const rangeStart = Math.max(2, currentPage - 1);
+        const rangeEnd = Math.min(totalPages - 1, currentPage + 1);
+        for (let i = rangeStart; i <= rangeEnd; i++) pageNumbers.push(i);
+        if (currentPage < totalPages - 2) pageNumbers.push("ellipsis");
+        pageNumbers.push(totalPages);
+    }
+
+    return (
+        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-border bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-muted-foreground">
+                <span className="font-semibold tabular-nums">
+                    {t("Showing {start}–{end} of {total}", { start, end, total: totalItems })}
+                </span>
+                <label className="inline-flex items-center gap-1.5 text-xs font-medium">
+                    <span>{t("Rows:")}</span>
+                    <select
+                        value={pageSize}
+                        onChange={(e) => onPageSizeChange(Number(e.target.value))}
+                        aria-label={t("Rows per page")}
+                        className="h-9 rounded-lg border border-border bg-card px-2.5 text-xs font-bold text-foreground outline-none focus:border-primary cursor-pointer"
+                    >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                    </select>
+                </label>
+            </div>
+
+            {totalPages > 1 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                        type="button"
+                        disabled={currentPage <= 1}
+                        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                        className="inline-flex h-10 items-center gap-1 rounded-xl border border-border bg-card px-3 text-xs sm:text-sm font-bold text-foreground transition-colors hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        <ChevronLeft className="size-4" />
+                        <span>{t("Previous")}</span>
+                    </button>
+
+                    <div className="hidden sm:flex items-center gap-1">
+                        {pageNumbers.map((item, index) =>
+                            item === "ellipsis" ? (
+                                <span key={`ellipsis-${index}`} className="px-1.5 text-xs font-bold text-muted-foreground">
+                                    …
+                                </span>
+                            ) : (
+                                <button
+                                    key={item}
+                                    type="button"
+                                    onClick={() => onPageChange(item)}
+                                    aria-current={item === currentPage ? "page" : undefined}
+                                    className={cn(
+                                        "inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl px-2.5 text-xs font-bold tabular-nums transition-colors cursor-pointer",
+                                        item === currentPage
+                                            ? "bg-primary text-primary-foreground shadow-xs"
+                                            : "border border-border bg-card text-foreground hover:bg-muted"
+                                    )}
+                                >
+                                    {item}
+                                </button>
+                            ),
+                        )}
+                    </div>
+
+                    <span className="px-2 text-xs font-bold text-foreground tabular-nums sm:hidden">
+                        {t("Page {current} of {total}", { current: currentPage, total: totalPages })}
+                    </span>
+
+                    <button
+                        type="button"
+                        disabled={currentPage >= totalPages}
+                        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                        className="inline-flex h-10 items-center gap-1 rounded-xl border border-border bg-card px-3 text-xs sm:text-sm font-bold text-foreground transition-colors hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        <span>{t("Next")}</span>
+                        <ChevronRight className="size-4" />
+                    </button>
+                </div>
+            )}
+
+            {onReturnToTop && (
+                <button
+                    type="button"
+                    onClick={onReturnToTop}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-xs sm:text-sm font-bold text-foreground transition-colors hover:bg-muted hover:border-primary/50 cursor-pointer self-start sm:self-auto"
+                >
+                    <ArrowUp className="size-4 text-primary" />
+                    <span>{t("Back to Top")}</span>
+                </button>
+            )}
+        </div>
     );
 }
