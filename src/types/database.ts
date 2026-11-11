@@ -678,6 +678,14 @@ export interface Database {
                     rejected_at?: string | null
                     notes?: string | null
                     updated_at?: string
+                    requirements_checklist?: Json | null
+                    employment_info?: Json | null
+                    applicant_name?: string | null
+                    applicant_phone?: string | null
+                    applicant_email?: string | null
+                    move_in_date?: string | null
+                    emergency_contact_name?: string | null
+                    emergency_contact_phone?: string | null
                 }
                 Relationships: [
                     {

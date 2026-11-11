@@ -14,12 +14,23 @@ interface CachedPropertyUnits {
 }
 const propertyUnitsMemoryCache = new Map<string, CachedPropertyUnits>();
 
+export function invalidatePropertyUnitsCache(userId?: string) {
+    if (userId) {
+        propertyUnitsMemoryCache.delete(userId);
+    } else {
+        propertyUnitsMemoryCache.clear();
+    }
+}
+
 export async function GET(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
-    const cached = propertyUnitsMemoryCache.get(userId);
+    const url = new URL(request.url);
+    const skipCache = url.searchParams.get("fresh") === "1";
+
+    const cached = !skipCache ? propertyUnitsMemoryCache.get(userId) : undefined;
     if (cached && Date.now() < cached.expiresAt) {
         return NextResponse.json(
             { properties: cached.data },
@@ -46,7 +57,10 @@ export async function GET(request: Request) {
                 status: unit.status,
                 rentAmount: unit.rentAmount,
                 hasOngoingApplication: unit.hasOngoingApplication ?? false,
+                ongoingApplicationCount: unit.ongoingApplicationCount ?? 0,
                 ongoingApplicationStatus: unit.ongoingApplicationStatus ?? null,
+                isOnHold: unit.isOnHold ?? false,
+                holdInfo: unit.holdInfo ?? null,
             })),
         }));
 
@@ -66,4 +80,4 @@ export async function GET(request: Request) {
             { status: 500 }
         );
     }
-}
+}

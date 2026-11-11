@@ -20,6 +20,7 @@ import {
   UnitNotFoundError,
 } from "./property.errors";
 import { ART, artOr } from "@/lib/art/abstract-art";
+import { getActiveUnitHold } from "@/lib/unit-hold";
 
 const FALLBACK_PROPERTY_IMAGE =
   ART.property;
@@ -191,6 +192,13 @@ export class PropertyService {
     const unitIds = unitList.map((u) => u.id);
     const activeApplicationsByUnit = new Map<string, { count: number; status: string }>();
 
+    const statusPriority: Record<string, number> = {
+      approved: 4,
+      payment_pending: 3,
+      reviewing: 2,
+      pending: 1,
+    };
+
     if (unitIds.length > 0) {
       const { data: activeApps } = await this.supabase
         .from("applications")
@@ -206,6 +214,9 @@ export class PropertyService {
               activeApplicationsByUnit.set(app.unit_id, { count: 1, status: app.status });
             } else {
               current.count += 1;
+              if ((statusPriority[app.status] ?? 0) > (statusPriority[current.status] ?? 0)) {
+                current.status = app.status;
+              }
             }
           }
         }
@@ -261,18 +272,25 @@ export class PropertyService {
       }
     }
 
+    const propertyMap = new Map(properties.map((p) => [p.id, p]));
     const unitsByPropertyId = new Map<string, UnitSummary[]>();
     for (const unit of unitList) {
       const existing = unitsByPropertyId.get(unit.property_id) ?? [];
       const appInfo = activeApplicationsByUnit.get(unit.id);
+      const prop = propertyMap.get(unit.property_id);
+      const holdInfo = prop ? getActiveUnitHold(prop.contractTemplate, unit.id) : null;
+      const isOccupied = (unit.status ?? "").toLowerCase() === "occupied";
       existing.push({
         id: unit.id,
         propertyId: unit.property_id,
         name: unit.name,
         status: unit.status,
         rentAmount: Number(unit.rent_amount ?? 0),
-        hasOngoingApplication: Boolean(appInfo && appInfo.count > 0),
+        hasOngoingApplication: Boolean((appInfo && appInfo.count > 0) || (!isOccupied && holdInfo)),
+        ongoingApplicationCount: appInfo?.count ?? 0,
         ongoingApplicationStatus: appInfo?.status ?? null,
+        isOnHold: Boolean(!isOccupied && holdInfo),
+        holdInfo: !isOccupied ? holdInfo : null,
       });
       unitsByPropertyId.set(unit.property_id, existing);
     }

@@ -23,6 +23,7 @@ import { buildAppUrl } from "@/lib/app-url";
 import type { Database } from "@/types/database";
 import { parseJsonBody } from "@/lib/validation/server";
 import { inviteApplicationSchema, isUrlToken } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { getActiveUnitHold } from "@/lib/unit-hold";
 
 type InviteRecord = {
     id: string;
@@ -146,6 +147,7 @@ export async function GET(
 
         const eligibleUnits = (units ?? [])
             .filter((unit) => invite.mode === "property" || unit.id === invite.unit_id)
+            .filter((unit) => !getActiveUnitHold(contractTemplate, unit.id))
             .map((unit) => ({
                 id: unit.id,
                 name: unit.name,
@@ -240,6 +242,34 @@ export async function POST(
 
         if (!unit || unit.property_id !== invite.property_id || unit.status !== "vacant") {
             return NextResponse.json({ error: "Selected unit is no longer available." }, { status: 400 });
+        }
+
+        const { data: propForHold } = await adminClient
+            .from("properties")
+            .select("contract_template")
+            .eq("id", unit.property_id)
+            .maybeSingle();
+
+        if (getActiveUnitHold(propForHold?.contract_template, resolvedUnitId)) {
+            return NextResponse.json(
+                { error: "This room is currently on temporary hold while another applicant finalizes payment." },
+                { status: 409 }
+            );
+        }
+
+        const { data: committedApp } = await adminClient
+            .from("applications")
+            .select("id")
+            .eq("unit_id", resolvedUnitId)
+            .in("status", ["payment_pending", "approved"])
+            .limit(1)
+            .maybeSingle();
+
+        if (committedApp) {
+            return NextResponse.json(
+                { error: "This room is currently reserved by an approved applicant." },
+                { status: 409 }
+            );
         }
 
         // Duplicate-submission guard: the same applicant cannot submit twice on one invite link.

@@ -841,3 +841,29 @@ export const landlordRenewalListQuerySchema = z.object({
   propertyId: zFilterId("Property"),
   status: zFilterEnum("Status", ["pending", "approved", "rejected", "signed"] as const),
 });
+
+// ---------------------------------------------------------------------------
+// Unit Hold (Manual Reservation) & Applicant Unit Reassignment
+// ---------------------------------------------------------------------------
+
+export const HOLD_DURATION_PRESETS = ["24h", "48h", "72h", "manual"] as const;
+export type HoldDurationPreset = (typeof HOLD_DURATION_PRESETS)[number];
+
+export const unitHoldSchema = z.object({
+  held_for_name: z
+    .string({ error: "Applicant name is required to hold a room." })
+    .trim()
+    .min(2, "Name must be at least 2 characters.")
+    .max(50, "Name cannot exceed 50 characters."),
+  held_by_application_id: z.preprocess(blankToUndefined, zId("Application").nullish()),
+  duration_preset: z.enum(HOLD_DURATION_PRESETS, { error: "Select a valid hold duration." }).default("48h"),
+  hold_note: zOptionalText("Hold note", 250).transform((v) => v ?? null),
+  notify_other_applicants: z.boolean().default(false),
+});
+
+export const reassignApplicationUnitSchema = z.object({
+  target_unit_id: zId("Target unit"),
+  landlord_note: zOptionalText("Message to applicant", 250).transform((v) => v ?? null),
+  notify_applicant: z.boolean().default(true),
+});
+

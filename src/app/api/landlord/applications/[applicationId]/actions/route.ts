@@ -29,6 +29,8 @@ import {
     generateInviteToken,
     hashInviteToken,
 } from "@/lib/tenant-intake-invites";
+import { clearUnitHoldForProperty } from "@/lib/unit-hold";
+import { invalidatePropertyUnitsCache } from "@/app/api/landlord/property-units/route";
 
 type ActionBody = {
     status?: ApplicationStatus;
@@ -1138,6 +1140,37 @@ export async function POST(
         }
     }
 
+    let competingApplications: Array<{
+        id: string;
+        name: string;
+        email: string;
+        status: string;
+        source: string;
+    }> = [];
+
+    if ((body.status === "approved" || body.status === "payment_pending") && application.unit_id) {
+        const propId = (application as any).unit?.property?.id ?? (application as any).unit?.property_id;
+        if (body.status === "approved" && propId) {
+            await clearUnitHoldForProperty(adminClient, propId, application.unit_id);
+        }
+        invalidatePropertyUnitsCache(userId);
+
+        const { data: competingApps } = await adminClient
+            .from("applications")
+            .select("id, applicant_name, applicant_email, status, application_source")
+            .eq("unit_id", application.unit_id)
+            .in("status", ["pending", "reviewing"])
+            .neq("id", applicationId);
+
+        competingApplications = (competingApps ?? []).map((c: any) => ({
+            id: c.id,
+            name: c.applicant_name ?? "Applicant",
+            email: c.applicant_email ?? "",
+            status: c.status,
+            source: c.application_source ?? "walk_in_application",
+        }));
+    }
+
     return NextResponse.json({
         success: true,
         status: body.status,
@@ -1148,5 +1181,6 @@ export async function POST(
         ...(leaseId ? { lease_id: leaseId } : {}),
         ...(paymentIds ? { payment_ids: paymentIds } : {}),
         ...(tenantAccountInfo ? { tenant_account: tenantAccountInfo } : {}),
+        competing_applications: competingApplications,
     });
 }

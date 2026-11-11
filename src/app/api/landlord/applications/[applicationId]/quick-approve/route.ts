@@ -7,6 +7,8 @@ import { generateSigningLink } from "@/lib/jwt";
 import { buildAuthCallbackUrl } from "@/lib/app-url";
 import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { generateTemporaryPassword } from "@/lib/security/passwords";
+import { clearUnitHoldForProperty } from "@/lib/unit-hold";
+import { invalidatePropertyUnitsCache } from "@/app/api/landlord/property-units/route";
 
 /** Temporary password from a CSPRNG (see lib/security/passwords). */
 function generateTempPassword(): string {
@@ -87,7 +89,7 @@ export async function POST(
 
     const { data: targetUnit } = await adminClient
         .from("units")
-        .select("id, status")
+        .select("id, status, property_id, name")
         .eq("id", app.unit_id)
         .maybeSingle();
 
@@ -97,6 +99,22 @@ export async function POST(
 
     if (targetUnit.status === "occupied") {
         return NextResponse.json({ error: "Selected unit is currently occupied and unavailable." }, { status: 409 });
+    }
+
+    const { data: alreadyApprovedOnUnit } = await adminClient
+        .from("applications")
+        .select("id")
+        .eq("unit_id", app.unit_id)
+        .eq("status", "approved")
+        .neq("id", applicationId)
+        .limit(1)
+        .maybeSingle();
+
+    if (alreadyApprovedOnUnit) {
+        return NextResponse.json(
+            { error: "Another applicant has already been approved for this unit." },
+            { status: 409 }
+        );
     }
 
     const tenantEmail = app.applicant_email?.trim();
@@ -167,6 +185,18 @@ export async function POST(
             .update({ status: "approved", reviewed_at: new Date().toISOString() })
             .eq("id", applicationId);
 
+        if (targetUnit.property_id) {
+            await clearUnitHoldForProperty(adminClient, targetUnit.property_id, app.unit_id);
+        }
+        invalidatePropertyUnitsCache(userId);
+
+        const { data: competingApps } = await adminClient
+            .from("applications")
+            .select("id, applicant_name, applicant_email, status, application_source")
+            .eq("unit_id", app.unit_id)
+            .in("status", ["pending", "reviewing"])
+            .neq("id", applicationId);
+
         const { data: landlordProfile } = await adminClient
             .from("profiles")
             .select("email, full_name")
@@ -179,7 +209,7 @@ export async function POST(
                 tenantName,
                 tempPassword,
                 inviteUrl,
-                leaseDetails: { property_name: "Property", unit_name: "Unit", move_in_date: app.move_in_date || "", monthly_rent: 0 },
+                leaseDetails: { property_name: "Property", unit_name: targetUnit.name || "Unit", move_in_date: app.move_in_date || "", monthly_rent: 0 },
                 signingLink,
             });
         } catch (e) {
@@ -205,6 +235,13 @@ export async function POST(
             success: true,
             lease_id: lease.id,
             tenant_account: { email: tenantEmail, tempPassword, inviteUrl },
+            competing_applications: (competingApps ?? []).map((c) => ({
+                id: c.id,
+                name: c.applicant_name ?? "Applicant",
+                email: c.applicant_email ?? "",
+                status: c.status,
+                source: c.application_source,
+            })),
         });
     } catch (err: any) {
         try {

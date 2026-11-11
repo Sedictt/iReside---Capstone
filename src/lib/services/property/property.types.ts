@@ -47,7 +47,16 @@ export interface UnitSummary {
   status: UnitStatus;
   rentAmount: number;
   hasOngoingApplication?: boolean;
+  ongoingApplicationCount?: number;
   ongoingApplicationStatus?: string | null;
+  isOnHold?: boolean;
+  holdInfo?: {
+    held_for_name: string;
+    held_by_application_id?: string | null;
+    hold_expires_at?: string | null;
+    hold_note?: string | null;
+    created_at?: string;
+  } | null;
 }
 
 export interface PropertyOverviewItem {

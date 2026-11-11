@@ -52,7 +52,9 @@ import {
     DEFAULT_EMPLOYMENT,
     applyLiveFieldValidation,
     isUnitOccupied,
+    isUnitOnHold,
     isUnitOngoing,
+    isUnitLockedForIntake,
     isUnitAvailable,
     translatedUnitOptionLabel,
     type EmploymentInfo,
@@ -737,11 +739,18 @@ export function WalkInApplicationModal({
                 setError("Selected unit is currently occupied. Please select an available unit.");
                 return;
             }
-            if (isUnitOngoing(chosenUnit)) {
-                setFormErrors((prev) => ({ ...prev, unit: "Selected unit currently has an ongoing application." }));
+            if (isUnitOnHold(chosenUnit)) {
+                setFormErrors((prev) => ({ ...prev, unit: "Selected unit is currently on hold for another applicant." }));
                 setTouchedFields((prev) => ({ ...prev, unit: true }));
                 setStep(0);
-                setError("Selected unit currently has an ongoing application under processing. Please select an available unit.");
+                setError("Selected unit is currently on hold. Please release the hold first or select another available unit.");
+                return;
+            }
+            if (isUnitLockedForIntake(chosenUnit)) {
+                setFormErrors((prev) => ({ ...prev, unit: "Selected unit currently has an ongoing payment or lease commitment." }));
+                setTouchedFields((prev) => ({ ...prev, unit: true }));
+                setStep(0);
+                setError("Selected unit currently has an ongoing payment or lease commitment. Please select an available unit.");
                 return;
             }
         }

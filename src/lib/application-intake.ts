@@ -9,6 +9,14 @@ import {
     phMobileRule,
 } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
+export interface UnitHoldInfo {
+    held_for_name: string;
+    held_by_application_id?: string | null;
+    hold_expires_at?: string | null;
+    hold_note?: string | null;
+    created_at?: string;
+}
+
 export interface WalkInUnit {
     id: string;
     name: string;
@@ -21,13 +29,28 @@ export interface WalkInUnit {
     ongoing_application_count?: number;
     ongoing_application_status?: string | null;
     application_status?: string | null;
+    is_on_hold?: boolean;
+    hold_info?: UnitHoldInfo | null;
+    max_occupants?: number | null;
 }
 
 export function isUnitOccupied(unit: Pick<WalkInUnit, "status">): boolean {
     return (unit.status ?? "").toLowerCase() === "occupied";
 }
 
-export function isUnitOngoing(unit: Pick<WalkInUnit, "status" | "has_ongoing_application" | "application_status">): boolean {
+export function isUnitOnHold(unit: Pick<WalkInUnit, "status" | "is_on_hold" | "hold_info">): boolean {
+    if (unit.is_on_hold) return true;
+    if (unit.hold_info) {
+        if (!unit.hold_info.hold_expires_at) return true;
+        const expires = new Date(unit.hold_info.hold_expires_at).getTime();
+        if (!Number.isNaN(expires) && expires > Date.now()) return true;
+    }
+    const status = (unit.status ?? "").toLowerCase();
+    return ["reserved", "on_hold", "on hold", "held"].includes(status);
+}
+
+export function isUnitOngoing(unit: Pick<WalkInUnit, "status" | "has_ongoing_application" | "application_status" | "is_on_hold" | "hold_info">): boolean {
+    if (isUnitOnHold(unit)) return true;
     if (Boolean(unit.has_ongoing_application)) return true;
     const status = (unit.status ?? "").toLowerCase();
     const isOngoingStatus = [
@@ -50,20 +73,49 @@ export function isUnitOngoing(unit: Pick<WalkInUnit, "status" | "has_ongoing_app
     return false;
 }
 
-export function isUnitAvailable(unit: Pick<WalkInUnit, "status" | "has_ongoing_application" | "application_status">): boolean {
+/**
+ * Checks whether a unit is strictly locked from accepting new applications
+ * (occupied, manual hold active, or already committed in payment_pending / approved).
+ * Units with only `pending` or `reviewing` applications remain open for competing applicants.
+ */
+export function isUnitLockedForIntake(
+    unit: Pick<WalkInUnit, "status" | "ongoing_application_status" | "application_status" | "is_on_hold" | "hold_info">
+): boolean {
+    if (isUnitOccupied(unit)) return true;
+    if (isUnitOnHold(unit)) return true;
+    const status = (unit.status ?? "").toLowerCase();
+    if (["under_negotiation", "under negotiation", "negotiating", "processing", "ongoing", "on-going", "reserved"].includes(status)) {
+        return true;
+    }
+    const appStatus = (unit.ongoing_application_status ?? unit.application_status ?? "").toLowerCase();
+    if (["payment_pending", "approved"].includes(appStatus)) {
+        return true;
+    }
+    return false;
+}
+
+export function isUnitAvailable(unit: Pick<WalkInUnit, "status" | "has_ongoing_application" | "application_status" | "is_on_hold" | "hold_info">): boolean {
     return !isUnitOccupied(unit) && !isUnitOngoing(unit);
 }
 
 export function getUnitOptionLabel(unit: WalkInUnit, includePropertyName = false): string {
     const isOccupied = isUnitOccupied(unit);
+    const onHold = isUnitOnHold(unit);
     const isOngoing = isUnitOngoing(unit);
     const prefix = includePropertyName ? `${unit.name} — ${unit.property_name}` : unit.name;
 
     if (isOccupied) {
         return `${prefix} • (Occupied — Unavailable)`;
     }
+    if (onHold && unit.hold_info?.held_for_name) {
+        return `${prefix} • (On Hold for ${unit.hold_info.held_for_name})`;
+    }
     if (isOngoing) {
         return `${prefix} • (On-going — Unavailable)`;
+    }
+    if (unit.ongoing_application_count && unit.ongoing_application_count > 0) {
+        const plural = unit.ongoing_application_count === 1 ? "1 Applicant" : `${unit.ongoing_application_count} Applicants`;
+        return `${prefix} — ₱${unit.rent_amount.toLocaleString()}/mo • (${plural})`;
     }
     return `${prefix} — ₱${unit.rent_amount.toLocaleString()}/mo`;
 }

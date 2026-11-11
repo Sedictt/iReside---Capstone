@@ -16,6 +16,7 @@ export type ApplicationResponse = {
     propertyName: string;
     propertyId?: string | null;
     propertyContractTemplate: Record<string, unknown> | null;
+    unitId?: string | null;
     unitNumber: string;
     propertyImage: string;
     requestedMoveIn: string | null;

@@ -6,7 +6,9 @@ import { cn } from "@/lib/utils";
 import {
     validateFormStep,
     isUnitOccupied,
+    isUnitOnHold,
     isUnitOngoing,
+    isUnitLockedForIntake,
     isUnitAvailable,
     type FormErrorKey,
     type WalkInFormData,
@@ -37,7 +39,9 @@ export {
     DEFAULT_EMPLOYMENT,
     validateFormStep,
     isUnitOccupied,
+    isUnitOnHold,
     isUnitOngoing,
+    isUnitLockedForIntake,
     isUnitAvailable,
     getUnitOptionLabel,
     type EmploymentInfo,
@@ -45,6 +49,7 @@ export {
     type RequirementsChecklist,
     type WalkInFormData,
     type WalkInUnit,
+    type UnitHoldInfo,
 } from "@/lib/application-intake";
 
 const DATE_MIN = todayIsoDate();
@@ -56,7 +61,17 @@ export type Translate = (phrase: string, params?: TranslationParams) => string;
 export function translatedUnitOptionLabel(unit: WalkInUnit, includePropertyName: boolean, t: Translate): string {
     const prefix = includePropertyName ? `${unit.name} — ${unit.property_name}` : unit.name;
     if (isUnitOccupied(unit)) return t("{unit} • (Occupied — Unavailable)", { unit: prefix });
+    if (isUnitOnHold(unit) && unit.hold_info?.held_for_name) {
+        return t("{unit} • (On Hold for {name})", { unit: prefix, name: unit.hold_info.held_for_name });
+    }
     if (isUnitOngoing(unit)) return t("{unit} • (On-going — Unavailable)", { unit: prefix });
+    if (unit.ongoing_application_count && unit.ongoing_application_count > 0) {
+        return t("{unit} — ₱{rent}/mo • ({count} Applicants)", {
+            unit: prefix,
+            rent: unit.rent_amount.toLocaleString(),
+            count: unit.ongoing_application_count,
+        });
+    }
     return t("{unit} — ₱{rent}/mo", { unit: prefix, rent: unit.rent_amount.toLocaleString() });
 }
 

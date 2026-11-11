@@ -41,6 +41,7 @@ import {
  Check,
  UploadCloud,
  FileCheck,
+ ArrowRightLeft,
 } from "lucide-react";
 import { ToolAccessBar } from "./ToolAccessBar";
 import { LeaseOfflineSigner } from "@/lib/offline/leaseOfflineSigner";
@@ -57,6 +58,9 @@ const WalkInApplicationModal = dynamic(() => import("@/components/landlord/appli
 
 import { TenantInviteManager, type InviteListItem } from "@/components/landlord/applications/TenantInviteManager";
 import { ContractPreviewModal } from "@/components/landlord/lease/ContractPreviewModal";
+import { UnitHoldModal } from "@/components/landlord/applications/UnitHoldModal";
+import { ResolveCompetingApplicantsModal, type CompetingApplicantItem } from "@/components/landlord/applications/ResolveCompetingApplicantsModal";
+import type { UnitHoldInfo } from "@/lib/application-intake";
 import { LeaseStatusBadge } from "@/components/landlord/leases/LeaseStatusBadge";
 import { LeaseAuditTrail, type LeaseAuditEvent } from "@/components/landlord/leases/LeaseAuditTrail";
 import type { LeaseStatus } from "@/types/database";
@@ -98,6 +102,7 @@ interface Applicant {
 interface RentApplication {
  id: string;
  propertyId?: string | null;
+ unitId?: string | null;
  source?: "walk_in_application" | "invite_link";
  paymentTerms?: InvitePaymentTerms | null;
  applicant: Applicant;
@@ -364,8 +369,30 @@ export function RentApplications() {
  property_contract_template?: Record<string, unknown> | null;
  status?: string;
  has_ongoing_application?: boolean;
+ ongoing_application_count?: number;
  ongoing_application_status?: string | null;
+ is_on_hold?: boolean;
+ hold_info?: UnitHoldInfo | null;
  }[]>([]);
+ const [unitHoldModalState, setUnitHoldModalState] = useState<{
+ isOpen: boolean;
+ unitId: string;
+ unitName: string;
+ propertyName: string;
+ defaultApplicantName: string;
+ defaultApplicationId: string | null;
+ competingApplicantsCount: number;
+ existingHold: UnitHoldInfo | null;
+ } | null>(null);
+ const [resolveModalState, setResolveModalState] = useState<{
+ isOpen: boolean;
+ takenUnitId: string;
+ takenUnitName: string;
+ propertyName: string;
+ propertyId: string | null;
+ winnerName?: string;
+ competingApplicants: CompetingApplicantItem[];
+ } | null>(null);
  const [tenantInvites, setTenantInvites] = useState<InviteListItem[]>([]);
   const [reloadTrigger, setReloadTrigger] = useState(0);
   const reloadKey = useRef(0);
@@ -655,10 +682,9 @@ export function RentApplications() {
  }
  };
 
- useEffect(() => {
- const loadUnits = async () => {
+ const loadUnits = useCallback(async (fresh = false) => {
  try {
- const res = await fetch("/api/landlord/property-units");
+ const res = await fetch(fresh ? "/api/landlord/property-units?fresh=1" : "/api/landlord/property-units");
  if (!res.ok) return;
  const data = (await res.json()) as any;
  const options = Array.isArray(data.properties) ? data.properties : [];
@@ -673,14 +699,19 @@ export function RentApplications() {
  property_contract_template: property.contractTemplate ?? null,
  status: unit.status,
  has_ongoing_application: Boolean(unit.hasOngoingApplication),
+ ongoing_application_count: Number(unit.ongoingApplicationCount ?? 0),
  ongoing_application_status: unit.ongoingApplicationStatus ?? null,
+ is_on_hold: Boolean(unit.isOnHold),
+ hold_info: unit.holdInfo ?? null,
  }));
  });
  setAvailableUnits(unitsList);
  } catch {}
- };
- loadUnits();
  }, []);
+
+ useEffect(() => {
+ void loadUnits();
+ }, [loadUnits]);
 
  const loadInvites = useCallback(async () => {
  try {
@@ -729,6 +760,7 @@ export function RentApplications() {
  if (!selectedApp) return;
  setActionError(null);
  setUpdatingStatusId(selectedApp.id);
+ const approvedSnapshot = selectedApp;
  try {
  const response = await fetch(`/api/landlord/applications/${selectedApp.id}/quick-approve`, {
  method: "POST",
@@ -741,11 +773,24 @@ export function RentApplications() {
  tempPassword: data.tenant_account?.tempPassword || null,
  inviteUrl: data.tenant_account?.inviteUrl,
  });
- reloadKey.current += 1;
+ refreshApplications();
+ void loadUnits(true);
  
  setShowContractModal(false);
  setSelectedApp(null);
- alert(t("Approved! Credentials:\nEmail: {email}\nTemp Password: {password}\n\nShare these with the tenant securely.", { email: data.tenant_account?.email ?? "", password: data.tenant_account?.tempPassword ?? "" }));
+
+ const competing = Array.isArray(data.competing_applications) ? data.competing_applications : [];
+ if (competing.length > 0 && approvedSnapshot.unitId) {
+ setResolveModalState({
+ isOpen: true,
+ takenUnitId: approvedSnapshot.unitId,
+ takenUnitName: approvedSnapshot.unitNumber,
+ propertyName: approvedSnapshot.propertyName,
+ propertyId: approvedSnapshot.propertyId ?? null,
+ winnerName: approvedSnapshot.applicant.name,
+ competingApplicants: competing,
+ });
+ }
  } catch { setActionError("Quick approve failed."); } finally { setUpdatingStatusId(null); }
  };
 
@@ -971,17 +1016,32 @@ export function RentApplications() {
  };
 
  const scopedApplications = useMemo(() => selectedPropertyId === "all" ? applications : applications.filter(a => a.propertyId === selectedPropertyId), [applications, selectedPropertyId]);
+
+ const activeApplicantsByUnitKey = useMemo(() => {
+   const map = new Map<string, RentApplication[]>();
+   for (const app of applications) {
+     if (!["pending", "reviewing", "payment_pending", "approved"].includes(app.status)) continue;
+     const key = app.unitId || `${app.propertyId ?? ""}:${app.unitNumber}`;
+     const list = map.get(key) ?? [];
+     list.push(app);
+     map.set(key, list);
+   }
+   return map;
+ }, [applications]);
+
  const scopedAvailableUnits = useMemo(() => {
    const baseUnits = selectedPropertyId === "all" ? availableUnits : availableUnits.filter(u => u.property_id === selectedPropertyId);
    return baseUnits.map(unit => {
-     const hasLiveActiveApp = applications.some(a => 
-       (a.unitNumber === unit.name || (a as any).unit_id === unit.id) &&
+     const matchingApps = applications.filter(a => 
+       (a.unitId === unit.id || (a.unitNumber === unit.name && a.propertyId === unit.property_id)) &&
        ["pending", "reviewing", "payment_pending", "approved"].includes(a.status)
      );
+     const hasCommittedApp = matchingApps.some(a => a.status === "payment_pending" || a.status === "approved");
      const isUnderNegStatus = ["under_negotiation", "under negotiation", "negotiating", "processing", "ongoing", "on-going"].includes((unit.status ?? "").toLowerCase());
      return {
        ...unit,
-       has_ongoing_application: Boolean(unit.has_ongoing_application || hasLiveActiveApp || isUnderNegStatus),
+       ongoing_application_count: matchingApps.length || unit.ongoing_application_count || 0,
+       has_ongoing_application: Boolean(unit.is_on_hold || hasCommittedApp || isUnderNegStatus),
      };
    });
  }, [availableUnits, applications, selectedPropertyId]);
@@ -1147,8 +1207,34 @@ export function RentApplications() {
                       );
                     })()}
  <div className="min-w-0 flex-1">
+ <div className="flex flex-wrap items-center gap-2">
  <h3 className="truncate text-lg font-black tracking-tight text-foreground group-hover:text-primary transition-colors">{app.applicant.name}</h3>
- <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate">
+ {(() => {
+   const unitKey = app.unitId || `${app.propertyId ?? ""}:${app.unitNumber}`;
+   const othersCount = (activeApplicantsByUnitKey.get(unitKey)?.length ?? 1) - 1;
+   const unitObj = availableUnits.find(u => u.id === app.unitId || (u.name === app.unitNumber && u.property_id === app.propertyId));
+   return (
+     <>
+       <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+         {app.source === "invite_link" ? t("Online Invite") : t("Walk-in")}
+       </span>
+       {othersCount > 0 && (
+         <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">
+           <Users className="size-3" />
+           {t("+{count} other applicant(s) for {unit}", { count: othersCount, unit: app.unitNumber })}
+         </span>
+       )}
+       {unitObj?.is_on_hold && (
+         <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 dark:text-amber-200">
+           <Lock className="size-3" />
+           {t("Held for {name}", { name: unitObj.hold_info?.held_for_name || "Applicant" })}
+         </span>
+       )}
+     </>
+   );
+ })()}
+ </div>
+ <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate mt-0.5">
  <Briefcase className="size-3 shrink-0" />
  {app.applicant.occupation || t("Unspecified")}
  </p>
@@ -1225,12 +1311,12 @@ export function RentApplications() {
 
  <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
  {selectedApp.status !== "approved" && (
- <div className="rounded-2xl bg-primary/5 p-5">
+ <div className="rounded-2xl bg-primary/5 p-5 space-y-4">
  <div className="flex flex-wrap items-center gap-3">
  <button
  onClick={() => handleQuickApprove()}
  disabled={updatingStatusId === selectedApp.id}
- className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-500 disabled:opacity-50 cursor-pointer"
+ className="flex h-12 items-center gap-2 rounded-xl bg-emerald-600 px-5 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-500 disabled:opacity-50 cursor-pointer"
  >
  {updatingStatusId === selectedApp.id ? (
  <Loader2 className="size-4 animate-spin" />
@@ -1241,13 +1327,117 @@ export function RentApplications() {
  </button>
  <button
  onClick={() => openApprovalModal(selectedApp)}
- className="flex items-center gap-2 rounded-xl bg-primary/10 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/20 cursor-pointer"
+ className="flex h-12 items-center gap-2 rounded-xl bg-primary/10 px-5 text-xs font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/20 cursor-pointer"
  >
  <Wallet className="size-4" />
  {selectedApp.status === "payment_pending" ? t("Approve Application") : t("Request Payment")}
  </button>
+ {(() => {
+   const matchedUnit = availableUnits.find(
+     u => u.id === selectedApp.unitId || (u.name === selectedApp.unitNumber && u.property_id === selectedApp.propertyId)
+   );
+   const resolvedUnitId = selectedApp.unitId || matchedUnit?.id || "";
+   const unitKey = selectedApp.unitId || `${selectedApp.propertyId ?? ""}:${selectedApp.unitNumber}`;
+   const competingList = (activeApplicantsByUnitKey.get(unitKey) ?? []).filter(a => a.id !== selectedApp.id);
+
+   return (
+     <>
+       {resolvedUnitId && (
+         <button
+           type="button"
+           onClick={() =>
+             setUnitHoldModalState({
+               isOpen: true,
+               unitId: resolvedUnitId,
+               unitName: selectedApp.unitNumber,
+               propertyName: selectedApp.propertyName,
+               defaultApplicantName: selectedApp.applicant.name,
+               defaultApplicationId: selectedApp.id,
+               competingApplicantsCount: competingList.length,
+               existingHold: matchedUnit?.hold_info ?? null,
+             })
+           }
+           className="flex h-12 items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 text-xs font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-500/20 transition-all cursor-pointer"
+         >
+           <Lock className="size-4" />
+           {matchedUnit?.is_on_hold ? t("Manage Room Hold") : t("Hold Room")}
+         </button>
+       )}
+       <button
+         type="button"
+         onClick={() =>
+           setResolveModalState({
+             isOpen: true,
+             takenUnitId: resolvedUnitId,
+             takenUnitName: selectedApp.unitNumber,
+             propertyName: selectedApp.propertyName,
+             propertyId: selectedApp.propertyId ?? matchedUnit?.property_id ?? null,
+             competingApplicants: [
+               {
+                 id: selectedApp.id,
+                 name: selectedApp.applicant.name,
+                 email: selectedApp.applicant.email,
+                 status: selectedApp.status,
+                 source: selectedApp.source,
+               },
+             ],
+           })
+         }
+         className="flex h-12 items-center gap-2 rounded-xl border border-border bg-background px-4 text-xs font-bold text-foreground hover:bg-muted transition-all cursor-pointer"
+       >
+         <ArrowRightLeft className="size-4" />
+         {t("Offer Another Room")}
+       </button>
+     </>
+   );
+ })()}
  </div>
- <p className="mt-3 text-[10px] font-medium text-muted-foreground">
+ {(() => {
+   const unitKey = selectedApp.unitId || `${selectedApp.propertyId ?? ""}:${selectedApp.unitNumber}`;
+   const competingList = (activeApplicantsByUnitKey.get(unitKey) ?? []).filter(a => a.id !== selectedApp.id);
+   if (competingList.length === 0) return null;
+   const resolvedUnitId =
+     selectedApp.unitId ||
+     availableUnits.find(u => u.name === selectedApp.unitNumber && u.property_id === selectedApp.propertyId)?.id ||
+     "";
+   return (
+     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5">
+       <div className="flex items-center gap-2.5">
+         <Users className="size-5 text-amber-600 dark:text-amber-400 shrink-0" />
+         <p className="text-xs font-bold text-foreground">
+           {t("{count} other applicant(s) also applied for {unit}.", {
+             count: competingList.length,
+             unit: selectedApp.unitNumber,
+           })}
+         </p>
+       </div>
+       <button
+         type="button"
+         onClick={() =>
+           setResolveModalState({
+             isOpen: true,
+             takenUnitId: resolvedUnitId,
+             takenUnitName: selectedApp.unitNumber,
+             propertyName: selectedApp.propertyName,
+             propertyId: selectedApp.propertyId ?? null,
+             winnerName: selectedApp.applicant.name,
+             competingApplicants: competingList.map(c => ({
+               id: c.id,
+               name: c.applicant.name,
+               email: c.applicant.email,
+               status: c.status,
+               source: c.source,
+             })),
+           })
+         }
+         className="shrink-0 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-amber-500 transition-colors"
+       >
+         {t("Manage Other Applicants")}
+       </button>
+     </div>
+   );
+ })()}
+ <p className="text-[10px] font-medium text-muted-foreground">
  {t("Quick Approve skips payment and directly creates tenant account.")}
  </p>
  </div>
@@ -1930,8 +2120,101 @@ export function RentApplications() {
  </AnimatePresence>
 
  {/* ─── Modals ─────────────────────────────────────────────────── */}
- <WalkInApplicationModal isOpen={showTenantApplicationModal} onClose={() => setShowTenantApplicationModal(false)} units={scopedAvailableUnits} onSuccess={() => { reloadKey.current += 1; }} />
- <ContractPreviewModal isOpen={showContractModal} onClose={() => { setShowContractModal(false); setContractData(null); }} contractData={contractData} onSuccess={(payload) => { reloadKey.current += 1; if (payload?.status === "approved") { setShowContractModal(false); } }} />
+ <WalkInApplicationModal
+   isOpen={showTenantApplicationModal}
+   onClose={() => setShowTenantApplicationModal(false)}
+   units={scopedAvailableUnits}
+   onSuccess={() => {
+     refreshApplications();
+     void loadUnits(true);
+   }}
+ />
+ <ContractPreviewModal
+   isOpen={showContractModal}
+   onClose={() => {
+     setShowContractModal(false);
+     setContractData(null);
+   }}
+   contractData={contractData}
+   onSuccess={(payload) => {
+     const currentTargetApp = applications.find(a => a.id === contractData?.application_id) ?? selectedApp;
+     refreshApplications();
+     void loadUnits(true);
+     if (payload?.status === "approved" || payload?.status === "payment_pending") {
+       setShowContractModal(false);
+       if (currentTargetApp) {
+         const unitKey = currentTargetApp.unitId || `${currentTargetApp.propertyId ?? ""}:${currentTargetApp.unitNumber}`;
+         const others = (activeApplicantsByUnitKey.get(unitKey) ?? []).filter(a => a.id !== currentTargetApp.id);
+         const resolvedUnitId =
+           currentTargetApp.unitId ||
+           availableUnits.find(u => u.name === currentTargetApp.unitNumber && u.property_id === currentTargetApp.propertyId)?.id ||
+           "";
+         if (others.length > 0 && resolvedUnitId) {
+           setResolveModalState({
+             isOpen: true,
+             takenUnitId: resolvedUnitId,
+             takenUnitName: currentTargetApp.unitNumber,
+             propertyName: currentTargetApp.propertyName,
+             propertyId: currentTargetApp.propertyId ?? null,
+             winnerName: currentTargetApp.applicant.name,
+             competingApplicants: others.map(o => ({
+               id: o.id,
+               name: o.applicant.name,
+               email: o.applicant.email,
+               status: o.status,
+               source: o.source,
+             })),
+           });
+         }
+       }
+     }
+   }}
+ />
+ {unitHoldModalState && (
+   <UnitHoldModal
+     isOpen={unitHoldModalState.isOpen}
+     onClose={() => setUnitHoldModalState(null)}
+     unitId={unitHoldModalState.unitId}
+     unitName={unitHoldModalState.unitName}
+     propertyName={unitHoldModalState.propertyName}
+     defaultApplicantName={unitHoldModalState.defaultApplicantName}
+     defaultApplicationId={unitHoldModalState.defaultApplicationId}
+     competingApplicantsCount={unitHoldModalState.competingApplicantsCount}
+     existingHold={unitHoldModalState.existingHold}
+     onHoldUpdated={(updatedUnitId, newHoldInfo) => {
+       setAvailableUnits(prev =>
+         prev.map(u =>
+           u.id === updatedUnitId
+             ? { ...u, is_on_hold: Boolean(newHoldInfo), hold_info: newHoldInfo }
+             : u
+         )
+       );
+       void loadUnits(true);
+       toast.success(
+         newHoldInfo
+           ? t("Room placed on hold for {name}.", { name: newHoldInfo.held_for_name })
+           : t("Room hold released. The room is vacant again.")
+       );
+     }}
+   />
+ )}
+ {resolveModalState && (
+   <ResolveCompetingApplicantsModal
+     isOpen={resolveModalState.isOpen}
+     onClose={() => setResolveModalState(null)}
+     takenUnitId={resolveModalState.takenUnitId}
+     takenUnitName={resolveModalState.takenUnitName}
+     propertyName={resolveModalState.propertyName}
+     propertyId={resolveModalState.propertyId}
+     winnerName={resolveModalState.winnerName}
+     competingApplicants={resolveModalState.competingApplicants}
+     availableUnits={availableUnits}
+     onResolved={() => {
+       refreshApplications();
+       void loadUnits(true);
+     }}
+   />
+ )}
  
  <AnimatePresence>
  {previewUrl && (

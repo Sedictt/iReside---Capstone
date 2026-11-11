@@ -6,6 +6,8 @@ import {
     isUnitOccupied,
     isUnitOngoing,
     isUnitAvailable,
+    isUnitOnHold,
+    isUnitLockedForIntake,
     getUnitOptionLabel,
     type WalkInFormData,
 } from "./application-intake";
@@ -125,4 +127,60 @@ describe("unit availability and labeling helpers", () => {
         expect(getUnitOptionLabel(underNegotiationUnit)).toBe("Villa 104 • (On-going — Unavailable)");
         expect(getUnitOptionLabel(underNegotiationUnit, true)).toBe("Villa 104 — Skyline Lofts • (On-going — Unavailable)");
     });
+
+    it("correctly identifies units placed on hold", () => {
+        const heldUnit = {
+            ...availableUnit,
+            is_on_hold: true,
+            hold_info: {
+                held_for_name: "Pedro Penduko",
+                hold_expires_at: "2099-01-01T00:00:00Z",
+            },
+        };
+        const expiredHoldUnit = {
+            ...availableUnit,
+            is_on_hold: false,
+            hold_info: {
+                held_for_name: "Pedro Penduko",
+                hold_expires_at: "2000-01-01T00:00:00Z",
+            },
+        };
+
+        expect(isUnitOnHold(heldUnit)).toBe(true);
+        expect(isUnitOnHold(expiredHoldUnit)).toBe(false);
+        expect(isUnitOnHold(availableUnit)).toBe(false);
+    });
+
+    it("correctly enforces intake locks for held, occupied, or payment-committed units", () => {
+        expect(isUnitLockedForIntake(occupiedUnit)).toBe(true);
+        expect(isUnitLockedForIntake({ ...availableUnit, is_on_hold: true })).toBe(true);
+        expect(isUnitLockedForIntake({ ...availableUnit, application_status: "approved" })).toBe(true);
+        expect(isUnitLockedForIntake({ ...availableUnit, ongoing_application_status: "payment_pending" })).toBe(true);
+
+        // Multiple pending or reviewing applications DO NOT lock intake (queueing allowed)
+        expect(isUnitLockedForIntake({ ...availableUnit, application_status: "reviewing" })).toBe(false);
+        expect(isUnitLockedForIntake({ ...availableUnit, ongoing_application_status: "pending" })).toBe(false);
+        expect(isUnitLockedForIntake(availableUnit)).toBe(false);
+    });
+
+    it("formats labels for held units and multi-applicant units", () => {
+        const heldUnit = {
+            ...availableUnit,
+            is_on_hold: true,
+            hold_info: {
+                held_for_name: "Pedro Penduko",
+            },
+        };
+        const competingUnit = {
+            ...availableUnit,
+            ongoing_application_count: 3,
+        };
+
+        expect(getUnitOptionLabel(heldUnit)).toBe("Villa 101 • (On Hold for Pedro Penduko)");
+        expect(getUnitOptionLabel(heldUnit, true)).toBe("Villa 101 — Skyline Lofts • (On Hold for Pedro Penduko)");
+
+        expect(getUnitOptionLabel(competingUnit)).toBe("Villa 101 — ₱15,000/mo • (3 Applicants)");
+        expect(getUnitOptionLabel(competingUnit, true)).toBe("Villa 101 — Skyline Lofts — ₱15,000/mo • (3 Applicants)");
+    });
 });
+

@@ -592,6 +592,7 @@ export async function GET(request: Request) {
                 property?.contract_template && typeof property.contract_template === "object" && !Array.isArray(property.contract_template)
                     ? (property.contract_template as Record<string, unknown>)
                     : null,
+            unitId: row.unit_id ?? unit?.id ?? null,
             unitNumber: unit?.name ?? "Unit",
             propertyImage,
             requestedMoveIn: row.move_in_date ?? null,

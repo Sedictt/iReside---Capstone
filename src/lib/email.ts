@@ -1012,3 +1012,96 @@ export async function sendPaymentProofSubmittedEmail({
 
     return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
+
+export async function sendUnitReassignedRecommendationEmail({
+    to,
+    applicantName,
+    propertyName,
+    previousUnitName,
+    newUnitName,
+    newMonthlyRent,
+    landlordNote,
+}: {
+    to: string;
+    applicantName: string;
+    propertyName: string;
+    previousUnitName: string;
+    newUnitName: string;
+    newMonthlyRent: number;
+    landlordNote?: string | null;
+}) {
+    const subject = `Room Update: We Reserved ${newUnitName} for Your Application — ${propertyName}`;
+
+    const rows: Array<{ label: string; value: string; accent?: boolean; strong?: boolean }> = [
+        { label: "Property", value: propertyName },
+        { label: "Previous Room", value: previousUnitName, strong: false },
+        { label: "New Recommended Room", value: newUnitName, accent: true },
+        { label: "Monthly Rent", value: peso(newMonthlyRent) },
+    ];
+
+    const html = renderEmail({
+        title: "Your Application Was Moved to an Available Room",
+        preheader: `${previousUnitName} was just taken, so we moved your application to ${newUnitName} at ${propertyName}.`,
+        header: { eyebrow: "Application Room Update", tone: "info" },
+        width: 520,
+        body: `
+            ${greeting(applicantName)}
+            ${heading("Good News — We Have Another Room for You!")}
+            ${paragraph(`<strong>${esc(previousUnitName)}</strong> at <strong>${esc(propertyName)}</strong> was just leased, so your landlord moved your application to <strong>${esc(newUnitName)}</strong> so you don't lose your spot.`, { marginBottom: 16 })}
+            ${paragraph("All of your submitted details and uploaded IDs have been carried over automatically — you do not need to fill out the form again.", { marginBottom: 20 })}
+            ${card(
+                `${keyValueRows(rows)}
+                 ${landlordNote ? `<div style="border-top:1px solid #e2e8f0;padding-top:10px;margin-top:10px;">
+                   <span style="font-size:11px;color:#64748b;text-transform:uppercase;display:block;margin-bottom:4px;font-weight:600;letter-spacing:0.5px;">Note from Your Landlord</span>
+                   <span style="font-size:13px;color:#334155;line-height:1.5;">${esc(landlordNote)}</span>
+                 </div>` : ""}`,
+                { marginBottom: 20, padding: 18 },
+            )}
+            ${muted("If you are happy with this room, your landlord will follow up with the next steps. If you prefer not to proceed, simply reply or let your landlord know.")}
+        `,
+    });
+
+    const text = `Hi ${applicantName},\n\n${previousUnitName} at ${propertyName} was just leased, so your landlord moved your application to ${newUnitName} (${peso(newMonthlyRent)}/month).\n\nAll of your submitted details and uploaded IDs have been carried over automatically.\n${landlordNote ? `\nNote from Landlord: ${landlordNote}\n` : ""}\n— iReside Property Management`;
+
+    return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
+}
+
+export async function sendUnitOnHoldStatusEmail({
+    to,
+    applicantName,
+    propertyName,
+    unitName,
+    holdNote,
+}: {
+    to: string;
+    applicantName: string;
+    propertyName: string;
+    unitName: string;
+    holdNote?: string | null;
+}) {
+    const subject = `Application Status Update — ${propertyName} (${unitName})`;
+
+    const html = renderEmail({
+        title: "Room Temporarily on Hold",
+        preheader: `An update regarding your application for ${unitName} at ${propertyName}.`,
+        header: { eyebrow: "Application Status Update", tone: "warning" },
+        width: 520,
+        body: `
+            ${greeting(applicantName)}
+            ${heading("Quick Update on Your Application")}
+            ${paragraph(`Thank you for applying for <strong>${esc(unitName)}</strong> at <strong>${esc(propertyName)}</strong>. Another applicant is currently finalizing their move-in payment for this room, so it has been placed on a temporary hold.`, { marginBottom: 16 })}
+            ${paragraph("Your application remains active on our priority list. If the room becomes available again, or if the landlord has another similar room to offer you, we will notify you right away.", { marginBottom: 20 })}
+            ${holdNote ? card(
+                `<span style="font-size:11px;color:#64748b;text-transform:uppercase;display:block;margin-bottom:4px;font-weight:600;letter-spacing:0.5px;">Note from Your Landlord</span>
+                 <span style="font-size:13px;color:#334155;line-height:1.5;">${esc(holdNote)}</span>`,
+                { marginBottom: 20, padding: 16 },
+            ) : ""}
+            ${muted("Thank you for your patience and interest in our property.")}
+        `,
+    });
+
+    const text = `Hi ${applicantName},\n\nThank you for applying for ${unitName} at ${propertyName}. Another applicant is currently finalizing their move-in payment for this room, so it has been placed on a temporary hold.\n\nYour application remains active on our priority list, and we will update you if the room reopens or if another room is available for you.\n${holdNote ? `\nNote from Landlord: ${holdNote}\n` : ""}\n— iReside Property Management`;
+
+    return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
+}
+

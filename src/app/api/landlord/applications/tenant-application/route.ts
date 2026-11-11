@@ -3,6 +3,7 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { parseJsonBody } from "@/lib/validation/server";
 import { landlordApplicationCreateSchema, landlordApplicationUpdateSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { getActiveUnitHold } from "@/lib/unit-hold";
 
 type PostgrestLikeError = {
     code?: string | null;
@@ -81,21 +82,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Selected unit currently has an ongoing application or is under negotiation." }, { status: 400 });
     }
 
-    const { data: ongoingApp } = await adminClient
-        .from("applications")
-        .select("id")
-        .eq("unit_id", unit_id)
-        .in("status", ["pending", "reviewing", "payment_pending", "approved"])
-        .limit(1)
-        .maybeSingle();
-
-    if (ongoingApp) {
-        return NextResponse.json({ error: "Selected unit currently has an ongoing application under processing and is unavailable." }, { status: 400 });
-    }
-
     const { data: property, error: propertyError } = await adminClient
         .from("properties")
-        .select("id, landlord_id")
+        .select("id, landlord_id, contract_template")
         .eq("id", unit.property_id)
         .maybeSingle();
 
@@ -110,6 +99,47 @@ export async function POST(request: Request) {
 
     if (property.landlord_id !== userId) {
         return NextResponse.json({ error: "You do not own this unit." }, { status: 403 });
+    }
+
+    const activeHold = getActiveUnitHold(property.contract_template, unit_id);
+    if (activeHold) {
+        return NextResponse.json(
+            { error: `Selected unit is currently on hold for ${activeHold.held_for_name}. Release the hold first or choose another unit.` },
+            { status: 409 }
+        );
+    }
+
+    const { data: committedApp } = await adminClient
+        .from("applications")
+        .select("id, status")
+        .eq("unit_id", unit_id)
+        .in("status", ["payment_pending", "approved"])
+        .limit(1)
+        .maybeSingle();
+
+    if (committedApp) {
+        return NextResponse.json(
+            { error: "Selected unit already has an approved or payment-pending applicant." },
+            { status: 409 }
+        );
+    }
+
+    if (normalizedApplicantEmail) {
+        const { data: duplicateApp } = await adminClient
+            .from("applications")
+            .select("id")
+            .eq("unit_id", unit_id)
+            .ilike("applicant_email", normalizedApplicantEmail)
+            .in("status", ["pending", "reviewing", "payment_pending", "approved"])
+            .limit(1)
+            .maybeSingle();
+
+        if (duplicateApp) {
+            return NextResponse.json(
+                { error: "This applicant already has an active application for this unit." },
+                { status: 409 }
+            );
+        }
     }
 
     // Tenant-application creation cannot directly approve under payment-gated flow.
