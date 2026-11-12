@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Image from 'next/image';
-import { Search, ArrowLeft, AlertTriangle, X } from "lucide-react";
+import { Search, ArrowLeft, AlertTriangle, X, Bot, Pin } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
 import { ContactItem as ContactItemType } from "./types";
@@ -150,6 +150,45 @@ export function ContactList({
 
             {/* Contacts */}
             <div className="flex-1 overflow-y-auto custom-scrollbar-premium p-4 pt-0 space-y-1">
+                {/* Pinned iRis Operations Assistant Tile */}
+                <button
+                    type="button"
+                    onClick={() => setActiveConversationId("iris-assistant")}
+                    className={cn(
+                        "flex w-full items-center gap-3 rounded-2xl p-3 text-left transition-all active:scale-[0.99] mb-1.5",
+                        activeConversationId === "iris-assistant"
+                            ? "neumorphic-inset border border-purple-500/30 bg-purple-500/5 shadow-inner"
+                            : "hover:bg-surface-2/60 neumorphic-extruded"
+                    )}
+                >
+                    <div
+                        className="relative size-12 shrink-0 rounded-full flex items-center justify-center shadow-xs"
+                        style={{ backgroundColor: "#8B5CF6" }}
+                    >
+                        <Bot className="size-6 text-white" />
+                        <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-amber-500 text-[9px] text-white shadow-xs">
+                            <Pin className="size-2.5 fill-white" />
+                        </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 truncate">
+                                <span className="truncate text-sm font-black text-high">
+                                    {t("iRis Operations Assistant")}
+                                </span>
+                            </div>
+                            <span className="shrink-0 text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded-md">
+                                {t("Hub")}
+                            </span>
+                        </div>
+                        <div className="truncate text-xs text-medium">
+                            {t("Automated Assistant & Quick Tools")}
+                        </div>
+                    </div>
+                </button>
+
+                <div className="my-1.5 h-[1px] bg-border/40" />
+
                 {isSidebarLoading ? (
                     <div className="space-y-2">
                         {Array.from({ length: 6 }).map((_, i) => (

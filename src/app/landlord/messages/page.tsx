@@ -52,6 +52,7 @@ import {
     QuickAction
 } from "@/components/landlord/messages/types";
 import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
+import { IrisAssistantWorkspace, IrisContextualDrawer } from "@/components/landlord/iris";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import {
     createOrGetDirectConversation,
@@ -280,6 +281,7 @@ function MessagesContent() {
     const [isPaymentHistoryExpanded, setIsPaymentHistoryExpanded] = useState(false);
     const [selectedQuickAction, setSelectedQuickAction] = useState<string | null>(null);
     const [showAttachInvoiceModal, setShowAttachInvoiceModal] = useState(false);
+    const [isIrisDrawerOpen, setIsIrisDrawerOpen] = useState(false);
     const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryEntry[]>([]);
     const [paymentHistoryTotal, setPaymentHistoryTotal] = useState(0);
     const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
@@ -601,7 +603,9 @@ const seen = new Set<string>();
             
             // Batch state updates via reducer (previously 3 setState calls)
             const computedActiveId = (() => {
+                if (activeConversationId === "iris-assistant") return "iris-assistant";
                 if (activeConversationId && cachedConversations.some((contact) => contact.id === activeConversationId)) return activeConversationId;
+                if (conversationFromUrl === "iris-assistant") return "iris-assistant";
                 if (conversationFromUrl && cachedConversations.some((contact) => contact.id === conversationFromUrl)) return conversationFromUrl;
                 return cachedConversations[0]?.id ?? null;
             })();
@@ -665,7 +669,7 @@ const seen = new Set<string>();
     const activeRelationshipStatus = activeContact?.relationshipStatus ?? "stranger";
     const activeQuickActions = LANDLORD_QUICK_ACTIONS_BY_RELATIONSHIP[activeRelationshipStatus];
     const canShowPaymentHistory = activeRelationshipStatus === "tenant_landlord" && (activeContact?.hasPaymentHistory ?? false);
-    const isChatLoading = isSidebarLoading || isMessagesLoading || Boolean(activeConversationId && !activeContact);
+    const isChatLoading = isSidebarLoading || isMessagesLoading || Boolean(activeConversationId && activeConversationId !== "iris-assistant" && !activeContact);
 
     const displayContact = activeContact ?? {
         id: "",
@@ -732,7 +736,7 @@ setPaymentHistoryLoading(true);
 
     useEffect(() => {
         setIsPaymentHistoryExpanded(false);
-        if (!activeConversationId || !canShowPaymentHistory) {
+        if (!activeConversationId || activeConversationId === "iris-assistant" || !canShowPaymentHistory) {
             setPaymentHistory([]);
             setPaymentHistoryTotal(0);
             paymentHistoryErrorRef.current = null;
@@ -743,7 +747,7 @@ setPaymentHistoryLoading(true);
     }, [activeConversationId, canShowPaymentHistory, loadPaymentHistory, showInfoSidebar, showPaymentHistoryModal]);
 
     useEffect(() => {
-        if (!activeConversationId || isSidebarLoading) return;
+        if (!activeConversationId || activeConversationId === "iris-assistant" || isSidebarLoading) return;
         const stillVisible = visibleContacts.some((contact) => contact.id === activeConversationId);
         if (stillVisible) return;
         
@@ -1322,7 +1326,7 @@ setPaymentHistoryLoading(true);
         setIsLoadingEarlier(false);
         scrollPositionAdjustmentRef.current = null;
 
-        if (!activeConversationId) { 
+        if (!activeConversationId || activeConversationId === "iris-assistant") { 
             setMessagesState([]);
             setIsOtherUserTyping(false);
             setIsMessagesLoading(false);
@@ -1365,7 +1369,7 @@ setPaymentHistoryLoading(true);
     }, [activeConversationId, user?.id]);
 
     useEffect(() => {
-        if (!activeConversationId) return;
+        if (!activeConversationId || activeConversationId === "iris-assistant") return;
         const channel = supabase.channel(`messages-${activeConversationId}`)
             .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${activeConversationId}` }, async (payload) => { 
                 const newMessage = payload.new as any;
@@ -1481,55 +1485,68 @@ setPaymentHistoryLoading(true);
                 "sm:flex sm:rounded-[2.5rem] sm:min-w-0 sm:flex-1",
                 activeConversationId ? "flex w-full" : "hidden sm:flex"
             )}>
-                <ChatHeader 
-                    contact={displayContact}
-                    isLoading={isChatLoading}
-                    showFilesSidebar={showFilesSidebar}
-                    setShowFilesSidebar={setShowFilesSidebar}
-                    showInfoSidebar={showInfoSidebar}
-                    setShowInfoSidebar={setShowInfoSidebar}
-                    openReportWizard={openReportWizard}
-                    onBack={() => setActiveConversationId(null)}
-                />
+                {activeConversationId === "iris-assistant" ? (
+                    <IrisAssistantWorkspace
+                        onOpenConversation={(targetUserId) => {
+                            void handleStartConversation(targetUserId);
+                        }}
+                        onBack={() => setActiveConversationId(null)}
+                        className="flex-1"
+                    />
+                ) : (
+                    <>
+                        <ChatHeader 
+                            contact={displayContact}
+                            isLoading={isChatLoading}
+                            showFilesSidebar={showFilesSidebar}
+                            setShowFilesSidebar={setShowFilesSidebar}
+                            showInfoSidebar={showInfoSidebar}
+                            setShowInfoSidebar={setShowInfoSidebar}
+                            openReportWizard={openReportWizard}
+                            onBack={() => setActiveConversationId(null)}
+                            onOpenIrisDrawer={() => setIsIrisDrawerOpen(true)}
+                        />
 
-                <MessageList 
-                    messages={messagesState}
-                    viewerRole="landlord"
-                    isMessagesLoading={isChatLoading}
-                    hasMoreMessages={hasMoreMessages}
-                    isLoadingEarlier={isLoadingEarlier}
-                    onLoadEarlier={loadEarlierMessages}
-                    onDownloadImage={handleDownloadImage}
-                    onOpenF2F={(msg) => {
-                        const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-                        const candidateId = msg.invoiceId || msg.paymentId || null;
-                        const resolvedId = candidateId && UUID_RE.test(candidateId) ? candidateId : null;
-                        setSelectedInvoiceId(resolvedId);
-                        setActiveRefundMessage(msg);
-                    }}
-                    onImageClick={(images, index) => { setPreviewImages(images); setPreviewImageIndex(index); }}
-                    isDownloading={isDownloading}
-                    updateShouldStickToBottom={updateShouldStickToBottom}
-                    messagesScrollRef={messagesScrollRef}
-                    messagesEndRef={messagesEndRef}
-                    onReportMessage={openReportWizard}
-                />
+                        <MessageList 
+                            messages={messagesState}
+                            viewerRole="landlord"
+                            isMessagesLoading={isChatLoading}
+                            hasMoreMessages={hasMoreMessages}
+                            isLoadingEarlier={isLoadingEarlier}
+                            onLoadEarlier={loadEarlierMessages}
+                            onDownloadImage={handleDownloadImage}
+                            onOpenF2F={(msg) => {
+                                const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                                const candidateId = msg.invoiceId || msg.paymentId || null;
+                                const resolvedId = candidateId && UUID_RE.test(candidateId) ? candidateId : null;
+                                setSelectedInvoiceId(resolvedId);
+                                setActiveRefundMessage(msg);
+                            }}
+                            onImageClick={(images, index) => { setPreviewImages(images); setPreviewImageIndex(index); }}
+                            isDownloading={isDownloading}
+                            updateShouldStickToBottom={updateShouldStickToBottom}
+                            messagesScrollRef={messagesScrollRef}
+                            messagesEndRef={messagesEndRef}
+                            onReportMessage={openReportWizard}
+                        />
 
-                <MessageComposer 
-                    messageInput={messageInput}
-                    setMessageInput={handleMessageInputChange}
-                    onSendMessage={handleSendMessage}
-                    onFileUpload={handleFileUpload}
-                    pendingAttachments={pendingAttachments}
-                    removePendingAttachment={removePendingAttachment}
-                    isUploadingFile={isUploadingFile}
-                    isSending={isSending}
-                    isOtherUserTyping={isOtherUserTyping}
-                    otherUserName={displayContact.name}
-                    isLoading={isChatLoading}
-                    onOpenAttachInvoice={() => setShowAttachInvoiceModal(true)}
-                    onOpenQuickActions={() => handleQuickAction(activeQuickActions[0]?.key || "request-payment")}
-                />
+                        <MessageComposer 
+                            messageInput={messageInput}
+                            setMessageInput={handleMessageInputChange}
+                            onSendMessage={handleSendMessage}
+                            onFileUpload={handleFileUpload}
+                            pendingAttachments={pendingAttachments}
+                            removePendingAttachment={removePendingAttachment}
+                            isUploadingFile={isUploadingFile}
+                            isSending={isSending}
+                            isOtherUserTyping={isOtherUserTyping}
+                            otherUserName={displayContact.name}
+                            isLoading={isChatLoading}
+                            onOpenAttachInvoice={() => setShowAttachInvoiceModal(true)}
+                            onOpenQuickActions={() => handleQuickAction(activeQuickActions[0]?.key || "request-payment")}
+                        />
+                    </>
+                )}
             </div>
 
             <AnimatePresence>
@@ -1882,6 +1899,14 @@ setPaymentHistoryLoading(true);
                       }
                   }}
                   refundMessage={activeRefundMessage}
+              />
+
+              <IrisContextualDrawer
+                  isOpen={isIrisDrawerOpen}
+                  onClose={() => setIsIrisDrawerOpen(false)}
+                  activeTenantId={activeContact?.participantUserId || undefined}
+                  activeTenantName={activeContact?.name || undefined}
+                  activeUnitName={activeContact?.unit || undefined}
               />
          </div>
      );
