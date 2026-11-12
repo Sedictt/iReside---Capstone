@@ -14,9 +14,9 @@ import { invalidatePropertyUnitsCache } from "@/app/api/landlord/property-units/
 
 export async function POST(
     request: Request,
-    context: { params: Promise<{ unitId: string }> }
+    context: { params: Promise<{ id: string }> }
 ) {
-    const { unitId } = await context.params;
+    const { id: unitId } = await context.params;
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
     const { userId } = authContext;
@@ -133,9 +133,9 @@ export async function POST(
 
 export async function DELETE(
     request: Request,
-    context: { params: Promise<{ unitId: string }> }
+    context: { params: Promise<{ id: string }> }
 ) {
-    const { unitId } = await context.params;
+    const { id: unitId } = await context.params;
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
     const { userId } = authContext;
