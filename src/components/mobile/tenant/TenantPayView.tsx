@@ -27,6 +27,7 @@ import { useLanguageContext } from '@/context/LanguageContext';
 import { formatAccountNumber, type ProofMethod } from '@/lib/billing/payment-methods';
 import { BankTransferDetails, GcashLimitNotice, type BankDestinationView } from '@/components/shared/payment-methods/PaymentMethodBits';
 import { mobilePayTotals, toMobilePayItems, type MobilePayItem, type OverviewResponse } from './pay-overview';
+import { readViewCache, writeViewCache, hasViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 
 /** Turns a status value like "under_review" into an English display label ("Under Review"). */
 const toStatusLabel = (value: string) =>
@@ -53,8 +54,8 @@ interface PaymentOverviewResponse extends OverviewResponse {
 
 export function TenantPayView() {
     const { t, locale } = useLanguageContext();
-    const [data, setData] = useState<PaymentOverviewResponse | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState<PaymentOverviewResponse | null>(() => readViewCache<PaymentOverviewResponse>('tenant-payments') ?? null);
+    const [loading, setLoading] = useState(() => !hasViewCache('tenant-payments'));
     const [filter, setFilter] = useState<'all' | 'pending' | 'paid'>('all');
     
     // Upload Proof modal state
@@ -80,11 +81,9 @@ export function TenantPayView() {
 
     const fetchPayments = async () => {
         try {
-            const res = await fetch('/api/tenant/payments');
-            if (res.ok) {
-                const json = await res.json();
-                setData(json);
-            }
+            const json = await fetchJsonDeduped<PaymentOverviewResponse>('/api/tenant/payments');
+            setData(json);
+            writeViewCache('tenant-payments', json);
         } catch (err) {
             console.error('[TenantPay] Failed to load payments:', err);
         } finally {

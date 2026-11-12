@@ -35,6 +35,7 @@ import { cn } from '@/lib/utils';
 import { useLanguageContext } from '@/context/LanguageContext';
 import { toast } from 'sonner';
 import { tr } from '@/hooks/useLanguage';
+import { readViewCache, writeViewCache, hasViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 
 interface ClearanceData {
     rent_settled: boolean;
@@ -94,8 +95,10 @@ export function LandlordMoveOutView() {
     const { selectedPropertyId } = useProperty();
     const { t, locale } = useLanguageContext();
 
-    const [requests, setRequests] = useState<MoveOutRequestItem[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [requests, setRequests] = useState<MoveOutRequestItem[]>(
+        () => readViewCache<MoveOutRequestItem[]>('landlord-move-out') ?? []
+    );
+    const [loading, setLoading] = useState(() => !hasViewCache('landlord-move-out'));
     const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'completed' | 'all'>('pending');
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -122,15 +125,17 @@ export function LandlordMoveOutView() {
     const [inspectionDate, setInspectionDate] = useState(() => new Date().toISOString().split('T')[0]);
 
     const fetchRequests = useCallback(async () => {
+        if (!hasViewCache('landlord-move-out')) setLoading(true);
         try {
-            setLoading(true);
-            const res = await fetch('/api/landlord/move-out');
-            if (!res.ok) throw new Error('Failed to load move-out requests');
-            const data = await res.json();
-            setRequests(Array.isArray(data) ? data : []);
+            const data = await fetchJsonDeduped<MoveOutRequestItem[]>('/api/landlord/move-out');
+            const list = Array.isArray(data) ? data : [];
+            setRequests(list);
+            writeViewCache('landlord-move-out', list);
         } catch (err) {
             console.error('Error fetching move-out requests:', err);
-            toast.error(tr('Failed to load move-out notices'));
+            if (!hasViewCache('landlord-move-out')) {
+                toast.error(tr('Failed to load move-out notices'));
+            }
         } finally {
             setLoading(false);
         }

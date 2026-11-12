@@ -6,6 +6,9 @@ import {
   generateRoomOfferToken,
   verifyRoomOfferToken,
   generateRoomOfferLink,
+  generateApplicationStatusToken,
+  verifyApplicationStatusToken,
+  generateApplicationStatusLink,
 } from '../jwt';
 
 describe('JWT Utilities for Lease Signing', () => {
@@ -154,6 +157,77 @@ describe('JWT Utilities for Lease Signing', () => {
       expect(result.valid).toBe(true);
       expect(result.payload?.applicationId).toBe('app-123');
       expect(result.payload?.targetUnitId).toBe('unit-456');
+    });
+  });
+
+  describe('application status tokens', () => {
+    it('generates and verifies an application status token', () => {
+      const token = generateApplicationStatusToken('app-status-123');
+      const result = verifyApplicationStatusToken(token);
+
+      expect(result.valid).toBe(true);
+      expect(result.payload?.applicationId).toBe('app-status-123');
+      expect(result.payload?.type).toBe('application_status');
+    });
+
+    it('rejects tokens with wrong type', () => {
+      const leaseToken = generateSigningToken('lease-123', 'tenant-456');
+      const roomOfferToken = generateRoomOfferToken('app-123', 'unit-456');
+
+      expect(verifyApplicationStatusToken(leaseToken)).toEqual({
+        valid: false,
+        error: 'Invalid token type',
+      });
+      expect(verifyApplicationStatusToken(roomOfferToken)).toEqual({
+        valid: false,
+        error: 'Invalid token type',
+      });
+    });
+
+    it('rejects expired tokens', () => {
+      const jwt = require('jsonwebtoken');
+      const expiredToken = jwt.sign(
+        { applicationId: 'app-123', type: 'application_status' },
+        process.env.JWT_SECRET,
+        { expiresIn: '-10s' }
+      );
+
+      const result = verifyApplicationStatusToken(expiredToken);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('This status link has expired.');
+    });
+
+    it('rejects tampered tokens', () => {
+      const token = generateApplicationStatusToken('app-status-123');
+      const parts = token.split('.');
+      const tampered = `${parts[0]}.${parts[1]}.tamperedSignature`;
+
+      const result = verifyApplicationStatusToken(tampered);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Invalid status link.');
+    });
+
+    it('rejects tokens with missing applicationId', () => {
+      const jwt = require('jsonwebtoken');
+      const incompleteToken = jwt.sign(
+        { type: 'application_status' },
+        process.env.JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+
+      const result = verifyApplicationStatusToken(incompleteToken);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Missing required token fields');
+    });
+
+    it('generates a verifiable /apply/status link', () => {
+      const link = generateApplicationStatusLink('app-status-999');
+      expect(link).toContain('/apply/status?token=');
+
+      const tokenParam = decodeURIComponent(link.split('?token=')[1]);
+      const result = verifyApplicationStatusToken(tokenParam);
+      expect(result.valid).toBe(true);
+      expect(result.payload?.applicationId).toBe('app-status-999');
     });
   });
 });

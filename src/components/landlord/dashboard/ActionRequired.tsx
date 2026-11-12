@@ -14,6 +14,8 @@ import {
     Filter,
     RotateCcw,
     Zap,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -89,9 +91,9 @@ type ActionItem = {
 // --- Constants & Helpers ---
 
 const toneClasses: Record<ActionItem["tone"], string> = {
-    critical: "border-red-500/25 bg-red-500/12 text-red-400",
-    high: "border-amber-500/25 bg-amber-500/12 text-amber-400",
-    medium: "border-primary/25 bg-primary/12 text-primary",
+    critical: "border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-400",
+    high: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+    medium: "border-primary/25 bg-primary/10 text-primary",
 };
 
 const kindIconMap = {
@@ -101,35 +103,55 @@ const kindIconMap = {
     message: MessageSquareMore,
 } as const;
 
-const formatDateLabel = (iso: string, locale: string) =>
-    new Date(iso).toLocaleDateString(locale, {
+const formatDateLabel = (raw: string | null | undefined, locale: string, fallback = "Recently") => {
+    if (!raw) return fallback;
+    const trimmed = raw.trim();
+    if (!trimmed) return fallback;
+    const parsed = new Date(trimmed);
+    if (Number.isNaN(parsed.getTime())) {
+        // API sometimes returns human-readable relative strings like "Today" or "2 days ago"
+        return trimmed;
+    }
+    return parsed.toLocaleDateString(locale, {
         month: "short",
         day: "numeric",
-        year: "numeric"
+        year: "numeric",
     });
+};
 
 // --- Sub-components ---
 
-function ActionFilteredEmptyState({ onReset }: { onReset: () => void }) {
+function ActionFilteredEmptyState({ onReset, isMobile }: { onReset: () => void; isMobile?: boolean }) {
     const { t } = useLanguageContext();
     return (
         <m.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
-            className="rounded-2xl neumorphic-inset p-8 sm:p-12 text-center"
+            className={cn(
+                "rounded-2xl text-center",
+                isMobile ? "border border-border/50 bg-muted/20 p-6" : "neumorphic-inset p-8 sm:p-12"
+            )}
         >
-            <div className="mb-4 inline-flex size-14 sm:size-16 items-center justify-center rounded-2xl neumorphic-extruded text-primary">
-                <Filter className="size-6 sm:size-7" />
+            <div className={cn(
+                "mb-3 inline-flex items-center justify-center rounded-2xl text-primary",
+                isMobile ? "size-12 bg-primary/10" : "mb-4 size-14 sm:size-16 neumorphic-extruded"
+            )}>
+                <Filter className={isMobile ? "size-5" : "size-6 sm:size-7"} />
             </div>
-            <h3 className="text-base sm:text-lg font-black text-foreground text-balance">{t("No Matching Attention Items")}</h3>
+            <h3 className="text-base sm:text-lg font-bold text-foreground text-balance">{t("No Matching Attention Items")}</h3>
             <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground max-w-sm mx-auto text-pretty">
                 {t("No items match your active filter criteria. Clear filters to view all pending tasks.")}
             </p>
             <button
                 type="button"
                 onClick={onReset}
-                className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl min-h-[44px] neumorphic-primary px-5 py-2.5 text-xs font-black text-primary-foreground transition-all hover:brightness-110 active:scale-95"
+                className={cn(
+                    "mt-4 inline-flex items-center justify-center gap-2 rounded-xl min-h-[44px] px-5 py-2.5 text-xs font-bold transition-all active:scale-95 cursor-pointer",
+                    isMobile
+                        ? "bg-primary text-primary-foreground shadow-xs"
+                        : "mt-5 font-black neumorphic-primary text-primary-foreground hover:brightness-110"
+                )}
             >
                 <RotateCcw className="size-3.5" />
                 {t("Reset All Filters")}
@@ -138,9 +160,61 @@ function ActionFilteredEmptyState({ onReset }: { onReset: () => void }) {
     );
 }
 
-function ActionItemCard({ action }: { action: ActionItem }) {
+function ActionItemCard({ action, isMobile }: { action: ActionItem; isMobile?: boolean }) {
     const Icon = kindIconMap[action.kind];
     const { t } = useLanguageContext();
+
+    if (isMobile) {
+        return (
+            <m.div
+                layout
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                className="rounded-2xl border border-border/60 bg-background/80 dark:bg-zinc-900/60 p-3.5 shadow-xs flex flex-col gap-2.5"
+            >
+                <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={cn(
+                            "flex size-9 items-center justify-center rounded-xl shrink-0 border",
+                            action.tone === "critical" && "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
+                            action.tone === "high" && "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+                            action.tone === "medium" && "bg-primary/10 text-primary border-primary/20"
+                        )}>
+                            <Icon className="size-4" />
+                        </div>
+                        <h3 className="text-sm font-bold text-foreground leading-snug line-clamp-1">
+                            {action.title}
+                        </h3>
+                    </div>
+                    <span className={cn(
+                        "rounded-full border px-2 py-0.5 text-[10px] font-bold whitespace-nowrap shrink-0",
+                        toneClasses[action.tone]
+                    )}>
+                        {t(action.badgeLabel ?? action.tone)}
+                    </span>
+                </div>
+
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                    {action.detail}
+                </p>
+
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40">
+                    <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground min-w-0">
+                        <Clock className="size-3.5 shrink-0" />
+                        <span className="truncate">{action.meta}</span>
+                    </div>
+                    <Link
+                        href={action.href}
+                        className="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold active:scale-95 transition-all whitespace-nowrap shrink-0 shadow-xs"
+                    >
+                        <span>{action.cta}</span>
+                        <ArrowRight className="size-3.5 shrink-0" />
+                    </Link>
+                </div>
+            </m.div>
+        );
+    }
 
     return (
         <m.div 
@@ -194,19 +268,25 @@ function ActionItemCard({ action }: { action: ActionItem }) {
     );
 }
 
-function ActionEmptyState() {
+function ActionEmptyState({ isMobile }: { isMobile?: boolean }) {
     const { t } = useLanguageContext();
     return (
         <m.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-3xl neumorphic-inset p-10 sm:p-12 text-center"
+            className={cn(
+                "text-center",
+                isMobile ? "rounded-2xl border border-border/50 bg-muted/20 p-6" : "rounded-3xl neumorphic-inset p-10 sm:p-12"
+            )}
         >
-            <div className="mb-6 inline-flex size-20 items-center justify-center rounded-2xl neumorphic-extruded text-primary">
-                <ShieldCheck className="size-10" />
+            <div className={cn(
+                "inline-flex items-center justify-center rounded-2xl text-primary",
+                isMobile ? "mb-3 size-12 bg-primary/10" : "mb-6 size-20 neumorphic-extruded"
+            )}>
+                <ShieldCheck className={isMobile ? "size-6" : "size-10"} />
             </div>
-            <h3 className="text-xl font-black text-foreground text-balance">{t("All Caught Up")}</h3>
-            <p className="mt-2 text-sm font-medium text-muted-foreground max-w-sm mx-auto text-pretty">
+            <h3 className={cn("font-bold text-foreground text-balance", isMobile ? "text-base" : "text-xl font-black")}>{t("All Caught Up")}</h3>
+            <p className={cn("mt-1.5 font-medium text-muted-foreground max-w-sm mx-auto text-pretty", isMobile ? "text-xs" : "mt-2 text-sm")}>
                 {t("No urgent tasks right now. Everything that needs action is already handled.")}
             </p>
         </m.div>
@@ -255,7 +335,8 @@ function actionRequiredReducer(state: ActionRequiredState, action: ActionRequire
 
 // --- Main Component ---
 
-export function ActionRequired() {
+export function ActionRequired({ variant = "desktop" }: { variant?: "desktop" | "mobile" } = {}) {
+    const isMobile = variant === "mobile";
     const { selectedPropertyId } = useProperty();
     const { t, locale, language } = useLanguageContext();
     
@@ -271,6 +352,11 @@ export function ActionRequired() {
 
     const [categoryFilter, setCategoryFilter] = useState<ActionCategoryFilter>("all");
     const [urgentOnly, setUrgentOnly] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [categoryFilter, urgentOnly, selectedPropertyId]);
 
     useEffect(() => {
         dispatch({ type: "SET_MOUNTED", payload: true });
@@ -373,8 +459,8 @@ export function ActionRequired() {
                         ? t("Urgent Maintenance Ticket")
                         : t("Routine Maintenance"),
                     detail: t("{tenant}: {issue} at {property}", { tenant: request.tenant, issue: request.title, property: request.property }),
-                    meta: t("Reported {date}", { date: formatDateLabel(request.reportedAt, locale) }),
-                    href: `/landlord/maintenance?id=${request.id}`,
+                    meta: t("Reported {date}", { date: formatDateLabel(request.reportedAt, locale, t("Recently")) }),
+                    href: isMobile ? `/mobile/landlord/tickets?id=${request.id}` : `/landlord/maintenance?id=${request.id}`,
                     cta: t("Dispatch Tech"),
                     tone: isCritical ? "critical" : isHigh ? "high" : "medium",
                     badgeLabel: isCritical ? "Critical SLA" : isHigh ? MAINTENANCE_PRIORITY_BADGE_TEXT.High : "Standard",
@@ -408,7 +494,9 @@ export function ActionRequired() {
                             : daysUntil === 1
                             ? t("{count} day until move-out ({date})", { count: daysUntil, date: formatLeaseDate(endState.endDate, undefined, language) })
                             : t("{count} days until move-out ({date})", { count: daysUntil, date: formatLeaseDate(endState.endDate, undefined, language) }),
-                        href: `/landlord/move-out?tenantId=${tenant.id}`,
+                        href: isMobile
+                            ? `/mobile/landlord/move-out?tenantId=${tenant.id}`
+                            : `/landlord/move-out?tenantId=${tenant.id}`,
                         cta: t("Prepare Move-out"),
                         tone: isImminent ? "high" : "medium",
                         badgeLabel: daysUntil < 0 ? "Follow Up" : isImminent ? "This Week" : "Scheduled",
@@ -431,7 +519,9 @@ export function ActionRequired() {
                         : daysUntil === 0
                         ? t("Expires today")
                         : t("{count} days remaining", { count: daysUntil }),
-                    href: `/landlord/tenants?tab=renewals&tenantId=${tenant.id}`,
+                    href: isMobile
+                        ? `/mobile/landlord/leases?tab=renewals&tenantId=${tenant.id}`
+                        : `/landlord/tenants?tab=renewals&tenantId=${tenant.id}`,
                     cta: t("Send Renewal"),
                     tone: isImminent ? "high" : "medium",
                     badgeLabel: daysUntil <= 0 ? "Expired" : isImminent ? "Expiring Soon" : "Renewal Due",
@@ -449,7 +539,9 @@ export function ActionRequired() {
                     title: t("Applicant Verification"),
                     detail: t("{name}: Application for {unit} ({property})", { name: app.applicant.name, unit: app.unitNumber, property: app.propertyName }),
                     meta: t("Document Verification"),
-                    href: `/landlord/applications?id=${app.id}`,
+                    href: isMobile
+                        ? `/mobile/landlord/applications?id=${app.id}`
+                        : `/landlord/applications?id=${app.id}`,
                     cta: t("Verify Docs"),
                     tone: "medium",
                     badgeLabel: "Review Needed",
@@ -478,7 +570,9 @@ export function ActionRequired() {
                         ? t("{name} ({unit}): Onboarding details submitted for review.", { name: tenant.name, unit: tenant.unit })
                         : t("{name} ({unit}): Move-in onboarding currently in progress.", { name: tenant.name, unit: tenant.unit }),
                     meta: isPendingReview ? t("Pending Approval") : isNotStarted ? t("Setup Needed") : t("In Progress"),
-                    href: `/landlord/tenants?view=profile&tenantId=${tenant.id}&search=${encodeURIComponent(tenant.name)}`,
+                    href: isMobile
+                        ? `/mobile/landlord/tenants?view=profile&tenantId=${tenant.id}&search=${encodeURIComponent(tenant.name)}`
+                        : `/landlord/tenants?view=profile&tenantId=${tenant.id}&search=${encodeURIComponent(tenant.name)}`,
                     cta: isPendingReview ? t("Review Resident") : t("View Resident"),
                     tone: "medium",
                     badgeLabel: isPendingReview ? "Approval Needed" : isNotStarted ? "Setup Pending" : "In Progress",
@@ -499,7 +593,9 @@ export function ActionRequired() {
                     meta: conversation.unreadCount > 1
                         ? t("{count} unread responses", { count: conversation.unreadCount })
                         : t("{count} unread response", { count: conversation.unreadCount }),
-                    href: `/landlord/messages?conversation=${conversation.id}`,
+                    href: isMobile
+                        ? `/mobile/landlord/messages?conversation=${conversation.id}`
+                        : `/landlord/messages?conversation=${conversation.id}`,
                     cta: t("Enter Chat"),
                     tone: "medium",
                     badgeLabel: "Unread",
@@ -522,7 +618,7 @@ export function ActionRequired() {
         };
 
         return { allActions: sorted, counts: calculatedCounts };
-    }, [state.conversations, state.maintenance, state.tenants, state.applications, state.mounted, t, locale]);
+    }, [state.conversations, state.maintenance, state.tenants, state.applications, state.mounted, isMobile, t, locale, language]);
 
     const filteredActions = useMemo(() => {
         let list = allActions;
@@ -535,15 +631,24 @@ export function ActionRequired() {
             list = list.filter((item) => item.tone === "critical" || item.tone === "high");
         }
 
-        const maxLimit = categoryFilter === "all" && !urgentOnly ? 6 : 15;
-        return list.slice(0, maxLimit);
+        return list;
     }, [allActions, categoryFilter, urgentOnly]);
+
+    const pageSize = isMobile ? 3 : 6;
+    const totalPages = Math.max(1, Math.ceil(filteredActions.length / pageSize));
+    const safePage = Math.min(currentPage, totalPages);
+    const startIndex = (safePage - 1) * pageSize;
+    const paginatedActions = useMemo(
+        () => filteredActions.slice(startIndex, startIndex + pageSize),
+        [filteredActions, startIndex, pageSize]
+    );
 
     const hasActiveFilters = categoryFilter !== "all" || urgentOnly;
 
     const handleResetFilters = () => {
         setCategoryFilter("all");
         setUrgentOnly(false);
+        setCurrentPage(1);
     };
 
     const filterOptions: FilterPillItem<ActionCategoryFilter>[] = [
@@ -578,90 +683,204 @@ export function ActionRequired() {
         },
     ];
 
+    const visibleRangeStart = filteredActions.length === 0 ? 0 : startIndex + 1;
+    const visibleRangeEnd = Math.min(startIndex + pageSize, filteredActions.length);
+
     return (
         <LazyMotion features={domAnimation}>
-            <section className="rounded-3xl neumorphic-panel p-6 sm:p-8">
+            <section
+                className={cn(
+                    isMobile
+                        ? "rounded-2xl bg-card border border-border/60 p-4 shadow-xs"
+                        : "rounded-3xl neumorphic-panel p-6 sm:p-8"
+                )}
+            >
                 {/* Header Row */}
-                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="flex size-12 sm:size-14 items-center justify-center rounded-2xl neumorphic-extruded text-primary shrink-0">
-                            <Activity className="size-5 sm:size-7" />
+                <div className={cn(
+                    isMobile
+                        ? "mb-3.5 flex items-center justify-between gap-2.5"
+                        : "mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+                )}>
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className={cn(
+                            "flex items-center justify-center text-primary shrink-0",
+                            isMobile
+                                ? "size-10 rounded-xl bg-primary/10 border border-primary/15"
+                                : "size-12 sm:size-14 rounded-2xl neumorphic-extruded"
+                        )}>
+                            <Activity className={isMobile ? "size-5" : "size-5 sm:size-7"} />
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2.5">
-                                <h2 className="text-lg sm:text-2xl font-black tracking-tight text-foreground text-balance">{t("Needs Your Attention")}</h2>
-                                {counts.urgent > 0 && (
-                                    <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20 tabular-nums">
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2.5 flex-wrap">
+                                <h2 className={cn(
+                                    "font-bold tracking-tight text-foreground",
+                                    isMobile ? "text-base leading-snug" : "text-lg sm:text-2xl font-black text-balance"
+                                )}>
+                                    {t("Needs Your Attention")}
+                                </h2>
+                                {!isMobile && counts.urgent > 0 && (
+                                    <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20 tabular-nums whitespace-nowrap">
                                         <span className="size-1.5 rounded-full bg-red-500 animate-pulse" />
                                         {t("{count} Urgent", { count: counts.urgent })}
                                     </span>
                                 )}
                             </div>
-                            <p className="hidden sm:block text-sm font-medium text-muted-foreground/80 max-w-prose text-pretty">
-                                {t("Action items requiring your immediate review or follow-up.")}
+                            <p className={cn(
+                                "text-muted-foreground leading-snug",
+                                isMobile ? "text-xs" : "hidden sm:block text-sm font-medium text-muted-foreground/80 max-w-prose text-pretty"
+                            )}>
+                                {isMobile
+                                    ? t("Items waiting for your review")
+                                    : t("Action items requiring your immediate review or follow-up.")}
                             </p>
                         </div>
                     </div>
-                </div>
 
-                {/* Filter Controls Bar */}
-                <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-                        <AnimatedFilterPills
-                            variant="neumorphic"
-                            size="sm"
-                            options={filterOptions}
-                            activeId={categoryFilter}
-                            onChange={(id) => setCategoryFilter(id)}
-                            layoutGroupId="dashboard-action-category-filters"
-                        />
-
-                        {/* Urgent Only Toggle Pill */}
-                        <button
-                            type="button"
-                            onClick={() => setUrgentOnly((prev) => !prev)}
-                            className={cn(
-                                "group relative flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-black transition-all shrink-0 select-none",
-                                urgentOnly
-                                    ? "border border-red-500/40 bg-red-500/15 text-red-400 shadow-sm shadow-red-500/10"
-                                    : "neumorphic-inset text-muted-foreground hover:text-foreground"
-                            )}
-                        >
-                            <Zap className={cn("size-3.5 transition-colors", urgentOnly ? "fill-red-400 text-red-400" : "text-muted-foreground group-hover:text-amber-400")} />
-                            <span>{t("Urgent Only")}</span>
-                            {counts.urgent > 0 && (
-                                <span className={cn(
-                                    "rounded-full px-1.5 py-0.2 text-[9px] font-black tabular-nums",
-                                    urgentOnly ? "bg-red-500/30 text-red-300" : "bg-white/10 text-neutral-400"
-                                )}>
-                                    {counts.urgent}
-                                </span>
-                            )}
-                        </button>
-                    </div>
-
-                    {hasActiveFilters && (
-                        <button
-                            type="button"
-                            onClick={handleResetFilters}
-                            className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 min-h-[36px] text-xs font-bold text-muted-foreground hover:text-primary transition-colors hover:neumorphic-inset"
-                        >
-                            <RotateCcw className="size-3" />
-                            <span>{t("Reset Filter")}</span>
-                        </button>
+                    {isMobile && counts.urgent > 0 && (
+                        <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 tabular-nums whitespace-nowrap shrink-0">
+                            <span className="size-1.5 rounded-full bg-red-500 animate-pulse" />
+                            {t("{count} Urgent", { count: counts.urgent })}
+                        </span>
                     )}
                 </div>
 
+                {/* Filter Controls Bar */}
+                {isMobile ? (
+                    <div className="mb-3.5 flex flex-wrap items-center gap-1.5">
+                        {filterOptions
+                            .filter((option) => option.id === "all" || Number(option.badge ?? 0) > 0 || categoryFilter === option.id)
+                            .map((option) => {
+                                const isActive = categoryFilter === option.id;
+                                return (
+                                    <button
+                                        key={option.id}
+                                        type="button"
+                                        onClick={() => setCategoryFilter(option.id)}
+                                        className={cn(
+                                            "inline-flex items-center gap-1.5 min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer border",
+                                            isActive
+                                                ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                                                : "bg-muted/50 text-muted-foreground hover:text-foreground border-border/60"
+                                        )}
+                                    >
+                                        {option.icon}
+                                        <span>{option.label}</span>
+                                        {option.badge !== undefined && (
+                                            <span className={cn(
+                                                "inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold tabular-nums",
+                                                isActive
+                                                    ? "bg-primary-foreground/20 text-primary-foreground"
+                                                    : "bg-background/80 text-foreground"
+                                            )}>
+                                                {option.badge}
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
+
+                        {(counts.urgent > 0 || urgentOnly) && (
+                            <button
+                                type="button"
+                                onClick={() => setUrgentOnly((prev) => !prev)}
+                                className={cn(
+                                    "inline-flex items-center gap-1.5 min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer border",
+                                    urgentOnly
+                                        ? "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/40"
+                                        : "bg-muted/50 text-muted-foreground hover:text-foreground border-border/60"
+                                )}
+                            >
+                                <Zap className={cn("size-3.5", urgentOnly ? "fill-red-500 text-red-500" : "text-amber-500")} />
+                                <span>{t("Urgent Only")}</span>
+                                {counts.urgent > 0 && (
+                                    <span className={cn(
+                                        "inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold tabular-nums",
+                                        urgentOnly
+                                            ? "bg-red-500/20 text-red-700 dark:text-red-300"
+                                            : "bg-background/80 text-foreground"
+                                    )}>
+                                        {counts.urgent}
+                                    </span>
+                                )}
+                            </button>
+                        )}
+
+                        {hasActiveFilters && (
+                            <button
+                                type="button"
+                                onClick={handleResetFilters}
+                                className="inline-flex items-center gap-1 min-h-[38px] px-2.5 py-1.5 rounded-xl text-xs font-bold text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                            >
+                                <RotateCcw className="size-3.5" />
+                                <span>{t("Reset")}</span>
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                            <AnimatedFilterPills
+                                variant="neumorphic"
+                                size="sm"
+                                options={filterOptions}
+                                activeId={categoryFilter}
+                                onChange={(id) => setCategoryFilter(id)}
+                                layoutGroupId="dashboard-action-category-filters"
+                            />
+
+                            {/* Urgent Only Toggle Pill */}
+                            <button
+                                type="button"
+                                onClick={() => setUrgentOnly((prev) => !prev)}
+                                className={cn(
+                                    "group relative flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-black transition-all shrink-0 select-none",
+                                    urgentOnly
+                                        ? "border border-red-500/40 bg-red-500/15 text-red-400 shadow-sm shadow-red-500/10"
+                                        : "neumorphic-inset text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                <Zap className={cn("size-3.5 transition-colors", urgentOnly ? "fill-red-400 text-red-400" : "text-muted-foreground group-hover:text-amber-400")} />
+                                <span>{t("Urgent Only")}</span>
+                                {counts.urgent > 0 && (
+                                    <span className={cn(
+                                        "rounded-full px-1.5 py-0.2 text-[9px] font-black tabular-nums",
+                                        urgentOnly ? "bg-red-500/30 text-red-300" : "bg-white/10 text-neutral-400"
+                                    )}>
+                                        {counts.urgent}
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+
+                        {hasActiveFilters && (
+                            <button
+                                type="button"
+                                onClick={handleResetFilters}
+                                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 min-h-[36px] text-xs font-bold text-muted-foreground hover:text-primary transition-colors hover:neumorphic-inset"
+                            >
+                                <RotateCcw className="size-3" />
+                                <span>{t("Reset Filter")}</span>
+                            </button>
+                        )}
+                    </div>
+                )}
+
                 <AnimatePresence mode="popLayout">
                     {state.loading ? (
-                        <div className="grid gap-4">
+                        <div className={cn("grid", isMobile ? "gap-2.5" : "gap-4")}>
                             {[1, 2, 3].map((item) => (
-                                <div key={item} className="animate-pulse rounded-2xl neumorphic-inset p-6">
-                                    <div className="flex gap-4">
-                                        <div className="size-12 rounded-xl neumorphic-extruded" />
-                                        <div className="flex-1 space-y-3">
-                                            <div className="h-4 w-1/4 rounded bg-muted/30" />
-                                            <div className="size-3/4 rounded bg-muted/30" />
+                                <div
+                                    key={item}
+                                    className={cn(
+                                        "animate-pulse rounded-2xl",
+                                        isMobile ? "border border-border/50 bg-muted/20 p-4" : "neumorphic-inset p-6"
+                                    )}
+                                >
+                                    <div className="flex gap-3">
+                                        <div className={cn("rounded-xl shrink-0", isMobile ? "size-9 bg-muted/40" : "size-12 neumorphic-extruded")} />
+                                        <div className="flex-1 space-y-2.5">
+                                            <div className="h-3.5 w-1/3 rounded bg-muted/40" />
+                                            <div className="h-3 w-3/4 rounded bg-muted/30" />
                                         </div>
                                     </div>
                                 </div>
@@ -671,19 +890,73 @@ export function ActionRequired() {
                         <m.div 
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="rounded-3xl border border-red-500/30 neumorphic-inset p-6 text-center"
+                            className={cn(
+                                "border border-red-500/30 text-center",
+                                isMobile ? "rounded-2xl bg-red-500/5 p-5" : "rounded-3xl neumorphic-inset p-6"
+                            )}
                         >
-                            <p className="text-sm font-black text-red-500">{t(state.error)}</p>
+                            <p className="text-sm font-bold text-red-500">{t(state.error)}</p>
                         </m.div>
                     ) : allActions.length === 0 ? (
-                        <ActionEmptyState />
+                        <ActionEmptyState isMobile={isMobile} />
                     ) : filteredActions.length === 0 ? (
-                        <ActionFilteredEmptyState onReset={handleResetFilters} />
+                        <ActionFilteredEmptyState onReset={handleResetFilters} isMobile={isMobile} />
                     ) : (
-                        <div className="grid gap-4">
-                            {filteredActions.map((action) => (
-                                <ActionItemCard key={action.id} action={action} />
-                            ))}
+                        <div className="flex flex-col gap-3">
+                            <div className={cn("grid", isMobile ? "gap-2.5" : "gap-4")}>
+                                {paginatedActions.map((action) => (
+                                    <ActionItemCard key={action.id} action={action} isMobile={isMobile} />
+                                ))}
+                            </div>
+
+                            {totalPages > 1 && (
+                                <div className={cn(
+                                    "flex items-center justify-between gap-2 pt-3 border-t border-border/50",
+                                    isMobile ? "flex-col xs:flex-row" : ""
+                                )}>
+                                    <p className="text-xs font-medium text-muted-foreground tabular-nums">
+                                        {t("Showing {start}–{end} of {total}", {
+                                            start: visibleRangeStart,
+                                            end: visibleRangeEnd,
+                                            total: filteredActions.length,
+                                        })}
+                                    </p>
+
+                                    <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                                        <button
+                                            type="button"
+                                            disabled={safePage <= 1}
+                                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                            aria-label={t("Previous page")}
+                                            className={cn(
+                                                "inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-muted/50 hover:bg-muted text-foreground text-xs font-bold transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer",
+                                                isMobile ? "min-h-[44px] px-3.5" : "min-h-[38px] px-3"
+                                            )}
+                                        >
+                                            <ChevronLeft className="size-4 shrink-0" />
+                                            <span>{t("Prev")}</span>
+                                        </button>
+
+                                        <span className="text-xs font-bold text-foreground tabular-nums px-1.5 whitespace-nowrap">
+                                            {t("Page {page} of {total}", { page: safePage, total: totalPages })}
+                                        </span>
+
+                                        <button
+                                            type="button"
+                                            disabled={safePage >= totalPages}
+                                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                            aria-label={t("Next page")}
+                                            className={cn(
+                                                "inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-muted/50 hover:bg-muted text-foreground text-xs font-bold transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer",
+                                                isMobile ? "min-h-[44px] px-3.5" : "min-h-[38px] px-3"
+                                            )}
+                                        >
+                                            <span>{t("Next")}</span>
+                                            <ChevronRight className="size-4 shrink-0" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </AnimatePresence>

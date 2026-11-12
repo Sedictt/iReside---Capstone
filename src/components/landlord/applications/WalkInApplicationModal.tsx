@@ -1520,7 +1520,7 @@ export function WalkInApplicationModal({
                                                 className="p-5 rounded-[1.5rem] bg-amber-500/5 border border-dashed border-amber-500/20 text-center"
                                             >
                                                 <p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-500/50">
-                                                    {t('Unchecked items will be flagged as "Pending Review" in the application dossier')}
+                                                    {t('Unchecked items will be flagged as "Pending Review" in the application details')}
                                                 </p>
                                             </motion.div>
                                         )}

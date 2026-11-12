@@ -40,6 +40,7 @@ import {
 import { toast } from 'sonner';
 import { useLanguageContext } from '@/context/LanguageContext';
 import { formatPhMobile } from "@/lib/phone";
+import { readViewCache, writeViewCache, hasViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 
 interface RenewalRequestItem {
     id: string;
@@ -60,9 +61,16 @@ const RENEWAL_OPTIONS = [
 
 export function TenantLeaseView() {
     const { t, locale, language } = useLanguageContext();
-    const [lease, setLease] = useState<LeaseData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [renewalRequest, setRenewalRequest] = useState<RenewalRequestItem | null>(null);
+    const cachedLease = readViewCache<{
+        lease: LeaseData | null;
+        renewalRequest: RenewalRequestItem | null;
+        moveOutStatus: string | null;
+    }>('tenant-lease');
+    const [lease, setLease] = useState<LeaseData | null>(() => cachedLease?.lease ?? null);
+    const [loading, setLoading] = useState(() => !cachedLease);
+    const [renewalRequest, setRenewalRequest] = useState<RenewalRequestItem | null>(
+        () => cachedLease?.renewalRequest ?? null
+    );
 
     // Modals
     const [isContractModalOpen, setIsContractModalOpen] = useState(false);
@@ -74,46 +82,54 @@ export function TenantLeaseView() {
     const [isAmenityDrawerOpen, setIsAmenityDrawerOpen] = useState(false);
     const [selectedAmenityId, setSelectedAmenityId] = useState<string | null>(null);
     const [isMoveOutDrawerOpen, setIsMoveOutDrawerOpen] = useState(false);
-    const [moveOutStatus, setMoveOutStatus] = useState<string | null>(null);
+    const [moveOutStatus, setMoveOutStatus] = useState<string | null>(() => cachedLease?.moveOutStatus ?? null);
 
     const fetchLeaseData = async () => {
         try {
-            const [leaseRes, renewalsRes, moveOutRes] = await Promise.all([
-                fetch('/api/tenant/lease', { cache: 'no-store' }),
-                fetch('/api/tenant/renewals', { cache: 'no-store' }).catch(() => null),
-                fetch('/api/tenant/lease/move-out/status', { cache: 'no-store' }).catch(() => null),
+            const [leaseData, renewals, moveOutData] = await Promise.all([
+                fetchJsonDeduped<{ lease?: LeaseData | null }>('/api/tenant/lease'),
+                fetchJsonDeduped<RenewalRequestItem[]>('/api/tenant/renewals').catch(() => null),
+                fetchJsonDeduped<{ hasRequest?: boolean; request?: { status?: string | null } }>('/api/tenant/lease/move-out/status').catch(() => null),
             ]);
 
-            if (leaseRes.ok) {
-                const leaseData = await leaseRes.json();
-                if (leaseData.lease) {
-                    setLease(leaseData.lease as LeaseData);
+            if (leaseData.lease) {
+                const nextLease = leaseData.lease;
+                setLease(nextLease);
 
-                    if (renewalsRes && renewalsRes.ok) {
-                        const renewals = await renewalsRes.json();
-                        if (Array.isArray(renewals)) {
-                            const active = renewals.find((r: RenewalRequestItem) => 
-                                r.current_lease_id === leaseData.lease.id && (r.status === 'pending' || r.status === 'approved')
-                            ) || renewals.find((r: RenewalRequestItem) => r.current_lease_id === leaseData.lease.id);
-                            setRenewalRequest(active || null);
-                        }
-                    }
-
-                    if (moveOutRes && moveOutRes.ok) {
-                        const moveOutData = await moveOutRes.json();
-                        if (moveOutData?.hasRequest && moveOutData?.request) {
-                            setMoveOutStatus(moveOutData.request.status);
-                        } else {
-                            setMoveOutStatus(null);
-                        }
-                    }
-                } else {
-                    setLease(null);
+                let nextRenewal: RenewalRequestItem | null = renewalRequest;
+                if (Array.isArray(renewals)) {
+                    nextRenewal = renewals.find((r: RenewalRequestItem) => 
+                        r.current_lease_id === nextLease.id && (r.status === 'pending' || r.status === 'approved')
+                    ) || renewals.find((r: RenewalRequestItem) => r.current_lease_id === nextLease.id) || null;
+                    setRenewalRequest(nextRenewal);
                 }
+
+                let nextMoveOutStatus: string | null = moveOutStatus;
+                if (moveOutData) {
+                    nextMoveOutStatus = moveOutData?.hasRequest && moveOutData?.request
+                        ? (moveOutData.request.status ?? null)
+                        : null;
+                    setMoveOutStatus(nextMoveOutStatus);
+                }
+
+                writeViewCache('tenant-lease', {
+                    lease: nextLease,
+                    renewalRequest: nextRenewal,
+                    moveOutStatus: nextMoveOutStatus,
+                });
+            } else {
+                setLease(null);
+                writeViewCache('tenant-lease', {
+                    lease: null,
+                    renewalRequest: null,
+                    moveOutStatus: null,
+                });
             }
         } catch (err) {
             console.error('[TenantLeaseView] Error loading lease data:', err);
-            toast.error(t('Unable to load lease details'));
+            if (!hasViewCache('tenant-lease')) {
+                toast.error(t('Unable to load lease details'));
+            }
         } finally {
             setLoading(false);
         }

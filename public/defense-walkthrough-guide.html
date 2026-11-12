@@ -1,0 +1,2453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iReside Defense Command & Walkthrough Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800;900&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #FFF9EB;
+      --ink: #1E2430;
+      --ink-soft: #5A6578;
+      --outline: #1E2430;
+
+      --white: #FFFFFF;
+      --cream: #FFF4D6;
+
+      --green: #22C55E;
+      --green-dark: #15803D;
+      --green-light: #DCFCE7;
+
+      --blue: #38BDF8;
+      --blue-dark: #0284C7;
+      --blue-light: #E0F2FE;
+
+      --yellow: #FACC15;
+      --yellow-dark: #CA8A04;
+      --yellow-light: #FEF9C3;
+
+      --orange: #FB923C;
+      --orange-dark: #C2410C;
+      --orange-light: #FFEDD5;
+
+      --pink: #F472B6;
+      --pink-dark: #BE185D;
+      --pink-light: #FCE7F3;
+
+      --purple: #A855F7;
+      --purple-light: #F3E8FF;
+
+      --red: #EF4444;
+      --red-light: #FEE2E2;
+
+      --font-display: 'Fredoka', sans-serif;
+      --font-body: 'Nunito', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg);
+      background-image: radial-gradient(#E5D9BC 1.5px, transparent 1.5px);
+      background-size: 20px 20px;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+       flex-direction: column;
+      align-items: center;
+      padding: 14px 16px 32px;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    /* Main Toy-Board Container */
+    .board {
+      width: 100%;
+      max-width: 1040px;
+      background: var(--white);
+      border: 3px solid var(--outline);
+      border-radius: 24px;
+      box-shadow: 0 8px 0 var(--outline);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Top Command Header Bar */
+    .top-cmd-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-bottom: 12px;
+      border-bottom: 2.5px dashed #CBD5E1;
+    }
+
+    .mode-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mode-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: 14px;
+      border: 2.5px solid var(--outline);
+      background: var(--white);
+      box-shadow: 0 4px 0 var(--outline);
+      font-family: var(--font-display);
+      font-size: 0.92rem;
+      font-weight: 700;
+      transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease;
+    }
+
+    .mode-tab:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 0 var(--outline);
+    }
+
+    .mode-tab.active {
+      background: var(--ink);
+      color: var(--yellow);
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 var(--outline);
+    }
+
+    .mode-tab.curveball.active {
+      background: var(--orange);
+      color: var(--white);
+    }
+
+    .mode-tab.tools.active {
+      background: var(--purple);
+      color: var(--white);
+    }
+
+    /* Active Session Status Pill + Quick Drawer Toggle */
+    .session-cluster {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .session-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 2px solid var(--outline);
+      background: var(--green-light);
+      font-family: var(--font-display);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .session-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--green);
+      border: 1.5px solid var(--outline);
+    }
+
+    .quick-bar-toggle {
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: 2px solid var(--outline);
+      background: var(--yellow-light);
+      box-shadow: 0 3px 0 var(--outline);
+      font-family: var(--font-display);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .quick-bar-toggle:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--outline);
+    }
+
+    /* 1-Click Account Switcher Strip */
+    .acct-strip {
+      background: #F8FAFC;
+      border: 2.5px solid var(--outline);
+      border-radius: 16px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .acct-strip.hidden {
+      display: none;
+    }
+
+    .acct-strip-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+    }
+
+    .acct-grid {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .acct-chip-group {
+      display: inline-flex;
+      align-items: stretch;
+      border: 2px solid var(--outline);
+      border-radius: 11px;
+      overflow: hidden;
+      background: var(--white);
+      box-shadow: 0 3px 0 var(--outline);
+      transition: transform 80ms ease;
+    }
+
+    .acct-chip-group:hover {
+      transform: translateY(-1px);
+    }
+
+    .acct-chip-group.current {
+      background: var(--green-light);
+      border-color: var(--green-dark);
+    }
+
+    .acct-btn {
+      padding: 5px 9px;
+      border: none;
+      background: transparent;
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-align: left;
+    }
+
+    .acct-btn:hover {
+      background: var(--yellow-light);
+    }
+
+    .acct-copy-email {
+      padding: 5px 7px;
+      border: none;
+      border-left: 1.5px solid var(--outline);
+      background: var(--cream);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      title: "Copy Email";
+    }
+
+    .acct-copy-email:hover {
+      background: var(--yellow);
+    }
+
+    /* 1. Chunky Module Picker Pills */
+    .mod-bar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mod-pill {
+      flex: 1;
+      min-width: 118px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 8px 8px;
+      border-radius: 14px;
+      border: 2.5px solid var(--outline);
+      background: var(--cream);
+      box-shadow: 0 4px 0 var(--outline);
+      font-family: var(--font-display);
+      font-size: 0.92rem;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease;
+    }
+
+    .mod-pill:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 0 var(--outline);
+    }
+
+    .mod-pill:active,
+    .mod-pill.active {
+      background: var(--yellow);
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 var(--outline);
+    }
+
+    .mod-pill.curveball-pill {
+      background: #FFF7ED;
+      flex: 1 1 calc(20% - 6px);
+      min-width: 165px;
+      justify-content: flex-start;
+      padding: 8px 10px;
+    }
+
+    .mod-pill.curveball-pill.active {
+      background: var(--orange);
+      color: var(--white);
+    }
+
+    .mod-badge {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: var(--white);
+      color: var(--ink);
+      border: 2px solid var(--outline);
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* 2. Visual Step-by-Step Toy Train Flowchart */
+    .flow-tray {
+      background: var(--blue-light);
+      border: 3px solid var(--outline);
+      border-radius: 18px;
+      box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.8), 0 4px 0 var(--outline);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .step-bubble {
+      flex: 1;
+      min-width: 125px;
+      background: var(--white);
+      border: 2.5px solid var(--outline);
+      border-radius: 14px;
+      box-shadow: 0 4px 0 var(--outline);
+      padding: 9px 11px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-align: left;
+      transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease;
+    }
+
+    .step-bubble:hover {
+      transform: translateY(-1px);
+    }
+
+    .step-bubble.active {
+      background: var(--green);
+      color: var(--white);
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 var(--outline);
+    }
+
+    .step-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--yellow);
+      color: var(--ink);
+      border: 2px solid var(--outline);
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-bubble.active .step-circle {
+      background: var(--white);
+      color: var(--ink);
+    }
+
+    .step-bubble-text {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.15;
+    }
+
+    .flow-arrow {
+      font-family: var(--font-display);
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--ink);
+      user-select: none;
+    }
+
+    /* 3. Compact Main Action Card */
+    .play-card {
+      background: var(--cream);
+      border: 3px solid var(--outline);
+      border-radius: 20px;
+      box-shadow: 0 6px 0 var(--outline);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .play-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .play-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .big-num {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--orange);
+      color: var(--white);
+      border: 2.5px solid var(--outline);
+      box-shadow: 0 3px 0 var(--outline);
+      font-family: var(--font-display);
+      font-size: 1.65rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .play-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .tags-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .where-tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--white);
+      border: 2px solid var(--outline);
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .actor-tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--purple-light);
+      border: 2px solid var(--outline);
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .action-btns {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 13px;
+      border-radius: 12px;
+      background: var(--blue);
+      color: var(--ink);
+      border: 2.5px solid var(--outline);
+      box-shadow: 0 4px 0 var(--outline);
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: transform 100ms ease, box-shadow 100ms ease;
+    }
+
+    .open-btn.auto-login {
+      background: var(--green);
+      color: var(--white);
+    }
+
+    .open-btn.reset-mini {
+      background: var(--yellow);
+      color: var(--ink);
+    }
+
+    .open-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 0 var(--outline);
+    }
+
+    .open-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 var(--outline);
+    }
+
+    /* Spoken Taglish Cue Banner */
+    .say-banner {
+      background: var(--white);
+      border: 2px solid var(--outline);
+      border-left: 6px solid var(--orange);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .say-label {
+      background: var(--orange-light);
+      border: 1.5px solid var(--outline);
+      border-radius: 6px;
+      padding: 1px 6px;
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    /* Two Compact Toy Blocks: CLICK + COPY */
+    .two-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .block {
+      background: var(--white);
+      border: 2.5px solid var(--outline);
+      border-radius: 16px;
+      box-shadow: 0 4px 0 var(--outline);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .block-heading {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+
+    .click-steps {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .click-steps li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--yellow-light);
+      border: 2px solid var(--outline);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .mini-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: var(--yellow);
+      border: 2px solid var(--outline);
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .btn-word {
+      background: var(--green-light);
+      border: 1.5px solid var(--outline);
+      padding: 1px 7px;
+      border-radius: 6px;
+      font-family: var(--font-display);
+      font-weight: 700;
+    }
+
+    /* Copy Toys */
+    .copy-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .copy-toy {
+      width: 100%;
+      background: var(--pink-light);
+      border: 2.5px solid var(--outline);
+      border-radius: 12px;
+      box-shadow: 0 3px 0 var(--outline);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      text-align: left;
+      transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease;
+    }
+
+    .copy-toy:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 0 var(--outline);
+    }
+
+    .copy-toy:active,
+    .copy-toy.copied {
+      background: var(--green-light);
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--outline);
+    }
+
+    .copy-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .copy-label {
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+
+    .copy-val {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--ink);
+      overflow-wrap: anywhere;
+    }
+
+    .copy-badge {
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: var(--green);
+      color: var(--white);
+      border: 2px solid var(--outline);
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .empty-toy {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--green-light);
+      border: 2px dashed var(--outline);
+      border-radius: 12px;
+      padding: 16px;
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    /* Bottom Chunky Back / Next Buttons */
+    .footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .big-btn {
+      padding: 10px 20px;
+      border-radius: 14px;
+      border: 2.5px solid var(--outline);
+      background: var(--white);
+      box-shadow: 0 4px 0 var(--outline);
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      transition: transform 100ms ease, box-shadow 100ms ease;
+    }
+
+    .big-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 0 var(--outline);
+    }
+
+    .big-btn:active:not(:disabled) {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 var(--outline);
+    }
+
+    .big-btn.next {
+      background: var(--green);
+      color: var(--white);
+    }
+
+    .big-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Mode 3: Emergency & Quick Jump Tools Grid */
+    .tools-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 12px;
+    }
+
+    .tool-card {
+      background: var(--white);
+      border: 2.5px solid var(--outline);
+      border-radius: 16px;
+      box-shadow: 0 4px 0 var(--outline);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .tool-card-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tool-card-desc {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--ink-soft);
+      line-height: 1.35;
+    }
+
+    .tool-btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tool-action-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 11px;
+      border: 2px solid var(--outline);
+      background: var(--yellow);
+      box-shadow: 0 3px 0 var(--outline);
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .tool-action-btn.green {
+      background: var(--green);
+      color: var(--white);
+    }
+
+    .tool-action-btn.blue {
+      background: var(--blue);
+      color: var(--ink);
+    }
+
+    .tool-action-btn.red {
+      background: var(--red-light);
+      color: #B91C1C;
+    }
+
+    .tool-action-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--outline);
+    }
+
+    .tool-input {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 10px;
+      border: 2px solid var(--outline);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    /* Quick Route Matrix */
+    .route-matrix {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+      gap: 8px;
+    }
+
+    .route-btn {
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 2px solid var(--outline);
+      background: var(--cream);
+      box-shadow: 0 3px 0 var(--outline);
+      font-family: var(--font-display);
+      font-size: 0.84rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-decoration: none;
+      color: var(--ink);
+    }
+
+    .route-btn:hover {
+      background: var(--yellow);
+    }
+
+    /* Toast Banner */
+    .toast-banner {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      z-index: 999;
+      background: var(--ink);
+      color: var(--yellow);
+      border: 3px solid var(--outline);
+      border-radius: 14px;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+      padding: 10px 16px;
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: none;
+      max-width: 420px;
+    }
+
+    .toast-banner.show {
+      display: block;
+    }
+
+    @media (max-width: 720px) {
+      .two-cols {
+        grid-template-columns: 1fr;
+      }
+      .flow-tray {
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="board">
+    <!-- TOP COMMAND BAR: Mode Switcher + Active Account Status -->
+    <header class="top-cmd-bar">
+      <div class="mode-tabs">
+        <button type="button" class="mode-tab active" id="tab-main">🎯 Main 7-Feature Demo</button>
+        <button type="button" class="mode-tab curveball" id="tab-curveballs">🔥 Panel Q&amp;A Scenarios (10 E2E)</button>
+        <button type="button" class="mode-tab tools" id="tab-tools">⚡ Quick Accounts, Reset &amp; Tools</button>
+      </div>
+
+      <div class="session-cluster">
+        <div class="session-pill" id="session-pill">
+          <span class="session-dot"></span>
+          <span id="session-label">Checking session…</span>
+        </div>
+        <button type="button" class="quick-bar-toggle" id="toggle-acct-strip">👥 1-Click Switch Account ▾</button>
+      </div>
+    </header>
+
+    <!-- COLLAPSIBLE 1-CLICK ACCOUNT SWITCHER STRIP -->
+    <section class="acct-strip" id="acct-strip" aria-label="1-Click Account Switcher">
+      <div class="acct-strip-header">
+        <span>⚡ Click any persona to auto-login this browser &amp; open their dashboard (or click 📋 to copy email for Device 2 · All Passwords: <code>Defense2026!</code>)</span>
+        <button type="button" class="acct-copy-email" data-raw-copy="Defense2026!" style="border:2px solid var(--outline); border-radius:8px; padding:3px 8px;">📋 Copy Password: Defense2026!</button>
+      </div>
+      <div class="acct-grid" id="acct-grid"></div>
+    </section>
+
+    <!-- MODE 1 & 2 VIEW: MODULE BAR + FLOWCHART + STEP CARD -->
+    <div id="walkthrough-view" style="display:flex; flex-direction:column; gap:14px;">
+      <!-- 1. PICK MODULE -->
+      <nav class="mod-bar" id="mod-bar" aria-label="Choose Module"></nav>
+
+      <!-- 2. FLOWCHART BUBBLES -->
+      <section class="flow-tray" id="flow-tray" aria-label="Step Flowchart"></section>
+
+      <!-- 3. CURRENT STEP CARD -->
+      <section class="play-card" id="play-card" aria-live="polite"></section>
+    </div>
+
+    <!-- MODE 3 VIEW: EMERGENCY RESET & QUICK NAVIGATION TOOLS -->
+    <section id="tools-view" class="tools-panel" style="display:none;"></section>
+  </main>
+
+  <div class="toast-banner" id="toast-banner"></div>
+
+  <script>
+    const APP_ORIGIN = window.location.origin.startsWith("http")
+      ? window.location.origin
+      : "http://localhost:3000";
+
+    // Live state fetched from /api/demo-console/actions
+    let liveKatrinaLink = `${APP_ORIGIN}/signing/tenant/ea37b3e5-e81c-4df9-b0fe-747e4f55cca8`;
+    let currentUserEmail = null;
+
+    // All Demo Accounts for 1-Click Switching
+    const ACCOUNTS = [
+      { key: "landlord", short: "👑 Landlord (John)", name: "John Peter Gonzales", email: "john.gonzales@ireside.ph", pass: "Defense2026!", role: "landlord", url: "/landlord/dashboard", note: "Owner · 24 Rooms" },
+      { key: "starter", short: "🌱 Fresh Landlord", name: "Practice Landlord 1", email: "practice.landlord1@ireside.ph", pass: "LandlordDemo2026!", role: "landlord", url: "/setup", note: "New Account 5-Stage Setup" },
+      { key: "joshua", short: "🏠 Joshua (Rm 102)", name: "Joshua Miguel Dela Cruz", email: "joshua.delacruz@ireside.ph", pass: "Defense2026!", role: "tenant", url: "/tenant/dashboard", note: "GCash Bill + Plumber + iRis" },
+      { key: "katrina", short: "✍️ Katrina (Rm 201)", name: "Katrina Mae Villanueva", email: "katrina.villanueva@ireside.ph", pass: "Defense2026!", role: "tenant", url: "/tenant/lease", note: "Pending Lease E-Signature" },
+      { key: "mark", short: "⚡ Mark (Rm 301)", name: "Mark Anthony Lim", email: "mark.lim@ireside.ph", pass: "Defense2026!", role: "tenant", url: "/tenant/dashboard", note: "New Tenant Tour + Sparking Outlet" },
+      { key: "ronald", short: "⏰ Ronald (Rm 202)", name: "Ronald Bautista", email: "ronald.bautista@ireside.ph", pass: "Defense2026!", role: "tenant", url: "/tenant/payments", note: "Overdue + Late Fee + Move-Out" },
+      { key: "christine", short: "🔄 Christine (Rm 203)", name: "Christine Joy Reyes", email: "christine.reyes@ireside.ph", pass: "Defense2026!", role: "tenant", url: "/tenant/lease", note: "Lease Renewal + Study Hall" },
+      { key: "angelo", short: "💵 Angelo (Rm 302)", name: "Angelo Fernandez", email: "angelo.fernandez@ireside.ph", pass: "Defense2026!", role: "tenant", url: "/tenant/payments", note: "Cash Intent + Unit Transfer" },
+      { key: "maria", short: "⭐ Maria (Rm 101)", name: "Maria Angelica Santos", email: "maria.santos@ireside.ph", pass: "Defense2026!", role: "tenant", url: "/tenant/dashboard", note: "Model Tenant · All Paid" },
+      { key: "daniel", short: "📦 Daniel (Archived)", name: "Daniel Ocampo", email: "daniel.ocampo@ireside.ph", pass: "Defense2026!", role: "tenant", url: "/tenant/dashboard", note: "Moved Out · Deposit Refunded" },
+      { key: "public", short: "🌐 Public / Guest", name: "Public Visitor (Signed Out)", email: null, pass: "", role: "public", url: "/login", note: "Signs out for QR / Invite links" }
+    ];
+
+    const ACCOUNT_BY_KEY = Object.fromEntries(ACCOUNTS.map(a => [a.key, a]));
+
+    // =========================================================================
+    // MODE 1: MAIN 7-FEATURE DEFENSE WALKTHROUGH
+    // =========================================================================
+    const MAIN_MODULES = [
+      {
+        num: "1",
+        name: "White-Label",
+        steps: [
+          {
+            short: "Login",
+            title: "Log in as Landlord",
+            where: "Device 1 (Landlord)",
+            as: "landlord",
+            url: `${APP_ORIGIN}/login`,
+            say: "Magla-log in po muna tayo bilang Landlord na si Mr. John Gonzales sa Device 1.",
+            clicks: [
+              "Paste <span class='btn-word'>Email</span> &amp; <span class='btn-word'>Password</span> (or click green Auto-Login button above)",
+              "Click <span class='btn-word'>Sign In</span>"
+            ],
+            copies: [
+              { label: "Email", value: "john.gonzales@ireside.ph" },
+              { label: "Password", value: "Defense2026!" }
+            ]
+          },
+          {
+            short: "Settings",
+            title: "Open Branding Settings",
+            where: "Device 1 (Left Menu)",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/settings?section=branding`,
+            say: "Punta po tayo sa System & Account -> Settings -> Logo, colors and banner para sa White-Label Customization.",
+            clicks: [
+              "Click <span class='btn-word'>System &amp; Account</span>",
+              "Click <span class='btn-word'>Settings</span>",
+              "Click <span class='btn-word'>Logo, colors and banner</span>"
+            ],
+            copies: []
+          },
+          {
+            short: "Dorm Name",
+            title: "Type Dorm Name & Tagline",
+            where: "Device 1 (Branding)",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/settings?section=branding`,
+            say: "Pwede pong i-customize ng dorm owner yung sarili nilang Property Name, Tagline, at Logo.",
+            clicks: [
+              "Paste <span class='btn-word'>Property name</span>",
+              "Paste <span class='btn-word'>Short tagline</span>"
+            ],
+            copies: [
+              { label: "Property Name", value: "Fernando Gonzales Dormitory" },
+              { label: "Tagline", value: "Safe, affordable rooms for students and workers in Marulas" }
+            ]
+          },
+          {
+            short: "Colors & Save",
+            title: "Pick Theme Color & Save, Check Tenant",
+            where: "Device 1 → Device 2",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/settings?section=branding`,
+            say: "Pagka-click ng Save changes, magre-reflect agad yung branding at kulay sa Tenant Portal sa Device 2.",
+            clicks: [
+              "Point at <span class='btn-word'>Your logo</span>",
+              "Click <span class='btn-word'>Emerald Oasis</span> &amp; <span class='btn-word'>Save changes</span>",
+              "Refresh <span class='btn-word'>/tenant/dashboard</span> on Device 2"
+            ],
+            copies: []
+          }
+        ]
+      },
+      {
+        num: "2",
+        name: "2D Unit Map",
+        steps: [
+          {
+            short: "Open Map",
+            title: "Open Landlord 2D Room Map",
+            where: "Device 1 (Landlord)",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/unit-map`,
+            say: "Ito po yung Interactive 2D Unit Map ng 3-floor dormitory natin — kita agad kung occupied, vacant, o under maintenance.",
+            clicks: [
+              "Click <span class='btn-word'>Unit Map</span>",
+              "Switch floors (<span class='btn-word'>FLOOR 1</span> / <span class='btn-word'>SECOND FLOOR</span> / <span class='btn-word'>THIRD FLOOR</span>)"
+            ],
+            copies: []
+          },
+          {
+            short: "Room 103 & 102",
+            title: "Check Vacant 103 & Tenant Map",
+            where: "Device 1 → Device 2",
+            as: "joshua",
+            url: `${APP_ORIGIN}/tenant/unit-map`,
+            say: "Pag cliniclick yung Room 103 sa Landlord, kita yung specs; sa Tenant side naman (Device 2), naka-highlight yung sariling kwarto ni Joshua (Room 102) for privacy.",
+            clicks: [
+              "On Device 1: Click <span class='btn-word'>Room 103</span> (Vacant ₱4,500/mo)",
+              "On Device 2: Open <span class='btn-word'>Unit Map</span> (Room 102 highlighted)"
+            ],
+            copies: []
+          }
+        ]
+      },
+      {
+        num: "3",
+        name: "Invite & Apply",
+        steps: [
+          {
+            short: "Invite Link",
+            title: "Create Private Invite Link",
+            where: "Device 1 (Landlord)",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/applications`,
+            say: "Walang public marketplace ang iReside; gumagawa si Landlord ng private Invite Link o QR Code para sa aplikante.",
+            clicks: [
+              "Click <span class='btn-word'>Applications</span>",
+              "Click <span class='btn-word'>INVITE MANAGER</span>"
+            ],
+            copies: [
+              { label: "Invite Link", value: `${APP_ORIGIN}/apply/fgd-apply-online-2026` }
+            ]
+          },
+          {
+            short: "Pick Room",
+            title: "Open Link & Pick Room 103",
+            where: "Device 2 (Applicant Tab)",
+            as: "public",
+            url: `${APP_ORIGIN}/apply/fgd-apply-online-2026`,
+            say: "Bubuksan ng prospective tenant yung Invite Link kahit wala pa siyang account, at pipiliin ang Room 103.",
+            clicks: [
+              "Open the <span class='btn-word'>Invite Link</span>",
+              "Pick <span class='btn-word'>Room 103 — ₱4,500/mo</span>"
+            ],
+            copies: [
+              { label: "Invite Link", value: `${APP_ORIGIN}/apply/fgd-apply-online-2026` }
+            ]
+          },
+          {
+            short: "Fill & Submit",
+            title: "Fill Applicant Info & Submit",
+            where: "Device 2 → Device 1",
+            as: "public",
+            resetAction: "delete-marco",
+            resetLabel: "🧹 Clear Marco's Test App",
+            url: `${APP_ORIGIN}/apply/fgd-apply-online-2026`,
+            say: "Pagka-submit ng application form, papasok agad ito sa Pending tab ng Landlord sa Device 1.",
+            clicks: [
+              "Paste <span class='btn-word'>Name</span>, <span class='btn-word'>Email</span>, <span class='btn-word'>Phone</span> &amp; Emergency Contact",
+              "Complete steps &amp; click <span class='btn-word'>Submit Application</span>",
+              "Refresh <span class='btn-word'>Pending</span> on Device 1"
+            ],
+            copies: [
+              { label: "Full Name", value: "Marco Antonio Reyes" },
+              { label: "Email", value: "marco.reyes2026@gmail.com" },
+              { label: "Phone", value: "9178452310" },
+              { label: "Emergency Contact", value: "Elena Reyes / 9185550192" }
+            ]
+          }
+        ]
+      },
+      {
+        num: "4",
+        name: "Sign Lease",
+        steps: [
+          {
+            short: "Copy Link",
+            title: "Open Katrina's Pending Lease",
+            where: "Device 1 (Landlord)",
+            as: "landlord",
+            resetAction: "quick-reset-katrina",
+            resetLabel: "🔄 Reset Katrina Lease (<1s)",
+            url: `${APP_ORIGIN}/landlord/leases?id=ea37b3e5-e81c-4df9-b0fe-747e4f55cca8`,
+            say: "Kapag approved na ang aplikante tulad ni Katrina sa Room 201, meron na siyang digital lease na waiting for her e-signature.",
+            clicks: [
+              "Open Katrina's lease (<span class='btn-word'>Pending Tenant Signature</span>)",
+              "Click <span class='btn-word'>Copy Signing Link</span> (or copy live link on the right)"
+            ],
+            copies: [
+              { label: "Live Katrina Signing Link", value: "__KATRINA_LINK__" }
+            ]
+          },
+          {
+            short: "Tenant Sign",
+            title: "Draw Tenant Signature",
+            where: "Device 2 (Signing Tab)",
+            as: "katrina",
+            resetAction: "quick-reset-katrina",
+            resetLabel: "🔄 Reset Katrina Lease (<1s)",
+            url: "__KATRINA_LINK__",
+            say: "Pipirma si Katrina sa digital signature pad; nire-record ng system ang IP address, timestamp, at device audit trail.",
+            clicks: [
+              "Open Katrina's signing link → click <span class='btn-word'>Sign Document</span>",
+              "Draw signature → <span class='btn-word'>FINALIZE</span> → <span class='btn-word'>Confirm &amp; Finalize Signature</span>"
+            ],
+            copies: [
+              { label: "Live Katrina Signing Link", value: "__KATRINA_LINK__" }
+            ]
+          },
+          {
+            short: "Countersign",
+            title: "Landlord Countersigns & Activates",
+            where: "Device 1 (Landlord)",
+            as: "landlord",
+            resetAction: "quick-reset-katrina",
+            resetLabel: "🔄 Reset Katrina Lease (<1s)",
+            url: `${APP_ORIGIN}/landlord/leases?id=ea37b3e5-e81c-4df9-b0fe-747e4f55cca8`,
+            say: "Sa Landlord side, magiging Pending Landlord Signature na; pag-countersign ni Landlord, Active na agad ang kontrata!",
+            clicks: [
+              "Refresh page → click <span class='btn-word'>Countersign Lease</span>",
+              "Draw signature → <span class='btn-word'>Countersign &amp; Activate</span>"
+            ],
+            copies: []
+          }
+        ]
+      },
+      {
+        num: "5",
+        name: "iRis AI",
+        steps: [
+          {
+            short: "Tenant Login",
+            title: "Stay Logged in as Joshua (Room 102)",
+            where: "Device 2 (Tenant)",
+            as: "joshua",
+            url: `${APP_ORIGIN}/tenant/dashboard`,
+            say: "Sa Device 2, naka-log in po tayo kay Joshua Miguel Dela Cruz ng Room 102.",
+            clicks: [
+              "Already logged in as <span class='btn-word'>Joshua</span> (or click green Auto-Login button)",
+              "Open <span class='btn-word'>Messages</span>"
+            ],
+            copies: [
+              { label: "Joshua Email", value: "joshua.delacruz@ireside.ph" },
+              { label: "Password", value: "Defense2026!" }
+            ]
+          },
+          {
+            short: "Ask iRis",
+            title: "Ask iRis AI & Show Analytics",
+            where: "Device 2 → Device 1",
+            as: "joshua",
+            url: `${APP_ORIGIN}/tenant/messages`,
+            say: "Si iRis AI ay nakabasa mismo sa lease, curfew rules, at billing data ni Joshua, pati na rin sa Financial Analytics ni Landlord.",
+            clicks: [
+              "Click <span class='btn-word'>Messages</span> → <span class='btn-word'>iRis Assistant</span>",
+              "Paste question &amp; press <span class='btn-word'>Enter</span>",
+              "On Device 1: <span class='btn-word'>Analytics</span> → click iRis mascot"
+            ],
+            copies: [
+              { label: "Tenant Question", value: "Anong oras po ang curfew at pwede ba ang bisita sa Room 102?" },
+              { label: "Landlord Question", value: "Sino pa ang hindi bayad ngayong October at magkano ang total overdue?" }
+            ]
+          }
+        ]
+      },
+      {
+        num: "6",
+        name: "Repair & Chat",
+        steps: [
+          {
+            short: "Send Ticket",
+            title: "Report Broken Aircon",
+            where: "Device 2 (Tenant)",
+            as: "joshua",
+            url: `${APP_ORIGIN}/tenant/maintenance`,
+            say: "Magfa-file si Joshua ng maintenance request na may kasamang litrato para sa tumutulong aircon sa Room 102.",
+            clicks: [
+              "Click <span class='btn-word'>Maintenance</span> → <span class='btn-word'>New Request</span>",
+              "Paste details &amp; click <span class='btn-word'>Submit Request</span>"
+            ],
+            copies: [
+              { label: "Problem Title", value: "Tumutulo ang aircon sa Room 102" },
+              { label: "Details", value: "May tumutulong tubig sa ilalim ng aircon unit tuwing gabi." }
+            ]
+          },
+          {
+            short: "Reply Chat",
+            title: "Smart Triage & Reply in Chat",
+            where: "Device 1 → Device 2",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/messages`,
+            say: "Makikita agad ni Landlord ang ticket sa Maintenance Desk at makakapag-reply real-time kay Joshua sa Messages.",
+            clicks: [
+              "Show ticket in <span class='btn-word'>Maintenance</span> → open <span class='btn-word'>Messages</span>",
+              "Click <span class='btn-word'>Joshua</span> &amp; paste reply → check Device 2"
+            ],
+            copies: [
+              { label: "Reply", value: "Noted Joshua, papupuntahin ko na yung technician ngayong 2 PM." }
+            ]
+          }
+        ]
+      },
+      {
+        num: "7",
+        name: "GCash Bill",
+        steps: [
+          {
+            short: "Meters & Pay",
+            title: "Show Meters & Tenant Pays GCash",
+            where: "Device 1 → Device 2",
+            as: "joshua",
+            resetAction: "quick-reset-joshua-bill",
+            resetLabel: "🔄 Reset Joshua Bills (<1s)",
+            url: `${APP_ORIGIN}/tenant/payments`,
+            say: "Walang third-party payment gateway fee: kino-compute ang sub-meter readings (₱13.50/kWh at ₱35/m³) at mag-a-upload si Joshua ng GCash receipt.",
+            clicks: [
+              "Device 1: <span class='btn-word'>Utility Billing</span> (₱13.50/kWh &amp; ₱35/m³)",
+              "Device 2: <span class='btn-word'>Finance Hub</span> → <span class='btn-word'>Pay Now</span> → enter Ref &amp; upload receipt → <span class='btn-word'>Confirm &amp; Settle Now</span>"
+            ],
+            copies: [
+              { label: "GCash Ref #", value: "4029184756123" }
+            ]
+          },
+          {
+            short: "Verify GCash",
+            title: "Approve Proof & Check Official Receipt",
+            where: "Device 1 → Device 2",
+            as: "landlord",
+            resetAction: "quick-reset-joshua-bill",
+            resetLabel: "🔄 Reset Joshua Bills (<1s)",
+            url: `${APP_ORIGIN}/landlord/invoices`,
+            say: "Iche-check ni Landlord yung GCash screenshot at reference number sa To Verify tab, tapos kusa nang mag-i-issue ng Official Receipt ang system!",
+            clicks: [
+              "Click <span class='btn-word'>Finance Hub</span> → <span class='btn-word'>To Verify</span>",
+              "Click <span class='btn-word'>Joshua Miguel Dela Cruz</span> → <span class='btn-word'>Yes, the payment is correct</span>",
+              "Refresh Device 2 → <span class='btn-word'>PAYMENT HISTORY</span> (Paid + Official Receipt)"
+            ],
+            copies: []
+          }
+        ]
+      }
+    ];
+
+    // =========================================================================
+    // MODE 2: 10 PANEL CURVEBALL & END-TO-END SCENARIO PLAYBOOKS
+    // =========================================================================
+    const CURVEBALL_MODULES = [
+      {
+        num: "A",
+        name: "New Landlord Setup",
+        steps: [
+          {
+            short: "1. Claim / Start",
+            title: "Prepare Fresh Landlord Account (0 Properties)",
+            where: "Landlord Setup",
+            as: "starter",
+            resetAction: "prepare-starter-onboarding",
+            resetLabel: "⚡ Reset & Ready Practice Landlord 1",
+            url: `${APP_ORIGIN}/setup`,
+            say: "Kapag bagong gawa ang Landlord account, dadaan po siya sa 5-Stage Guided Onboarding at naka-lock pa ang ibang menu hangga't hindi pa set up ang property.",
+            clicks: [
+              "Click <span class='btn-word'>⚡ Reset &amp; Ready Practice Landlord 1</span> above (or login with credentials on right)",
+              "Click <span class='btn-word'>⚡ Login as Fresh Landlord &amp; Open ↗</span> to launch <span class='btn-word'>/setup</span>"
+            ],
+            copies: [
+              { label: "Fresh Landlord Email", value: "practice.landlord1@ireside.ph" },
+              { label: "Password", value: "LandlordDemo2026!" }
+            ]
+          },
+          {
+            short: "2. Step 1 Property",
+            title: "Step 1 of 5: Property Setup",
+            where: "/landlord/properties/new",
+            as: "starter",
+            url: `${APP_ORIGIN}/landlord/properties/new`,
+            say: "Step 1 of 5 po ay Property Setup: ilalagay ang pangalan ng dormitory, address, floors, at base rent.",
+            clicks: [
+              "Click <span class='btn-word'>Start Setup</span> on the Step 1 Greeting Modal",
+              "Paste <span class='btn-word'>Property Name</span> &amp; <span class='btn-word'>Address</span>, set Floors &amp; Rent, and save"
+            ],
+            copies: [
+              { label: "Property Name", value: "Valenzuela Student Dormitory" },
+              { label: "Address", value: "48 MacArthur Highway, Marulas, Valenzuela City" },
+              { label: "Default Rent", value: "4500" }
+            ]
+          },
+          {
+            short: "3. Step 2 Unit Map",
+            title: "Step 2 of 5: Unit Map Layout",
+            where: "/landlord/unit-map",
+            as: "starter",
+            url: `${APP_ORIGIN}/landlord/unit-map`,
+            say: "Step 2 of 5 ay ang Interactive Unit Map Layout kung saan pwedeng gumamit ng layout presets tulad ng Double Loaded corridor at i-drag-and-drop ang mga kwarto.",
+            clicks: [
+              "Click <span class='btn-word'>Proceed to Guided Tour</span> on Step 2 Modal",
+              "Apply preset (<span class='btn-word'>Double Loaded</span>) or drag a room card across floor lanes"
+            ],
+            copies: []
+          },
+          {
+            short: "4. Step 3 Billing",
+            title: "Step 3 of 5: Utility & Billing Rails",
+            where: "/landlord/utility-billing",
+            as: "starter",
+            url: `${APP_ORIGIN}/landlord/utility-billing`,
+            say: "Step 3 of 5 ay ang Water & Electricity Billing Rails kung saan isine-set ang Meralco kWh rate at Maynilad per cubic meter rate.",
+            clicks: [
+              "Set <span class='btn-word'>Electricity Rate</span> (13.50) &amp; <span class='btn-word'>Water Rate</span> (35.00)",
+              "Save configuration and click <span class='btn-word'>Proceed to Next Step</span>"
+            ],
+            copies: [
+              { label: "Electricity Rate (kWh)", value: "13.50" },
+              { label: "Water Rate (m³)", value: "35.00" }
+            ]
+          },
+          {
+            short: "5. Step 4 & 5 Tour",
+            title: "Step 4 Tenants & Step 5 Dashboard Guided Tour",
+            where: "/landlord/dashboard",
+            as: "starter",
+            url: `${APP_ORIGIN}/landlord/dashboard`,
+            say: "Step 4 ay Tenant Onboarding at Step 5 ay ang Dashboard Guided Tour na nagtuturo ng Quick Actions, Today's Overview, at Rent & Payments.",
+            clicks: [
+              "In <span class='btn-word'>/landlord/tenants</span>, click <span class='btn-word'>Proceed to Dashboard</span>",
+              "Walk through the 4 spotlight steps on <span class='btn-word'>/landlord/dashboard</span> to unlock all features!"
+            ],
+            copies: []
+          }
+        ]
+      },
+      {
+        num: "B",
+        name: "New Tenant & Tour",
+        steps: [
+          {
+            short: "1. Existing Link",
+            title: "Existing Resident Self-Onboarding Link",
+            where: "Public Invite Link",
+            as: "public",
+            url: `${APP_ORIGIN}/apply/fgd-room104-existing-2026`,
+            say: "Paano kung may nakatira nang tenant bago pa gamitin ang iReside? Meron po tayong Existing Resident Onboarding Link (Room 104) o Quick Add.",
+            clicks: [
+              "Open <span class='btn-word'>Existing Resident Link (Room 104)</span>",
+              "Show how an existing tenant registers directly into their assigned room"
+            ],
+            copies: [
+              { label: "Existing Resident Link", value: `${APP_ORIGIN}/apply/fgd-room104-existing-2026` }
+            ]
+          },
+          {
+            short: "2. First Login Tour",
+            title: "New Tenant Guided Product Tour (Mark, Rm 301)",
+            where: "Tenant Portal",
+            as: "mark",
+            resetAction: "reset-tenant-tour",
+            resetLabel: "🔄 Reset Mark's First-Time Tour",
+            url: `${APP_ORIGIN}/tenant/dashboard`,
+            say: "Pag unang log in ng bagong tenant tulad ni Mark Lim sa Room 301, sasalubungin siya ng interactive Product Tour para hindi siya maligaw.",
+            clicks: [
+              "Click <span class='btn-word'>🔄 Reset Mark's First-Time Tour</span> above",
+              "Click <span class='btn-word'>⚡ Login as Mark &amp; Open ↗</span> to show the guided tour on <span class='btn-word'>/tenant/dashboard</span>"
+            ],
+            copies: [
+              { label: "Mark Email", value: "mark.lim@ireside.ph" },
+              { label: "Password", value: "Defense2026!" }
+            ]
+          },
+          {
+            short: "3. Profile Setup",
+            title: "Tenant Profile & Attention Beacon",
+            where: "/tenant/settings",
+            as: "mark",
+            url: `${APP_ORIGIN}/tenant/settings`,
+            say: "Kapag kulang pa ang profile details, may pinging beacon sa avatar para kumpletuhin ang emergency contact, bio, at security settings.",
+            clicks: [
+              "Click avatar top-right → <span class='btn-word'>Complete Profile</span>",
+              "Show <span class='btn-word'>/tenant/settings</span>"
+            ],
+            copies: []
+          }
+        ]
+      },
+      {
+        num: "C",
+        name: "Full Application E2E",
+        steps: [
+          {
+            short: "1. 3 Intake Modes",
+            title: "3 Intake Channels: Online QR, Walk-In & Lobby Flyer",
+            where: "/landlord/applications",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/applications`,
+            say: "Tatlo po ang paraan ng pag-apply: Online QR/Invite Link, Walk-In Intake form na tine-type ni Landlord sa office, at Printable Lobby QR Flyer.",
+            clicks: [
+              "Click <span class='btn-word'>Invite Manager</span> (show Online, Walk-in &amp; Existing links + QR)",
+              "Click <span class='btn-word'>Walk-in Intake</span> modal (direct encoding)",
+              "Optional: Open <span class='btn-word'>/landlord/flyer</span> for printable lobby poster"
+            ],
+            copies: [
+              { label: "Online QR Link", value: `${APP_ORIGIN}/apply/fgd-apply-online-2026` },
+              { label: "Printable Flyer Page", value: `${APP_ORIGIN}/landlord/flyer` }
+            ]
+          },
+          {
+            short: "2. Checklist & Approve",
+            title: "Verify ID Checklist & Approve Applicant (Jerome)",
+            where: "/landlord/applications",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/applications`,
+            say: "Sa Reviewing tab (Patricia) at Pending tab (Jerome Pascual, Room 103), iche-check ni Landlord ang Valid ID at Income bago i-click ang Quick Approve.",
+            clicks: [
+              "Click <span class='btn-word'>Reviewing</span> tab → show <span class='btn-word'>Patricia Anne Cruz</span>",
+              "Click <span class='btn-word'>Pending</span> tab → click <span class='btn-word'>Jerome Pascual</span> → <span class='btn-word'>Quick Approve</span>"
+            ],
+            copies: []
+          },
+          {
+            short: "3. Deposit Portal",
+            title: "Applicant Pays Move-In Advance & Deposit (Kevin)",
+            where: "Public Payment Portal",
+            as: "public",
+            url: `${APP_ORIGIN}/apply/payments/fgd-pay-kevin-portal-2026`,
+            say: "Pagka-approve, makakatanggap ang aplikante (tulad ni Kevin Torres) ng Move-In Payment Portal link para mag-upload ng GCash Advance Rent at Security Deposit.",
+            clicks: [
+              "Open <span class='btn-word'>Kevin's Move-In Payment Portal</span>",
+              "Show itemized Advance Rent (₱4,500) + Security Deposit (₱4,500) &amp; GCash upload"
+            ],
+            copies: [
+              { label: "Kevin Deposit Portal", value: `${APP_ORIGIN}/apply/payments/fgd-pay-kevin-portal-2026` }
+            ]
+          },
+          {
+            short: "4. Confirm Move-In",
+            title: "Landlord Confirms Advance (or Cash Bypass)",
+            where: "/landlord/applications",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/applications`,
+            say: "Sa Payment Pending tab, iki-click ni Landlord ang Confirm Payment (o Confirm Bypass kung nagbayad ng cash sa opisina) at gagawin na ang tenant account at lease!",
+            clicks: [
+              "Open <span class='btn-word'>Payment Pending</span> tab → click <span class='btn-word'>Kevin Torres</span>",
+              "Click <span class='btn-word'>Confirm Payment</span> or <span class='btn-word'>Confirm Cash Bypass</span>"
+            ],
+            copies: []
+          }
+        ]
+      },
+      {
+        num: "D",
+        name: "Full Maintenance E2E",
+        steps: [
+          {
+            short: "1. File w/ Photo",
+            title: "Tenant Submits Repair Ticket with Photo",
+            where: "/tenant/maintenance",
+            as: "mark",
+            url: `${APP_ORIGIN}/tenant/maintenance`,
+            say: "Magpapasa ang tenant ng maintenance ticket na may category, priority level, at photo attachment.",
+            clicks: [
+              "Open <span class='btn-word'>/tenant/maintenance</span> as Mark (Room 301) or Joshua (Room 102)",
+              "Click <span class='btn-word'>New Request</span> or open Mark's <span class='btn-word'>Sparking Wall Outlet</span> ticket"
+            ],
+            copies: [
+              { label: "Sample Title", value: "Malakas ang tagas ng gripo sa CR" },
+              { label: "Sample Description", value: "Hindi na po naisasara nang maayos yung valve sa banyo ng Room 301." }
+            ]
+          },
+          {
+            short: "2. AI Smart Triage",
+            title: "Landlord AI Smart Triage & 3 Assignment Modes",
+            where: "/landlord/maintenance",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/maintenance`,
+            say: "Sa Landlord Maintenance Desk, awtomatikong tinatriage ni iRis ang ticket (halimbawa Urgent Fire Hazard yung outlet ni Mark) at pwedeng i-assign sa Caretaker, 3rd-Party Contractor, o Self-Repair.",
+            clicks: [
+              "Inspect <span class='btn-word'>Mark Lim (Room 301)</span> → flagged Urgent by Smart Triage",
+              "Show 3 assignment paths: <span class='btn-word'>Landlord/In-House</span>, <span class='btn-word'>3rd-Party Contractor</span> (Mang Dodong), or <span class='btn-word'>Approve Self-Repair</span> (Ronald's showerhead)"
+            ],
+            copies: [
+              { label: "Contractor Name", value: "Mang Dodong Electrical & Plumbing" },
+              { label: "Contractor Phone", value: "0917-555-8291" }
+            ]
+          },
+          {
+            short: "3. On-Site & Done",
+            title: "Tenant Confirms Technician Arrival & Completion",
+            where: "/tenant/maintenance",
+            as: "joshua",
+            url: `${APP_ORIGIN}/tenant/maintenance`,
+            say: "Sa Tenant side (Joshua Room 102), naka-sync ang status at pwedeng i-update ng tenant kung dumating na ang gagawa at kung tapos na ang repair.",
+            clicks: [
+              "Open <span class='btn-word'>/tenant/maintenance</span> as Joshua (Room 102)",
+              "View assigned plumber (<span class='btn-word'>Mang Dodong</span>) &amp; click <span class='btn-word'>Mark Completed / Update</span>"
+            ],
+            copies: []
+          }
+        ]
+      },
+      {
+        num: "E",
+        name: "Create New Property",
+        steps: [
+          {
+            short: "1. New Property",
+            title: "Create New Property Building",
+            where: "/landlord/properties/new",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/properties/new`,
+            say: "Suportado ng iReside ang multi-property management — pwedeng magdagdag ng bagong building si Landlord anumang oras.",
+            clicks: [
+              "Go to <span class='btn-word'>My Properties</span> → click <span class='btn-word'>Add Property</span>",
+              "Paste property details, set floors &amp; units, and create"
+            ],
+            copies: [
+              { label: "Property Name", value: "Gonzales Annex Residence" },
+              { label: "Address", value: "112 Fatima Ave., Marulas, Valenzuela City" }
+            ]
+          },
+          {
+            short: "2. Rules & Curfew",
+            title: "Configure Curfew, Visitor Cutoff & Contract Template",
+            where: "/landlord/properties",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/properties`,
+            say: "Sa loob ng Property Settings, naka-configure ang Curfew (11 PM), Visitor Cutoff (9 PM), Quiet Hours, at awtomatiko itong pumapasok sa Lease Contract template.",
+            clicks: [
+              "Open <span class='btn-word'>Fernando Gonzales Dormitory</span> → <span class='btn-word'>Environment / Rules</span>",
+              "Show Curfew (11:00 PM), Visitor Cutoff (9:00 PM), Quiet Hours (10 PM–6 AM) &amp; Contract Clauses"
+            ],
+            copies: []
+          },
+          {
+            short: "3. Switch Property",
+            title: "Switch Between Properties & Edit 2D Map",
+            where: "/landlord/unit-map",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/unit-map`,
+            say: "Sa top-left Property Selector sa sidebar, pwedeng magpalit-palit ng building at i-edit ang kani-kanilang 2D Unit Map.",
+            clicks: [
+              "Use the top-left <span class='btn-word'>Property Selector</span> in Sidebar",
+              "Show <span class='btn-word'>/landlord/unit-map</span> floor planner"
+            ],
+            copies: []
+          }
+        ]
+      },
+      {
+        num: "F",
+        name: "Full Payment Cycle",
+        steps: [
+          {
+            short: "1. Submeters",
+            title: "Input Meter Readings & Send Monthly Bills",
+            where: "/landlord/utility-billing",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/utility-billing`,
+            say: "Tuwing katapusan, inilalagay ang previous at current sub-meter readings ng kuryente at tubig bawat kwarto, tapos 1-click Send Monthly Bills.",
+            clicks: [
+              "Open <span class='btn-word'>Water &amp; Electricity</span> (/landlord/utility-billing)",
+              "Review room meter readings → click <span class='btn-word'>Save Readings</span> &amp; <span class='btn-word'>Send Monthly Bills</span>"
+            ],
+            copies: []
+          },
+          {
+            short: "2. GCash vs Cash",
+            title: "Tenant Pays via GCash (Joshua) or Cash Intent (Angelo)",
+            where: "/tenant/payments",
+            as: "joshua",
+            resetAction: "quick-reset-joshua-bill",
+            resetLabel: "🔄 Reset Joshua Bills (<1s)",
+            url: `${APP_ORIGIN}/tenant/payments`,
+            say: "Dalawa ang main settlement flows: GCash upload (Joshua Room 102) o 72-hour Cash Payment Intent sa opisina (Angelo Room 302).",
+            clicks: [
+              "As Joshua: Click <span class='btn-word'>Pay Now</span> → upload GCash receipt &amp; reference #",
+              "Or switch to <span class='btn-word'>Angelo (Rm 302)</span> to show active <span class='btn-word'>Cash Payment Intent</span>"
+            ],
+            copies: [
+              { label: "Sample GCash Ref #", value: "4029184756123" }
+            ]
+          },
+          {
+            short: "3. Verify & Collect",
+            title: "Landlord Verifies GCash OR Records Cash Payment",
+            where: "/landlord/invoices",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/invoices`,
+            say: "Sa Bills & Receipts, vine-verify ni Landlord ang GCash ni Joshua O kino-collect ang Cash ni Angelo, at parehong nag-i-issue ng Official Receipt.",
+            clicks: [
+              "For GCash: <span class='btn-word'>To Verify</span> → approve Joshua's receipt",
+              "For Cash: On <span class='btn-word'>/landlord/dashboard</span> click <span class='btn-word'>Record Payment</span> → pick <span class='btn-word'>Angelo Fernandez</span>"
+            ],
+            copies: []
+          },
+          {
+            short: "4. Overdue & Late Fee",
+            title: "Overdue Bill, ₱200 Late Fee & Reminder (Ronald)",
+            where: "/landlord/invoices",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/invoices`,
+            say: "Kapag lumagpas sa due date (5th of the month), nagkakaroon ng ₱200 late fee gaya kay Ronald sa Room 202 at pwedeng magpadala ng Overdue Reminder.",
+            clicks: [
+              "Click <span class='btn-word'>Overdue</span> filter chip → open <span class='btn-word'>Ronald Bautista (Oct 2026)</span>",
+              "Show itemized <span class='btn-word'>₱200.00 Late Fee</span> &amp; <span class='btn-word'>Send Reminder</span>",
+              "Also show <span class='btn-word'>Issue Invoice</span> button for one-off charges (e.g. lost key)"
+            ],
+            copies: []
+          },
+          {
+            short: "5. Expenses & CSV",
+            title: "Record Property Expenses & Export Unified Ledger CSV",
+            where: "/landlord/invoices",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/invoices`,
+            say: "Kumpleto rin ang accounting: may Expenses tab para sa maintenance/permits at Unified Ledger na pwedeng i-export sa CSV o PDF.",
+            clicks: [
+              "Click <span class='btn-word'>Expenses</span> tab → show 12 recorded expenses &amp; <span class='btn-word'>Record Expense</span>",
+              "Click <span class='btn-word'>Unified Ledger</span> → click <span class='btn-word'>Export Ledger (CSV)</span>"
+            ],
+            copies: []
+          }
+        ]
+      },
+      {
+        num: "G",
+        name: "2FA & Security",
+        steps: [
+          {
+            short: "1. 2-Step Auth",
+            title: "2-Step Verification (Email OTP) & Active Devices",
+            where: "/landlord/settings?section=security",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/settings?section=security`,
+            say: "Para sa security ng account, meron tayong 2-Step Verification via Email OTP at Active Device Session tracking.",
+            clicks: [
+              "Open <span class='btn-word'>/landlord/settings?section=security</span>",
+              "Point to <span class='btn-word'>2-Step Verification</span> toggle &amp; <span class='btn-word'>Signed-in Devices</span>"
+            ],
+            copies: []
+          },
+          {
+            short: "2. Spare Key",
+            title: "Emergency Spare Key (Senior-Friendly Recovery)",
+            where: "/landlord/settings?section=security",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/settings?section=security`,
+            say: "Imbes na nakakalitong crypto recovery phrase, tinawag namin itong Emergency Spare Key para madaling maintindihan ng senior landlords.",
+            clicks: [
+              "Scroll to <span class='btn-word'>Emergency Spare Key</span> section",
+              "Show 1-click <span class='btn-word'>Download Key</span> &amp; <span class='btn-word'>Copy Code</span>"
+            ],
+            copies: []
+          },
+          {
+            short: "3. Audit & OTP Reset",
+            title: "Security Activity Log & Forgot Password Email OTP",
+            where: "/landlord/settings?section=activity",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/settings?section=activity`,
+            say: "Lahat ng login, password change, at nhạy-sensitibong actions ay naka-log sa Activity History, at may Email OTP Forgot Password flow sa /forgot-password.",
+            clicks: [
+              "Show <span class='btn-word'>/landlord/settings?section=activity</span> audit log",
+              "Optional: Open <span class='btn-word'>/forgot-password</span> in a public tab to show Email OTP recovery"
+            ],
+            copies: [
+              { label: "Forgot Password URL", value: `${APP_ORIGIN}/forgot-password` }
+            ]
+          }
+        ]
+      },
+      {
+        num: "H",
+        name: "Lease Lifecycle",
+        steps: [
+          {
+            short: "1. Audit & Terms",
+            title: "Remote Signing Audit Trail (Mark) & Term Types",
+            where: "/landlord/leases",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/leases`,
+            say: "Bawat kontrata ay may kumpletong Signing Audit Trail (IP address, browser, at timestamps) at pwedeng Open-Ended (month-to-month) o Fixed-Term.",
+            clicks: [
+              "Open <span class='btn-word'>Mark Anthony Lim (Room 301)</span> → click <span class='btn-word'>Audit Trail</span>",
+              "Show <span class='btn-word'>Open-Ended vs Fixed Term</span> switcher on any active lease"
+            ],
+            copies: []
+          },
+          {
+            short: "2. Lease Renewal",
+            title: "Lease Renewal Request & Review (Christine, Rm 203)",
+            where: "/landlord/tenants",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/tenants`,
+            say: "Kapag malapit nang mag-expire ang fixed-term lease gaya kay Christine sa Room 203, pwedeng mag-request ng renewal at i-approve ni Landlord.",
+            clicks: [
+              "Open <span class='btn-word'>/landlord/tenants</span> → click <span class='btn-word'>Lease Renewals</span> tab",
+              "Click <span class='btn-word'>Christine Joy Reyes</span> → <span class='btn-word'>Review Renewal Terms</span>"
+            ],
+            copies: []
+          },
+          {
+            short: "3. Unit Transfer",
+            title: "Room Transfer Request (Angelo: Rm 302 → Rm 303)",
+            where: "/tenant/lease",
+            as: "angelo",
+            url: `${APP_ORIGIN}/tenant/lease`,
+            say: "Kung gustong lumipat ng kwarto ng tenant (halimbawa si Angelo mula Room 302 papuntang Room 303), may built-in Unit Transfer request.",
+            clicks: [
+              "Login as <span class='btn-word'>Angelo (Room 302)</span> → open <span class='btn-word'>/tenant/lease</span>",
+              "Show <span class='btn-word'>Unit Transfer</span> request to Room 303"
+            ],
+            copies: []
+          },
+          {
+            short: "4. Move-Out & Refund",
+            title: "Move-Out Inspection & Deposit Refund (Ronald & Daniel)",
+            where: "/landlord/move-out",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/move-out`,
+            say: "Pag aalis na ang tenant, may Move-Out Inspection Checklist para sa deductions at automatic computation ng Security Deposit Refund.",
+            clicks: [
+              "Open <span class='btn-word'>/landlord/move-out</span> → <span class='btn-word'>Pending</span> tab: <span class='btn-word'>Ronald Bautista</span>",
+              "Click <span class='btn-word'>Completed</span> tab: show <span class='btn-word'>Daniel Ocampo</span> (₱5,050 refunded after itemized deductions)"
+            ],
+            copies: []
+          }
+        ]
+      },
+      {
+        num: "I",
+        name: "Community & Alerts",
+        steps: [
+          {
+            short: "1. Notice Board",
+            title: "Community Board: Pinned Advisories, Polls & Moderation",
+            where: "/landlord/community",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/community`,
+            say: "Sa Community Hub, pwedeng mag-post si Landlord ng pinned water interruption advisory, interactive poll (Christmas party), at i-moderate ang posts ng tenants.",
+            clicks: [
+              "Open <span class='btn-word'>/landlord/community</span>",
+              "Show Pinned Water Advisory, Christmas Poll (5 votes), &amp; <span class='btn-word'>Approvals</span> moderation tab"
+            ],
+            copies: []
+          },
+          {
+            short: "2. Amenities & Bell",
+            title: "Amenity Bookings (Study Hall) & Real-Time Notifications",
+            where: "/landlord/dashboard",
+            as: "landlord",
+            resetAction: "seed-notifications",
+            resetLabel: "🔔 Push Fresh Unread Alerts",
+            url: `${APP_ORIGIN}/landlord/dashboard`,
+            say: "May Study Hall amenity booking din para kay Christine, at real-time Notification Bell para sa lahat ng actions.",
+            clicks: [
+              "Click <span class='btn-word'>🔔 Push Fresh Unread Alerts</span> above",
+              "Click the <span class='btn-word'>Bell Icon</span> on <span class='btn-word'>/landlord/dashboard</span> to show live alerts"
+            ],
+            copies: []
+          }
+        ]
+      },
+      {
+        num: "J",
+        name: "Elderly UX & Mobile",
+        steps: [
+          {
+            short: "1. Bilingual & Contrast",
+            title: "Elderly-Friendly Accessibility: Tagalog, High Contrast & Text Size",
+            where: "/landlord/settings",
+            as: "landlord",
+            url: `${APP_ORIGIN}/landlord/settings`,
+            say: "Dinisenyo ang iReside para sa senior Filipino landlords: may English/Filipino language switch, High Contrast mode, at Large Text size.",
+            clicks: [
+              "Open <span class='btn-word'>/landlord/settings</span>",
+              "Toggle <span class='btn-word'>Filipino / Tagalog</span> language &amp; <span class='btn-word'>High Contrast</span> mode"
+            ],
+            copies: []
+          },
+          {
+            short: "2. Mobile & APK",
+            title: "Mobile App Shell & Signed Android APK Download",
+            where: "/mobile/tenant/home",
+            as: "joshua",
+            url: `${APP_ORIGIN}/mobile/tenant/home`,
+            say: "Meron din po tayong dedicated Mobile UI para sa Landlord at Tenant, at pwedeng i-download ang signed Android APK diretso sa /download.",
+            clicks: [
+              "Open <span class='btn-word'>/mobile/tenant/home</span> (Tenant Mobile) or <span class='btn-word'>/mobile/landlord/overview</span>",
+              "Open <span class='btn-word'>/download</span> (Android APK) &amp; <span class='btn-word'>/docs</span> (User Manual)"
+            ],
+            copies: [
+              { label: "Tenant Mobile View", value: `${APP_ORIGIN}/mobile/tenant/home` },
+              { label: "Landlord Mobile View", value: `${APP_ORIGIN}/mobile/landlord/overview` },
+              { label: "APK Download Page", value: `${APP_ORIGIN}/download` }
+            ]
+          }
+        ]
+      }
+    ];
+
+    // All direct deep links for Mode 3 Quick Jump Matrix
+    const QUICK_ROUTES = [
+      { label: "🏠 Landlord Dashboard", url: "/landlord/dashboard", as: "landlord" },
+      { label: "🗺️ 2D Unit Map (Landlord)", url: "/landlord/unit-map", as: "landlord" },
+      { label: "🏢 My Properties", url: "/landlord/properties", as: "landlord" },
+      { label: "➕ Add New Property", url: "/landlord/properties/new", as: "landlord" },
+      { label: "📋 Tenant Applications", url: "/landlord/applications", as: "landlord" },
+      { label: "✍️ Lease Contracts", url: "/landlord/leases", as: "landlord" },
+      { label: "👥 Tenant Directory", url: "/landlord/tenants", as: "landlord" },
+      { label: "⚡ Water & Electricity", url: "/landlord/utility-billing", as: "landlord" },
+      { label: "🧾 Bills & Receipts", url: "/landlord/invoices", as: "landlord" },
+      { label: "🛠️ Repairs & Maintenance", url: "/landlord/maintenance", as: "landlord" },
+      { label: "🚪 Move-Out & Refunds", url: "/landlord/move-out", as: "landlord" },
+      { label: "💬 Messages (Landlord)", url: "/landlord/messages", as: "landlord" },
+      { label: "📢 Community Board", url: "/landlord/community", as: "landlord" },
+      { label: "📊 Income & Analytics (iRis)", url: "/landlord/analytics", as: "landlord" },
+      { label: "📅 Operations Calendar", url: "/landlord/calendar", as: "landlord" },
+      { label: "📁 Document Vault", url: "/landlord/documents", as: "landlord" },
+      { label: "🖨️ Printable QR Flyer", url: "/landlord/flyer", as: "landlord" },
+      { label: "🎨 White-Label Branding", url: "/landlord/settings?section=branding", as: "landlord" },
+      { label: "🛡️ 2FA & Spare Key", url: "/landlord/settings?section=security", as: "landlord" },
+      { label: "📜 Security Audit Log", url: "/landlord/settings?section=activity", as: "landlord" },
+      { label: "🏡 Tenant Dashboard (Joshua)", url: "/tenant/dashboard", as: "joshua" },
+      { label: "💳 Tenant Payments (Joshua)", url: "/tenant/payments", as: "joshua" },
+      { label: "🤖 Tenant iRis & Chat", url: "/tenant/messages", as: "joshua" },
+      { label: "🔧 Tenant Maintenance", url: "/tenant/maintenance", as: "joshua" },
+      { label: "📄 Tenant Lease (Katrina)", url: "/tenant/lease", as: "katrina" },
+      { label: "🌐 Public Online Apply Link", url: "/apply/fgd-apply-online-2026", as: "public" },
+      { label: "💰 Kevin Move-In Portal", url: "/apply/payments/fgd-pay-kevin-portal-2026", as: "public" },
+      { label: "📱 Mobile Tenant App", url: "/mobile/tenant/home", as: "joshua" },
+      { label: "📱 Mobile Landlord App", url: "/mobile/landlord/overview", as: "landlord" },
+      { label: "📥 Android APK Download", url: "/download", as: "public" }
+    ];
+
+    let activeMode = "main"; // "main" | "curveballs" | "tools"
+    let modIdx = 0;
+    let stepIdx = 0;
+
+    const modBarEl = document.getElementById("mod-bar");
+    const flowTrayEl = document.getElementById("flow-tray");
+    const playCardEl = document.getElementById("play-card");
+    const walkthroughViewEl = document.getElementById("walkthrough-view");
+    const toolsViewEl = document.getElementById("tools-view");
+    const acctGridEl = document.getElementById("acct-grid");
+    const acctStripEl = document.getElementById("acct-strip");
+    const sessionLabelEl = document.getElementById("session-label");
+    const toastEl = document.getElementById("toast-banner");
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toastEl.classList.remove("show"), 3200);
+    }
+
+    function resolveDynamicValue(val) {
+      if (!val) return val;
+      return val.replace(/__KATRINA_LINK__/g, liveKatrinaLink);
+    }
+
+    // Fetch current session & live IDs from /api/demo-console/actions
+    async function refreshLiveState() {
+      try {
+        const res = await fetch(`${APP_ORIGIN}/api/demo-console/actions`);
+        const data = await res.json();
+        if (data.ok) {
+          currentUserEmail = data.currentUser?.email || null;
+          if (data.demoIds?.links?.katrina_signing_link) {
+            liveKatrinaLink = data.demoIds.links.katrina_signing_link;
+          }
+          updateSessionBadge(data.currentUser);
+          renderAccountStrip();
+          if (activeMode !== "tools") renderWalkthrough();
+        }
+      } catch {
+        sessionLabelEl.textContent = "Local Guide Ready";
+      }
+    }
+
+    function updateSessionBadge(user) {
+      if (!user || !user.email) {
+        sessionLabelEl.textContent = "Signed Out (Public Mode)";
+        return;
+      }
+      const matched = ACCOUNTS.find(a => a.email && a.email.toLowerCase() === user.email.toLowerCase());
+      sessionLabelEl.textContent = matched
+        ? `Active: ${matched.short}`
+        : `Active: ${user.email} (${user.role})`;
+    }
+
+    // Switch account via backend API & optionally open target URL
+    async function switchAccountAndOpen(acctKey, customTargetUrl, openTab = true) {
+      const acct = ACCOUNT_BY_KEY[acctKey];
+      if (!acct) return;
+
+      showToast(`⏳ Switching to ${acct.short}…`);
+      try {
+        // Clear or set localStorage onboarding flags for clean transitions
+        if (acct.key === "starter") {
+          localStorage.removeItem("ireside.onboarding_completed");
+          localStorage.removeItem("ireside_setup_completed");
+        } else if (acct.key === "landlord") {
+          localStorage.setItem("ireside.onboarding_completed", "true");
+          localStorage.setItem("ireside_setup_completed", "true");
+        }
+
+        const res = await fetch(`${APP_ORIGIN}/api/demo-console/actions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "switch-account",
+            email: acct.email,
+            password: acct.pass
+          })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "Login failed");
+
+        currentUserEmail = acct.email;
+        updateSessionBadge(data.user);
+        renderAccountStrip();
+
+        const dest = resolveDynamicValue(customTargetUrl || `${APP_ORIGIN}${acct.url}`);
+        showToast(`✅ Logged in as ${acct.short}!`);
+        if (openTab) {
+          window.open(dest, "_blank", "noopener");
+        }
+      } catch (err) {
+        showToast(`⚠️ Auto-switch error: ${err.message}`);
+      }
+    }
+
+    // Run backend reset/utility action
+    async function runBackendAction(actionType, extraPayload = {}) {
+      showToast(`⏳ Running ${actionType}…`);
+      try {
+        const res = await fetch(`${APP_ORIGIN}/api/demo-console/actions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: actionType, ...extraPayload })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "Action failed");
+
+        if (data.signingLink) {
+          liveKatrinaLink = data.signingLink;
+        }
+        if (data.demoIds?.links?.katrina_signing_link) {
+          liveKatrinaLink = data.demoIds.links.katrina_signing_link;
+        }
+
+        showToast(`✅ ${data.message || `Completed (${data.seconds ?? 1}s)`}`);
+        await refreshLiveState();
+        return data;
+      } catch (err) {
+        showToast(`✗ Error: ${err.message}`);
+        return null;
+      }
+    }
+
+    function renderAccountStrip() {
+      acctGridEl.innerHTML = ACCOUNTS.map(a => {
+        const isCurrent = (a.email && currentUserEmail && a.email.toLowerCase() === currentUserEmail.toLowerCase()) || (!a.email && !currentUserEmail);
+        return `
+          <div class="acct-chip-group ${isCurrent ? "current" : ""}">
+            <button type="button" class="acct-btn" data-switch-acct="${a.key}" title="${a.note}">
+              <span>${a.short}</span>
+            </button>
+            ${a.email ? `<button type="button" class="acct-copy-email" data-raw-copy="${a.email}" title="Copy ${a.email}">📋</button>` : ""}
+          </div>
+        `;
+      }).join("");
+
+      acctGridEl.querySelectorAll("[data-switch-acct]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const k = btn.getAttribute("data-switch-acct");
+          switchAccountAndOpen(k, null, true);
+        });
+      });
+
+      document.querySelectorAll("[data-raw-copy]").forEach(btn => {
+        btn.onclick = () => {
+          const val = btn.getAttribute("data-raw-copy");
+          navigator.clipboard.writeText(val).catch(() => {});
+          showToast(`📋 Copied: ${val}`);
+        };
+      });
+    }
+
+    function getActiveModules() {
+      return activeMode === "curveballs" ? CURVEBALL_MODULES : MAIN_MODULES;
+    }
+
+    function renderWalkthrough() {
+      const modules = getActiveModules();
+      if (modIdx >= modules.length) modIdx = 0;
+      const mod = modules[modIdx];
+      if (stepIdx >= mod.steps.length) stepIdx = 0;
+      const step = mod.steps[stepIdx];
+
+      // 1. Module Pills
+      modBarEl.innerHTML = modules.map((m, i) => `
+        <button type="button" class="mod-pill ${activeMode === "curveballs" ? "curveball-pill" : ""} ${i === modIdx ? "active" : ""}" data-mod="${i}">
+          <span class="mod-badge">${m.num}</span>
+          <span>${m.name}</span>
+        </button>
+      `).join("");
+
+      modBarEl.querySelectorAll("[data-mod]").forEach((b) => {
+        b.addEventListener("click", () => {
+          modIdx = Number(b.getAttribute("data-mod"));
+          stepIdx = 0;
+          renderWalkthrough();
+        });
+      });
+
+      // 2. Flowchart Bubbles
+      flowTrayEl.innerHTML = mod.steps.map((s, i) => `
+        <button type="button" class="step-bubble ${i === stepIdx ? "active" : ""}" data-step="${i}">
+          <span class="step-circle">${i + 1}</span>
+          <span class="step-bubble-text">${s.short}</span>
+        </button>
+        ${i < mod.steps.length - 1 ? `<span class="flow-arrow">➜</span>` : ""}
+      `).join("");
+
+      flowTrayEl.querySelectorAll("[data-step]").forEach((b) => {
+        b.addEventListener("click", () => {
+          stepIdx = Number(b.getAttribute("data-step"));
+          renderWalkthrough();
+        });
+      });
+
+      // 3. Play Card
+      const stepUrl = resolveDynamicValue(step.url);
+      const actor = step.as ? ACCOUNT_BY_KEY[step.as] : null;
+
+      const clicksHtml = step.clicks.map((c, i) => `
+        <li>
+          <span class="mini-num">${i + 1}</span>
+          <span>${c}</span>
+        </li>
+      `).join("");
+
+      const resolvedCopies = (step.copies || []).map(cp => ({
+        label: cp.label,
+        value: resolveDynamicValue(cp.value)
+      }));
+
+      const copiesHtml = resolvedCopies.length > 0
+        ? `<div class="copy-list">
+            ${resolvedCopies.map((cp) => `
+              <button type="button" class="copy-toy" data-copy="${cp.value.replace(/"/g, "&quot;")}">
+                <div class="copy-info">
+                  <div class="copy-label">${cp.label}</div>
+                  <div class="copy-val">${cp.value}</div>
+                </div>
+                <span class="copy-badge">COPY</span>
+              </button>
+            `).join("")}
+           </div>`
+        : `<div class="empty-toy">Nothing to type — just click!</div>`;
+
+      const isFirst = modIdx === 0 && stepIdx === 0;
+      const isLast = modIdx === modules.length - 1 && stepIdx === mod.steps.length - 1;
+
+      const nextText = stepIdx < mod.steps.length - 1
+        ? `Next: Step ${stepIdx + 2} ➜`
+        : modIdx < modules.length - 1
+          ? `Next: ${modules[modIdx + 1].name} ➜`
+          : `All Done!`;
+
+      const resetBtnHtml = step.resetAction
+        ? `<button type="button" class="open-btn reset-mini" id="step-reset-btn">${step.resetLabel || "🔄 Reset Step"}</button>`
+        : "";
+
+      const autoLoginBtnHtml = actor
+        ? `<button type="button" class="open-btn auto-login" id="step-autologin-btn">⚡ Login as ${actor.short} &amp; Open ↗</button>`
+        : "";
+
+      playCardEl.innerHTML = `
+        <div class="play-header">
+          <div class="play-title-group">
+            <div class="big-num">${stepIdx + 1}</div>
+            <div>
+              <h1 class="play-title">${step.title}</h1>
+              <div class="tags-row">
+                <span class="where-tag">Screen: ${step.where}</span>
+                ${actor ? `<span class="actor-tag">Role: ${actor.short}</span>` : ""}
+              </div>
+            </div>
+          </div>
+          <div class="action-btns">
+            ${resetBtnHtml}
+            ${autoLoginBtnHtml}
+            <a href="${stepUrl}" target="_blank" rel="noopener" class="open-btn">Open Page Only ↗</a>
+          </div>
+        </div>
+
+        ${step.say ? `
+          <div class="say-banner">
+            <span class="say-label">🎙️ Say</span>
+            <span>"${step.say}"</span>
+          </div>
+        ` : ""}
+
+        <div class="two-cols">
+          <div class="block">
+            <div class="block-heading">1. Click This</div>
+            <ul class="click-steps">${clicksHtml}</ul>
+          </div>
+
+          <div class="block">
+            <div class="block-heading">2. Copy &amp; Paste This</div>
+            ${copiesHtml}
+          </div>
+        </div>
+
+        <div class="footer-bar">
+          <button type="button" class="big-btn" id="prev-btn" ${isFirst ? "disabled" : ""}>⬅ Back</button>
+          <button type="button" class="big-btn next" id="next-btn" ${isLast ? "disabled" : ""}>${nextText}</button>
+        </div>
+      `;
+
+      playCardEl.querySelectorAll("[data-copy]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const val = btn.getAttribute("data-copy");
+          navigator.clipboard.writeText(val).catch(() => {});
+          const badge = btn.querySelector(".copy-badge");
+          btn.classList.add("copied");
+          badge.textContent = "COPIED!";
+          setTimeout(() => {
+            btn.classList.remove("copied");
+            badge.textContent = "COPY";
+          }, 900);
+        });
+      });
+
+      const autoBtn = document.getElementById("step-autologin-btn");
+      if (autoBtn && actor) {
+        autoBtn.addEventListener("click", () => {
+          switchAccountAndOpen(actor.key, stepUrl, true);
+        });
+      }
+
+      const resetBtn = document.getElementById("step-reset-btn");
+      if (resetBtn && step.resetAction) {
+        resetBtn.addEventListener("click", () => {
+          if (step.resetAction === "delete-marco") {
+            runBackendAction("delete-user", { email: "marco.reyes2026@gmail.com" });
+          } else {
+            runBackendAction(step.resetAction);
+          }
+        });
+      }
+
+      document.getElementById("prev-btn").addEventListener("click", prev);
+      document.getElementById("next-btn").addEventListener("click", next);
+    }
+
+    function renderToolsPanel() {
+      toolsViewEl.innerHTML = `
+        <div class="play-card" style="background:var(--blue-light);">
+          <div class="play-header">
+            <div>
+              <h2 class="play-title">🛠️ Live Emergency Controls &amp; Instant Resets</h2>
+              <p style="font-size:0.88rem; font-weight:800; color:var(--ink-soft); margin-top:2px;">
+                Use these 1-click tools if the panel asks you to repeat a demo, create a brand-new account, or reset the database.
+              </p>
+            </div>
+          </div>
+
+          <div class="tools-grid">
+            <div class="tool-card">
+              <div>
+                <div class="tool-card-title">✍️ Reset Katrina's Lease Signing (&lt;1s)</div>
+                <p class="tool-card-desc">Restores Katrina's Room 201 lease back to <b>Pending Tenant Signature</b> and generates a fresh 30-day JWT signing link immediately.</p>
+              </div>
+              <div class="tool-btn-row">
+                <button type="button" class="tool-action-btn green" id="tool-reset-katrina">🔄 Reset Katrina Lease Now</button>
+                <button type="button" class="tool-action-btn" id="tool-copy-katrina">📋 Copy Signing Link</button>
+              </div>
+            </div>
+
+            <div class="tool-card">
+              <div>
+                <div class="tool-card-title">💳 Reset Joshua's GCash Bills (&lt;1s)</div>
+                <p class="tool-card-desc">Restores Joshua's Nov 2026 bill to <b>Pay Now (₱5,709.50)</b> for Tenant and Oct 2026 bill to <b>To Verify</b> for Landlord.</p>
+              </div>
+              <div class="tool-btn-row">
+                <button type="button" class="tool-action-btn green" id="tool-reset-joshua">🔄 Reset Joshua Bills Now</button>
+              </div>
+            </div>
+
+            <div class="tool-card">
+              <div>
+                <div class="tool-card-title">🌱 Fresh Landlord Account (5-Stage Setup)</div>
+                <p class="tool-card-desc">Wipes <code>practice.landlord1@ireside.ph</code> (<code>LandlordDemo2026!</code>) to 0 properties so you can demo New Landlord Onboarding live.</p>
+              </div>
+              <div class="tool-btn-row">
+                <button type="button" class="tool-action-btn green" id="tool-starter-setup">⚡ Ready for /setup (Skip OTP)</button>
+                <button type="button" class="tool-action-btn" id="tool-starter-unclaimed">🔐 Unclaimed (Show OTP Claim)</button>
+              </div>
+            </div>
+
+            <div class="tool-card">
+              <div>
+                <div class="tool-card-title">➕ Generate Brand-New Landlord</div>
+                <p class="tool-card-desc">Creates a brand-new <code>practice.landlordN@ireside.ph</code> account without touching any existing accounts.</p>
+              </div>
+              <div class="tool-btn-row">
+                <button type="button" class="tool-action-btn blue" id="tool-create-landlord">✨ Provision New Landlord</button>
+              </div>
+            </div>
+
+            <div class="tool-card">
+              <div>
+                <div class="tool-card-title">🧭 Reset New Tenant Guided Tour</div>
+                <p class="tool-card-desc">Resets Mark Lim (Room 301) back to his first-time login state so the Tenant Guided Product Tour launches automatically.</p>
+              </div>
+              <div class="tool-btn-row">
+                <button type="button" class="tool-action-btn blue" id="tool-reset-tour">🔄 Reset Mark's Tour &amp; Login</button>
+              </div>
+            </div>
+
+            <div class="tool-card">
+              <div>
+                <div class="tool-card-title">🔔 Push Unread Notifications</div>
+                <p class="tool-card-desc">Inserts fresh unread notifications for both Landlord (John) and Tenant (Joshua) so the notification bell lights up live.</p>
+              </div>
+              <div class="tool-btn-row">
+                <button type="button" class="tool-action-btn" id="tool-push-notif">🔔 Trigger Live Notifications</button>
+              </div>
+            </div>
+
+            <div class="tool-card">
+              <div>
+                <div class="tool-card-title">🧹 Delete / Purge Test Email or Account</div>
+                <p class="tool-card-desc">Deletes a test applicant or user (e.g. <code>marco.reyes2026@gmail.com</code>) so you can re-register that email cleanly.</p>
+              </div>
+              <div class="tool-btn-row">
+                <input type="text" class="tool-input" id="purge-email-input" value="marco.reyes2026@gmail.com" />
+                <button type="button" class="tool-action-btn red" id="tool-purge-user" style="flex:0 0 auto;">🗑️ Purge</button>
+              </div>
+            </div>
+
+            <div class="tool-card">
+              <div>
+                <div class="tool-card-title">🚨 Full Defense Database Reset (~20s)</div>
+                <p class="tool-card-desc">Runs <code>scripts/seed-defense-demo.mjs</code> to rebuild all 24 units, 8 tenants, 140 invoices, and applications from scratch.</p>
+              </div>
+              <div class="tool-btn-row">
+                <button type="button" class="tool-action-btn red" id="tool-full-reset">🚨 Run Full Database Seed Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="play-card">
+          <div class="play-header">
+            <div>
+              <h2 class="play-title">🚀 1-Click Deep-Link Matrix (Auto-Switches Role &amp; Opens Page)</h2>
+              <p style="font-size:0.88rem; font-weight:800; color:var(--ink-soft); margin-top:2px;">
+                Click any destination below to automatically log in as the right persona and open that page in a new tab.
+              </p>
+            </div>
+          </div>
+          <div class="route-matrix">
+            ${QUICK_ROUTES.map((r, idx) => `
+              <button type="button" class="route-btn" data-quick-route="${idx}">
+                <span>${r.label}</span>
+                <span>↗</span>
+              </button>
+            `).join("")}
+          </div>
+        </div>
+      `;
+
+      document.getElementById("tool-reset-katrina").onclick = () => runBackendAction("quick-reset-katrina");
+      document.getElementById("tool-copy-katrina").onclick = () => {
+        navigator.clipboard.writeText(liveKatrinaLink).catch(() => {});
+        showToast("📋 Copied live Katrina Signing Link!");
+      };
+      document.getElementById("tool-reset-joshua").onclick = () => runBackendAction("quick-reset-joshua-bill");
+      document.getElementById("tool-starter-setup").onclick = async () => {
+        const res = await runBackendAction("prepare-starter-onboarding");
+        if (res && res.ok) switchAccountAndOpen("starter", `${APP_ORIGIN}/setup`, true);
+      };
+      document.getElementById("tool-starter-unclaimed").onclick = async () => {
+        const res = await runBackendAction("reset-starter-landlord");
+        if (res && res.ok) switchAccountAndOpen("public", `${APP_ORIGIN}/login`, true);
+      };
+      document.getElementById("tool-create-landlord").onclick = async () => {
+        const res = await runBackendAction("create-fresh-landlord");
+        if (res && res.email) {
+          navigator.clipboard.writeText(res.email).catch(() => {});
+          showToast(`✨ Created ${res.email} (Copied to clipboard! Pass: ${res.password})`);
+        }
+      };
+      document.getElementById("tool-reset-tour").onclick = async () => {
+        const res = await runBackendAction("reset-tenant-tour");
+        if (res && res.ok) switchAccountAndOpen("mark", `${APP_ORIGIN}/tenant/dashboard`, true);
+      };
+      document.getElementById("tool-push-notif").onclick = () => runBackendAction("seed-notifications");
+      document.getElementById("tool-purge-user").onclick = () => {
+        const email = document.getElementById("purge-email-input").value.trim();
+        if (email) runBackendAction("delete-user", { email });
+      };
+      document.getElementById("tool-full-reset").onclick = () => {
+        if (confirm("Run full database seed reset (takes ~20 seconds)?")) {
+          runBackendAction("full-reset");
+        }
+      };
+
+      toolsViewEl.querySelectorAll("[data-quick-route]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const r = QUICK_ROUTES[Number(btn.getAttribute("data-quick-route"))];
+          switchAccountAndOpen(r.as, `${APP_ORIGIN}${r.url}`, true);
+        });
+      });
+    }
+
+    function setMode(mode) {
+      activeMode = mode;
+      modIdx = 0;
+      stepIdx = 0;
+
+      document.getElementById("tab-main").classList.toggle("active", mode === "main");
+      document.getElementById("tab-curveballs").classList.toggle("active", mode === "curveballs");
+      document.getElementById("tab-tools").classList.toggle("active", mode === "tools");
+
+      if (mode === "tools") {
+        walkthroughViewEl.style.display = "none";
+        toolsViewEl.style.display = "flex";
+        renderToolsPanel();
+      } else {
+        walkthroughViewEl.style.display = "flex";
+        toolsViewEl.style.display = "none";
+        renderWalkthrough();
+      }
+    }
+
+    function next() {
+      if (activeMode === "tools") return;
+      const modules = getActiveModules();
+      const mod = modules[modIdx];
+      if (stepIdx < mod.steps.length - 1) stepIdx++;
+      else if (modIdx < modules.length - 1) { modIdx++; stepIdx = 0; }
+      renderWalkthrough();
+    }
+
+    function prev() {
+      if (activeMode === "tools") return;
+      const modules = getActiveModules();
+      if (stepIdx > 0) stepIdx--;
+      else if (modIdx > 0) { modIdx--; stepIdx = modules[modIdx].steps.length - 1; }
+      renderWalkthrough();
+    }
+
+    document.getElementById("tab-main").addEventListener("click", () => setMode("main"));
+    document.getElementById("tab-curveballs").addEventListener("click", () => setMode("curveballs"));
+    document.getElementById("tab-tools").addEventListener("click", () => setMode("tools"));
+
+    document.getElementById("toggle-acct-strip").addEventListener("click", () => {
+      acctStripEl.classList.toggle("hidden");
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.target && e.target.tagName === "INPUT") return;
+      if (e.key === "ArrowRight") { e.preventDefault(); next(); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); prev(); }
+    });
+
+    renderAccountStrip();
+    renderWalkthrough();
+    refreshLiveState();
+  </script>
+</body>
+</html>

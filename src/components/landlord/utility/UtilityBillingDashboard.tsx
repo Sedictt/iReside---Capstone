@@ -44,15 +44,13 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { parseNumericInput } from "@/lib/validation/rules";
-import { currentReadingRule } from "@/lib/validation/schemas/billing.schema";
-
-type ReadingDraftCell = { previous: number; current: string; exists?: boolean };
-
-/** Inline error for a not-yet-recorded meter reading (blank = not entered, which is allowed). */
-function readingCellError(cell: ReadingDraftCell, label: string) {
-	if (cell.exists) return undefined;
-	return currentReadingRule(cell.current, cell.previous, { label, required: false });
-}
+import {
+	buildDraftsFromWorkspace,
+	readingCellError,
+	sanitizeMeterInput,
+	type ReadingDraft,
+	type ReadingSaveRequest,
+} from "@/lib/billing/utility-drafts";
 import { useProperty } from "@/context/PropertyContext";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
@@ -67,297 +65,6 @@ import { UtilityBillingOnboardingModal } from "@/components/landlord/utility/Uti
 import { UtilityBillingTourSpotlight } from "@/components/landlord/utility/UtilityBillingTourSpotlight";
 import { UtilityBillingCompletionModal } from "@/components/landlord/utility/UtilityBillingCompletionModal";
 import { paymentMethodLabel } from "@/lib/billing/payment-methods";
-
-type ReadingDraft = {
-	unitId: string;
-	unitName: string;
-	propertyId: string;
-	propertyName: string;
-	leaseId: string | null;
-	tenantName: string | null;
-	occupancyStatus: "occupied" | "vacant" | "maintenance";
-	rentAmount: number;
-	water: {
-		previous: number;
-		current: string;
-		exists: boolean;
-		rate: number;
-	};
-	electricity: {
-		previous: number;
-		current: string;
-		exists: boolean;
-		rate: number;
-	};
-};
-
-type ReadingSaveRequest = {
-	leaseId: string;
-	unitId?: string;
-	utilityType: string;
-	billingPeriodStart: string;
-	billingPeriodEnd: string;
-	previousReading: number;
-	currentReading: number;
-	note: string;
-};
-
-function getPreviousMonthString(monthStr: string): string {
-	const [yearStr, monthStrPart] = monthStr.split("-");
-	const year = parseInt(yearStr, 10);
-	const month = parseInt(monthStrPart, 10);
-	if (month === 1) {
-		return `${year - 1}-12`;
-	}
-	return `${year}-${String(month - 1).padStart(2, "0")}`;
-}
-
-function resolvePreviousReading({
-	targetMonth,
-	unitId,
-	leaseId,
-	utilityType,
-	allReadings,
-	monthlyDrafts,
-}: {
-	targetMonth: string;
-	unitId: string;
-	leaseId: string | null;
-	utilityType: "water" | "electricity";
-	allReadings: any[];
-	monthlyDrafts: Record<string, ReadingDraft[]>;
-}): number {
-	// 1. Check in-memory drafts for prior months (iterating backwards from previous month)
-	let checkMonth = targetMonth;
-	for (let i = 0; i < 12; i++) {
-		checkMonth = getPreviousMonthString(checkMonth);
-		const draftsForMonth = monthlyDrafts[checkMonth];
-		if (draftsForMonth) {
-			const d = draftsForMonth.find(
-				(item) => item.unitId === unitId || (leaseId && item.leaseId === leaseId)
-			);
-			if (d) {
-				const util = utilityType === "water" ? d.water : d.electricity;
-				const parsed = parseFloat(util.current);
-				if (!isNaN(parsed) && parsed >= 0 && util.current.trim() !== "") {
-					return parsed;
-				}
-			}
-		}
-	}
-
-	// 2. Look in recorded readings strictly before targetMonth (chronological)
-	const priorReadings = (allReadings || [])
-		.filter((r: any) => {
-			const matchesUnit = r.unit_id === unitId || (leaseId && r.lease_id === leaseId);
-			const matchesType = r.utility_type === utilityType;
-			const periodStartMonth = (r.billing_period_start || "").slice(0, 7);
-			return matchesUnit && matchesType && periodStartMonth < targetMonth;
-		})
-		.sort((a: any, b: any) => {
-			const timeA = new Date(a.billing_period_end || a.billing_period_start || a.created_at).getTime();
-			const timeB = new Date(b.billing_period_end || b.billing_period_start || b.created_at).getTime();
-			return timeB - timeA; // Most recent prior reading first
-		});
-
-	if (priorReadings.length > 0) {
-		return Number(priorReadings[0].current_reading) || 0;
-	}
-
-	return 0;
-}
-
-function resolveUtilityItem({
-	targetMonth,
-	unitId,
-	leaseId,
-	utilityType,
-	readingsData,
-	allReadings,
-	monthlyDrafts,
-	rate,
-}: {
-	targetMonth: string;
-	unitId: string;
-	leaseId: string | null;
-	utilityType: "water" | "electricity";
-	readingsData: { readings?: any[] };
-	allReadings: any[];
-	monthlyDrafts: Record<string, ReadingDraft[]>;
-	rate: number;
-}) {
-	const currentReading = (readingsData?.readings || []).find(
-		(r: any) => (r.unit_id === unitId || (leaseId && r.lease_id === leaseId)) && r.utility_type === utilityType
-	);
-
-	const existingDraft = monthlyDrafts[targetMonth]?.find(
-		(d) => d.unitId === unitId || (leaseId && d.leaseId === leaseId)
-	);
-	const existingUtil = utilityType === "water" ? existingDraft?.water : existingDraft?.electricity;
-
-	const resolvedPrior = resolvePreviousReading({
-		targetMonth,
-		unitId,
-		leaseId,
-		utilityType,
-		allReadings,
-		monthlyDrafts,
-	});
-
-	if (currentReading) {
-		const recordedPrev = Number(currentReading.previous_reading) || 0;
-		return {
-			previous: recordedPrev > 0 ? recordedPrev : (resolvedPrior || 0),
-			current: currentReading.current_reading !== undefined && currentReading.current_reading !== null 
-				? currentReading.current_reading.toString() 
-				: (existingUtil?.current || ""),
-			exists: true,
-			rate,
-		};
-	}
-
-	return {
-		previous: existingUtil && existingUtil.previous !== undefined && existingUtil.previous !== 0 && resolvedPrior === 0
-			? existingUtil.previous
-			: resolvedPrior,
-		current: existingUtil?.current || "",
-		exists: false,
-		rate,
-	};
-}
-
-function buildDraftsFromWorkspace(
-	workspaceData: BillingWorkspace,
-	readingsData: { readings?: any[] },
-	allReadings: any[],
-	targetMonth: string,
-	monthlyDrafts: Record<string, ReadingDraft[]> = {}
-): ReadingDraft[] {
-	const draftsList: ReadingDraft[] = [];
-	const seenUnitIds = new Set<string>();
-
-	// 1. Iterate over all properties and their units
-	(workspaceData.properties || []).forEach((property: any) => {
-		(property.units || []).forEach((unit: any) => {
-			seenUnitIds.add(unit.id);
-			const activeLease = (workspaceData.activeLeases || []).find(
-				(l: any) => l.unit?.id === unit.id
-			);
-
-			const leaseId = activeLease ? activeLease.id : null;
-			const isOccupied = !!activeLease;
-			const occupancyStatus: "occupied" | "vacant" | "maintenance" = isOccupied
-				? "occupied"
-				: (unit.status === "maintenance" ? "maintenance" : "vacant");
-
-			const propertyWaterConfig = (workspaceData.utilityConfigs || []).find(
-				(c: any) => c.property_id === property.id && c.utility_type === "water" && c.unit_id === null
-			);
-			const unitWaterConfig = (workspaceData.utilityConfigs || []).find(
-				(c: any) => c.unit_id === unit.id && c.utility_type === "water"
-			);
-
-			const propertyElecConfig = (workspaceData.utilityConfigs || []).find(
-				(c: any) => c.property_id === property.id && c.utility_type === "electricity" && c.unit_id === null
-			);
-			const unitElecConfig = (workspaceData.utilityConfigs || []).find(
-				(c: any) => c.unit_id === unit.id && c.utility_type === "electricity"
-			);
-
-			const waterRate = unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0;
-			const elecRate = unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0;
-
-			draftsList.push({
-				unitId: unit.id,
-				unitName: unit.name || tr("Unknown Unit"),
-				propertyId: property.id || "",
-				propertyName: property.name || "",
-				leaseId,
-				tenantName: activeLease?.tenant?.full_name || null,
-				occupancyStatus,
-				rentAmount: activeLease?.monthly_rent ?? unit.rent_amount ?? 0,
-				water: resolveUtilityItem({
-					targetMonth,
-					unitId: unit.id,
-					leaseId,
-					utilityType: "water",
-					readingsData,
-					allReadings,
-					monthlyDrafts,
-					rate: waterRate,
-				}),
-				electricity: resolveUtilityItem({
-					targetMonth,
-					unitId: unit.id,
-					leaseId,
-					utilityType: "electricity",
-					readingsData,
-					allReadings,
-					monthlyDrafts,
-					rate: elecRate,
-				}),
-			});
-		});
-	});
-
-	// 2. Include any active lease whose unit might not have been returned in property.units
-	(workspaceData.activeLeases || []).forEach((lease: any) => {
-		if (lease.unit?.id && !seenUnitIds.has(lease.unit.id)) {
-			seenUnitIds.add(lease.unit.id);
-
-			const propertyWaterConfig = (workspaceData.utilityConfigs || []).find(
-				(c: any) => c.property_id === lease.property?.id && c.utility_type === "water" && c.unit_id === null
-			);
-			const unitWaterConfig = (workspaceData.utilityConfigs || []).find(
-				(c: any) => c.unit_id === lease.unit?.id && c.utility_type === "water"
-			);
-
-			const propertyElecConfig = (workspaceData.utilityConfigs || []).find(
-				(c: any) => c.property_id === lease.property?.id && c.utility_type === "electricity" && c.unit_id === null
-			);
-			const unitElecConfig = (workspaceData.utilityConfigs || []).find(
-				(c: any) => c.unit_id === lease.unit?.id && c.utility_type === "electricity"
-			);
-
-			const waterRate = unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0;
-			const elecRate = unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0;
-
-			draftsList.push({
-				unitId: lease.unit.id,
-				unitName: lease.unit.name || tr("Unknown Unit"),
-				propertyId: lease.property?.id || "",
-				propertyName: lease.property?.name || "",
-				leaseId: lease.id,
-				tenantName: lease.tenant?.full_name || null,
-				occupancyStatus: "occupied",
-				rentAmount: lease.monthly_rent || 0,
-				water: resolveUtilityItem({
-					targetMonth,
-					unitId: lease.unit.id,
-					leaseId: lease.id,
-					utilityType: "water",
-					readingsData,
-					allReadings,
-					monthlyDrafts,
-					rate: waterRate,
-				}),
-				electricity: resolveUtilityItem({
-					targetMonth,
-					unitId: lease.unit.id,
-					leaseId: lease.id,
-					utilityType: "electricity",
-					readingsData,
-					allReadings,
-					monthlyDrafts,
-					rate: elecRate,
-				}),
-			});
-		}
-	});
-
-	draftsList.sort((a, b) => a.unitName.localeCompare(b.unitName, undefined, { numeric: true, sensitivity: "base" }));
-	return draftsList;
-}
 
 export function UtilityBillingDashboard() {
 	const searchParams = useSearchParams();
@@ -484,13 +191,6 @@ export function UtilityBillingDashboard() {
 		}
 	}, [selectedMonth]);
 
-	const sanitizeMeterInput = useCallback((raw: string): string => {
-		const stripped = raw.replace(/[^0-9.]/g, "");
-		const parts = stripped.split(".");
-		const normalized = parts.length > 1 ? `${parts[0]}.${parts.slice(1).join("")}` : stripped;
-		return normalized.slice(0, 10);
-	}, []);
-
 	const handleMeterValueChange = useCallback((unitId: string, utilityType: "water" | "electricity", rawValue: string) => {
 		const cleaned = sanitizeMeterInput(rawValue);
 		const index = drafts.findIndex((d) => d.unitId === unitId);
@@ -513,7 +213,7 @@ export function UtilityBillingDashboard() {
 			if (announceTimerRef.current) clearTimeout(announceTimerRef.current);
 			setLiveErrorAnnouncement("");
 		}
-	}, [drafts, sanitizeMeterInput, updateDraftsAndCache]);
+	}, [drafts, updateDraftsAndCache]);
 
 	const handleMeterFieldBlur = useCallback((draft: ReadingDraft, utilityType: "water" | "electricity") => {
 		const key = `${draft.unitId}:${utilityType}`;

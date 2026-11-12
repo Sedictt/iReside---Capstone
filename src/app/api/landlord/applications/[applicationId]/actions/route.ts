@@ -12,7 +12,7 @@ import {
     sendProspectPaymentRequestEmail,
     sendApplicationRejectedEmail,
 } from "@/lib/email";
-import { generateSigningLink } from "@/lib/jwt";
+import { generateApplicationStatusLink, generateSigningLink } from "@/lib/jwt";
 import {
     buildPortalToken,
     buildPortalUrl,
@@ -678,6 +678,10 @@ export async function POST(
             try {
                 const propertyName = (application as any).unit?.property?.name || "Property";
                 const unitName = (application as any).unit?.name || "Unit";
+                const statusTrackerUrl = generateApplicationStatusLink(
+                    applicationId,
+                    new URL(request.url).origin
+                );
                 emailSentToProspect = await sendProspectPaymentRequestEmail({
                     to: applicantEmail,
                     applicantName,
@@ -687,6 +691,7 @@ export async function POST(
                     expiresAt,
                     advanceAmount,
                     securityAmount,
+                    statusTrackerUrl,
                 });
             } catch (emailErr: any) {
                 console.error("[actions] Error sending payment request email:", emailErr);
@@ -758,6 +763,10 @@ export async function POST(
                 const unitName = (application as any).unit?.name || null;
                 const applicantName = application.applicant_name || "Applicant";
                 const rejectionReason = body.rejection_reason?.trim() || "The application did not meet the requirements for this unit.";
+                const statusTrackerUrl = generateApplicationStatusLink(
+                    applicationId,
+                    new URL(request.url).origin
+                );
 
                 await sendApplicationRejectedEmail({
                     to: application.applicant_email.trim(),
@@ -766,6 +775,7 @@ export async function POST(
                     unitName,
                     rejectionReason,
                     resubmitUrl,
+                    statusTrackerUrl,
                 });
                 console.log(`[actions] Dispatched rejection email with resubmission link to ${application.applicant_email}`);
             } catch (rejectEmailErr) {

@@ -73,6 +73,7 @@ const PUBLIC_EXACT_ROUTES = [
     "/manifest.json",
     "/robots.txt",
     "/favicon.ico",
+    "/defense-walkthrough-guide.html",
 ];
 
 // The boneyard skeleton generator (dev tooling, see boneyard.config.json) needs

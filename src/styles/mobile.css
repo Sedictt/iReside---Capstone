@@ -687,7 +687,7 @@ body.mobile-viewport::-webkit-scrollbar {
 /* Floating pill bar: the ground shows around it, so it has no border */
 .mobile-tab-bar {
     position: relative;
-    z-index: 60;
+    z-index: 40;
     pointer-events: auto;
     flex-shrink: 0;
     box-sizing: border-box;

@@ -9,7 +9,7 @@ export default defineConfig({
         globals: true,
         testTimeout: 15000,
         setupFiles: ["./vitest.setup.ts"],
-        exclude: [...configDefaults.exclude, "tests/**/*"],
+        exclude: [...configDefaults.exclude, "tests/**/*", ".claude/**/*"],
     },
     resolve: {
         alias: {

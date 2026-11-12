@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo, Fragment, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, useRef, Fragment, type ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { useProperty } from '@/context/PropertyContext';
+import { readViewCache, writeViewCache, hasViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 import Image from 'next/image';
 import { 
     CreditCard, 
@@ -54,8 +55,10 @@ export function LandlordPaymentsView() {
     const { selectedPropertyId } = useProperty();
     const searchParams = useSearchParams();
     const { t, locale } = useLanguageContext();
-    const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
-    const [loading, setLoading] = useState(true);
+    const invoicesCacheKey = `landlord-invoices:${selectedPropertyId || 'all'}`;
+    const fetchRequestRef = useRef(0);
+    const [invoices, setInvoices] = useState<InvoiceItem[]>(() => readViewCache<InvoiceItem[]>(invoicesCacheKey) ?? []);
+    const [loading, setLoading] = useState(() => !hasViewCache(invoicesCacheKey));
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<'all' | 'proofs' | 'overdue' | 'paid'>('all');
 
@@ -82,38 +85,46 @@ export function LandlordPaymentsView() {
     const [rejectionReason, setRejectionReason] = useState('');
 
     const fetchInvoices = async () => {
+        const requestId = ++fetchRequestRef.current;
+        const cacheKey = invoicesCacheKey;
         try {
             const queryParam = selectedPropertyId && selectedPropertyId !== 'all' 
                 ? `?propertyId=${selectedPropertyId}` 
                 : '';
-            const res = await fetch(`/api/landlord/invoices${queryParam}`);
-            if (res.ok) {
-                const data = await res.json();
-                const rawList = Array.isArray(data) ? data : Array.isArray(data?.invoices) ? data.invoices : [];
-                const formattedInvoices: InvoiceItem[] = rawList.map((inv: any) => ({
-                    id: inv.id,
-                    invoiceNumber: inv.invoiceNumber || inv.invoice_number,
-                    tenantName: inv.tenantName || inv.tenant || t('Unknown tenant'),
-                    unitNumber: inv.unitNumber || inv.unit || t('N/A'),
-                    propertyName: inv.propertyName || inv.property,
-                    amount: Number(inv.amount || 0),
-                    status: (inv.status || 'pending').toLowerCase(),
-                    dueDate: inv.dueDate || inv.due_date || '',
-                    paymentProofUrl: inv.paymentProofUrl || inv.payment_proof_url || null,
-                    createdAt: inv.createdAt || inv.issuedDate || inv.created_at,
-                    notes: inv.notes || inv.type,
-                }));
-                setInvoices(formattedInvoices);
-            }
+            const data = await fetchJsonDeduped(`/api/landlord/invoices${queryParam}`);
+            if (requestId !== fetchRequestRef.current) return;
+            const rawList = Array.isArray(data) ? data : Array.isArray(data?.invoices) ? data.invoices : [];
+            const formattedInvoices: InvoiceItem[] = rawList.map((inv: any) => ({
+                id: inv.id,
+                invoiceNumber: inv.invoiceNumber || inv.invoice_number,
+                tenantName: inv.tenantName || inv.tenant || t('Unknown tenant'),
+                unitNumber: inv.unitNumber || inv.unit || t('N/A'),
+                propertyName: inv.propertyName || inv.property,
+                amount: Number(inv.amount || 0),
+                status: (inv.status || 'pending').toLowerCase(),
+                dueDate: inv.dueDate || inv.due_date || '',
+                paymentProofUrl: inv.paymentProofUrl || inv.payment_proof_url || null,
+                createdAt: inv.createdAt || inv.issuedDate || inv.created_at,
+                notes: inv.notes || inv.type,
+            }));
+            setInvoices(formattedInvoices);
+            writeViewCache(cacheKey, formattedInvoices);
         } catch (err) {
             console.error('[MobilePayments] Failed to fetch invoices:', err);
         } finally {
-            setLoading(false);
+            if (requestId === fetchRequestRef.current) setLoading(false);
         }
     };
 
     useEffect(() => {
-        setLoading(true);
+        // Revisiting the tab shows the last loaded list instantly and refreshes silently.
+        const snapshot = readViewCache<InvoiceItem[]>(invoicesCacheKey);
+        if (snapshot) {
+            setInvoices(snapshot);
+            setLoading(false);
+        } else {
+            setLoading(true);
+        }
         fetchInvoices();
     }, [selectedPropertyId]);
 

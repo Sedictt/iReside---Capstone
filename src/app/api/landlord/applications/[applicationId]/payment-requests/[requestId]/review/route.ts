@@ -14,6 +14,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { sendPaymentReviewResolutionEmail } from "@/lib/email";
 import { getAppBaseUrl } from "@/lib/app-url";
+import { generateApplicationStatusLink } from "@/lib/jwt";
 import { validateMediaFile } from "@/lib/validation/media-validation";
 import { parseWithSchema } from "@/lib/validation/server";
 import { isId, paymentReviewSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
@@ -259,6 +260,11 @@ export async function POST(request: Request, context: RouteContext) {
                 paymentPortalUrl = buildPortalUrl(getAppBaseUrl(new URL(request.url).origin), token);
             }
 
+            const statusTrackerUrl = generateApplicationStatusLink(
+                application.id,
+                new URL(request.url).origin
+            );
+
             await sendPaymentReviewResolutionEmail({
                 to: application.applicant_email.trim(),
                 applicantName,
@@ -270,6 +276,7 @@ export async function POST(request: Request, context: RouteContext) {
                 note: note || null,
                 proofUrl: refundProofUrl || null,
                 paymentPortalUrl,
+                statusTrackerUrl,
             });
             console.log(`[payment-review] Sent ${resolutionType} resolution email to ${application.applicant_email}`);
         } catch (emailErr) {

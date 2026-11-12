@@ -26,12 +26,14 @@ import {
   sendLandlordRegistrationApproved,
   sendLandlordOnboardingMagicLink,
   sendApplicationRejectedEmail,
+  sendApplicationReceivedEmail,
   sendPaymentReviewResolutionEmail,
   sendNewApplicationReceivedEmail,
 } from "@/lib/email";
 
 export {
   sendApplicationRejectedEmail,
+  sendApplicationReceivedEmail,
   sendPaymentReviewResolutionEmail,
   sendNewApplicationReceivedEmail,
   sendTwoFactorOTP,
@@ -110,6 +112,7 @@ export interface ProspectPaymentRequestEmailParameters {
   readonly expiresAt: Date;
   readonly advanceAmount: number;
   readonly securityAmount: number;
+  readonly statusTrackerUrl?: string | null;
 }
 
 export interface RegistrationOtpEmailParameters {
@@ -266,6 +269,7 @@ export async function sendProspectPaymentRequestEmail(
     expiresAt: parameters.expiresAt,
     advanceAmount: parameters.advanceAmount,
     securityAmount: parameters.securityAmount,
+    statusTrackerUrl: parameters.statusTrackerUrl,
   });
 }
 

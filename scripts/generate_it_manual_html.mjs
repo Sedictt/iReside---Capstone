@@ -1,0 +1,2029 @@
+import { getCommonCss } from './manual-common-css.mjs';
+
+export function buildItManualHtml() {
+  const css = getCommonCss({ isIt: true });
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iReside - IT Technical Documentation & System Administration Handbook</title>
+  <style>
+${css}
+  </style>
+</head>
+<body>
+
+<div class="book-container">
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 1: DEDICATED ENTERPRISE IT COVER PAGE                                -->
+  <!-- ========================================================================= -->
+  <div class="page cover-page" id="page-1">
+    <div class="cover-frame">
+      <div class="cover-header-top">
+        <span>iReside Engineering Group</span>
+        <span>System Administration Standard</span>
+      </div>
+
+      <div class="cover-hero">
+        <div class="cover-wordmark">iReside</div>
+        <div class="cover-tagline">Cloud Infrastructure &amp; Systems Architecture</div>
+        <div class="cover-rule"></div>
+        <div class="cover-title">IT TECHNICAL DOCUMENTATION &amp; SYSTEM ADMINISTRATION HANDBOOK</div>
+        <div class="cover-subtitle">Production Topology, Security Invariants, Database Schema &amp; Operational Runbooks</div>
+      </div>
+
+      <div class="cover-emblem-wrap">
+        <img src="images/ireside-logo-bw.png" alt="iReside Logo" class="cover-logo-img" />
+      </div>
+
+      <table class="cover-doc-table">
+        <tr>
+          <td class="meta-label">Document ID</td>
+          <td class="meta-value">DOC REF: IR-IT-2026-V1.0</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Classification</td>
+          <td class="meta-value">Internal Technical Standard &bull; Production Reference</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Audience</td>
+          <td class="meta-value">Systems Architects, DevOps Engineers, and Database Administrators</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Stack</td>
+          <td class="meta-value">Next.js 16 (React 19), Supabase PostgreSQL 15, Vercel &amp; Capacitor 7</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Pilot Scope</td>
+          <td class="meta-value">Barangay Marulas Pilot Implementation, Valenzuela City</td>
+        </tr>
+      </table>
+
+      <div class="cover-imprint">
+        <span>Published by iReside Core Engineering Group</span>
+        <span>Authorized Technical Custody &bull; Release 1.0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 2: TABLE OF CONTENTS & EXECUTIVE SUMMARY                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-2">
+    <div class="running-header">
+      <span class="app-brand">iReside Engineering</span>
+      <span>Directory &amp; Executive Summary</span>
+    </div>
+
+    <div class="content">
+      <h2>Table of Contents</h2>
+      <table class="toc-table">
+        <tr>
+          <td class="toc-title">1. System Architecture &amp; Complete Tech Stack</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 3</td>
+        </tr>
+        <tr>
+          <td class="toc-title">2. Strict Two-Role Model &amp; Zero Admin Architecture</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 4</td>
+        </tr>
+        <tr>
+          <td class="toc-title">3. Environment Variables &amp; Secrets Governance</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 5</td>
+        </tr>
+        <tr>
+          <td class="toc-title">4. Database Schema: Users, Profiles &amp; Buildings</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 6</td>
+        </tr>
+        <tr>
+          <td class="toc-title">5. Database Schema: Leases, Financials &amp; Operations</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 7</td>
+        </tr>
+        <tr>
+          <td class="toc-title">6. Row-Level Security (RLS) Policy Governance</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 8</td>
+        </tr>
+        <tr>
+          <td class="toc-title">7. Authentication Engine &amp; 2FA Session Guards</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 9</td>
+        </tr>
+        <tr>
+          <td class="toc-title">8. Cryptographic Emergency Spare Key Engine</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 10</td>
+        </tr>
+        <tr>
+          <td class="toc-title">9. Turnkey Workspace Launch Lifecycle (/api/setup)</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 11</td>
+        </tr>
+        <tr>
+          <td class="toc-title">10. Core Application REST API Directory</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 12</td>
+        </tr>
+        <tr>
+          <td class="toc-title">11. Mobile Client Architecture &amp; Android Build Pipeline</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 13</td>
+        </tr>
+        <tr>
+          <td class="toc-title">12. Automated Schedulers &amp; Serverless Cron Workers</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 14</td>
+        </tr>
+        <tr>
+          <td class="toc-title">13. Database Backups, Disaster Recovery &amp; Runbooks</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 15</td>
+        </tr>
+        <tr>
+          <td class="toc-title">14. Commissioning Sign-Off, Support &amp; Glossary</td>
+          <td><div class="toc-leader"></div></td>
+          <td class="toc-page">Page 16</td>
+        </tr>
+      </table>
+
+      <h2>Executive Architecture Overview</h2>
+      <p>This technical manual establishes production architecture and security invariants.</p>
+      <p>The platform decouples presentation, serverless edge compute, and managed relational persistence.</p>
+      <p>The system enforces a strict two-role model: <strong>Landlord</strong> and <strong>Tenant</strong> with zero human admin.</p>
+      <p>All automated tasks execute through secure service role tokens.</p>
+
+      <h2>System Engineering Invariants &amp; SLA Metrics</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Metric / Invariant</th>
+            <th>Production Standard</th>
+            <th>Architectural Justification</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Role Architecture</strong></td>
+            <td>Strict Two-Role: Landlord &amp; Tenant</td>
+            <td>External entities communicate through processes.</td>
+          </tr>
+          <tr>
+            <td><strong>Service Role Key</strong></td>
+            <td>Serverless Backend Task Automation</td>
+            <td>Bypasses client RLS for background jobs.</td>
+          </tr>
+          <tr>
+            <td><strong>Uptime Objective</strong></td>
+            <td>99.9% Production High Availability</td>
+            <td>Redundant edge infrastructure with database backups.</td>
+          </tr>
+          <tr>
+            <td><strong>Legal Standards</strong></td>
+            <td>RA 10173 and RA 8792 Compliance</td>
+            <td>Encryption at rest and binding signatures.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>Engineering Standard:</strong> All architectural changes must preserve passing automated test suites.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 2 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 3: SYSTEM ARCHITECTURE & COMPLETE TECH STACK                         -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-3">
+    <div class="running-header">
+      <span class="app-brand">System Architecture</span>
+      <span>Production Topology &amp; Tech Stack</span>
+    </div>
+
+    <div class="content">
+      <h2>Production Topology Architecture</h2>
+      <p>iReside deploys a modern three-tier serverless topology with edge acceleration:</p>
+
+      <div class="flow-diagram">
+        <div class="flow-card">
+          <div class="flow-card-title">Client Tier: Web &amp; Android PWA (Capacitor 7)</div>
+          <div class="flow-card-desc">React 19 &bull; Tailwind CSS &bull; Local Storage Offline Caching</div>
+        </div>
+        <div class="flow-connector-v">
+          <div class="flow-stem"></div>
+          <span class="flow-badge">HTTPS / TLS 1.3 / Edge Middleware</span>
+          <svg width="10" height="9" viewBox="0 0 10 9">
+            <line x1="5" y1="0" x2="5" y2="5" stroke="#333" stroke-width="1.5" />
+            <polygon points="2,4 5,9 8,4" fill="#333" />
+          </svg>
+        </div>
+        <div class="flow-card">
+          <div class="flow-card-title">Application Tier: Vercel Serverless Edge (Next.js 16)</div>
+          <div class="flow-card-desc">App Router &bull; Server Actions &bull; REST API Routes &bull; Vercel Crons</div>
+        </div>
+        <div class="flow-connector-v">
+          <div class="flow-stem"></div>
+          <span class="flow-badge">TLS 1.3 / Port 5432 / HTTPS</span>
+          <svg width="10" height="9" viewBox="0 0 10 9">
+            <line x1="5" y1="0" x2="5" y2="5" stroke="#333" stroke-width="1.5" />
+            <polygon points="2,4 5,9 8,4" fill="#333" />
+          </svg>
+        </div>
+        <div class="flow-card">
+          <div class="flow-card-title">Managed Cloud BaaS: Supabase PostgreSQL 15 &amp; Storage CDN</div>
+          <div class="flow-card-desc">PostgreSQL RLS Policies &bull; PgBouncer Pooler &bull; S3 Bucket CDN</div>
+        </div>
+      </div>
+
+      <h2>Complete Technology Stack Specifications</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Subsystem</th>
+            <th>Technology</th>
+            <th>Runtime / Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Frontend</strong></td>
+            <td>Next.js 16 (App Router)</td>
+            <td>React 19 Server Components and Server Actions</td>
+          </tr>
+          <tr>
+            <td><strong>Language</strong></td>
+            <td>TypeScript 5.x</td>
+            <td>Strict mode, end-to-end type safety</td>
+          </tr>
+          <tr>
+            <td><strong>Styling</strong></td>
+            <td>Tailwind CSS v3.4</td>
+            <td>Mobile-responsive, high-contrast accessible</td>
+          </tr>
+          <tr>
+            <td><strong>Database</strong></td>
+            <td>PostgreSQL 15.x</td>
+            <td>Supabase BaaS with Row-Level Security</td>
+          </tr>
+          <tr>
+            <td><strong>Connection Pool</strong></td>
+            <td>PgBouncer</td>
+            <td>Transaction connection pooling on port 6543</td>
+          </tr>
+          <tr>
+            <td><strong>Mobile</strong></td>
+            <td>Capacitor 7 Native Wrapper</td>
+            <td>Android SDK 34, standalone Gradle project</td>
+          </tr>
+          <tr>
+            <td><strong>File Storage</strong></td>
+            <td>Supabase Storage</td>
+            <td>S3-compatible encrypted CDN buckets</td>
+          </tr>
+          <tr>
+            <td><strong>Edge Compute</strong></td>
+            <td>Vercel Serverless</td>
+            <td>Edge middleware and serverless functions</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Network Ingress Routing &amp; Protocol Bindings</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Traffic Layer</th>
+            <th>Protocol / Port</th>
+            <th>Destination Subsystem</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Web &amp; Mobile Traffic</strong></td>
+            <td>HTTPS / TLS 1.3 (Port 443)</td>
+            <td>Vercel Edge Serverless Gateway.</td>
+          </tr>
+          <tr>
+            <td><strong>Database Pool</strong></td>
+            <td>TCP Port 6543 (PgBouncer)</td>
+            <td>PostgreSQL 15 Managed Cluster.</td>
+          </tr>
+          <tr>
+            <td><strong>Object Storage CDN</strong></td>
+            <td>HTTPS API (Port 443)</td>
+            <td>Encrypted S3-compatible buckets.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 3 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 4: STRICT TWO-ROLE MODEL & ZERO ADMIN ARCHITECTURE                   -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-4">
+    <div class="running-header">
+      <span class="app-brand">Access Control</span>
+      <span>Strict Two-Role Human User Model</span>
+    </div>
+
+    <div class="content">
+      <h2>Strict Two-Role Human User Model</h2>
+      <p>Per system rules, iReside implements a strict two-role model with <strong>zero admin role</strong>:</p>
+      <ul>
+        <li><strong>Landlord:</strong> Property owner. Manages properties, unit maps, leases, invoices, and maintenance.</li>
+        <li><strong>Tenant:</strong> Resident occupant. Signs digital leases, submits payments, logs maintenance tickets.</li>
+      </ul>
+
+      <h2>Service Role Operational Model</h2>
+      <p>Automated processes that require cross-tenant or system-level access use secure service role tokens:</p>
+      <ul>
+        <li><strong>Automated Billing Cron:</strong> Daily midnight worker generates recurring rent and overdue charges.</li>
+        <li><strong>Workspace Initialization (/api/setup/launch):</strong> Bypasses client RLS to stamp initial configuration.</li>
+        <li><strong>Disaster Recovery &amp; Seeding:</strong> Dedicated CLI maintenance scripts run via service role key.</li>
+      </ul>
+
+      <h2>Access Control Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Resource / Scope</th>
+            <th>Landlord</th>
+            <th>Tenant</th>
+            <th>Service Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Property Configuration</td>
+            <td>Read / Write (Own)</td>
+            <td>Read Only (Assigned)</td>
+            <td>Full Bypass</td>
+          </tr>
+          <tr>
+            <td>Lease Contracts</td>
+            <td>Create / Sign (Own)</td>
+            <td>Sign / View (Own)</td>
+            <td>Full Bypass</td>
+          </tr>
+          <tr>
+            <td>Payment Verification</td>
+            <td>Verify / Reject</td>
+            <td>Submit / View (Own)</td>
+            <td>Automated Audit</td>
+          </tr>
+          <tr>
+            <td>System Initialization</td>
+            <td>Execute Launch</td>
+            <td>No Access</td>
+            <td>Atomic Write</td>
+          </tr>
+          <tr>
+            <td>Submeter Readings</td>
+            <td>Record &amp; Bill (Own)</td>
+            <td>View Bills (Assigned)</td>
+            <td>Automated Billing</td>
+          </tr>
+          <tr>
+            <td>Repair Work Orders</td>
+            <td>Assign &amp; Close (Own)</td>
+            <td>Create &amp; View (Own)</td>
+            <td>Work Order Worker</td>
+          </tr>
+          <tr>
+            <td>Emergency Spare Key</td>
+            <td>Reset &amp; Generate (Own)</td>
+            <td>Reset &amp; Generate (Own)</td>
+            <td>Bcrypt Hash Engine</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Human Role vs. Service Role Boundary Specifications</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Security Boundary</th>
+            <th>Design Constraint</th>
+            <th>Enforcement Architecture</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Zero Human Admin</strong></td>
+            <td>No master user exists.</td>
+            <td>Database lacks admin enum values.</td>
+          </tr>
+          <tr>
+            <td><strong>Service Automation</strong></td>
+            <td>Background tasks use tokens.</td>
+            <td>Bypasses RLS through server credentials.</td>
+          </tr>
+          <tr>
+            <td><strong>Role Segregation</strong></td>
+            <td>Landlords cannot access tenants.</td>
+            <td>Strict foreign key tenant checks.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>Data Flow Invariant:</strong> External entities never communicate directly without mediating processes.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 4 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 5: ENVIRONMENT SECRETS & THIRD-PARTY CONFIGURATION                   -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-5">
+    <div class="running-header">
+      <span class="app-brand">Configuration</span>
+      <span>Environment Secrets &amp; Credentials</span>
+    </div>
+
+    <div class="content">
+      <h2>Required Environment Variables (.env.local)</h2>
+      <p>All production instances must supply the following environment secrets in <code>.env.local</code>:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Scope</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>NEXT_PUBLIC_SUPABASE_URL</code></td>
+            <td>Public / Browser</td>
+            <td>Supabase HTTPS project endpoint</td>
+          </tr>
+          <tr>
+            <td><code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code></td>
+            <td>Public / Browser</td>
+            <td>Client-side anonymous key (RLS enforced)</td>
+          </tr>
+          <tr>
+            <td><code>SUPABASE_SERVICE_ROLE_KEY</code></td>
+            <td>Server Only</td>
+            <td>Bypasses RLS for setup, launch, and crons</td>
+          </tr>
+          <tr>
+            <td><code>CRON_SECRET</code></td>
+            <td>Server Only</td>
+            <td>Bearer token authenticating Vercel cron triggers</td>
+          </tr>
+          <tr>
+            <td><code>NEXT_PUBLIC_APP_URL</code></td>
+            <td>Public / Browser</td>
+            <td>Production canonical URL for invite generation</td>
+          </tr>
+          <tr>
+            <td><code>DATABASE_URL</code></td>
+            <td>Server Only</td>
+            <td>Direct connection for migrations and seeds</td>
+          </tr>
+          <tr>
+            <td><code>CAPACITOR_SERVER_URL</code></td>
+            <td>Public / Build</td>
+            <td>Canonical web URL for Android APK</td>
+          </tr>
+          <tr>
+            <td><code>NEXT_PUBLIC_APP_ENV</code></td>
+            <td>Public / Browser</td>
+            <td>Deployment target environment name</td>
+          </tr>
+          <tr>
+            <td><code>RESEND_API_KEY</code></td>
+            <td>Server Only</td>
+            <td>Transactional email delivery for 2FA OTP codes.</td>
+          </tr>
+          <tr>
+            <td><code>JWT_EXPIRY_SECONDS</code></td>
+            <td>Server Only</td>
+            <td>Session token lifecycle duration setting.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Environment Secret Rotation &amp; Key Lifecycle Standards</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Secret Key</th>
+            <th>Rotation Period</th>
+            <th>Rotation Runbook</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>SERVICE_ROLE_KEY</strong></td>
+            <td>Annual or post-incident</td>
+            <td>Rotate in Supabase dashboard and Vercel.</td>
+          </tr>
+          <tr>
+            <td><strong>CRON_SECRET</strong></td>
+            <td>Semi-annually</td>
+            <td>Generate 32-byte hex string in CLI.</td>
+          </tr>
+          <tr>
+            <td><strong>ANON_KEY</strong></td>
+            <td>Major release cycles</td>
+            <td>Bound to client browser environment.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Secret Isolation &amp; Rotation Guidelines</h2>
+      <ul>
+        <li><strong>Service Role Key Isolation:</strong> Never prefix <code>SUPABASE_SERVICE_ROLE_KEY</code> with <code>NEXT_PUBLIC_</code>.</li>
+        <li><strong>Git Hygiene:</strong> Ensure <code>.env*</code> patterns remain in <code>.gitignore</code>.</li>
+        <li><strong>Zero Compromise:</strong> Compromise of the service role key grants full unrestricted database write access.</li>
+      </ul>
+
+      <div class="warning-box">
+        Secret Governance: Never commit environment files to public version control.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 5 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 6: DATABASE SCHEMA - USERS, PROFILES & BUILDINGS                     -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-6">
+    <div class="running-header">
+      <span class="app-brand">Database Schema</span>
+      <span>Users, Profiles &amp; Buildings</span>
+    </div>
+
+    <div class="content">
+      <h2>Entity Hierarchy: Properties &amp; 2D Floor Plans</h2>
+      <p>Properties represent rental buildings in Barangay Marulas with floor levels and individual units:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Table</th>
+            <th>Primary Key</th>
+            <th>Foreign Keys</th>
+            <th>Key Columns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>profiles</code></td>
+            <td><code>id (UUID)</code></td>
+            <td><code>auth.users(id)</code></td>
+            <td><code>role</code>, <code>full_name</code>, <code>phone</code>, <code>emergency_spare_key</code></td>
+          </tr>
+          <tr>
+            <td><code>properties</code></td>
+            <td><code>id (UUID)</code></td>
+            <td><code>landlord_id &rarr; profiles(id)</code></td>
+            <td><code>name</code>, <code>address</code>, <code>total_units</code>, <code>gcash_qr_url</code></td>
+          </tr>
+          <tr>
+            <td><code>floors</code></td>
+            <td><code>id (UUID)</code></td>
+            <td><code>property_id &rarr; properties(id)</code></td>
+            <td><code>floor_number</code>, <code>label</code>, <code>display_order</code></td>
+          </tr>
+          <tr>
+            <td><code>units</code></td>
+            <td><code>id (UUID)</code></td>
+            <td><code>floor_id &rarr; floors(id)</code></td>
+            <td><code>unit_number</code>, <code>monthly_rent</code>, <code>status</code> (vacant, occupied)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Relational Integrity &amp; Foreign Key Cascade Actions</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Parent Table</th>
+            <th>Child Table</th>
+            <th>Foreign Key Column</th>
+            <th>Cascade Policy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>profiles</code></td>
+            <td><code>properties</code></td>
+            <td><code>landlord_id</code></td>
+            <td><code>ON DELETE RESTRICT</code></td>
+          </tr>
+          <tr>
+            <td><code>properties</code></td>
+            <td><code>floors</code></td>
+            <td><code>property_id</code></td>
+            <td><code>ON DELETE CASCADE</code></td>
+          </tr>
+          <tr>
+            <td><code>floors</code></td>
+            <td><code>units</code></td>
+            <td><code>floor_id</code></td>
+            <td><code>ON DELETE CASCADE</code></td>
+          </tr>
+          <tr>
+            <td><code>units</code></td>
+            <td><code>leases</code></td>
+            <td><code>unit_id</code></td>
+            <td><code>ON DELETE RESTRICT</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Unit Map Coordinate Layout Constraints</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Layout Attribute</th>
+            <th>Data Type</th>
+            <th>Database Constraint</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>grid_x, grid_y</code></td>
+            <td><code>INTEGER</code></td>
+            <td>Clamped to non-negative grid coordinates.</td>
+          </tr>
+          <tr>
+            <td><code>layout_preset</code></td>
+            <td><code>VARCHAR(30)</code></td>
+            <td>Checked against valid architectural presets.</td>
+          </tr>
+          <tr>
+            <td><code>status</code></td>
+            <td><code>VARCHAR(20)</code></td>
+            <td>B-tree index for rapid vacancy filtering.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Unit Status Enum Transitions &amp; Availability Rules</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Status Enum</th>
+            <th>Business Condition</th>
+            <th>Automated Transition Rule</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>vacant</code></td>
+            <td>Unit has no active lease.</td>
+            <td>Available for tenant application assignment.</td>
+          </tr>
+          <tr>
+            <td><code>occupied</code></td>
+            <td>Active signed tenancy lease.</td>
+            <td>Locked against duplicate resident assignment.</td>
+          </tr>
+          <tr>
+            <td><code>maintenance</code></td>
+            <td>Active critical repair order.</td>
+            <td>Temporarily hidden from tenant listings.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 6 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 7: DATABASE SCHEMA - LEASES, FINANCIALS & OPERATIONS                 -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-7">
+    <div class="running-header">
+      <span class="app-brand">Database Schema</span>
+      <span>Financial Engine &amp; Operations</span>
+    </div>
+
+    <div class="content">
+      <h2>Financial Engine &amp; Ledger Relational Architecture</h2>
+      <p>iReside models the complete tenancy lifecycle from digital signing to submetered utility invoicing:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Table</th>
+            <th>Foreign Keys</th>
+            <th>Key Columns</th>
+            <th>Enums / Constraints</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>leases</code></td>
+            <td><code>unit_id</code>, <code>tenant_id</code></td>
+            <td><code>start_date</code>, <code>end_date</code>, <code>rent_amount</code></td>
+            <td><code>status</code>: active, pending, ended</td>
+          </tr>
+          <tr>
+            <td><code>invoices</code></td>
+            <td><code>lease_id</code>, <code>property_id</code></td>
+            <td><code>amount_due</code>, <code>due_date</code>, <code>billing_period</code></td>
+            <td><code>status</code>: unpaid, pending, paid</td>
+          </tr>
+          <tr>
+            <td><code>payments</code></td>
+            <td><code>invoice_id</code>, <code>tenant_id</code></td>
+            <td><code>amount_paid</code>, <code>reference_no</code>, <code>proof_url</code></td>
+            <td><code>method</code>: gcash, cash, maya</td>
+          </tr>
+          <tr>
+            <td><code>maintenance_tickets</code></td>
+            <td><code>unit_id</code>, <code>tenant_id</code></td>
+            <td><code>category</code>, <code>description</code>, <code>photo_url</code></td>
+            <td><code>status</code>: pending, in_progress, completed</td>
+          </tr>
+          <tr>
+            <td><code>utility_readings</code></td>
+            <td><code>unit_id</code>, <code>property_id</code></td>
+            <td><code>meter_type</code>, <code>current_reading</code>, <code>total_cost</code></td>
+            <td><code>meter_type</code>: electricity, water</td>
+          </tr>
+          <tr>
+            <td><code>announcements</code></td>
+            <td><code>property_id</code>, <code>author_id</code></td>
+            <td><code>title</code>, <code>content</code>, <code>category</code></td>
+            <td>Broadcast to property residents</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Financial State Machine &amp; Invoice Lifecycle</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>State Transition</th>
+            <th>Trigger Event</th>
+            <th>Ledger Balance Impact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Null &rarr; unpaid</code></td>
+            <td>Daily billing cron runs</td>
+            <td>Posts monthly invoice debit.</td>
+          </tr>
+          <tr>
+            <td><code>unpaid &rarr; pending</code></td>
+            <td>Tenant uploads proof</td>
+            <td>Places receipt in review queue.</td>
+          </tr>
+          <tr>
+            <td><code>pending &rarr; paid</code></td>
+            <td>Landlord confirms receipt</td>
+            <td>Credits balance and settles invoice.</td>
+          </tr>
+          <tr>
+            <td><code>unpaid &rarr; overdue</code></td>
+            <td>Due date passes grace period</td>
+            <td>Flags account for collection action.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Payment Rail Ledger Validation Protocols</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Payment Rail</th>
+            <th>Validation Check</th>
+            <th>Accounting Ledger Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>GCash / Maya</strong></td>
+            <td>13-digit reference checksum.</td>
+            <td>Automated receipt creation upon approval.</td>
+          </tr>
+          <tr>
+            <td><strong>Direct Cash</strong></td>
+            <td>Physical cash receipt verification.</td>
+            <td>Instant ledger credit stamp.</td>
+          </tr>
+          <tr>
+            <td><strong>Bank Transfer</strong></td>
+            <td>Account transfer confirmation slip.</td>
+            <td>Reconciled against monthly bank statements.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>Data Durability:</strong> Financial transactions utilize ACID compliance to prevent double settlements.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 7 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 8: ROW-LEVEL SECURITY (RLS) POLICY GOVERNANCE                        -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-8">
+    <div class="running-header">
+      <span class="app-brand">Security Governance</span>
+      <span>Row-Level Security Policies</span>
+    </div>
+
+    <div class="content">
+      <h2>PostgreSQL Row-Level Security (RLS) Architecture</h2>
+      <p>Every table in the iReside database enforces strict Row-Level Security. Unauthenticated queries return zero rows:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Table</th>
+            <th>Command</th>
+            <th>Target Role</th>
+            <th>Policy Condition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>properties</code></td>
+            <td>SELECT, UPDATE</td>
+            <td>Landlord</td>
+            <td><code>landlord_id = auth.uid()</code></td>
+          </tr>
+          <tr>
+            <td><code>leases</code></td>
+            <td>SELECT</td>
+            <td>Tenant</td>
+            <td><code>tenant_id = auth.uid()</code></td>
+          </tr>
+          <tr>
+            <td><code>invoices</code></td>
+            <td>SELECT</td>
+            <td>Tenant</td>
+            <td><code>lease_id IN (SELECT id FROM leases WHERE tenant_id = auth.uid())</code></td>
+          </tr>
+          <tr>
+            <td><code>payments</code></td>
+            <td>INSERT</td>
+            <td>Tenant</td>
+            <td><code>tenant_id = auth.uid()</code></td>
+          </tr>
+          <tr>
+            <td><code>maintenance_tickets</code></td>
+            <td>INSERT, SELECT</td>
+            <td>Tenant</td>
+            <td><code>tenant_id = auth.uid()</code></td>
+          </tr>
+          <tr>
+            <td><code>utility_readings</code></td>
+            <td>SELECT</td>
+            <td>Tenant</td>
+            <td><code>unit_id IN (SELECT unit_id FROM leases WHERE tenant_id = auth.uid())</code></td>
+          </tr>
+          <tr>
+            <td><code>utility_readings</code></td>
+            <td>ALL</td>
+            <td>Landlord</td>
+            <td><code>property_id IN (SELECT id FROM properties WHERE landlord_id = auth.uid())</code></td>
+          </tr>
+          <tr>
+            <td><code>announcements</code></td>
+            <td>SELECT</td>
+            <td>Tenant</td>
+            <td><code>property_id IN (SELECT property_id FROM leases WHERE tenant_id = auth.uid())</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Automated RLS Regression Test Coverage</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Test Suite</th>
+            <th>Verification Scope</th>
+            <th>Assertion Expectation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>rls-tenant.test.ts</code></td>
+            <td>Tenant isolation across units</td>
+            <td>Returns 403 on cross-tenant access.</td>
+          </tr>
+          <tr>
+            <td><code>rls-landlord.test.ts</code></td>
+            <td>Landlord property management</td>
+            <td>Disallows updates to foreign buildings.</td>
+          </tr>
+          <tr>
+            <td><code>rls-bypass.test.ts</code></td>
+            <td>Service role cron tasks</td>
+            <td>Successfully inserts recurring billing rows.</td>
+          </tr>
+          <tr>
+            <td><code>rls-anon.test.ts</code></td>
+            <td>Public and anonymous queries</td>
+            <td>Returns 0 rows for unauthenticated requests.</td>
+          </tr>
+          <tr>
+            <td><code>rls-audit.test.ts</code></td>
+            <td>Multi-tenant data isolation</td>
+            <td>Confirms zero cross-property data leakage.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warning-box">
+        Security Invariant: Row-level security is enforced at the PostgreSQL kernel level.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 8 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 9: AUTHENTICATION ENGINE & 2FA SESSION GUARDS                        -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-9">
+    <div class="running-header">
+      <span class="app-brand">Authentication</span>
+      <span>2FA Engine &amp; Session Guards</span>
+    </div>
+
+    <div class="content">
+      <h2>Two-Factor Authentication (2FA) Lifecycle</h2>
+      <p>iReside implements mandatory email-delivered 6-digit OTP verification for secure sessions:</p>
+      <ol>
+        <li>User submits credentials at <code>/login</code> via Supabase Auth PKCE flow.</li>
+        <li>Server generates an ephemeral 6-digit cryptographic token (10-minute expiry).</li>
+        <li>Token is dispatched via transactional SMTP to the verified email.</li>
+        <li>User inputs token; upon verification, Supabase issues signed JWT and refresh tokens.</li>
+      </ol>
+
+      <h2>Authentication Threat Model &amp; Defense Mechanisms</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Threat Vector</th>
+            <th>Risk Level</th>
+            <th>Defense Architecture</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Brute Force Login</strong></td>
+            <td>High</td>
+            <td>Rate limit: 5 failed attempts per IP.</td>
+          </tr>
+          <tr>
+            <td><strong>Session Hijacking</strong></td>
+            <td>Critical</td>
+            <td>HTTP-only SameSite cookies and TLS 1.3.</td>
+          </tr>
+          <tr>
+            <td><strong>OTP Replay Attack</strong></td>
+            <td>Medium</td>
+            <td>10-minute expiry on single-use OTP codes.</td>
+          </tr>
+          <tr>
+            <td><strong>Client Lock Stalls</strong></td>
+            <td>High</td>
+            <td>Background non-blocking auth refresh execution.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Session Token Specifications &amp; Lifecycle</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Token Identifier</th>
+            <th>Storage Medium</th>
+            <th>Validity Window</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Access Token (JWT)</strong></td>
+            <td>Secure HTTP-only cookie</td>
+            <td>60 minutes with auto-refresh.</td>
+          </tr>
+          <tr>
+            <td><strong>Refresh Token</strong></td>
+            <td>Encrypted HTTP-only cookie</td>
+            <td>30 days rolling validity window.</td>
+          </tr>
+          <tr>
+            <td><strong>Setup Cookie</strong></td>
+            <td>Browser session cookie</td>
+            <td>Instant client navigation signal.</td>
+          </tr>
+          <tr>
+            <td><strong>CSRF Token</strong></td>
+            <td>Client Header</td>
+            <td>Protects state-changing REST endpoints.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Next.js Edge Middleware Evaluation Pipeline (middleware.ts)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Route Pattern</th>
+            <th>Session Requirement</th>
+            <th>Middleware Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/landlord/*</code></td>
+            <td>Valid session with Landlord role</td>
+            <td>Redirects to login if unauthenticated.</td>
+          </tr>
+          <tr>
+            <td><code>/tenant/*</code></td>
+            <td>Valid session with Tenant role</td>
+            <td>Redirects to login if unauthenticated.</td>
+          </tr>
+          <tr>
+            <td><code>/setup/*</code></td>
+            <td>Pending setup profile flag</td>
+            <td>Enforces onboarding wizard completion.</td>
+          </tr>
+          <tr>
+            <td><code>/api/cron/*</code></td>
+            <td>Valid CRON_SECRET header</td>
+            <td>Rejects missing tokens with HTTP 401.</td>
+          </tr>
+          <tr>
+            <td><code>/login, /signup</code></td>
+            <td>Anonymous / Unauthenticated</td>
+            <td>Redirects active sessions to home dashboard.</td>
+          </tr>
+        </tbody>
+      </table>
+
+
+      <div class="warning-box">
+        Client-side SDK token refreshes must NEVER be awaited on the critical navigation path.
+      </div>
+
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 9 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 10: CRYPTOGRAPHIC EMERGENCY SPARE KEY ARCHITECTURE                   -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-10">
+    <div class="running-header">
+      <span class="app-brand">Cryptography</span>
+      <span>Emergency Spare Key Architecture</span>
+    </div>
+
+    <div class="content">
+      <h2>The Emergency Spare Key Architecture</h2>
+      <p>The Emergency Spare Key provides failsafe account recovery when losing phone or email access:</p>
+
+      <h2>Cryptographic Engine Specifications</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Cryptographic Standard</th>
+            <th>Operational Implementation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Entropy Source</strong></td>
+            <td>CSPRNG 128-bit random bytes</td>
+            <td>Secure browser crypto API source.</td>
+          </tr>
+          <tr>
+            <td><strong>String Format</strong></td>
+            <td>16 uppercase alphanumeric chars</td>
+            <td>4 blocks separated by hyphens.</td>
+          </tr>
+          <tr>
+            <td><strong>Hashing Algorithm</strong></td>
+            <td>Bcrypt (Cost factor 12)</td>
+            <td>Plaintext key is never stored in DB.</td>
+          </tr>
+          <tr>
+            <td><strong>Revocation Rule</strong></td>
+            <td>Single-use consumption rule</td>
+            <td>Key is deleted upon successful recovery.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Account Recovery Verification Protocol</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Recovery Step</th>
+            <th>Verification Check</th>
+            <th>Expected System Response</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Submit Email</strong></td>
+            <td>Verifies user profile exists</td>
+            <td>Checks active user in PostgreSQL.</td>
+          </tr>
+          <tr>
+            <td><strong>2. Submit Spare Key</strong></td>
+            <td>Constant-time hash verification</td>
+            <td>Prevents timing side-channel attacks.</td>
+          </tr>
+          <tr>
+            <td><strong>3. Session Reset</strong></td>
+            <td>Revokes existing refresh tokens</td>
+            <td>Issues authenticated recovery session.</td>
+          </tr>
+          <tr>
+            <td><strong>4. Key Rotation</strong></td>
+            <td>Generates new spare key</td>
+            <td>Old key is rendered permanently invalid.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Atomic Recovery Lifecycle (/api/auth/spare-key-recovery)</h2>
+      <p>The recovery endpoint validates the submitted key hash using constant-time verification.</p>
+      <p>Upon verification, existing tokens are revoked and a replacement key is generated.</p>
+
+      <h2>Emergency Spare Key Error Handling &amp; Failure Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Failure Scenario</th>
+            <th>Detection Mechanism</th>
+            <th>Recovery Resolution Runbook</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Invalid Key Input</strong></td>
+            <td>Constant-time hash comparison fails</td>
+            <td>Prompts retry with clear inline error message.</td>
+          </tr>
+          <tr>
+            <td><strong>Consumed Key Reuse</strong></td>
+            <td>Database flag checks key deletion</td>
+            <td>Rejects used key; guides user to support.</td>
+          </tr>
+          <tr>
+            <td><strong>Rate Limit Exceeded</strong></td>
+            <td>Exceeds 5 attempts per IP</td>
+            <td>Throttles requests for 15 minutes.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        Senior Landlord Invariant: Recovery keys use the Emergency Spare Key physical metaphor. Touch targets measure at least 48px.
+      </div>
+
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 10 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 11: TURNKEY WORKSPACE LAUNCH LIFECYCLE (/api/setup)                  -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-11">
+    <div class="running-header">
+      <span class="app-brand">System Lifecycle</span>
+      <span>Turnkey Workspace Launch</span>
+    </div>
+
+    <div class="content">
+      <h2>The Turnkey Workspace Launch Lifecycle</h2>
+      <p>The 5-stage onboarding pipeline guides new landlords through required system initialization:</p>
+
+      <h2>5-Stage Onboarding Route Locking Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Stage</th>
+            <th>Identifier</th>
+            <th>Accessible Routes</th>
+            <th>Locked Routes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Stage 1: Property</strong></td>
+            <td><code>no_property</code></td>
+            <td><code>/landlord/properties</code>, <code>/new</code></td>
+            <td>All other sidebar navigation items.</td>
+          </tr>
+          <tr>
+            <td><strong>Stage 2: Unit Map</strong></td>
+            <td><code>no_unit_map</code></td>
+            <td><code>/landlord/unit-map</code></td>
+            <td>Operations and Finance workspaces.</td>
+          </tr>
+          <tr>
+            <td><strong>Stage 3: Billing Rails</strong></td>
+            <td><code>no_billing_rails</code></td>
+            <td>Dashboard, Properties, Utility</td>
+            <td>Finance Hub and Tenant records.</td>
+          </tr>
+          <tr>
+            <td><strong>Stage 4: Tenants</strong></td>
+            <td><code>no_tenant</code></td>
+            <td>Dashboard, Properties, Tenants</td>
+            <td>Deep operational financial pages.</td>
+          </tr>
+          <tr>
+            <td><strong>Stage 5: Dashboard</strong></td>
+            <td><code>setupCompleted</code></td>
+            <td>All production workspaces</td>
+            <td>None (All features fully unlocked).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Launch Atomic Validation Contract (/api/setup/launch)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Validation Check</th>
+            <th>Required Entity</th>
+            <th>Failure Behavior</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Property Exists</strong></td>
+            <td>At least 1 registered property</td>
+            <td>Rejects launch with HTTP 400.</td>
+          </tr>
+          <tr>
+            <td><strong>Units Configured</strong></td>
+            <td>At least 1 configured rental unit</td>
+            <td>Rejects launch with HTTP 400.</td>
+          </tr>
+          <tr>
+            <td><strong>Utility Rates Set</strong></td>
+            <td>Non-zero water and electric rates</td>
+            <td>Rejects launch with HTTP 400.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Atomic Finalization Rail</h2>
+      <p>When the landlord completes configuration, the workspace executes an atomic launch sequence:</p>
+      <ol>
+        <li>Client submits setup state to <code>/api/setup/launch</code>.</li>
+        <li>Service role verifies property and utility rates exist.</li>
+        <li>Sets <code>is_setup_completed = true</code> in the profile database record.</li>
+        <li>Sets HTTP-only cookie <code>ireside_setup_completed=true</code> for immediate middleware evaluation.</li>
+        <li>Redirects to <code>/landlord/dashboard</code> via <code>router.replace</code>.</li>
+      </ol>
+
+      <div class="tip-box">
+        <strong>Navigation Rule:</strong> Use router.replace to avoid back-navigation loops into setup wizards.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 11 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 12: CORE REST API DIRECTORY                                          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-12">
+    <div class="running-header">
+      <span class="app-brand">API Reference</span>
+      <span>Core REST Application Directory</span>
+    </div>
+
+    <div class="content">
+      <h2>Core Application API Directory</h2>
+      <p>iReside exposes structured REST endpoints for application and worker operations:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Route</th>
+            <th>Method</th>
+            <th>Auth</th>
+            <th>Payload &amp; Behavior</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/api/setup/launch</code></td>
+            <td>POST</td>
+            <td>Landlord</td>
+            <td>Stamps workspace completion and issues cookie signal.</td>
+          </tr>
+          <tr>
+            <td><code>/api/cron/daily-billing</code></td>
+            <td>POST</td>
+            <td>CRON_SECRET</td>
+            <td>Generates recurring invoices and assesses late fees.</td>
+          </tr>
+          <tr>
+            <td><code>/api/auth/spare-key-recovery</code></td>
+            <td>POST</td>
+            <td>Public</td>
+            <td>Redeems Emergency Spare Key for recovery session.</td>
+          </tr>
+          <tr>
+            <td><code>/api/leases/e-sign</code></td>
+            <td>POST</td>
+            <td>Tenant</td>
+            <td>Appends digital signature and countersigns lease.</td>
+          </tr>
+          <tr>
+            <td><code>/api/payments/verify</code></td>
+            <td>POST</td>
+            <td>Landlord</td>
+            <td>Verifies GCash reference number and settles invoice.</td>
+          </tr>
+          <tr>
+            <td><code>/api/mobile/version</code></td>
+            <td>GET</td>
+            <td>Public</td>
+            <td>Returns latest release APK version and download URL.</td>
+          </tr>
+          <tr>
+            <td><code>/api/units/update-layout</code></td>
+            <td>POST</td>
+            <td>Landlord</td>
+            <td>Saves 2D coordinates of room cards on unit map.</td>
+          </tr>
+          <tr>
+            <td><code>/api/maintenance/update-status</code></td>
+            <td>POST</td>
+            <td>Landlord</td>
+            <td>Advances repair work orders to completed status.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>HTTP Status Code &amp; Error Envelope Specifications</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>HTTP Code</th>
+            <th>Error Code</th>
+            <th>Meaning &amp; Corrective Directive</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>200 OK</strong></td>
+            <td><code>SUCCESS</code></td>
+            <td>Request succeeded; payload delivered in data object.</td>
+          </tr>
+          <tr>
+            <td><strong>400 Bad Request</strong></td>
+            <td><code>VALIDATION_ERROR</code></td>
+            <td>Request payload failed schema validation rules.</td>
+          </tr>
+          <tr>
+            <td><strong>401 Unauthorized</strong></td>
+            <td><code>SESSION_EXPIRED</code></td>
+            <td>User session expired; re-authenticate at login.</td>
+          </tr>
+          <tr>
+            <td><strong>403 Forbidden</strong></td>
+            <td><code>RLS_RESTRICTION</code></td>
+            <td>Target record belongs to another user account.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>API Rate Limiting &amp; Throttling Thresholds</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint Group</th>
+            <th>Window Size</th>
+            <th>Maximum Requests Allowed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Authentication APIs</strong></td>
+            <td>60 seconds</td>
+            <td>5 requests per IP address.</td>
+          </tr>
+          <tr>
+            <td><strong>Public Onboarding Links</strong></td>
+            <td>60 seconds</td>
+            <td>20 requests per IP address.</td>
+          </tr>
+          <tr>
+            <td><strong>Standard App Workspaces</strong></td>
+            <td>60 seconds</td>
+            <td>120 requests per IP address.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 12 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 13: MOBILE CLIENT & ANDROID BUILD                                    -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-13">
+    <div class="running-header">
+      <span class="app-brand">Mobile Client</span>
+      <span>Android APK Compilation Protocol</span>
+    </div>
+
+    <div class="content">
+      <h2>Mobile Client Architecture &amp; Isolation</h2>
+      <p>iReside provides a native Android experience via a standalone Capacitor 7 wrapper. Per <code>mobile-apk-build.md</code>, all native source is strictly isolated inside <code>android/</code>:</p>
+
+      <div class="flow-diagram">
+        <div class="flow-card">
+          <div class="flow-card-title">Web App Production Endpoint</div>
+          <div class="flow-card-desc">https://i-reside-capstone.vercel.app/mobile</div>
+        </div>
+        <div class="flow-connector-v">
+          <div class="flow-stem"></div>
+          <span class="flow-badge">Capacitor 7 Bridge (WebView)</span>
+          <svg width="10" height="9" viewBox="0 0 10 9">
+            <line x1="5" y1="0" x2="5" y2="5" stroke="#333" stroke-width="1.5" />
+            <polygon points="2,4 5,9 8,4" fill="#333" />
+          </svg>
+        </div>
+        <div class="flow-card">
+          <div class="flow-card-title">Android Native Wrapper: android/ (Gradle 8.x)</div>
+          <div class="flow-card-desc">Package: ph.ireside.mobile &bull; Android SDK 34 &bull; Java JBR 17/21</div>
+        </div>
+        <div class="flow-connector-v">
+          <div class="flow-stem"></div>
+          <span class="flow-badge">Build Script: scripts/build-mobile.mjs</span>
+          <svg width="10" height="9" viewBox="0 0 10 9">
+            <line x1="5" y1="0" x2="5" y2="5" stroke="#333" stroke-width="1.5" />
+            <polygon points="2,4 5,9 8,4" fill="#333" />
+          </svg>
+        </div>
+        <div class="flow-card">
+          <div class="flow-card-title">Output Production Artifacts</div>
+          <div class="flow-card-desc">output/iReside-release.apk (v1+v2 signed, zipalign verified)</div>
+        </div>
+      </div>
+
+      <h2>Android Build Toolchain Invariants &amp; Paths</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Toolchain Component</th>
+            <th>Target Environment</th>
+            <th>Invariant Directive</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Bundled JDK</strong></td>
+            <td>Android Studio JBR 17/21</td>
+            <td>Incompatible system JDKs must not be used.</td>
+          </tr>
+          <tr>
+            <td><strong>Android SDK</strong></td>
+            <td>Android SDK API 34</td>
+            <td>Resolved from local user app data directory.</td>
+          </tr>
+          <tr>
+            <td><strong>Gradle Wrapper</strong></td>
+            <td>Gradle 8.x in android/</td>
+            <td>Native build logic remains inside android/.</td>
+          </tr>
+          <tr>
+            <td><strong>Target URL</strong></td>
+            <td>Production Vercel endpoint</td>
+            <td>Overridable via --url command flag.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Mobile Build Commands &amp; Artifact Output</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Build Command</th>
+            <th>Target Function</th>
+            <th>Output File</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>npm run mobile:build</code></td>
+            <td>Compiles signed release APK</td>
+            <td><code>output/iReside-release.apk</code></td>
+          </tr>
+          <tr>
+            <td><code>npm run mobile:clean</code></td>
+            <td>Purges Gradle compilation cache</td>
+            <td>Cleans temporary build directories.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>Zero Regression Invariant:</strong> Mobile changes must pass Next.js build and TypeScript audits.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 13 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 14: AUTOMATED SCHEDULERS & SERVERLESS CRON WORKERS                   -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-14">
+    <div class="running-header">
+      <span class="app-brand">System Automation</span>
+      <span>Serverless Cron Architecture</span>
+    </div>
+
+    <div class="content">
+      <h2>Vercel Serverless Cron Architecture</h2>
+      <p>Automated processes run via Vercel Cron jobs declared in <code>vercel.json</code>:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Job Name</th>
+            <th>Schedule</th>
+            <th>Target Route</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>daily-billing</code></td>
+            <td><code>0 0 * * *</code> (Midnight UTC)</td>
+            <td><code>/api/cron/daily-billing</code></td>
+            <td>Generate recurring invoices and late payment penalties.</td>
+          </tr>
+          <tr>
+            <td><code>lease-expiry-check</code></td>
+            <td><code>0 2 * * *</code> (02:00 UTC)</td>
+            <td><code>/api/cron/lease-status</code></td>
+            <td>Transition expired leases to ended status.</td>
+          </tr>
+          <tr>
+            <td><code>payment-reminders</code></td>
+            <td><code>0 8 * * *</code> (08:00 UTC)</td>
+            <td><code>/api/cron/reminders</code></td>
+            <td>Dispatches rent reminders before due dates.</td>
+          </tr>
+          <tr>
+            <td><code>purge-temp-tokens</code></td>
+            <td><code>0 4 * * 0</code> (Weekly Sun)</td>
+            <td><code>/api/cron/purge-temp</code></td>
+            <td>Cleans up expired onboarding invitations.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Billing Idempotency &amp; Fault Tolerance Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Failure Mode</th>
+            <th>Detection Mechanism</th>
+            <th>Recovery Runbook</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Network Timeout</strong></td>
+            <td>Vercel 15s execution ceiling</td>
+            <td>Worker resumes on next scheduled run.</td>
+          </tr>
+          <tr>
+            <td><strong>Duplicate Trigger</strong></td>
+            <td>Unique constraint on billing period</td>
+            <td>Database rejects duplicate insert attempts.</td>
+          </tr>
+          <tr>
+            <td><strong>Database Unreachable</strong></td>
+            <td>Supabase 503 HTTP status</td>
+            <td>Telemetry alert dispatched to operations.</td>
+          </tr>
+          <tr>
+            <td><strong>Partial Batch Error</strong></td>
+            <td>SQL transactional execution</td>
+            <td>Unprocessed leases are re-queued.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Cron Worker Security Validation Standards</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Security Check</th>
+            <th>Expected Value</th>
+            <th>Security Policy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Authorization Header</strong></td>
+            <td><code>Bearer $CRON_SECRET</code></td>
+            <td>Constant-time bearer token verification.</td>
+          </tr>
+          <tr>
+            <td><strong>HTTP Method</strong></td>
+            <td>HTTP POST</td>
+            <td>Non-POST requests rejected with HTTP 405.</td>
+          </tr>
+          <tr>
+            <td><strong>User Agent Header</strong></td>
+            <td><code>vercel-cron/*</code></td>
+            <td>Validated against serverless provider.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Cron Telemetry &amp; Alerting Thresholds</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Automation Metric</th>
+            <th>Target Threshold</th>
+            <th>Automated Alerting Policy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Cron Execution Duration</strong></td>
+            <td>Under 10 seconds execution time</td>
+            <td>Alerts operations on execution timeouts.</td>
+          </tr>
+          <tr>
+            <td><strong>Job Failure Rate</strong></td>
+            <td>Zero consecutive job failures</td>
+            <td>Dispatches emergency SMS to on-call engineer.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 14 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 15: DEVOPS, BACKUPS & DISASTER RECOVERY                              -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-15">
+    <div class="running-header">
+      <span class="app-brand">DevOps &amp; Security</span>
+      <span>Backup &amp; Disaster Recovery</span>
+    </div>
+
+    <div class="content">
+      <h2>Database Backup Tiers &amp; Retention Policies</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Backup Tier</th>
+            <th>Frequency</th>
+            <th>Retention Window</th>
+            <th>Storage Location</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>WAL Archiving (PITR)</strong></td>
+            <td>Continuous streaming</td>
+            <td>7 days rolling</td>
+            <td>Supabase multi-region storage.</td>
+          </tr>
+          <tr>
+            <td><strong>Daily Snapshot Dump</strong></td>
+            <td>03:00 UTC daily</td>
+            <td>30 days retention</td>
+            <td>Encrypted offsite cloud bucket.</td>
+          </tr>
+          <tr>
+            <td><strong>Schema Migration History</strong></td>
+            <td>Every git commit</td>
+            <td>Permanent</td>
+            <td>Versioned in git repository.</td>
+          </tr>
+          <tr>
+            <td><strong>Weekly Offsite Backup</strong></td>
+            <td>Sunday 04:00 UTC</td>
+            <td>90 days retention</td>
+            <td>Encrypted secondary cloud bucket.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Disaster Recovery Target Objectives (RTO &amp; RPO)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Disaster Scenario</th>
+            <th>Target RTO</th>
+            <th>Target RPO</th>
+            <th>Recovery Procedure</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Database Node Outage</strong></td>
+            <td>&le; 15 minutes</td>
+            <td>&le; 1 minute</td>
+            <td>Automatic failover to replica node.</td>
+          </tr>
+          <tr>
+            <td><strong>Accidental Row Deletion</strong></td>
+            <td>&le; 30 minutes</td>
+            <td>&le; 5 minutes</td>
+            <td>Point-in-time recovery via Supabase CLI.</td>
+          </tr>
+          <tr>
+            <td><strong>Failed Schema Migration</strong></td>
+            <td>&le; 10 minutes</td>
+            <td>Zero data loss</td>
+            <td>Downward migration rollback script.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Infrastructure Telemetry &amp; Alerting Thresholds</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Operational Metric</th>
+            <th>Warning Threshold</th>
+            <th>Escalation Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Database CPU Usage</strong></td>
+            <td>Exceeds 80% for 5 minutes</td>
+            <td>Dispatches pager alert to engineering.</td>
+          </tr>
+          <tr>
+            <td><strong>Connection Pool Level</strong></td>
+            <td>Exceeds 90% capacity</td>
+            <td>PgBouncer auto-scales worker pool.</td>
+          </tr>
+          <tr>
+            <td><strong>Server Error Rate</strong></td>
+            <td>Exceeds 1% of total traffic</td>
+            <td>Vercel edge alerts operations team.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Disaster Recovery Step-by-Step Incident Runbook</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Runbook Phase</th>
+            <th>Primary Objective</th>
+            <th>Operational Command</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Phase 1: Triage</strong></td>
+            <td>Identify outage root cause</td>
+            <td>Inspect Vercel and Supabase dashboards.</td>
+          </tr>
+          <tr>
+            <td><strong>Phase 2: Isolation</strong></td>
+            <td>Prevent dirty data writes</td>
+            <td>Enable maintenance mode in edge middleware.</td>
+          </tr>
+          <tr>
+            <td><strong>Phase 3: Restore</strong></td>
+            <td>Recover database to valid state</td>
+            <td>Execute point-in-time recovery via Supabase CLI.</td>
+          </tr>
+          <tr>
+            <td><strong>Phase 4: Verify</strong></td>
+            <td>Validate data integrity</td>
+            <td>Run automated verification test suite.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>Maintenance Protocol:</strong> Set maintenance flag in edge middleware during major restoration events.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 15 of 16</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 16: ENGINEERING COMMISSIONING SIGN-OFF & GLOSSARY                    -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-16">
+    <div class="running-header">
+      <span class="app-brand">System Commissioning</span>
+      <span>Sign-Off, Support &amp; Glossary</span>
+    </div>
+
+    <div class="content">
+      <h2>Engineering Commissioning Sign-Off</h2>
+      <p>This technical manual certifies that the iReside platform satisfies all architectural standards:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Name / Organization</th>
+            <th>Status</th>
+            <th>Sign-Off Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Lead Systems Architect</td>
+            <td>iReside Engineering Group</td>
+            <td>Verified &amp; Certified</td>
+            <td>Q1 2026</td>
+          </tr>
+          <tr>
+            <td>DevOps &amp; Security Officer</td>
+            <td>Systems Security Committee</td>
+            <td>Production Approved</td>
+            <td>Q1 2026</td>
+          </tr>
+          <tr>
+            <td>Lead Mobile Engineer</td>
+            <td>Native Mobile Division</td>
+            <td>Verified &amp; Signed</td>
+            <td>Q1 2026</td>
+          </tr>
+          <tr>
+            <td>Quality Assurance Lead</td>
+            <td>Validation &amp; Test Operations</td>
+            <td>100% Suite Pass</td>
+            <td>Q1 2026</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Automated Verification Suite Pass Record</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Verification Suite</th>
+            <th>Execution Command</th>
+            <th>Result Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>TypeScript Type Check</strong></td>
+            <td><code>npx tsc --noEmit</code></td>
+            <td>Clean Pass (0 errors).</td>
+          </tr>
+          <tr>
+            <td><strong>Validation Test Suite</strong></td>
+            <td><code>npx vitest run src/__tests__/validation</code></td>
+            <td>Clean Pass (100% passing).</td>
+          </tr>
+          <tr>
+            <td><strong>Production Next.js Build</strong></td>
+            <td><code>npm run build</code></td>
+            <td>Clean Pass (Zero build errors).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Production Deployment Pipeline &amp; Release Verification Protocol</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Deployment Stage</th>
+            <th>Automated Gate</th>
+            <th>Pass Criteria</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Continuous Integration</strong></td>
+            <td>Automated GitHub Actions CI</td>
+            <td>Clean typecheck and 100% test pass.</td>
+          </tr>
+          <tr>
+            <td><strong>2. Production Vercel</strong></td>
+            <td>Edge Serverless Promotion</td>
+            <td>Zero route compilation errors.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Technical Glossary</h2>
+      <div class="glossary-item"><span class="glossary-term">RLS:</span> Row-Level Security in PostgreSQL restricting row access per user session.</div>
+      <div class="glossary-item"><span class="glossary-term">JWT:</span> JSON Web Token used for cryptographically signed stateless session verification.</div>
+      <div class="glossary-item"><span class="glossary-term">Service Role:</span> Privileged PostgreSQL role that bypasses RLS for administrative workers.</div>
+      <div class="glossary-item"><span class="glossary-term">Capacitor 7:</span> Cross-platform runtime executing the web app inside an Android WebView.</div>
+      <div class="glossary-item"><span class="glossary-term">Vercel Cron:</span> Serverless scheduler invoking authenticated API endpoints at defined intervals.</div>
+      <div class="glossary-item"><span class="glossary-term">Bcrypt:</span> Adaptive cryptographic hash function used for Emergency Spare Key verification.</div>
+      <div class="glossary-item"><span class="glossary-term">CSPRNG:</span> Cryptographically Secure Pseudo-Random Number Generator.</div>
+      <div class="glossary-item"><span class="glossary-term">PgBouncer:</span> Lightweight connection pooler for PostgreSQL database.</div>
+      <div class="glossary-item"><span class="glossary-term">WAL:</span> Write-Ahead Logging ensuring durability and point-in-time recovery.</div>
+      <div class="glossary-item"><span class="glossary-term">PKCE:</span> Proof Key for Code Exchange securing authorization flows.</div>
+      <div class="glossary-item"><span class="glossary-term">RTO:</span> Recovery Time Objective specifying maximum allowable downtime.</div>
+      <div class="glossary-item"><span class="glossary-term">RPO:</span> Recovery Point Objective specifying maximum allowable data loss.</div>
+
+      <p style="font-size: 6.8pt; color: #666; text-align: center; margin-top: 1.2mm; border-top: 1px solid #ddd; padding-top: 0.6mm;">
+        &copy; 2026 iReside Technologies. All rights reserved. Confidential technical standard.
+      </p>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside IT Manual &bull; Rev 1.0</span>
+      <span class="page-number">Page 16 of 16</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
+`;
+}

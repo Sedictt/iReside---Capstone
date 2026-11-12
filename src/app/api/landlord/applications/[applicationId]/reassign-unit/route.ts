@@ -5,7 +5,7 @@ import { parseJsonBody } from "@/lib/validation/server";
 import { isId, reassignApplicationUnitSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { getActiveUnitHold } from "@/lib/unit-hold";
 import { sendUnitReassignedRecommendationEmail } from "@/lib/email";
-import { generateRoomOfferLink } from "@/lib/jwt";
+import { generateApplicationStatusLink, generateRoomOfferLink } from "@/lib/jwt";
 import { invalidatePropertyUnitsCache } from "@/app/api/landlord/property-units/route";
 
 export async function POST(
@@ -154,6 +154,10 @@ export async function POST(
     invalidatePropertyUnitsCache(userId);
 
     const offerResponseUrl = generateRoomOfferLink(applicationId, targetUnit.id);
+    const statusTrackerUrl = generateApplicationStatusLink(
+        applicationId,
+        new URL(request.url).origin
+    );
 
     let emailSent = false;
     const applicantEmail = application.applicant_email?.trim();
@@ -168,6 +172,7 @@ export async function POST(
                 newMonthlyRent: offeredMonthlyRent,
                 landlordNote: landlord_note,
                 offerResponseUrl,
+                statusTrackerUrl,
             });
             emailSent = true;
         } catch (emailErr) {

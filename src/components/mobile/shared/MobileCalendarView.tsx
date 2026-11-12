@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -37,6 +37,7 @@ import { triggerHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useLanguageContext } from '@/context/LanguageContext';
+import { readViewCache, writeViewCache, hasViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 
 export interface CalendarEventItem {
     id: string;
@@ -64,8 +65,13 @@ export function MobileCalendarView() {
     const role = (profile?.role as 'tenant' | 'landlord') || 'tenant';
     const isLandlord = role === 'landlord';
 
-    const [events, setEvents] = useState<CalendarEventItem[]>([]);
-    const [loading, setLoading] = useState(true);
+    const calendarCacheKey = `calendar:${role}:${isLandlord ? selectedPropertyId || 'all' : 'tenant'}`;
+    const fetchRequestRef = useRef(0);
+
+    const [events, setEvents] = useState<CalendarEventItem[]>(
+        () => readViewCache<CalendarEventItem[]>(calendarCacheKey) ?? []
+    );
+    const [loading, setLoading] = useState(() => !hasViewCache(calendarCacheKey));
     const [activeCategory, setActiveCategory] = useState<'all' | 'payment' | 'lease' | 'maintenance' | 'booking' | 'note'>('all');
     const [selectedDate, setSelectedDate] = useState<string>(() => {
         return new Date().toISOString().split('T')[0];
@@ -104,8 +110,17 @@ export function MobileCalendarView() {
     }, [events, noteEvents]);
 
     const fetchEvents = useCallback(async () => {
-        try {
+        const requestId = ++fetchRequestRef.current;
+        const cacheKey = `calendar:${role}:${isLandlord ? selectedPropertyId || 'all' : 'tenant'}`;
+        const snapshot = readViewCache<CalendarEventItem[]>(cacheKey);
+        if (snapshot) {
+            setEvents(snapshot);
+            setLoading(false);
+        } else {
             setLoading(true);
+        }
+
+        try {
             const endpoint = isLandlord 
                 ? '/api/landlord/calendar/events' 
                 : '/api/tenant/calendar/events';
@@ -116,17 +131,21 @@ export function MobileCalendarView() {
             }
 
             const query = params.toString() ? `?${params.toString()}` : "";
-            const res = await fetch(`${endpoint}${query}`);
-            if (!res.ok) throw new Error('Failed to load calendar events');
-            const data = await res.json();
-            setEvents(Array.isArray(data.events) ? data.events : Array.isArray(data) ? data : []);
+            const data = await fetchJsonDeduped<any>(`${endpoint}${query}`);
+            if (requestId !== fetchRequestRef.current) return;
+            const list = Array.isArray(data.events) ? data.events : Array.isArray(data) ? data : [];
+            setEvents(list);
+            writeViewCache(cacheKey, list);
         } catch (err) {
+            if (requestId !== fetchRequestRef.current) return;
             console.error('Error fetching calendar events:', err);
-            toast.error(t('Failed to load schedule'));
+            if (!hasViewCache(cacheKey)) {
+                toast.error(t('Failed to load schedule'));
+            }
         } finally {
-            setLoading(false);
+            if (requestId === fetchRequestRef.current) setLoading(false);
         }
-    }, [isLandlord, selectedPropertyId, t]);
+    }, [isLandlord, role, selectedPropertyId, t]);
 
     useEffect(() => {
         fetchEvents();

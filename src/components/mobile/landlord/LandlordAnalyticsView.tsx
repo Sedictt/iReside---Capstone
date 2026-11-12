@@ -36,6 +36,7 @@ import { useProperty } from '@/context/PropertyContext'
 import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropertySelector'
 import { triggerHaptic } from '@/lib/haptics'
 import { m as motion, AnimatePresence } from 'framer-motion'
+import { readViewCache, writeViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache'
 
 /* ----------------------------------------------------------
    Types
@@ -334,7 +335,9 @@ export function LandlordAnalyticsView() {
     const [isIrisVisible, setIsIrisVisible] = useState(false)
     const [isExportModalOpen, setIsExportModalOpen] = useState(false)
     const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('pdf')
-    const [exportHistory, setExportHistory] = useState<ExportAuditItem[]>([])
+    const [exportHistory, setExportHistory] = useState<ExportAuditItem[]>(
+        () => readViewCache<ExportAuditItem[]>('landlord-analytics:exports') ?? []
+    )
     const [selectedVitalsDetail, setSelectedVitalsDetail] = useState<{
         title: string
         value: string
@@ -346,13 +349,22 @@ export function LandlordAnalyticsView() {
     } | null>(null)
     const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-    const [statsState, dispatchStats] = useReducer(statsReducer, {
-        primaryKpis: DEFAULT_PRIMARY_KPIS,
-        extendedKpis: DEFAULT_EXTENDED_KPIS,
-        financialChart: DEFAULT_FINANCIAL_CHART,
-        operationalSnapshot: DEFAULT_OPERATIONAL_SNAPSHOT,
-        statsLoading: false,
-        statsError: null,
+    const analyticsCacheKey = `landlord-analytics:${selectedPropertyId || 'all'}:${startDate}:${endDate}`
+    const [statsState, dispatchStats] = useReducer(statsReducer, undefined, () => {
+        const cached = readViewCache<{
+            primaryKpis: KpiItem[]
+            extendedKpis: KpiItem[]
+            financialChart: OverviewApiResponse['financialChart']
+            operationalSnapshot: OverviewApiResponse['operationalSnapshot']
+        }>(analyticsCacheKey)
+        return {
+            primaryKpis: cached?.primaryKpis ?? DEFAULT_PRIMARY_KPIS,
+            extendedKpis: cached?.extendedKpis ?? DEFAULT_EXTENDED_KPIS,
+            financialChart: cached?.financialChart ?? DEFAULT_FINANCIAL_CHART,
+            operationalSnapshot: cached?.operationalSnapshot ?? DEFAULT_OPERATIONAL_SNAPSHOT,
+            statsLoading: false,
+            statsError: null,
+        }
     })
 
     const { primaryKpis, extendedKpis, financialChart, operationalSnapshot, statsLoading, statsError } = statsState
@@ -405,10 +417,10 @@ export function LandlordAnalyticsView() {
 
     const fetchExportHistory = useCallback(async () => {
         try {
-            const response = await fetch('/api/landlord/analytics/report?limit=5&offset=0')
-            if (!response.ok) return
-            const payload = await response.json()
-            setExportHistory(payload.history as ExportAuditItem[])
+            const payload = await fetchJsonDeduped<{ history?: ExportAuditItem[] }>('/api/landlord/analytics/report?limit=5&offset=0')
+            const history = Array.isArray(payload.history) ? payload.history : []
+            setExportHistory(history)
+            writeViewCache('landlord-analytics:exports', history)
         } catch {
             // Handled gracefully
         }
@@ -634,7 +646,17 @@ export function LandlordAnalyticsView() {
         }
 
         const loadOverview = async () => {
-            dispatchStats({ type: 'LOAD_START' })
+            const cached = readViewCache<{
+                primaryKpis: KpiItem[]
+                extendedKpis: KpiItem[]
+                financialChart: OverviewApiResponse['financialChart']
+                operationalSnapshot: OverviewApiResponse['operationalSnapshot']
+            }>(analyticsCacheKey)
+            if (cached) {
+                dispatchStats({ type: 'LOAD_SUCCESS', payload: cached })
+            } else {
+                dispatchStats({ type: 'LOAD_START' })
+            }
             try {
                 const params = new URLSearchParams({
                     start: startDate,
@@ -645,28 +667,34 @@ export function LandlordAnalyticsView() {
                     signal: controller.signal,
                 })
                 if (!res.ok) {
-                    dispatchStats({ type: 'LOAD_ERROR', error: 'Unable to load live analytics.' })
+                    if (!cached) {
+                        dispatchStats({ type: 'LOAD_ERROR', error: 'Unable to load live analytics.' })
+                    }
                     return
                 }
                 const payload = (await res.json()) as OverviewApiResponse
+                const nextPayload = {
+                    primaryKpis: mergeKpis(DEFAULT_PRIMARY_KPIS, payload.primaryKpis ?? []),
+                    extendedKpis: mergeKpis(DEFAULT_EXTENDED_KPIS, payload.extendedKpis ?? []),
+                    financialChart: payload.financialChart ?? DEFAULT_FINANCIAL_CHART,
+                    operationalSnapshot: payload.operationalSnapshot ?? DEFAULT_OPERATIONAL_SNAPSHOT,
+                }
+                writeViewCache(analyticsCacheKey, nextPayload)
                 dispatchStats({
                     type: 'LOAD_SUCCESS',
-                    payload: {
-                        primaryKpis: mergeKpis(primaryKpis, payload.primaryKpis ?? []),
-                        extendedKpis: mergeKpis(extendedKpis, payload.extendedKpis ?? []),
-                        financialChart: payload.financialChart ?? DEFAULT_FINANCIAL_CHART,
-                        operationalSnapshot: payload.operationalSnapshot ?? DEFAULT_OPERATIONAL_SNAPSHOT,
-                    },
+                    payload: nextPayload,
                 })
             } catch (err) {
                 if ((err as Error).name === 'AbortError') return
-                dispatchStats({ type: 'LOAD_ERROR', error: 'Failed to sync portfolio metrics.' })
+                if (!cached) {
+                    dispatchStats({ type: 'LOAD_ERROR', error: 'Failed to sync portfolio metrics.' })
+                }
             }
         }
 
         void loadOverview()
         return () => controller.abort()
-    }, [mounted, startDate, endDate, selectedPropertyId])
+    }, [mounted, startDate, endDate, selectedPropertyId, analyticsCacheKey])
 
     useEffect(() => {
         if (!toastMessage) return

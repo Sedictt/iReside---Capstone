@@ -73,6 +73,7 @@ import { InvoiceModal } from '@/components/landlord/invoices/InvoiceModal';
 import { AttachInvoiceModal } from '@/components/landlord/messages/AttachInvoiceModal';
 import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropertySelector';
 import { tr } from '@/hooks/useLanguage';
+import { readViewCache, writeViewCache, hasViewCache } from '@/lib/mobile/view-cache';
 
 const QUICK_ACTIONS: QuickAction[] = [
     {
@@ -130,8 +131,10 @@ export function LandlordMessagesView() {
     
     // View state: 'chats' | 'broadcasts'
     const [viewMode, setViewMode] = useState<'chats' | 'broadcasts'>('chats');
-    const [conversations, setConversations] = useState<ConversationSummary[]>([]);
-    const [loadingChats, setLoadingChats] = useState(true);
+    const [conversations, setConversations] = useState<ConversationSummary[]>(
+        () => readViewCache<ConversationSummary[]>('landlord-messages:conversations') ?? []
+    );
+    const [loadingChats, setLoadingChats] = useState(() => !hasViewCache('landlord-messages:conversations'));
     const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -184,15 +187,19 @@ export function LandlordMessagesView() {
     const [broadcastPropertyId, setBroadcastPropertyId] = useState(selectedPropertyId || 'all');
     const [submittingBroadcast, setSubmittingBroadcast] = useState(false);
     const [broadcastSuccess, setBroadcastSuccess] = useState(false);
-    const [broadcastsList, setBroadcastsList] = useState<Array<{ 
-        id: string; 
-        title: string; 
-        content: string; 
-        created_at: string; 
+    type CachedBroadcastItem = {
+        id: string;
+        title: string;
+        content: string;
+        created_at: string;
         is_pinned?: boolean;
         property_id?: string;
         propertyName?: string;
-    }>>([]);
+    };
+    const broadcastsCacheKey = `landlord-messages:broadcasts:${selectedPropertyId || 'all'}`;
+    const [broadcastsList, setBroadcastsList] = useState<CachedBroadcastItem[]>(
+        () => readViewCache<CachedBroadcastItem[]>(broadcastsCacheKey) ?? []
+    );
     const [loadingBroadcasts, setLoadingBroadcasts] = useState(false);
     const [mounted, setMounted] = useState(false);
 
@@ -204,7 +211,10 @@ export function LandlordMessagesView() {
     const loadConversations = useCallback(async () => {
         try {
             const { data } = await fetchConversations();
-            setConversations(data || []);
+            if (data) {
+                setConversations(data);
+                writeViewCache('landlord-messages:conversations', data);
+            }
         } catch (err) {
             console.error('[MobileMessages] Failed to load conversations:', err);
         } finally {
@@ -214,13 +224,23 @@ export function LandlordMessagesView() {
     }, []);
 
     // Load announcements
+    const broadcastsRequestRef = useRef(0);
     const loadBroadcasts = useCallback(async () => {
-        setLoadingBroadcasts(true);
+        const requestId = ++broadcastsRequestRef.current;
+        const cacheKey = broadcastsCacheKey;
+        const cached = readViewCache<CachedBroadcastItem[]>(cacheKey);
+        if (cached) {
+            setBroadcastsList(cached);
+            setLoadingBroadcasts(false);
+        } else {
+            setLoadingBroadcasts(true);
+        }
         try {
             const targetProp = selectedPropertyId && selectedPropertyId !== 'all' ? selectedPropertyId : undefined;
             const res = await getCurrentCommunityPosts(50, undefined, targetProp);
+            if (requestId !== broadcastsRequestRef.current) return;
             const posts = res?.posts || [];
-            const formatted = posts
+            const formatted: CachedBroadcastItem[] = posts
                 .filter((p: any) => p.type === 'announcement' || p.title)
                 .map((p: any) => {
                     const matchedProp = properties.find((prop) => prop.id === p.property_id);
@@ -235,13 +255,16 @@ export function LandlordMessagesView() {
                     };
                 });
             setBroadcastsList(formatted);
+            writeViewCache(cacheKey, formatted);
         } catch (err) {
             console.error('[MobileMessages] Failed to load announcements:', err);
         } finally {
-            setLoadingBroadcasts(false);
-            setRefreshing(false);
+            if (requestId === broadcastsRequestRef.current) {
+                setLoadingBroadcasts(false);
+                setRefreshing(false);
+            }
         }
-    }, [selectedPropertyId, properties]);
+    }, [selectedPropertyId, properties, broadcastsCacheKey]);
 
     useEffect(() => {
         loadConversations();
@@ -325,16 +348,29 @@ export function LandlordMessagesView() {
     // Open chat and load messages
     const handleOpenChat = async (conv: ConversationSummary) => {
         setActiveChat(conv);
-        setLoadingMessages(true);
+        const msgKey = `chat-messages:${conv.id}`;
+        const cachedMsgs = readViewCache<ConversationMessage[]>(msgKey);
+        if (cachedMsgs) {
+            setMessages(cachedMsgs);
+            setLoadingMessages(false);
+        } else {
+            setMessages([]);
+            setLoadingMessages(true);
+        }
         setShowInfoSidebar(false);
         setShowFilesSidebar(false);
         setShowAttachInvoiceModal(false);
         try {
             const { data } = await fetchConversationMessages(conv.id);
-            setMessages(data || []);
+            if (data) {
+                setMessages(data);
+                writeViewCache(msgKey, data);
+            }
             void loadPaymentHistory(conv.id);
             void markConversationAsRead(conv.id);
-            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+            if (!cachedMsgs) {
+                setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+            }
         } catch (err) {
             console.error('Failed to load messages:', err);
         } finally {

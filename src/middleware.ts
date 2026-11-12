@@ -21,6 +21,6 @@ export const config = {
          * - sw.js, manifest.json, robots.txt (PWA and SEO assets)
          * - public folder assets
          */
-        '/((?!api|_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.json|robots\\.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|webmanifest)$).*)',
+        '/((?!api|_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.json|robots\\.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|webmanifest|html)$).*)',
     ],
 }

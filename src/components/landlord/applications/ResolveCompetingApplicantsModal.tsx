@@ -13,6 +13,7 @@ import {
     Copy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScrollableWithHint } from "@/components/ui/ScrollableWithHint";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { isUnitOccupied, isUnitOnHold, isUnitLockedForIntake, type WalkInUnit } from "@/lib/application-intake";
 
@@ -208,38 +209,47 @@ export function ResolveCompetingApplicantsModal({
             onClick={onClose}
         >
             <div
-                className="w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl bg-card border border-border/60 shadow-xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto overscroll-contain space-y-6"
+                className="w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl bg-card border border-border/60 shadow-xl max-h-[90vh] flex flex-col overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="mx-auto h-1.5 w-12 rounded-full bg-muted sm:hidden" />
+                <div className="px-6 sm:px-8 pt-5 sm:pt-7 pb-4 border-b border-border/60 shrink-0 space-y-4">
+                    <div className="mx-auto h-1.5 w-12 rounded-full bg-muted sm:hidden" />
 
-                {/* Header */}
-                <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3.5">
-                        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20">
-                            <Users className="size-6" />
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3.5">
+                            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20">
+                                <Users className="size-6" />
+                            </div>
+                            <div>
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
+                                    {propertyName} • {takenUnitName}
+                                </span>
+                                <h2 className="text-xl font-black tracking-tight text-foreground mt-0.5">
+                                    {competingApplicants.length === 1
+                                        ? t("Offer Another Room to This Applicant")
+                                        : t("Other Applicants Waiting for {unit}", { unit: takenUnitName })}
+                                </h2>
+                            </div>
                         </div>
-                        <div>
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
-                                {propertyName} • {takenUnitName}
-                            </span>
-                            <h2 className="text-xl font-black tracking-tight text-foreground mt-0.5">
-                                {competingApplicants.length === 1
-                                    ? t("Offer Another Room to This Applicant")
-                                    : t("Other Applicants Waiting for {unit}", { unit: takenUnitName })}
-                            </h2>
-                        </div>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            aria-label={t("Close")}
+                            className="flex size-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors shrink-0"
+                        >
+                            <X className="size-5" />
+                        </button>
                     </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        aria-label={t("Close")}
-                        className="flex size-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
-                    >
-                        <X className="size-5" />
-                    </button>
                 </div>
 
+                <ScrollableWithHint
+                    className="overscroll-contain"
+                    contentClassName="px-6 sm:px-8 py-5 space-y-5"
+                    fadeColor="card"
+                    resetKey={`${takenUnitId}-${competingApplicants.length}`}
+                    hintText={t("More options below • Scroll down")}
+                >
                 <p className="text-sm leading-relaxed text-muted-foreground">
                     {winnerName
                         ? t(
@@ -432,9 +442,10 @@ export function ResolveCompetingApplicantsModal({
                         );
                     })}
                 </div>
+                </ScrollableWithHint>
 
                 {/* Footer */}
-                <div className="flex items-center justify-end pt-2 border-t border-border/60">
+                <div className="flex items-center justify-end px-6 sm:px-8 py-4 border-t border-border/60 shrink-0 bg-card">
                     <button
                         type="button"
                         onClick={onClose}

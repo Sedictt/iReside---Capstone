@@ -24,6 +24,7 @@ import { MAINTENANCE_PRIORITY_BADGE_TEXT, MAINTENANCE_PRIORITY_LABELS, MAINTENAN
 import { triggerHaptic } from '@/lib/haptics';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { useLanguageContext } from '@/context/LanguageContext';
+import { readViewCache, writeViewCache, hasViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 
 interface MaintenanceRequest {
     id: string;
@@ -57,8 +58,8 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function TenantMaintenanceView() {
     const { t, locale } = useLanguageContext();
-    const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [requests, setRequests] = useState<MaintenanceRequest[]>(() => readViewCache<MaintenanceRequest[]>('tenant-maintenance') ?? []);
+    const [loading, setLoading] = useState(() => !hasViewCache('tenant-maintenance'));
     const [filter, setFilter] = useState<'all' | 'open' | 'in_progress' | 'resolved'>('open');
     
     // New Request Modal state
@@ -84,11 +85,10 @@ export function TenantMaintenanceView() {
 
     const fetchRequests = async () => {
         try {
-            const res = await fetch('/api/tenant/maintenance');
-            if (res.ok) {
-                const json = await res.json();
-                setRequests(Array.isArray(json.requests) ? json.requests : []);
-            }
+            const json = await fetchJsonDeduped<{ requests?: MaintenanceRequest[] }>('/api/tenant/maintenance');
+            const list = Array.isArray(json.requests) ? json.requests : [];
+            setRequests(list);
+            writeViewCache('tenant-maintenance', list);
         } catch (err) {
             console.error('[TenantMaintenance] Failed to fetch requests:', err);
         } finally {

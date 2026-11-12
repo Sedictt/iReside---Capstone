@@ -10,6 +10,7 @@ import {
 } from "@/lib/unit-hold";
 import type { UnitHoldInfo } from "@/lib/application-intake";
 import { sendUnitOnHoldStatusEmail } from "@/lib/email";
+import { generateApplicationStatusLink } from "@/lib/jwt";
 import { invalidatePropertyUnitsCache } from "@/app/api/landlord/property-units/route";
 
 export async function POST(
@@ -106,12 +107,17 @@ export async function POST(
                 const email = other.applicant_email?.trim();
                 if (!email) continue;
                 try {
+                    const statusTrackerUrl = generateApplicationStatusLink(
+                        other.id,
+                        new URL(request.url).origin
+                    );
                     await sendUnitOnHoldStatusEmail({
                         to: email,
                         applicantName: other.applicant_name?.trim() || "Applicant",
                         propertyName: property.name || "Property",
                         unitName: unit.name || "Room",
                         holdNote: body.hold_note,
+                        statusTrackerUrl,
                     });
                     notifiedCount += 1;
                 } catch (emailErr) {

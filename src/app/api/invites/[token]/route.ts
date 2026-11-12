@@ -18,8 +18,9 @@ import {
     sanitizePaymentTerms,
     type InvitePaymentTerms,
 } from "@/lib/tenant-invite-payment-terms";
-import { sendNewApplicationReceivedEmail } from "@/lib/email";
+import { sendApplicationReceivedEmail, sendNewApplicationReceivedEmail } from "@/lib/email";
 import { buildAppUrl } from "@/lib/app-url";
+import { generateApplicationStatusLink } from "@/lib/jwt";
 import type { Database } from "@/types/database";
 import { parseJsonBody } from "@/lib/validation/server";
 import { inviteApplicationSchema, isUrlToken } from "@/lib/validation/schemas/tenant-lifecycle.schema";
@@ -418,7 +419,7 @@ export async function POST(
                 user_id: invite.landlord_id,
                 type: "application" as const,
                 title: `New Application — ${resolvedPropertyName}`,
-                message: `${applicantName} submitted a rental application for ${resolvedUnitName}. Review the dossier now.`,
+                message: `${applicantName} submitted a rental application for ${resolvedUnitName}. Review the application now.`,
                 data: {
                     applicationId: application.id,
                     propertyId: invite.property_id,
@@ -444,6 +445,9 @@ export async function POST(
             console.error("[POST invites] Unhandled exception creating in-app notification:", notifEx);
         }
 
+        const requestOrigin = new URL(request.url).origin;
+        const statusTrackerUrl = generateApplicationStatusLink(application.id, requestOrigin);
+
         // 3. Dispatch email notification to landlord (with fallback resolution)
         try {
             let landlordEmail: string | null = null;
@@ -468,7 +472,7 @@ export async function POST(
             }
 
             if (landlordEmail) {
-                const dossierUrl = buildAppUrl(`/landlord/applications?id=${application.id}`, new URL(request.url).origin);
+                const dossierUrl = buildAppUrl(`/landlord/applications?id=${application.id}`, requestOrigin);
 
                 await sendNewApplicationReceivedEmail({
                     to: landlordEmail,
@@ -487,12 +491,29 @@ export async function POST(
             console.error("[POST invites] Failed to send new application email to landlord:", emailErr);
         }
 
+        // 4. Dispatch non-blocking confirmation + live status tracker link to applicant
+        if (applicantEmail?.trim()) {
+            try {
+                await sendApplicationReceivedEmail({
+                    to: applicantEmail.trim(),
+                    applicantName,
+                    propertyName: resolvedPropertyName,
+                    unitName: resolvedUnitName,
+                    referenceCode: application.id.slice(0, 8).toUpperCase(),
+                    statusTrackerUrl,
+                });
+            } catch (applicantEmailErr) {
+                console.error("[POST invites] Failed to send application confirmation email to applicant:", applicantEmailErr);
+            }
+        }
+
         return NextResponse.json({
             application: {
                 id: application.id,
                 status: application.status,
                 createdAt: application.created_at,
             },
+            statusTrackerUrl,
         });
     } catch {
         return NextResponse.json({ error: "Failed to submit invite application." }, { status: 500 });

@@ -31,6 +31,7 @@ import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModal';
 import { formatLeaseDate, formatTenure, leaseEndState, tenureSinceLabel } from '@/lib/lease-term';
 import { ART, artOr } from "@/lib/art/abstract-art";
+import { readViewCache, writeViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 
 const FALLBACK_AVATAR = ART.avatar;
 
@@ -70,17 +71,21 @@ export function TenantProfileView() {
     const router = useRouter();
     const { t, language } = useLanguageContext();
 
-    const [lease, setLease] = useState<LeaseDetails | null>(null);
-    const [loading, setLoading] = useState(true);
+    const cachedDashboard = readViewCache<{ lease?: LeaseDetails | null }>('tenant-dashboard');
+    const [lease, setLease] = useState<LeaseDetails | null>(() => cachedDashboard?.lease ?? null);
+    const [loading, setLoading] = useState(() => !cachedDashboard);
 
     const fetchProfileData = async () => {
         try {
-            await refreshProfile();
-            const res = await fetch('/api/tenant/dashboard');
-            if (res.ok) {
-                const data = await res.json();
-                if (data.lease) {
-                    setLease(data.lease);
+            const [, dashResult] = await Promise.allSettled([
+                refreshProfile(),
+                fetchJsonDeduped<{ lease?: LeaseDetails | null }>('/api/tenant/dashboard'),
+            ]);
+            if (dashResult.status === 'fulfilled' && dashResult.value) {
+                const current = readViewCache<Record<string, unknown>>('tenant-dashboard') ?? {};
+                writeViewCache('tenant-dashboard', { ...current, ...dashResult.value });
+                if (dashResult.value.lease) {
+                    setLease(dashResult.value.lease);
                 }
             }
         } catch (err) {
@@ -91,7 +96,17 @@ export function TenantProfileView() {
     };
 
     useEffect(() => {
-        fetchProfileData();
+        // Only refresh dashboard lease data on mount (profile is already live in AuthContext).
+        void fetchJsonDeduped<{ lease?: LeaseDetails | null }>('/api/tenant/dashboard')
+            .then((data) => {
+                const current = readViewCache<Record<string, unknown>>('tenant-dashboard') ?? {};
+                writeViewCache('tenant-dashboard', { ...current, ...data });
+                if (data.lease) setLease(data.lease);
+            })
+            .catch((err) => {
+                console.error('Failed to load tenant profile lease data:', err);
+            })
+            .finally(() => setLoading(false));
     }, []);
 
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);

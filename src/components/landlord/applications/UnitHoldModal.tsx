@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Clock, Lock, Unlock, AlertCircle, CheckCircle2, X, Users, Bell } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Clock, Lock, Unlock, AlertCircle, CheckCircle2, X, Bell, ChevronDown, Check, User, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScrollableWithHint } from "@/components/ui/ScrollableWithHint";
 import { useLanguageContext } from "@/context/LanguageContext";
 import type { HoldDurationPreset } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import type { UnitHoldInfo } from "@/lib/application-intake";
+
+export interface UnitHoldApplicantOption {
+    id: string;
+    name: string;
+    subtitle?: string | null;
+    status?: string;
+}
 
 interface UnitHoldModalProps {
     isOpen: boolean;
@@ -13,6 +21,7 @@ interface UnitHoldModalProps {
     unitId: string;
     unitName: string;
     propertyName: string;
+    applicantOptions?: UnitHoldApplicantOption[];
     defaultApplicantName?: string;
     defaultApplicationId?: string | null;
     competingApplicantsCount?: number;
@@ -33,6 +42,7 @@ export function UnitHoldModal({
     unitId,
     unitName,
     propertyName,
+    applicantOptions = [],
     defaultApplicantName = "",
     defaultApplicationId = null,
     competingApplicantsCount = 0,
@@ -40,7 +50,9 @@ export function UnitHoldModal({
     onHoldUpdated,
 }: UnitHoldModalProps) {
     const { t } = useLanguageContext();
-    const [heldForName, setHeldForName] = useState(defaultApplicantName);
+    const [selectedApplicantId, setSelectedApplicantId] = useState<string>("");
+    const [comboOpen, setComboOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const [durationPreset, setDurationPreset] = useState<HoldDurationPreset>("48h");
     const [holdNote, setHoldNote] = useState("");
     const [notifyOthers, setNotifyOthers] = useState(competingApplicantsCount > 0);
@@ -48,52 +60,162 @@ export function UnitHoldModal({
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [releasing, setReleasing] = useState(false);
+    const comboContainerRef = useRef<HTMLDivElement>(null);
+
+    const resolvedOptions = useMemo<UnitHoldApplicantOption[]>(() => {
+        const seenIds = new Set<string>();
+        const list: UnitHoldApplicantOption[] = [];
+        for (const opt of applicantOptions) {
+            const cleanName = opt.name?.trim();
+            if (!cleanName || seenIds.has(opt.id)) continue;
+            seenIds.add(opt.id);
+            list.push({ ...opt, name: cleanName });
+        }
+
+        if (list.length === 0 && defaultApplicantName.trim()) {
+            list.push({
+                id: defaultApplicationId || "__default__",
+                name: defaultApplicantName.trim(),
+                subtitle: null,
+            });
+        }
+
+        const holdName = existingHold?.held_for_name?.trim();
+        if (holdName) {
+            const matchesExisting = list.some(
+                (opt) =>
+                    (existingHold?.held_by_application_id && opt.id === existingHold.held_by_application_id) ||
+                    opt.name.toLowerCase() === holdName.toLowerCase()
+            );
+            if (!matchesExisting) {
+                list.unshift({
+                    id: existingHold?.held_by_application_id || "__existing__",
+                    name: holdName,
+                    subtitle: t("Current room hold"),
+                });
+            }
+        }
+
+        return list;
+    }, [applicantOptions, defaultApplicantName, defaultApplicationId, existingHold, t]);
+
+    const selectedOption = useMemo(
+        () => resolvedOptions.find((opt) => opt.id === selectedApplicantId) ?? null,
+        [resolvedOptions, selectedApplicantId]
+    );
+
+    const filteredOptions = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return resolvedOptions;
+        return resolvedOptions.filter(
+            (opt) =>
+                opt.name.toLowerCase().includes(q) ||
+                (opt.subtitle?.toLowerCase().includes(q) ?? false)
+        );
+    }, [resolvedOptions, searchQuery]);
+
+    const otherWaitingCount = useMemo(() => {
+        if (applicantOptions.length > 0) {
+            return applicantOptions.filter((opt) => opt.id !== selectedOption?.id).length;
+        }
+        return competingApplicantsCount;
+    }, [applicantOptions, selectedOption, competingApplicantsCount]);
 
     useEffect(() => {
-        if (isOpen) {
-            setHeldForName(existingHold?.held_for_name || defaultApplicantName || "");
-            setHoldNote(existingHold?.hold_note || "");
-            setDurationPreset("48h");
-            setNotifyOthers(competingApplicantsCount > 0);
-            setNameError(null);
-            setSubmitError(null);
+        if (!isOpen) return;
+
+        let initialId = "";
+        if (existingHold) {
+            const matchById = existingHold.held_by_application_id
+                ? resolvedOptions.find((opt) => opt.id === existingHold.held_by_application_id)
+                : undefined;
+            const matchByName = resolvedOptions.find(
+                (opt) => opt.name.toLowerCase() === existingHold.held_for_name.trim().toLowerCase()
+            );
+            initialId = (matchById ?? matchByName)?.id ?? "";
         }
-    }, [isOpen, existingHold, defaultApplicantName, competingApplicantsCount]);
+
+        if (!initialId && defaultApplicationId) {
+            const matchDefault = resolvedOptions.find((opt) => opt.id === defaultApplicationId);
+            initialId = matchDefault?.id ?? "";
+        }
+
+        if (!initialId && defaultApplicantName.trim()) {
+            const matchName = resolvedOptions.find(
+                (opt) => opt.name.toLowerCase() === defaultApplicantName.trim().toLowerCase()
+            );
+            initialId = matchName?.id ?? "";
+        }
+
+        if (!initialId && resolvedOptions.length > 0) {
+            initialId = resolvedOptions[0].id;
+        }
+
+        setSelectedApplicantId(initialId);
+        setComboOpen(false);
+        setSearchQuery("");
+        setHoldNote(existingHold?.hold_note || "");
+        setDurationPreset("48h");
+        const initialOthers =
+            applicantOptions.length > 0
+                ? applicantOptions.filter((opt) => opt.id !== initialId).length
+                : competingApplicantsCount;
+        setNotifyOthers(initialOthers > 0);
+        setNameError(null);
+        setSubmitError(null);
+    }, [isOpen, existingHold, defaultApplicantName, defaultApplicationId, resolvedOptions, applicantOptions, competingApplicantsCount]);
 
     useEffect(() => {
         if (!isOpen) return;
         const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
+            if (e.key === "Escape") {
+                if (comboOpen) {
+                    e.stopPropagation();
+                    setComboOpen(false);
+                    return;
+                }
+                onClose();
+            }
         };
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
-    }, [isOpen, onClose]);
+    }, [isOpen, comboOpen, onClose]);
+
+    useEffect(() => {
+        if (!comboOpen) return;
+        const onPointerDown = (e: MouseEvent) => {
+            if (comboContainerRef.current && !comboContainerRef.current.contains(e.target as Node)) {
+                setComboOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", onPointerDown);
+        return () => document.removeEventListener("mousedown", onPointerDown);
+    }, [comboOpen]);
 
     if (!isOpen) return null;
 
-    const validateName = (value: string) => {
-        const trimmed = value.trim();
-        if (!trimmed) return t("Please enter the name of the person you are holding this room for.");
-        if (trimmed.length < 2) return t("Name must be at least 2 characters.");
-        if (trimmed.length > 50) return t("Name cannot exceed 50 characters.");
-        return null;
-    };
-
-    const handleNameChange = (value: string) => {
-        setHeldForName(value);
-        if (nameError) {
-            setNameError(validateName(value));
-        }
+    const handleSelectApplicant = (option: UnitHoldApplicantOption) => {
+        setSelectedApplicantId(option.id);
+        setNameError(null);
+        setComboOpen(false);
+        setSearchQuery("");
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitError(null);
-        const err = validateName(heldForName);
-        if (err) {
-            setNameError(err);
+        if (!selectedOption || !selectedOption.name.trim()) {
+            setNameError(t("Please select an applicant to hold this room for."));
+            setComboOpen(true);
             return;
         }
+
+        const applicationIdToSend =
+            selectedOption.id === "__existing__"
+                ? existingHold?.held_by_application_id ?? null
+                : selectedOption.id === "__default__"
+                  ? defaultApplicationId
+                  : selectedOption.id;
 
         setSubmitting(true);
         try {
@@ -101,11 +223,11 @@ export function UnitHoldModal({
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    held_for_name: heldForName.trim(),
-                    held_by_application_id: defaultApplicationId,
+                    held_for_name: selectedOption.name.trim(),
+                    held_by_application_id: applicationIdToSend,
                     duration_preset: durationPreset,
                     hold_note: holdNote.trim() || null,
-                    notify_other_applicants: notifyOthers,
+                    notify_other_applicants: otherWaitingCount > 0 ? notifyOthers : false,
                 }),
             });
 
@@ -149,37 +271,46 @@ export function UnitHoldModal({
             onClick={onClose}
         >
             <div
-                className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl bg-card border border-border/60 shadow-xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto overscroll-contain space-y-6"
+                className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl bg-card border border-border/60 shadow-xl max-h-[90vh] flex flex-col overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Drag Handle on Mobile */}
-                <div className="mx-auto h-1.5 w-12 rounded-full bg-muted sm:hidden" />
+                <div className="px-6 sm:px-8 pt-5 sm:pt-7 pb-4 border-b border-border/60 shrink-0 space-y-4">
+                    {/* Drag Handle on Mobile */}
+                    <div className="mx-auto h-1.5 w-12 rounded-full bg-muted sm:hidden" />
 
-                {/* Header */}
-                <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3.5">
-                        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                            <Lock className="size-6" />
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3.5">
+                            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                <Lock className="size-6" />
+                            </div>
+                            <div>
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-300">
+                                    {propertyName} • {unitName}
+                                </span>
+                                <h2 className="text-xl font-black tracking-tight text-foreground mt-0.5">
+                                    {existingHold ? t("Manage Room Hold") : t("Hold Room for Applicant")}
+                                </h2>
+                            </div>
                         </div>
-                        <div>
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-300">
-                                {propertyName} • {unitName}
-                            </span>
-                            <h2 className="text-xl font-black tracking-tight text-foreground mt-0.5">
-                                {existingHold ? t("Manage Room Hold") : t("Hold Room for Applicant")}
-                            </h2>
-                        </div>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            aria-label={t("Close")}
+                            className="flex size-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors shrink-0"
+                        >
+                            <X className="size-5" />
+                        </button>
                     </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        aria-label={t("Close")}
-                        className="flex size-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
-                    >
-                        <X className="size-5" />
-                    </button>
                 </div>
 
+                <ScrollableWithHint
+                    className="overscroll-contain"
+                    contentClassName="px-6 sm:px-8 py-5 space-y-5"
+                    fadeColor="card"
+                    resetKey={unitId}
+                    hintText={t("More options below • Scroll down")}
+                >
                 <p className="text-sm leading-relaxed text-muted-foreground">
                     {t("Holding this room stops new online applicants from picking it while you wait for your chosen applicant to send their payment.")}
                 </p>
@@ -207,24 +338,120 @@ export function UnitHoldModal({
                 )}
 
                 <form noValidate onSubmit={handleSubmit} className="space-y-5">
-                    {/* Person Name */}
-                    <div className="space-y-2">
-                        <label htmlFor="hold-for-name" className="block text-sm font-bold text-foreground">
+                    {/* Applicant Selection Combo Box */}
+                    <div className="space-y-2" ref={comboContainerRef}>
+                        <label id="hold-for-label" htmlFor="hold-for-combobox" className="block text-sm font-bold text-foreground">
                             {t("Who are you holding this room for?")}
                         </label>
-                        <input
-                            id="hold-for-name"
-                            type="text"
-                            maxLength={50}
-                            value={heldForName}
-                            onChange={(e) => handleNameChange(e.target.value)}
-                            onBlur={() => setNameError(validateName(heldForName))}
-                            placeholder={t("e.g., Juan Dela Cruz")}
-                            className={cn(
-                                "w-full h-12 rounded-xl border bg-background px-4 text-base font-medium text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                                nameError ? "border-red-500" : "border-border"
+                        <div className="relative">
+                            <button
+                                id="hold-for-combobox"
+                                type="button"
+                                role="combobox"
+                                aria-labelledby="hold-for-label"
+                                aria-expanded={comboOpen}
+                                aria-controls="hold-applicant-listbox"
+                                aria-haspopup="listbox"
+                                onClick={() => setComboOpen((prev) => !prev)}
+                                className={cn(
+                                    "w-full min-h-[52px] rounded-xl border bg-background px-4 py-2.5 text-left transition-colors flex items-center justify-between gap-3 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                                    nameError
+                                        ? "border-red-500"
+                                        : comboOpen
+                                          ? "border-primary ring-2 ring-primary/20"
+                                          : "border-border hover:border-primary/50"
+                                )}
+                            >
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                        <User className="size-4" />
+                                    </span>
+                                    <div className="min-w-0">
+                                        <p className={cn("text-base font-bold truncate", selectedOption ? "text-foreground" : "text-muted-foreground font-medium")}>
+                                            {selectedOption ? selectedOption.name : t("Select an applicant")}
+                                        </p>
+                                        {selectedOption?.subtitle && (
+                                            <p className="text-xs text-muted-foreground truncate">
+                                                {selectedOption.subtitle}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <ChevronDown
+                                    className={cn(
+                                        "size-5 shrink-0 text-muted-foreground transition-transform duration-200",
+                                        comboOpen && "rotate-180 text-primary"
+                                    )}
+                                />
+                            </button>
+
+                            {comboOpen && (
+                                <div
+                                    id="hold-applicant-listbox"
+                                    role="listbox"
+                                    aria-labelledby="hold-for-label"
+                                    className="mt-2 rounded-2xl border border-border bg-card shadow-lg overflow-hidden"
+                                >
+                                    {resolvedOptions.length > 5 && (
+                                        <div className="p-2.5 border-b border-border/60 bg-muted/20">
+                                            <div className="relative">
+                                                <Search className="size-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                                <input
+                                                    type="text"
+                                                    maxLength={50}
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    placeholder={t("Find applicant name...")}
+                                                    aria-label={t("Filter applicants")}
+                                                    className="w-full h-10 rounded-lg border border-border bg-background pl-9 pr-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="max-h-56 overflow-y-auto p-1.5 space-y-1">
+                                        {filteredOptions.length === 0 ? (
+                                            <div className="px-3 py-4 text-center text-xs font-medium text-muted-foreground">
+                                                {t("No matching applicants found.")}
+                                            </div>
+                                        ) : (
+                                            filteredOptions.map((option) => {
+                                                const isSelected = option.id === selectedOption?.id;
+                                                return (
+                                                    <button
+                                                        key={option.id}
+                                                        type="button"
+                                                        role="option"
+                                                        aria-selected={isSelected}
+                                                        onClick={() => handleSelectApplicant(option)}
+                                                        className={cn(
+                                                            "w-full min-h-[48px] rounded-xl px-3.5 py-2.5 text-left transition-colors flex items-center justify-between gap-3 cursor-pointer",
+                                                            isSelected
+                                                                ? "bg-primary/10 text-primary"
+                                                                : "text-foreground hover:bg-muted/60"
+                                                        )}
+                                                    >
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm font-bold truncate">
+                                                                {option.name}
+                                                            </p>
+                                                            {(option.subtitle || option.status) && (
+                                                                <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                                                    {[option.status, option.subtitle].filter(Boolean).join(" • ")}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        {isSelected && (
+                                                            <Check className="size-4 shrink-0 text-primary" />
+                                                        )}
+                                                    </button>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                </div>
                             )}
-                        />
+                        </div>
                         {nameError && (
                             <p className="flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400">
                                 <AlertCircle className="size-4 shrink-0" />
@@ -288,7 +515,7 @@ export function UnitHoldModal({
                     </div>
 
                     {/* Notify competing applicants toggle */}
-                    {competingApplicantsCount > 0 && (
+                    {otherWaitingCount > 0 && (
                         <label className="flex items-start gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4 cursor-pointer">
                             <input
                                 type="checkbox"
@@ -299,7 +526,7 @@ export function UnitHoldModal({
                             <div className="space-y-0.5">
                                 <span className="text-sm font-bold text-foreground flex items-center gap-1.5">
                                     <Bell className="size-4 text-primary" />
-                                    {t("Notify {count} other waiting applicant(s)", { count: competingApplicantsCount })}
+                                    {t("Notify {count} other waiting applicant(s)", { count: otherWaitingCount })}
                                 </span>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
                                     {t("Sends a polite email letting them know this room is temporarily on hold and keeping them on your backup list.")}
@@ -343,6 +570,7 @@ export function UnitHoldModal({
                         </button>
                     </div>
                 </form>
+                </ScrollableWithHint>
             </div>
         </div>
     );

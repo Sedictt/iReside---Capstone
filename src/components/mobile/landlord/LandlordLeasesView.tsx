@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -44,6 +44,7 @@ import {
     tenureSinceLabel,
 } from '@/lib/lease-term';
 import { tr } from '@/hooks/useLanguage';
+import { readViewCache, writeViewCache, hasViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 
 /** Display labels for lease / renewal status values (values themselves stay untouched). */
 const STATUS_LABELS: Record<string, string> = {
@@ -136,9 +137,12 @@ export function LandlordLeasesView() {
 
     const { selectedPropertyId } = useProperty();
     const { t, locale, language } = useLanguageContext();
-    const [leases, setLeases] = useState<LeaseItem[]>([]);
-    const [renewals, setRenewals] = useState<RenewalRequestItem[]>([]);
-    const [loading, setLoading] = useState(true);
+    const leasesCacheKey = `landlord-leases:${selectedPropertyId || 'all'}`;
+    const fetchRequestRef = useRef(0);
+    const cachedLeases = readViewCache<{ leases: LeaseItem[]; renewals: RenewalRequestItem[] }>(leasesCacheKey);
+    const [leases, setLeases] = useState<LeaseItem[]>(() => cachedLeases?.leases ?? []);
+    const [renewals, setRenewals] = useState<RenewalRequestItem[]>(() => cachedLeases?.renewals ?? []);
+    const [loading, setLoading] = useState(() => !cachedLeases);
     const [activeTab, setActiveTab] = useState<'all' | 'renewals' | 'expiring' | 'active'>(
         initialTab === 'renewals' ? 'renewals' : initialTab === 'expiring' ? 'expiring' : 'all'
     );
@@ -171,31 +175,52 @@ export function LandlordLeasesView() {
     const [previewLoading, setPreviewLoading] = useState(false);
 
     const fetchData = useCallback(async () => {
-        try {
+        const requestId = ++fetchRequestRef.current;
+        const cacheKey = `landlord-leases:${selectedPropertyId || 'all'}`;
+        const snapshot = readViewCache<{ leases: LeaseItem[]; renewals: RenewalRequestItem[] }>(cacheKey);
+        if (snapshot) {
+            setLeases(snapshot.leases);
+            setRenewals(snapshot.renewals);
+            setLoading(false);
+        } else {
             setLoading(true);
+        }
+
+        try {
             const propertyParam = selectedPropertyId && selectedPropertyId !== 'all' 
                 ? `?propertyId=${encodeURIComponent(selectedPropertyId)}` 
                 : '';
 
-            const [leasesRes, renewalsRes] = await Promise.all([
-                fetch(`/api/landlord/leases${propertyParam}`),
-                fetch(`/api/landlord/renewals${propertyParam}`)
+            const [leasesResult, renewalsResult] = await Promise.allSettled([
+                fetchJsonDeduped<LeaseItem[]>(`/api/landlord/leases${propertyParam}`),
+                fetchJsonDeduped<RenewalRequestItem[]>(`/api/landlord/renewals${propertyParam}`)
             ]);
 
-            if (leasesRes.ok) {
-                const data = await leasesRes.json();
-                setLeases(Array.isArray(data) ? data : []);
-            }
+            if (requestId !== fetchRequestRef.current) return;
 
-            if (renewalsRes.ok) {
-                const data = await renewalsRes.json();
-                setRenewals(Array.isArray(data) ? data : []);
+            const nextLeases = leasesResult.status === 'fulfilled' && Array.isArray(leasesResult.value)
+                ? leasesResult.value
+                : null;
+            const nextRenewals = renewalsResult.status === 'fulfilled' && Array.isArray(renewalsResult.value)
+                ? renewalsResult.value
+                : null;
+
+            if (nextLeases) setLeases(nextLeases);
+            if (nextRenewals) setRenewals(nextRenewals);
+
+            if (nextLeases && nextRenewals) {
+                writeViewCache(cacheKey, { leases: nextLeases, renewals: nextRenewals });
+            } else if (!snapshot && leasesResult.status === 'rejected' && renewalsResult.status === 'rejected') {
+                toast.error(tr('Failed to load lease agreements'));
             }
         } catch (err) {
+            if (requestId !== fetchRequestRef.current) return;
             console.error('Failed to load landlord leases:', err);
-            toast.error(tr('Failed to load lease agreements'));
+            if (!hasViewCache(cacheKey)) {
+                toast.error(tr('Failed to load lease agreements'));
+            }
         } finally {
-            setLoading(false);
+            if (requestId === fetchRequestRef.current) setLoading(false);
         }
     }, [selectedPropertyId]);
 

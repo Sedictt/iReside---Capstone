@@ -36,6 +36,7 @@ import {
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { useLanguageContext } from '@/context/LanguageContext';
 import { ART, artOr } from "@/lib/art/abstract-art";
+import { readViewCache, writeViewCache, hasViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 
 const FALLBACK_AVATAR = ART.avatar;
 
@@ -56,16 +57,20 @@ export function TenantMessagesView() {
     const { profile } = useAuth();
     const { t, locale } = useLanguageContext();
     const [viewMode, setViewMode] = useState<'chat' | 'broadcasts'>('chat');
-    const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+    const [conversations, setConversations] = useState<ConversationSummary[]>(
+        () => readViewCache<ConversationSummary[]>('tenant-messages:conversations') ?? []
+    );
     const [activeConversation, setActiveConversation] = useState<ConversationSummary | null>(null);
     const [messages, setMessages] = useState<ConversationMessage[]>([]);
     const [messageInput, setMessageInput] = useState('');
     const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
-    const [loadingConversations, setLoadingConversations] = useState(true);
+    const [loadingConversations, setLoadingConversations] = useState(() => !hasViewCache('tenant-messages:conversations'));
     const [loadingMessages, setLoadingMessages] = useState(false);
     const [sending, setSending] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [announcements, setAnnouncements] = useState<any[]>([]);
+    const [announcements, setAnnouncements] = useState<any[]>(
+        () => readViewCache<{ announcements?: any[] }>('tenant-dashboard')?.announcements ?? []
+    );
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -80,14 +85,20 @@ export function TenantMessagesView() {
         try {
             const [convRes, dashRes] = await Promise.all([
                 fetchConversations(),
-                fetch('/api/tenant/dashboard').then(r => r.ok ? r.json() : null).catch(() => null),
+                fetchJsonDeduped<{ announcements?: any[] }>('/api/tenant/dashboard').catch(() => null),
             ]);
 
-            const convList = convRes.data || [];
-            setConversations(convList);
+            if (convRes.data) {
+                setConversations(convRes.data);
+                writeViewCache('tenant-messages:conversations', convRes.data);
+            }
 
-            if (dashRes?.announcements) {
-                setAnnouncements(dashRes.announcements);
+            if (dashRes) {
+                const current = readViewCache<Record<string, unknown>>('tenant-dashboard') ?? {};
+                writeViewCache('tenant-dashboard', { ...current, ...dashRes });
+                if (dashRes.announcements) {
+                    setAnnouncements(dashRes.announcements);
+                }
             }
         } catch (err) {
             console.error('[TenantMessages] Error loading data:', err);
@@ -102,11 +113,24 @@ export function TenantMessagesView() {
 
     const handleOpenChat = async (conv: ConversationSummary) => {
         setActiveConversation(conv);
-        setLoadingMessages(true);
+        const msgKey = `chat-messages:${conv.id}`;
+        const cachedMsgs = readViewCache<ConversationMessage[]>(msgKey);
+        if (cachedMsgs) {
+            setMessages(cachedMsgs);
+            setLoadingMessages(false);
+        } else {
+            setMessages([]);
+            setLoadingMessages(true);
+        }
         try {
             const { data } = await fetchConversationMessages(conv.id);
-            setMessages(data || []);
-            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+            if (data) {
+                setMessages(data);
+                writeViewCache(msgKey, data);
+            }
+            if (!cachedMsgs) {
+                setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+            }
         } catch (err) {
             console.error('[TenantMessages] Error loading messages:', err);
         } finally {

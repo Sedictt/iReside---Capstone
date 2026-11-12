@@ -4,6 +4,8 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { parseJsonBody } from "@/lib/validation/server";
 import { landlordApplicationCreateSchema, landlordApplicationUpdateSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { getActiveUnitHold } from "@/lib/unit-hold";
+import { generateApplicationStatusLink } from "@/lib/jwt";
+import { sendApplicationReceivedEmail } from "@/lib/email";
 
 type PostgrestLikeError = {
     code?: string | null;
@@ -50,7 +52,7 @@ export async function POST(request: Request) {
     // Verify landlord owns this unit.
     const { data: unit, error: unitError } = await adminClient
         .from("units")
-        .select("id, property_id, status")
+        .select("id, name, property_id, status")
         .eq("id", unit_id)
         .maybeSingle();
 
@@ -83,7 +85,7 @@ export async function POST(request: Request) {
 
     const { data: property, error: propertyError } = await adminClient
         .from("properties")
-        .select("id, landlord_id, contract_template")
+        .select("id, name, landlord_id, contract_template")
         .eq("id", unit.property_id)
         .maybeSingle();
 
@@ -238,7 +240,27 @@ export async function POST(request: Request) {
         );
     }
 
-    return NextResponse.json({ application }, { status: 201 });
+    const statusTrackerUrl = generateApplicationStatusLink(
+        application.id,
+        new URL(request.url).origin
+    );
+
+    if (normalizedApplicantEmail?.trim()) {
+        try {
+            await sendApplicationReceivedEmail({
+                to: normalizedApplicantEmail.trim(),
+                applicantName: normalizedApplicantName || "Applicant",
+                propertyName: property.name || "Property",
+                unitName: unit.name || "Unit",
+                referenceCode: application.id.slice(0, 8).toUpperCase(),
+                statusTrackerUrl,
+            });
+        } catch (emailErr) {
+            console.error("[walk-in POST] Failed to send application status email:", emailErr);
+        }
+    }
+
+    return NextResponse.json({ application, statusTrackerUrl }, { status: 201 });
 }
 
 export async function PATCH(request: Request) {

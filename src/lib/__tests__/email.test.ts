@@ -149,4 +149,74 @@ describe('Email Utilities', () => {
       expect(callArgs.html).not.toContain('Sign Your Lease Agreement');
     });
   });
+
+  describe('application status tracker emails', () => {
+    it('sendApplicationReceivedEmail includes status tracker link and reference code', async () => {
+      const { sendApplicationReceivedEmail } = await import('../email');
+
+      const trackerUrl = 'https://ireside.app/apply/status?token=abc.def.ghi';
+      await sendApplicationReceivedEmail({
+        to: 'applicant@example.com',
+        applicantName: 'Ana Reyes',
+        propertyName: 'Sunrise Residences',
+        unitName: 'Room 101',
+        referenceCode: 'ABCDEF12',
+        statusTrackerUrl: trackerUrl,
+      });
+
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      const callArgs = mockSendMail.mock.calls[0][0];
+      expect(callArgs.to).toBe('applicant@example.com');
+      expect(callArgs.subject).toContain('Application Received');
+      expect(callArgs.html).toContain('Track Application Status');
+      expect(callArgs.html).toContain(trackerUrl);
+      expect(callArgs.html).toContain('ABCDEF12');
+      expect(callArgs.text).toContain(trackerUrl);
+    });
+
+    it('includes optional statusTrackerUrl in lifecycle emails when provided', async () => {
+      const {
+        sendProspectPaymentRequestEmail,
+        sendApplicationRejectedEmail,
+        sendUnitOnHoldStatusEmail,
+      } = await import('../email');
+
+      const trackerUrl = 'https://ireside.app/apply/status?token=xyz';
+
+      await sendProspectPaymentRequestEmail({
+        to: 'applicant@example.com',
+        applicantName: 'Ana Reyes',
+        propertyName: 'Sunrise Residences',
+        unitName: 'Room 101',
+        paymentPortalUrl: 'https://ireside.app/apply/payments/pay-1',
+        expiresAt: new Date('2026-12-01T00:00:00Z'),
+        advanceAmount: 5000,
+        securityAmount: 5000,
+        statusTrackerUrl: trackerUrl,
+      });
+
+      await sendApplicationRejectedEmail({
+        to: 'applicant@example.com',
+        applicantName: 'Ana Reyes',
+        propertyName: 'Sunrise Residences',
+        unitName: 'Room 101',
+        rejectionReason: 'Incomplete documents',
+        statusTrackerUrl: trackerUrl,
+      });
+
+      await sendUnitOnHoldStatusEmail({
+        to: 'applicant@example.com',
+        applicantName: 'Ana Reyes',
+        propertyName: 'Sunrise Residences',
+        unitName: 'Room 101',
+        statusTrackerUrl: trackerUrl,
+      });
+
+      expect(mockSendMail).toHaveBeenCalledTimes(3);
+      for (const call of mockSendMail.mock.calls) {
+        expect(call[0].html).toContain(trackerUrl);
+        expect(call[0].text).toContain(trackerUrl);
+      }
+    });
+  });
 });

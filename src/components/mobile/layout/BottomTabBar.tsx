@@ -1,7 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { m as motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { triggerHaptic } from '@/lib/haptics'
@@ -108,11 +109,21 @@ interface BottomTabBarProps {
 
 export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
     const pathname = usePathname()
+    const router = useRouter()
     const { t } = useLanguageContext()
     const tabs = role === 'tenant' ? TENANT_TABS : LANDLORD_TABS
 
+    // Warm up the other tab routes in the Router Cache so tab switches are instant.
+    useEffect(() => {
+        for (const tab of tabs) {
+            if (!pathname?.startsWith(tab.matchPrefix)) {
+                router.prefetch(tab.href)
+            }
+        }
+    }, [role, pathname, router, tabs])
+
     return (
-        <nav className="mobile-tab-bar relative z-[60] pointer-events-auto" aria-label={t("Main navigation")}>
+        <nav className="mobile-tab-bar relative z-40 pointer-events-auto" aria-label={t("Main navigation")}>
             {tabs.map((tab) => {
                 const isMenuTab = tab.label === 'Menu'
                 const isActive = pathname?.startsWith(tab.matchPrefix) || 
@@ -125,6 +136,7 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
                     <Link
                         key={tab.href}
                         href={tab.href}
+                        prefetch={true}
                         onClick={() => triggerHaptic('light')}
                         className={cn(
                             'mobile-tab-item cursor-pointer touch-manipulation active:scale-95 transition-transform',

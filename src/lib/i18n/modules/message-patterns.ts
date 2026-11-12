@@ -218,8 +218,8 @@ export const filMessagePatterns: PatternDictionary = {
     "Pumirma na si {tenant} sa lease para sa {property} - {unit}. Pakisuri at pumirma rin.",
   "The lease for {property} - {unit} with {tenant} has been successfully activated. Both parties have signed the agreement.":
     "Aktibo na ang lease para sa {property} - {unit} kasama si {tenant}. Parehong pumirma na ang dalawang panig.",
-  "{applicant} submitted a rental application for {unit}. Review the dossier now.":
-    "Nagpasa si {applicant} ng rental application para sa {unit}. Suriin na ang dossier.",
+  "{applicant} submitted a rental application for {unit}. Review the application now.":
+    "Nagpasa si {applicant} ng rental application para sa {unit}. Suriin na ang aplikasyon.",
   "A new invoice for {amount} has been issued for {unit}. Due date: {date}.":
     "May bagong invoice na {amount} para sa {unit}. Due date: {date}.",
   "Invoice {invoice} is awaiting in-person confirmation.": "Naghihintay ng personal na kumpirmasyon ang invoice {invoice}.",

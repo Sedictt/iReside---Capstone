@@ -150,7 +150,33 @@ EXTRA_RESIDENTS.forEach(([key, name, unit, leaseStart, occupation, employer, inc
     leaseStart, bio: "Settled resident; pays on time.", extra: true,
   };
 });
-for (const [key, t] of Object.entries(TENANTS)) { t.key = key; t.id = uid(`user:${key}`); t.leaseId = uid(`lease:${key}`); }
+const TENANT_AVATAR_BG_PALETTE = [
+  "#8B5CF6", // Brand Violet
+  "#3B82F6", // Blue
+  "#F59E0B", // Amber
+  "#EC4899", // Pink
+  "#14B8A6", // Teal
+  "#F97316", // Orange
+  "#6366F1", // Indigo
+  "#10B981", // Emerald
+  "#0EA5E9", // Sky
+  "#EF4444", // Red
+  "#06B6D4", // Cyan
+  "#84CC16", // Lime
+  "#7C3AED", // Violet Dark
+  "#2563EB", // Blue Dark
+  "#D97706", // Amber Dark
+  "#DB2777", // Pink Dark
+  "#0891B2", // Cyan Dark
+  "#059669", // Emerald Dark
+];
+
+Object.entries(TENANTS).forEach(([key, t], idx) => {
+  t.key = key;
+  t.id = uid(`user:${key}`);
+  t.leaseId = uid(`lease:${key}`);
+  t.avatarBgColor = TENANT_AVATAR_BG_PALETTE[idx % TENANT_AVATAR_BG_PALETTE.length];
+});
 
 // Rooms: 3 floors × 8 rooms. Floor 1 fan rooms, Floor 2 larger, Floor 3 air-conditioned.
 const ROOMS_PER_FLOOR = 8;
@@ -348,6 +374,10 @@ async function main() {
   }));
   const leakPhoto1 = await uploadPng("maintenance-images", `${TENANTS.joshua.id}/demo/room102-faucet-leak-1.png`, await photoOrCard("room102-faucet-leak.webp", { title: "Room 102 · Lavatory", subtitle: "Photo evidence · Oct 14, 2026 · 7:12 AM", accent: "#b45309", lines: ["Water dripping from the faucet base", "even when closed. Bucket fills in ~3 hrs.", "", "Submitted by: Joshua Miguel Dela Cruz"] }));
   const outletPhoto = await uploadPng("maintenance-images", `${TENANTS.mark.id}/demo/room301-outlet.png`, await photoOrCard("room301-outlet.webp", { title: "Room 301 · Wall Outlet", subtitle: "Photo evidence · Oct 17, 2026 · 10:30 PM", accent: "#991b1b", lines: ["Sparks and a burning smell when the", "aircon is plugged in. Outlet cover is", "discolored. Not using it for now.", "", "Submitted by: Mark Anthony Lim"] }));
+  const wifiPhoto = await uploadPng("maintenance-images", `${TENANTS.christine.id}/demo/room203-wifi-weak.png`, await photoOrCard("room203-wifi-weak.webp", { title: "Room 203 · Wi-Fi Signal", subtitle: "Photo evidence · Oct 24, 2026 · 9:34 PM", accent: "#0369a1", lines: ["Only 1 bar on the 2nd floor at night.", "Hard to attend online classes.", "", "Submitted by: Christine Joy Reyes"] }));
+  const doorKnobPhoto = await uploadPng("maintenance-images", `${TENANTS.maria.id}/demo/room101-doorknob-loose.png`, await photoOrCard("room101-doorknob-loose.webp", { title: "Room 101 · Door Knob", subtitle: "Photo evidence · Sep 19, 2026 · 10:48 AM", accent: "#4b5563", lines: ["Door knob is loose and sometimes", "won't lock from the outside.", "", "Submitted by: Maria Angelica Santos"] }));
+  const airconPhoto = await uploadPng("maintenance-images", `${TENANTS.angelo.id}/demo/room302-aircon.png`, await photoOrCard("room302-aircon.webp", { title: "Room 302 · Aircon", subtitle: "Photo evidence · Jul 30, 2026 · 9:20 PM", accent: "#0f766e", lines: ["Aircon turns on and blows air", "but does not cool the room.", "", "Submitted by: Angelo Fernandez"] }));
+  const showerHeadPhoto = await uploadPng("maintenance-images", `${TENANTS.ronald.id}/demo/room202-showerhead.png`, await photoOrCard("room202-showerhead.webp", { title: "Room 202 · Shower Head", subtitle: "Photo evidence · Oct 26, 2026 · 8:15 AM", accent: "#2563eb", lines: ["Old fixed shower head. Requesting", "to replace with a handheld type.", "", "Submitted by: Ronald Bautista"] }));
   const albumPhoto1 = await uploadPng("community-images", `${PROPERTY_ID}/demo/fiesta-1.png`, await makeCardPng({ title: "Marulas Fiesta 2026", subtitle: "Boodle fight at the rooftop", accent: "#7c3aed", lines: ["Thank you to everyone who joined!"], w: 1200, h: 900 }));
   const albumPhoto2 = await uploadPng("community-images", `${PROPERTY_ID}/demo/fiesta-2.png`, await makeCardPng({ title: "Marulas Fiesta 2026", subtitle: "Karaoke night, ground-floor lounge", accent: "#7c3aed", lines: ["Winner: Room 203 (Christine) — Tagumpay Nating Lahat"], w: 1200, h: 900 }));
   ok("Logo, GCash proof, maintenance photos and album images uploaded");
@@ -375,7 +405,7 @@ async function main() {
     two_factor_enabled: false, has_changed_password: true, is_account_claimed: true, updated_at: iso(new Date()),
   }], "id", "landlord profile");
   await upsert("profiles", Object.values(TENANTS).map((t) => ({
-    id: t.id, email: t.email, full_name: t.name, role: "tenant", phone: t.phone, avatar_url: t.avatar, avatar_bg_color: "#2f6f5e",
+    id: t.id, email: t.email, full_name: t.name, role: "tenant", phone: t.phone, avatar_url: t.avatar, avatar_bg_color: t.avatarBgColor,
     bio: t.bio, address: `${PROPERTY_NAME}, Room ${t.unit}, Marulas, Valenzuela City`,
     socials: { emergency_contact_name: t.emergency[0], emergency_contact_phone: t.emergency[1], occupation: t.occupation, employer: t.employer },
     two_factor_enabled: false, has_changed_password: true, is_account_claimed: true, updated_at: iso(new Date()),
@@ -630,6 +660,10 @@ async function main() {
   const joshuaOct = monthlyInvoice(TENANTS.joshua, 2026, 10, "under_review", { lateFee: LATE_FEE, submittedAt: "2026-10-12T12:41:00.000Z" });
   const gcashProof = await gcashProofFor(joshuaOct.amount);
   joshuaOct.payment_proof_path = gcashProof?.path ?? null; joshuaOct.payment_proof_url = gcashProof?.url ?? null;
+  // November bill for Joshua stays pending so Device 2 can demo Pay Now -> GCash -> Verify end-to-end without switching tenant accounts
+  const joshuaNov = monthlyInvoice(TENANTS.joshua, 2026, 11, "pending");
+  joshuaNov.due_date = "2026-11-15";
+  joshuaNov.description = "November 2026 — Rent & Utilities (Room 102)";
   // Ronald: Jan–Sep paid (cash); October unpaid, reminder already sent
   for (let m = 1; m <= 9; m++) monthlyInvoice(TENANTS.ronald, 2026, m, "paid_cash", { paidDay: 5 });
   const ronaldOct = monthlyInvoice(TENANTS.ronald, 2026, 10, "reminder_sent", { lateFee: LATE_FEE, reminderAt: "2026-10-08T01:30:00.000Z" });
@@ -691,10 +725,10 @@ async function main() {
   await insert("maintenance_requests", [
     { id: uid("mr:joshua:faucet"), unit_id: unitByName["102"].id, tenant_id: TENANTS.joshua.id, landlord_id: LANDLORD.id, title: "Leaking lavatory faucet", description: "Tumutulo po yung gripo sa lababo kahit nakasara. Umaabot ng kalahating timba sa loob ng 3 oras. Nag-corrode na ata yung supply line.", status: "in_progress", priority: "high", category: "plumbing", images: [leakPhoto1?.url].filter(Boolean), repair_method: "third_party", third_party_name: "Mang Dodong Plumbing Services (Marulas)", photo_requested: true, tenant_repair_status: "personnel_arrived", tenant_provided_photos: [leakPhoto1?.url].filter(Boolean), ai_triage_priority: "high", ai_triage_sentiment: "negative", ai_triage_reason: "Continuous water loss and risk of damage to the vanity; plumbing issue that worsens if deferred.", ai_triage_confidence: 0.91, ai_triage_version: "v2", ai_triaged_at: "2026-10-14T00:15:00.000Z", created_at: "2026-10-13T23:12:00.000Z", updated_at: hoursAgo(5) },
     { id: uid("mr:mark:outlet"), unit_id: unitByName["301"].id, tenant_id: TENANTS.mark.id, landlord_id: LANDLORD.id, title: "Wall outlet sparking when aircon is plugged in", description: "May spark at amoy sunog sa outlet malapit sa aircon. Hindi ko muna ginagamit. Discolored na po yung cover.", status: "open", priority: "urgent", category: "electrical", images: [outletPhoto?.url].filter(Boolean), ai_triage_priority: "urgent", ai_triage_sentiment: "distressed", ai_triage_reason: "Electrical arcing and burning smell indicate a fire hazard; isolate the circuit and dispatch an electrician immediately.", ai_triage_confidence: 0.97, ai_triage_version: "v2", ai_triaged_at: hoursAgo(10), created_at: hoursAgo(11), updated_at: hoursAgo(10) },
-    { id: uid("mr:christine:wifi"), unit_id: unitByName["203"].id, tenant_id: TENANTS.christine.id, landlord_id: LANDLORD.id, title: "Weak Wi-Fi signal on the 2nd floor", description: "Isang bar lang po ang Wi-Fi sa Room 203 tuwing gabi. Nahihirapan ako sa online classes ng kapatid ko pag bumibisita.", status: "assigned", priority: "medium", category: "internet", images: [], repair_method: "landlord", ai_triage_priority: "medium", ai_triage_sentiment: "neutral", ai_triage_reason: "Connectivity degradation; not safety-related. Suggest adding a mesh node on the 2nd floor.", ai_triage_confidence: 0.84, ai_triage_version: "v2", ai_triaged_at: daysAgo(3), created_at: daysAgo(3), updated_at: daysAgo(2) },
-    { id: uid("mr:maria:lock"), unit_id: unitByName["101"].id, tenant_id: TENANTS.maria.id, landlord_id: LANDLORD.id, title: "Door knob loose / hard to lock", description: "Maluwag na yung door knob at minsan hindi nala-lock mula sa labas.", status: "resolved", priority: "medium", category: "carpentry", images: [], repair_method: "landlord", tenant_repair_status: "done", resolved_at: "2026-09-21T06:30:00.000Z", ai_triage_priority: "medium", ai_triage_sentiment: "neutral", ai_triage_reason: "Security-related hardware fault; replace the lockset.", ai_triage_confidence: 0.88, ai_triage_version: "v2", ai_triaged_at: "2026-09-19T03:00:00.000Z", created_at: "2026-09-19T02:48:00.000Z", updated_at: "2026-09-21T06:30:00.000Z" },
-    { id: uid("mr:angelo:fan"), unit_id: unitByName["302"].id, tenant_id: TENANTS.angelo.id, landlord_id: LANDLORD.id, title: "Aircon not cooling, only blowing air", description: "Hindi na lumalamig yung aircon simula kahapon. Umaandar pero hangin lang.", status: "closed", priority: "high", category: "hvac", images: [], repair_method: "third_party", third_party_name: "CoolTech Aircon Cleaning – Karuhatan", tenant_repair_status: "done", resolved_at: "2026-08-03T09:00:00.000Z", created_at: "2026-07-30T13:20:00.000Z", updated_at: "2026-08-03T09:00:00.000Z" },
-    { id: uid("mr:ronald:selfrepair"), unit_id: unitByName["202"].id, tenant_id: TENANTS.ronald.id, landlord_id: LANDLORD.id, title: "Request to replace my own shower head", description: "Gusto ko po sanang palitan yung shower head ng handheld type. Ako na po ang bibili at mag-iinstall, pwede po ba?", status: "open", priority: "low", category: "plumbing", images: [], self_repair_requested: true, self_repair_decision: "pending", repair_method: "self_repair", created_at: daysAgo(1), updated_at: daysAgo(1) },
+    { id: uid("mr:christine:wifi"), unit_id: unitByName["203"].id, tenant_id: TENANTS.christine.id, landlord_id: LANDLORD.id, title: "Weak Wi-Fi signal on the 2nd floor", description: "Isang bar lang po ang Wi-Fi sa Room 203 tuwing gabi. Nahihirapan ako sa online classes ng kapatid ko pag bumibisita.", status: "assigned", priority: "medium", category: "internet", images: [wifiPhoto?.url].filter(Boolean), repair_method: "landlord", ai_triage_priority: "medium", ai_triage_sentiment: "neutral", ai_triage_reason: "Connectivity degradation; not safety-related. Suggest adding a mesh node on the 2nd floor.", ai_triage_confidence: 0.84, ai_triage_version: "v2", ai_triaged_at: daysAgo(3), created_at: daysAgo(3), updated_at: daysAgo(2) },
+    { id: uid("mr:maria:lock"), unit_id: unitByName["101"].id, tenant_id: TENANTS.maria.id, landlord_id: LANDLORD.id, title: "Door knob loose / hard to lock", description: "Maluwag na yung door knob at minsan hindi nala-lock mula sa labas.", status: "resolved", priority: "medium", category: "carpentry", images: [doorKnobPhoto?.url].filter(Boolean), repair_method: "landlord", tenant_repair_status: "done", resolved_at: "2026-09-21T06:30:00.000Z", ai_triage_priority: "medium", ai_triage_sentiment: "neutral", ai_triage_reason: "Security-related hardware fault; replace the lockset.", ai_triage_confidence: 0.88, ai_triage_version: "v2", ai_triaged_at: "2026-09-19T03:00:00.000Z", created_at: "2026-09-19T02:48:00.000Z", updated_at: "2026-09-21T06:30:00.000Z" },
+    { id: uid("mr:angelo:fan"), unit_id: unitByName["302"].id, tenant_id: TENANTS.angelo.id, landlord_id: LANDLORD.id, title: "Aircon not cooling, only blowing air", description: "Hindi na lumalamig yung aircon simula kahapon. Umaandar pero hangin lang.", status: "closed", priority: "high", category: "hvac", images: [airconPhoto?.url].filter(Boolean), repair_method: "third_party", third_party_name: "CoolTech Aircon Cleaning – Karuhatan", tenant_repair_status: "done", resolved_at: "2026-08-03T09:00:00.000Z", created_at: "2026-07-30T13:20:00.000Z", updated_at: "2026-08-03T09:00:00.000Z" },
+    { id: uid("mr:ronald:selfrepair"), unit_id: unitByName["202"].id, tenant_id: TENANTS.ronald.id, landlord_id: LANDLORD.id, title: "Request to replace my own shower head", description: "Gusto ko po sanang palitan yung shower head ng handheld type. Ako na po ang bibili at mag-iinstall, pwede po ba?", status: "open", priority: "low", category: "plumbing", images: [showerHeadPhoto?.url].filter(Boolean), self_repair_requested: true, self_repair_decision: "pending", repair_method: "self_repair", created_at: daysAgo(1), updated_at: daysAgo(1) },
   ], "maintenance");
   ok("6 tickets: urgent electrical (new), plumbing in progress, Wi-Fi assigned, self-repair request, 2 resolved/closed");
 
@@ -984,7 +1018,7 @@ async function main() {
 
   // ---- verify login -------------------------------------------------------
   step("Verifying logins");
-  for (const email of [LANDLORD.email, TENANTS.maria.email, TENANTS.katrina.email]) {
+  for (const email of [LANDLORD.email, TENANTS.joshua.email, TENANTS.maria.email, TENANTS.katrina.email]) {
     const r = await authProbe.auth.signInWithPassword({ email, password: PASSWORD });
     if (r.error) { console.error(`\x1b[31m✗ login failed for ${email}: ${r.error.message}\x1b[0m`); process.exit(1); }
     ok(`${email} can sign in`);
@@ -997,7 +1031,7 @@ async function main() {
     landlord: { email: LANDLORD.email, id: LANDLORD.id, property_id: PROPERTY_ID },
     tenants: Object.fromEntries(Object.values(TENANTS).map((t) => [t.key, { name: t.name, email: t.email, id: t.id, room: `Room ${t.unit}`, lease_id: t.leaseId }])),
     key_ids: {
-      joshua_october_payment: joshuaOct.id, ronald_october_payment: ronaldOct.id, angelo_october_payment: angeloOct.id, mark_november_payment: markNov.id,
+      joshua_october_payment: joshuaOct.id, joshua_november_payment: joshuaNov.id, ronald_october_payment: ronaldOct.id, angelo_october_payment: angeloOct.id, mark_november_payment: markNov.id,
       maria_october_payment: uid("pay:maria:2026-10-01"), katrina_lease: K.leaseId, katrina_application: uid("app:katrina"),
       jerome_application: uid("app:jerome"), patricia_application: uid("app:patricia"), kevin_application: uid("app:kevin"),
       renewal_christine: uid("renewal:christine"), moveout_ronald: uid("moveout:ronald"), transfer_angelo: uid("transfer:angelo"),

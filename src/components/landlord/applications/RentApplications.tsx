@@ -58,11 +58,14 @@ const WalkInApplicationModal = dynamic(() => import("@/components/landlord/appli
 
 import { TenantInviteManager, type InviteListItem } from "@/components/landlord/applications/TenantInviteManager";
 import { ContractPreviewModal } from "@/components/landlord/lease/ContractPreviewModal";
-import { UnitHoldModal } from "@/components/landlord/applications/UnitHoldModal";
+import { UnitHoldModal, type UnitHoldApplicantOption } from "@/components/landlord/applications/UnitHoldModal";
+import { ApproveConfirmationModal } from "@/components/landlord/applications/ApproveConfirmationModal";
 import { ResolveCompetingApplicantsModal, type CompetingApplicantItem } from "@/components/landlord/applications/ResolveCompetingApplicantsModal";
 import type { UnitHoldInfo } from "@/lib/application-intake";
 import { LeaseStatusBadge } from "@/components/landlord/leases/LeaseStatusBadge";
 import { LeaseAuditTrail, type LeaseAuditEvent } from "@/components/landlord/leases/LeaseAuditTrail";
+import { ScrollableWithHint } from "@/components/ui/ScrollableWithHint";
+import { CollapsiblePanel } from "@/components/ui/CollapsiblePanel";
 import type { LeaseStatus } from "@/types/database";
 const SignaturePad = dynamic(() => import("./SignaturePad").then(mod => mod.SignaturePad), {
  ssr: false,
@@ -184,45 +187,45 @@ type PaymentReviewAction =
 // ─── Status Config ────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: string; bgColor: string; borderColor: string; icon: React.ElementType }> = {
  pending: {
- label: "Pending Review",
- color: "text-amber-500",
- bgColor: "bg-amber-500/10",
- borderColor: "border-amber-500/20",
+ label: "Needs Review",
+ color: "text-amber-700 dark:text-amber-300",
+ bgColor: "bg-amber-500/12",
+ borderColor: "border-amber-500/30",
  icon: Clock,
  },
  reviewing: {
- label: "Under Review",
- color: "text-blue-500",
- bgColor: "bg-blue-500/10",
- borderColor: "border-blue-500/20",
+ label: "In Review",
+ color: "text-blue-700 dark:text-blue-300",
+ bgColor: "bg-blue-500/12",
+ borderColor: "border-blue-500/30",
  icon: Eye,
  },
  payment_pending: {
- label: "Payment Pending",
- color: "text-violet-500",
- bgColor: "bg-violet-500/10",
- borderColor: "border-violet-500/20",
+ label: "Waiting Payment",
+ color: "text-violet-700 dark:text-violet-300",
+ bgColor: "bg-violet-500/12",
+ borderColor: "border-violet-500/30",
  icon: Wallet,
  },
  approved: {
  label: "Approved",
- color: "text-emerald-500",
- bgColor: "bg-emerald-500/10",
- borderColor: "border-emerald-500/20",
+ color: "text-emerald-700 dark:text-emerald-300",
+ bgColor: "bg-emerald-500/12",
+ borderColor: "border-emerald-500/30",
  icon: CheckCircle2,
  },
  rejected: {
- label: "Rejected",
- color: "text-red-500",
+ label: "Declined",
+ color: "text-red-700 dark:text-red-300",
  bgColor: "bg-red-500/10",
- borderColor: "border-red-500/20",
+ borderColor: "border-red-500/25",
  icon: XCircle,
  },
  withdrawn: {
- label: "Withdrawn",
- color: "text-zinc-500",
+ label: "Cancelled",
+ color: "text-zinc-600 dark:text-zinc-300",
  bgColor: "bg-zinc-500/10",
- borderColor: "border-zinc-500/20",
+ borderColor: "border-zinc-500/25",
  icon: AlertCircle,
  },
 };
@@ -388,6 +391,7 @@ export function RentApplications() {
  unitId: string;
  unitName: string;
  propertyName: string;
+ applicantOptions: UnitHoldApplicantOption[];
  defaultApplicantName: string;
  defaultApplicationId: string | null;
  competingApplicantsCount: number;
@@ -453,6 +457,24 @@ export function RentApplications() {
  const [leasePdfBlob, setLeasePdfBlob] = useState<Blob | null>(null);
  const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
  const [declineReason, setDeclineReason] = useState("");
+ const [showMoreActions, setShowMoreActions] = useState(false);
+ const [showApplicantDetails, setShowApplicantDetails] = useState(true);
+ const [showQuickApproveConfirm, setShowQuickApproveConfirm] = useState(false);
+ const [expandedCardIds, setExpandedCardIds] = useState<Record<string, boolean>>({});
+ const latestChecklistRef = useRef<Record<string, Record<string, boolean>>>({});
+ const confirmedChecklistRef = useRef<Record<string, Record<string, boolean>>>({});
+ const checklistInflightRef = useRef<Record<string, boolean>>({});
+ const checklistDirtyRef = useRef<Record<string, boolean>>({});
+
+ const toggleCardExpanded = (id: string) => {
+  setExpandedCardIds((prev) => ({ ...prev, [id]: !prev[id] }));
+ };
+
+ useEffect(() => {
+  setShowMoreActions(false);
+  setShowApplicantDetails(true);
+  setShowQuickApproveConfirm(false);
+ }, [selectedApp?.id]);
 
  // Inline validation for the decline / bypass / discrepancy modals (same rules as their API routes).
  const declineForm = useFormValidation(
@@ -669,26 +691,71 @@ export function RentApplications() {
   }, [user?.id, supabase, refreshApplications]);
 
 
- const toggleRequirement = async (applicationId: string, currentChecklist: Record<string, boolean>, key: string) => {
- const updatedChecklist = { ...currentChecklist, [key]: !currentChecklist[key] };
- const updateStates = (checklist: Record<string, boolean>) => {
- setApplications(prev => prev.map(a => a.id === applicationId ? { ...a, complianceChecklist: checklist as RentApplication['complianceChecklist'] } : a));
- if (selectedApp?.id === applicationId) {
- setSelectedApp(prev => prev ? { ...prev, complianceChecklist: checklist as RentApplication['complianceChecklist'] } : null);
- }
+ const flushRequirementSync = async (applicationId: string) => {
+  if (checklistInflightRef.current[applicationId]) {
+   checklistDirtyRef.current[applicationId] = true;
+   return;
+  }
+
+  checklistInflightRef.current[applicationId] = true;
+  try {
+   while (true) {
+    checklistDirtyRef.current[applicationId] = false;
+    const payloadToSync = latestChecklistRef.current[applicationId];
+    if (!payloadToSync) break;
+
+    const res = await fetch("/api/landlord/applications/tenant-application", {
+     method: "PATCH",
+     headers: { "Content-Type": "application/json" },
+     body: JSON.stringify({ application_id: applicationId, requirements_checklist: payloadToSync }),
+    });
+    if (!res.ok) throw new Error("Failed update");
+
+    confirmedChecklistRef.current[applicationId] = payloadToSync;
+
+    if (!checklistDirtyRef.current[applicationId]) {
+     break;
+    }
+   }
+  } catch {
+   if (!checklistDirtyRef.current[applicationId]) {
+    const fallback = confirmedChecklistRef.current[applicationId];
+    if (fallback) {
+     latestChecklistRef.current[applicationId] = fallback;
+     setApplications(prev =>
+      prev.map(a => a.id === applicationId ? { ...a, complianceChecklist: fallback as RentApplication['complianceChecklist'] } : a)
+     );
+     setSelectedApp(prev =>
+      prev && prev.id === applicationId ? { ...prev, complianceChecklist: fallback as RentApplication['complianceChecklist'] } : prev
+     );
+    }
+   }
+   setActionError("Failed to sync requirement status.");
+  } finally {
+   checklistInflightRef.current[applicationId] = false;
+   if (checklistDirtyRef.current[applicationId]) {
+    void flushRequirementSync(applicationId);
+   }
+  }
  };
- updateStates(updatedChecklist);
- try {
- const res = await fetch("/api/landlord/applications/tenant-application", {
- method: "PATCH",
- headers: { "Content-Type": "application/json" },
- body: JSON.stringify({ application_id: applicationId, requirements_checklist: updatedChecklist })
- });
- if (!res.ok) throw new Error("Failed update");
- } catch {
- updateStates(currentChecklist);
- setActionError("Failed to sync requirement status.");
- }
+
+ const toggleRequirement = (applicationId: string, currentChecklist: Record<string, boolean>, key: string) => {
+  const baseChecklist = latestChecklistRef.current[applicationId] ?? currentChecklist;
+  if (!confirmedChecklistRef.current[applicationId]) {
+   confirmedChecklistRef.current[applicationId] = baseChecklist;
+  }
+
+  const updatedChecklist = { ...baseChecklist, [key]: !baseChecklist[key] };
+  latestChecklistRef.current[applicationId] = updatedChecklist;
+
+  setApplications(prev =>
+   prev.map(a => a.id === applicationId ? { ...a, complianceChecklist: updatedChecklist as RentApplication['complianceChecklist'] } : a)
+  );
+  setSelectedApp(prev =>
+   prev && prev.id === applicationId ? { ...prev, complianceChecklist: updatedChecklist as RentApplication['complianceChecklist'] } : prev
+  );
+
+  void flushRequirementSync(applicationId);
  };
 
  const loadUnits = useCallback(async (fresh = false) => {
@@ -785,6 +852,7 @@ export function RentApplications() {
  refreshApplications();
  void loadUnits(true);
  
+ setShowQuickApproveConfirm(false);
  setShowContractModal(false);
  setSelectedApp(null);
 
@@ -1175,110 +1243,155 @@ export function RentApplications() {
  </p>
  </div>
  ) : (
- <div className="space-y-3">
+ <div className="space-y-3.5">
  <AnimatePresence mode="popLayout">
  {filteredApplications.map((app, idx) => {
  const config = STATUS_CONFIG[app.status];
+ const unitKey = app.unitId || `${app.propertyId ?? ""}:${app.unitNumber}`;
+ const othersCount = Math.max(0, (activeApplicantsByUnitKey.get(unitKey)?.length ?? 1) - 1);
+ const unitObj = availableUnits.find(u => u.id === app.unitId || (u.name === app.unitNumber && u.property_id === app.propertyId));
+ const hasCallouts = othersCount > 0 || Boolean(unitObj?.is_on_hold) || (app.unitOffer?.status === "pending" && Boolean(app.unitOffer.target_unit_name));
+ const isExpanded = Boolean(expandedCardIds[app.id]);
+
  return (
  <motion.div
  key={app.id}
- layout
  initial={{ opacity: 0, y: 10 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: idx * 0.03 }}
- onClick={() => setSelectedApp(app)}
- className="group relative flex cursor-pointer items-center overflow-hidden rounded-3xl neumorphic-extruded p-3 transition-all hover:border-primary/20 hover:neumorphic-panel active:scale-[0.99]"
+ className="group relative rounded-2xl bg-card border border-border/75 shadow-xs transition-all hover:border-primary/40 hover:shadow-sm overflow-hidden"
  >
- <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl neumorphic-inset">
- <Image src={resolveImage(app.propertyImage)} alt="" fill sizes="112px" className="object-cover transition-transform duration-700 group-hover:scale-110" />
- <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
- <span className="absolute bottom-2 left-2 text-[10px] font-black text-white">{app.unitNumber}</span>
- </div>
+ <button
+  type="button"
+  onClick={() => toggleCardExpanded(app.id)}
+  aria-expanded={isExpanded}
+  className="w-full p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left hover:bg-muted/20 transition-colors cursor-pointer"
+ >
+  <div className="flex items-center gap-4 min-w-0 flex-1">
+   <div className="relative h-14 w-16 shrink-0 overflow-hidden rounded-xl border border-border/50 hidden sm:block">
+    <Image src={resolveImage(app.propertyImage)} alt={app.propertyName} fill sizes="64px" className="object-cover" />
+   </div>
 
- <div className="grid flex-1 grid-cols-1 items-center gap-6 px-6 lg:grid-cols-[1fr_120px_180px] xl:grid-cols-[1fr_120px_120px_180px]">
- <div className="flex items-center gap-4 min-w-0">
- {(() => {
- const avatarStyle = getApplicantAvatarStyles(app.applicant);
-   return (
-                        <div 
-                          style={avatarStyle.style}
-                          className={cn(
-                            "relative size-12 shrink-0 rounded-full border-2 flex items-center justify-center font-black text-sm transition-all",
-                            avatarStyle.className
-                          )}
-                        >
-                          {app.applicant.avatar ? (
-                            <Image src={app.applicant.avatar} alt={t("{name} avatar", { name: app.applicant.name })} fill sizes="48px" className="object-cover rounded-full" />
-                          ) : (
-                            app.applicant.name[0]?.toUpperCase() || "?"
-                          )}
-                        </div>
-                      );
-                    })()}
- <div className="min-w-0 flex-1">
- <div className="flex flex-wrap items-center gap-2">
- <h3 className="truncate text-lg font-black tracking-tight text-foreground group-hover:text-primary transition-colors">{app.applicant.name}</h3>
- {(() => {
-   const unitKey = app.unitId || `${app.propertyId ?? ""}:${app.unitNumber}`;
-   const othersCount = (activeApplicantsByUnitKey.get(unitKey)?.length ?? 1) - 1;
-   const unitObj = availableUnits.find(u => u.id === app.unitId || (u.name === app.unitNumber && u.property_id === app.propertyId));
-   return (
-     <>
-       <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground">
-         {app.source === "invite_link" ? t("Online Invite") : t("Walk-in")}
-       </span>
-       {othersCount > 0 && (
-         <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">
-           <Users className="size-3" />
-           {t("+{count} other applicant(s) for {unit}", { count: othersCount, unit: app.unitNumber })}
-         </span>
-       )}
-       {unitObj?.is_on_hold && (
-         <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 dark:text-amber-200">
-           <Lock className="size-3" />
-           {t("Held for {name}", { name: unitObj.hold_info?.held_for_name || "Applicant" })}
-         </span>
-       )}
-       {app.unitOffer?.status === "pending" && app.unitOffer.target_unit_name && (
-         <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 border border-primary/30 px-2.5 py-0.5 text-[10px] font-bold text-primary">
-           <ArrowRightLeft className="size-3" />
-           {t("Offered {unit} • Awaiting Choice", { unit: app.unitOffer.target_unit_name })}
-         </span>
-       )}
-     </>
-   );
- })()}
- </div>
- <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate mt-0.5">
- <Briefcase className="size-3 shrink-0" />
- {app.applicant.occupation || t("Unspecified")}
- </p>
- </div>
- </div>
+   {(() => {
+    const avatarStyle = getApplicantAvatarStyles(app.applicant);
+    return (
+     <div
+      style={avatarStyle.style}
+      className={cn(
+       "relative size-12 shrink-0 rounded-full border-2 flex items-center justify-center font-bold text-base transition-all",
+       avatarStyle.className
+      )}
+     >
+      {app.applicant.avatar ? (
+       <Image src={app.applicant.avatar} alt={t("{name} avatar", { name: app.applicant.name })} fill sizes="48px" className="object-cover rounded-full" />
+      ) : (
+       app.applicant.name[0]?.toUpperCase() || "?"
+      )}
+     </div>
+    );
+   })()}
 
- <div className="hidden lg:flex flex-col">
- <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{t("Rent")}</span>
- <span className="text-sm font-black text-foreground">{formatCurrency(app.monthlyRent)}</span>
- </div>
+   <div className="min-w-0 flex-1">
+    <div className="flex flex-wrap items-center gap-2">
+     <h3 className="text-lg font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
+      {app.applicant.name}
+     </h3>
+     {!isExpanded && othersCount > 0 && (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/12 border border-amber-500/30 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:text-amber-300">
+       <Users className="size-3.5 shrink-0" />
+       {othersCount === 1 ? t("1 other applicant") : t("{count} other applicants", { count: othersCount })}
+      </span>
+     )}
+    </div>
+    <p className="text-sm text-muted-foreground mt-0.5">
+     <span className="font-semibold text-foreground">{app.unitNumber}</span>
+     {" • "}
+     <span>{app.propertyName}</span>
+    </p>
+   </div>
+  </div>
 
- <div className="hidden xl:flex flex-col">
- <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{t("Move-in")}</span>
- <span className="text-sm font-black text-foreground">{formatDate(app.requestedMoveIn)}</span>
- </div>
-
- <div className="flex items-center justify-end gap-3">
- <div className={cn(
- "flex items-center gap-2 rounded-xl border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest whitespace-nowrap",
- config.bgColor, config.borderColor, config.color
- )}>
- <config.icon className="size-3.5" />
- {t(config.label)}
- </div>
- <button aria-label={t("View application")} className="neumorphic-extruded flex size-10 shrink-0 items-center justify-center rounded-xl neumorphic-panel transition-all text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary">
- <Eye className="size-4" />
+  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+   <div className={cn(
+    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold whitespace-nowrap",
+    config.bgColor, config.borderColor, config.color
+   )}>
+    <config.icon className="size-3.5 shrink-0" />
+    <span>{t(config.label)}</span>
+   </div>
+   <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground px-2">
+    <span>{isExpanded ? t("Hide") : t("Show")}</span>
+    <ChevronDown className={cn("size-5 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]", isExpanded && "rotate-180")} />
+   </div>
+  </div>
  </button>
- </div>
- </div>
+
+ <CollapsiblePanel isOpen={isExpanded}>
+  <div className="border-t border-border/60 p-5 pt-4 space-y-4 bg-muted/10">
+   {hasCallouts && (
+    <div className="flex flex-wrap items-center gap-2">
+     {othersCount > 0 && (
+      <span className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/12 border border-amber-500/30 px-3 py-1.5 text-xs font-semibold text-amber-900 dark:text-amber-200">
+       <Users className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+       {othersCount === 1
+        ? t("1 other person also applied for {unit}", { unit: app.unitNumber })
+        : t("{count} other people also applied for {unit}", { count: othersCount, unit: app.unitNumber })}
+      </span>
+     )}
+     {unitObj?.is_on_hold && (
+      <span className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/12 border border-amber-500/30 px-3 py-1.5 text-xs font-semibold text-amber-900 dark:text-amber-200">
+       <Lock className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+       {t("On hold for {name}", { name: unitObj.hold_info?.held_for_name || "Applicant" })}
+      </span>
+     )}
+     {app.unitOffer?.status === "pending" && app.unitOffer.target_unit_name && (
+      <span className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 border border-primary/25 px-3 py-1.5 text-xs font-semibold text-primary">
+       <ArrowRightLeft className="size-3.5 shrink-0" />
+       {t("Offered {unit} — waiting for reply", { unit: app.unitOffer.target_unit_name })}
+      </span>
+     )}
+    </div>
+   )}
+
+   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-background border border-border/60 flex-1">
+     <div>
+      <span className="text-xs text-muted-foreground block">{t("Occupation")}</span>
+      <span className="text-sm font-semibold text-foreground block truncate mt-0.5">
+       {app.applicant.occupation || t("Not stated")}
+      </span>
+     </div>
+     <div>
+      <span className="text-xs text-muted-foreground block">{t("Monthly Income")}</span>
+      <span className="text-sm font-bold text-foreground tabular-nums block mt-0.5">
+       {formatCurrency(app.applicant.monthlyIncome)}
+      </span>
+     </div>
+     <div>
+      <span className="text-xs text-muted-foreground block">{t("Room Rent")}</span>
+      <span className="text-sm font-semibold text-foreground tabular-nums block mt-0.5">
+       {formatCurrency(app.monthlyRent)} / {t("mo")}
+      </span>
+     </div>
+     <div>
+      <span className="text-xs text-muted-foreground block">{t("Move-in")}</span>
+      <span className="text-sm font-semibold text-foreground tabular-nums block mt-0.5">
+       {formatDate(app.requestedMoveIn)}
+      </span>
+     </div>
+    </div>
+
+    <button
+     type="button"
+     onClick={() => setSelectedApp(app)}
+     className="min-h-[48px] px-5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+    >
+     <span>{t("Review Details")}</span>
+     <ArrowRight className="size-4 shrink-0" />
+    </button>
+   </div>
+  </div>
+ </CollapsiblePanel>
  </motion.div>
  );
  })}
@@ -1314,7 +1427,7 @@ export function RentApplications() {
  {t("Application Record")}
  </div>
  <h2 className="text-3xl font-black tracking-tighter text-foreground">
- {t("Dossier")} <span className="text-muted-foreground/40">{t("Review")}</span>
+ {t("Application")} <span className="text-muted-foreground/40">{t("Review")}</span>
  </h2>
  </div>
  <div className="flex items-center gap-2">
@@ -1324,138 +1437,173 @@ export function RentApplications() {
  </div>
  </div>
 
- <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
- {selectedApp.status !== "approved" && (
- <div className="rounded-2xl bg-primary/5 p-5 space-y-4">
- <div className="flex flex-wrap items-center gap-3">
- <button
- onClick={() => handleQuickApprove()}
- disabled={updatingStatusId === selectedApp.id}
- className="flex h-12 items-center gap-2 rounded-xl bg-emerald-600 px-5 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-500 disabled:opacity-50 cursor-pointer"
+ <ScrollableWithHint
+  className="custom-scrollbar"
+  contentClassName="p-8 space-y-6"
+  fadeColor="background"
+  resetKey={selectedApp.id}
+  hintText={t("More details below • Scroll down")}
  >
- {updatingStatusId === selectedApp.id ? (
- <Loader2 className="size-4 animate-spin" />
- ) : (
- <Zap className="size-4" />
- )}
- {t("Quick Approve")}
- </button>
- <button
- onClick={() => openApprovalModal(selectedApp)}
- className="flex h-12 items-center gap-2 rounded-xl bg-primary/10 px-5 text-xs font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/20 cursor-pointer"
- >
- <Wallet className="size-4" />
- {selectedApp.status === "payment_pending" ? t("Approve Application") : t("Request Payment")}
- </button>
- {(() => {
-   const matchedUnit = availableUnits.find(
-     u => u.id === selectedApp.unitId || (u.name === selectedApp.unitNumber && u.property_id === selectedApp.propertyId)
-   );
-   const resolvedUnitId = selectedApp.unitId || matchedUnit?.id || "";
-   const unitKey = selectedApp.unitId || `${selectedApp.propertyId ?? ""}:${selectedApp.unitNumber}`;
-   const competingList = (activeApplicantsByUnitKey.get(unitKey) ?? []).filter(a => a.id !== selectedApp.id);
+ {!["approved", "rejected", "withdrawn"].includes(selectedApp.status) && (() => {
+  const matchedUnit = availableUnits.find(
+   u => u.id === selectedApp.unitId || (u.name === selectedApp.unitNumber && u.property_id === selectedApp.propertyId)
+  );
+  const resolvedUnitId = selectedApp.unitId || matchedUnit?.id || "";
+  const unitKey = selectedApp.unitId || `${selectedApp.propertyId ?? ""}:${selectedApp.unitNumber}`;
+  const competingList = (activeApplicantsByUnitKey.get(unitKey) ?? []).filter(a => a.id !== selectedApp.id);
 
-   return (
-     <>
-       {resolvedUnitId && (
-         <button
-           type="button"
-           onClick={() =>
-             setUnitHoldModalState({
-               isOpen: true,
-               unitId: resolvedUnitId,
-               unitName: selectedApp.unitNumber,
-               propertyName: selectedApp.propertyName,
-               defaultApplicantName: selectedApp.applicant.name,
-               defaultApplicationId: selectedApp.id,
-               competingApplicantsCount: competingList.length,
-               existingHold: matchedUnit?.hold_info ?? null,
-             })
-           }
-           className="flex h-12 items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 text-xs font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-500/20 transition-all cursor-pointer"
-         >
-           <Lock className="size-4" />
-           {matchedUnit?.is_on_hold ? t("Manage Room Hold") : t("Hold Room")}
-         </button>
-       )}
-       <button
-         type="button"
-         onClick={() =>
-           setResolveModalState({
-             isOpen: true,
-             takenUnitId: resolvedUnitId,
-             takenUnitName: selectedApp.unitNumber,
-             propertyName: selectedApp.propertyName,
-             propertyId: selectedApp.propertyId ?? matchedUnit?.property_id ?? null,
-             competingApplicants: [
-               {
-                 id: selectedApp.id,
-                 name: selectedApp.applicant.name,
-                 email: selectedApp.applicant.email,
-                 status: selectedApp.status,
-                 source: selectedApp.source,
-               },
-             ],
-           })
-         }
-         className="flex h-12 items-center gap-2 rounded-xl border border-border bg-background px-4 text-xs font-bold text-foreground hover:bg-muted transition-all cursor-pointer"
-       >
-         <ArrowRightLeft className="size-4" />
-         {t("Offer Another Room")}
-       </button>
-     </>
-   );
- })()}
- </div>
- {(() => {
-   const unitKey = selectedApp.unitId || `${selectedApp.propertyId ?? ""}:${selectedApp.unitNumber}`;
-   const competingList = (activeApplicantsByUnitKey.get(unitKey) ?? []).filter(a => a.id !== selectedApp.id);
-   if (competingList.length === 0) return null;
-   const resolvedUnitId =
-     selectedApp.unitId ||
-     availableUnits.find(u => u.name === selectedApp.unitNumber && u.property_id === selectedApp.propertyId)?.id ||
-     "";
-   return (
-     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5">
-       <div className="flex items-center gap-2.5">
-         <Users className="size-5 text-amber-600 dark:text-amber-400 shrink-0" />
-         <p className="text-xs font-bold text-foreground">
-           {t("{count} other applicant(s) also applied for {unit}.", {
-             count: competingList.length,
-             unit: selectedApp.unitNumber,
-           })}
-         </p>
-       </div>
-       <button
-         type="button"
-         onClick={() =>
-           setResolveModalState({
-             isOpen: true,
-             takenUnitId: resolvedUnitId,
-             takenUnitName: selectedApp.unitNumber,
-             propertyName: selectedApp.propertyName,
-             propertyId: selectedApp.propertyId ?? null,
-             competingApplicants: competingList.map(c => ({
-               id: c.id,
-               name: c.applicant.name,
-               email: c.applicant.email,
-               status: c.status,
-               source: c.source,
-             })),
-           })
-         }
-         className="shrink-0 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-amber-500 transition-colors"
-       >
-         {t("Manage Other Applicants")}
-       </button>
+  return (
+   <div className="space-y-3">
+    {competingList.length > 0 && (
+     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-amber-500/35 bg-amber-500/10 p-4">
+      <div className="flex items-center gap-3">
+       <Users className="size-5 text-amber-600 dark:text-amber-400 shrink-0" />
+       <p className="text-sm font-semibold text-foreground leading-snug">
+        {t("{count} other applicant(s) also applied for {unit}.", {
+         count: competingList.length,
+         unit: selectedApp.unitNumber,
+        })}
+       </p>
+      </div>
+      <button
+       type="button"
+       onClick={() =>
+        setResolveModalState({
+         isOpen: true,
+         takenUnitId: resolvedUnitId,
+         takenUnitName: selectedApp.unitNumber,
+         propertyName: selectedApp.propertyName,
+         propertyId: selectedApp.propertyId ?? matchedUnit?.property_id ?? null,
+         competingApplicants: competingList.map(c => ({
+          id: c.id,
+          name: c.applicant.name,
+          email: c.applicant.email,
+          status: c.status,
+          source: c.source,
+         })),
+        })
+       }
+       className="shrink-0 min-h-[44px] rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-500 transition-colors cursor-pointer"
+      >
+       {t("View Other Applicants")}
+      </button>
      </div>
-   );
+    )}
+
+    <div className="rounded-2xl border border-border/70 bg-muted/20 overflow-hidden">
+     <button
+      type="button"
+      onClick={() => setShowMoreActions(prev => !prev)}
+      aria-expanded={showMoreActions}
+      className="w-full min-h-[52px] px-4 py-3 flex items-center justify-between gap-3 text-left hover:bg-muted/40 transition-colors cursor-pointer"
+     >
+      <div className="min-w-0">
+       <p className="text-sm font-bold text-foreground">
+        {t("Other Actions")}
+       </p>
+       <p className="text-xs text-muted-foreground mt-0.5">
+        {t("Hold room, offer another room, or approve without payment")}
+       </p>
+      </div>
+      <ChevronDown
+       className={cn(
+        "size-5 text-muted-foreground shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        showMoreActions && "rotate-180"
+       )}
+      />
+     </button>
+
+     <CollapsiblePanel isOpen={showMoreActions}>
+      <div className="border-t border-border/60 p-3.5 space-y-2.5 bg-background/50">
+       <button
+        type="button"
+        onClick={() => {
+         setActionError(null);
+         setShowQuickApproveConfirm(true);
+        }}
+        disabled={updatingStatusId === selectedApp.id}
+        className="w-full min-h-[48px] px-4 py-2.5 rounded-xl bg-emerald-600/10 border border-emerald-600/25 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600/15 transition-colors flex items-center justify-between gap-3 text-left disabled:opacity-50 cursor-pointer"
+       >
+        <div className="flex items-center gap-3 min-w-0">
+         {updatingStatusId === selectedApp.id ? (
+          <Loader2 className="size-4 animate-spin shrink-0" />
+         ) : (
+          <Zap className="size-4 shrink-0" />
+         )}
+         <div className="min-w-0">
+          <p className="text-sm font-bold leading-tight">{t("Quick Approve (Skip Payment)")}</p>
+          <p className="text-xs text-emerald-700/80 dark:text-emerald-300/80 mt-0.5">
+           {t("Skip payment and directly create tenant account.")}
+          </p>
+         </div>
+        </div>
+       </button>
+
+       <div className={cn("grid gap-2.5", resolvedUnitId ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1")}>
+        {resolvedUnitId && (
+         <button
+          type="button"
+          onClick={() => {
+           const unitApplicants = activeApplicantsByUnitKey.get(unitKey) ?? [];
+           const allCandidates = unitApplicants.some((a) => a.id === selectedApp.id)
+            ? unitApplicants
+            : [selectedApp, ...unitApplicants];
+           setUnitHoldModalState({
+            isOpen: true,
+            unitId: resolvedUnitId,
+            unitName: selectedApp.unitNumber,
+            propertyName: selectedApp.propertyName,
+            applicantOptions: allCandidates.map((a) => ({
+             id: a.id,
+             name: a.applicant.name,
+             subtitle: a.applicant.email || a.applicant.phone || null,
+             status: a.status === "pending" ? t("Pending") : a.status === "reviewing" ? t("Under Review") : a.status,
+            })),
+            defaultApplicantName: selectedApp.applicant.name,
+            defaultApplicationId: selectedApp.id,
+            competingApplicantsCount: competingList.length,
+            existingHold: matchedUnit?.hold_info ?? null,
+           });
+          }}
+          className="min-h-[48px] px-4 py-2.5 rounded-xl border border-amber-500/35 bg-amber-500/10 text-amber-800 dark:text-amber-300 hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-2 text-sm font-bold cursor-pointer"
+         >
+          <Lock className="size-4 shrink-0" />
+          <span>{matchedUnit?.is_on_hold ? t("Manage Room Hold") : t("Hold Room")}</span>
+         </button>
+        )}
+
+        <button
+         type="button"
+         onClick={() =>
+          setResolveModalState({
+           isOpen: true,
+           takenUnitId: resolvedUnitId,
+           takenUnitName: selectedApp.unitNumber,
+           propertyName: selectedApp.propertyName,
+           propertyId: selectedApp.propertyId ?? matchedUnit?.property_id ?? null,
+           competingApplicants: [
+            {
+             id: selectedApp.id,
+             name: selectedApp.applicant.name,
+             email: selectedApp.applicant.email,
+             status: selectedApp.status,
+             source: selectedApp.source,
+            },
+           ],
+          })
+         }
+         className="min-h-[48px] px-4 py-2.5 rounded-xl border border-border bg-background text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-2 text-sm font-bold cursor-pointer"
+        >
+         <ArrowRightLeft className="size-4 shrink-0" />
+         <span>{t("Offer Another Room")}</span>
+        </button>
+       </div>
+      </div>
+     </CollapsiblePanel>
+    </div>
+   </div>
+  );
  })()}
- <p className="text-[10px] font-medium text-muted-foreground">
- {t("Quick Approve skips payment and directly creates tenant account.")}
- </p>
- </div>
- )}
  {/* Hero Card */}
  <div className="relative h-48 w-full overflow-hidden rounded-[2.5rem] neumorphic-inset ">
  <Image src={resolveImage(selectedApp.propertyImage)} alt="" fill sizes="(max-width: 768px) 100vw, 800px" className="object-cover opacity-60" />
@@ -1778,41 +1926,58 @@ export function RentApplications() {
             </div>
           )}
 
-          {/* Applicant Profile */}
- <div className="space-y-4">
- <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">{t("Tenant Profile")}</h4>
- <div className="rounded-[2.5rem] neumorphic-extruded p-8 space-y-8">
- <div className="flex items-center gap-6">
- {(() => {
- const avatarStyle = getApplicantAvatarStyles(selectedApp.applicant);
-   return (
-                            <div 
-                              style={avatarStyle.style}
-                              className={cn(
-                                "relative size-20 rounded-full border-4 flex items-center justify-center text-3xl font-black transition-all",
-                                avatarStyle.className
-                              )}
-                            >
-                              {selectedApp.applicant.avatar ? (
-                                <Image src={selectedApp.applicant.avatar} alt={t("{name} avatar", { name: selectedApp.applicant.name })} fill sizes="80px" className="object-cover rounded-full" />
-                              ) : (
-                                selectedApp.applicant.name[0]?.toUpperCase() || "?"
-                              )}
-                            </div>
-                          );
-                        })()}
- <div>
- <h3 className="text-2xl font-black text-foreground">{selectedApp.applicant.name}</h3>
- <p className="text-sm font-black text-muted-foreground">{selectedApp.applicant.occupation || t("Unspecified Occupation")}</p>
- </div>
- </div>
+          {/* Collapsible Applicant Profile */}
+ <div className="space-y-3">
+ <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">{t("Applicant Details")}</h4>
+ <div className="rounded-[2rem] neumorphic-extruded overflow-hidden">
+ <button
+  type="button"
+  onClick={() => setShowApplicantDetails(prev => !prev)}
+  aria-expanded={showApplicantDetails}
+  className="w-full p-6 flex items-center justify-between gap-4 text-left hover:bg-muted/20 transition-colors cursor-pointer"
+ >
+  <div className="flex items-center gap-4 min-w-0">
+  {(() => {
+  const avatarStyle = getApplicantAvatarStyles(selectedApp.applicant);
+    return (
+                             <div 
+                               style={avatarStyle.style}
+                               className={cn(
+                                 "relative size-14 shrink-0 rounded-full border-2 flex items-center justify-center text-xl font-black transition-all",
+                                 avatarStyle.className
+                               )}
+                             >
+                               {selectedApp.applicant.avatar ? (
+                                 <Image src={selectedApp.applicant.avatar} alt={t("{name} avatar", { name: selectedApp.applicant.name })} fill sizes="56px" className="object-cover rounded-full" />
+                               ) : (
+                                 selectedApp.applicant.name[0]?.toUpperCase() || "?"
+                               )}
+                             </div>
+                           );
+                         })()}
+  <div className="min-w-0">
+  <h3 className="text-xl font-black text-foreground truncate">{selectedApp.applicant.name}</h3>
+  <p className="text-sm font-semibold text-muted-foreground truncate">
+   {selectedApp.applicant.occupation || t("Unspecified Occupation")}
+   {" • "}
+   {formatCurrency(selectedApp.applicant.monthlyIncome)}/mo
+  </p>
+  </div>
+  </div>
+  <div className="flex items-center gap-2 shrink-0 text-xs font-bold text-muted-foreground">
+   <span className="hidden sm:inline">{showApplicantDetails ? t("Hide") : t("Show")}</span>
+   <ChevronDown className={cn("size-5 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]", showApplicantDetails && "rotate-180")} />
+  </div>
+ </button>
 
- <div className="grid grid-cols-2 gap-6">
+ <CollapsiblePanel isOpen={showApplicantDetails}>
+ <div className="border-t border-border/50 px-6 sm:px-8 pb-6 pt-5">
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
  <div className="space-y-1">
  <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
  <Mail className="size-3" /> {t("Email")}
  </span>
- <p className="text-sm font-black text-foreground">{selectedApp.applicant.email}</p>
+ <p className="text-sm font-black text-foreground break-all">{selectedApp.applicant.email}</p>
  </div>
  <div className="space-y-1">
  <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
@@ -1850,6 +2015,8 @@ export function RentApplications() {
  </p>
  </div>
  </div>
+ </div>
+ </CollapsiblePanel>
  </div>
  </div>
 
@@ -2041,26 +2208,26 @@ export function RentApplications() {
  </div>
  </div>
  )}
- </div>
+ </ScrollableWithHint>
 
- <div className="border-t border-white/5 neumorphic-panel p-8 backdrop-blur-xl">
+ <div className="border-t border-white/5 neumorphic-panel p-6 sm:p-8 backdrop-blur-xl">
   {selectedApp.status === "pending" || selectedApp.status === "reviewing" ? (
-  <div className="flex gap-4">
-  <button onClick={() => { setDeclineReason(""); setShowDeclineConfirm(true); }} className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/5 py-4 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer">
+  <div className="flex gap-3">
+  <button onClick={() => { setDeclineReason(""); setShowDeclineConfirm(true); }} className="flex-1 min-h-[48px] rounded-2xl border border-red-500/25 bg-red-500/10 py-3.5 px-4 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer">
   {t("Decline")}
   </button>
-  <button onClick={() => openApprovalModal(selectedApp)} className="flex-[2] rounded-2xl bg-primary py-4 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95 cursor-pointer">
-  {t("Move to Approval")}
+  <button onClick={() => openApprovalModal(selectedApp)} className="flex-[2] min-h-[48px] rounded-2xl bg-primary py-3.5 px-5 text-sm font-bold text-primary-foreground shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95 cursor-pointer">
+  {t("Review & Approve")}
   </button>
   </div>
   ) : selectedApp.status === "payment_pending" ? (
-  <div className="flex gap-4">
-  <button onClick={() => { setDeclineReason(""); setShowDeclineConfirm(true); }} className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/5 py-4 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer">
+  <div className="flex gap-3">
+  <button onClick={() => { setDeclineReason(""); setShowDeclineConfirm(true); }} className="flex-1 min-h-[48px] rounded-2xl border border-red-500/25 bg-red-500/10 py-3.5 px-4 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer">
   {t("Decline")}
   </button>
-  <button onClick={() => openApprovalModal(selectedApp)} className="flex-[2] rounded-2xl bg-emerald-600 py-4 text-xs font-black uppercase tracking-widest text-white shadow-emerald-600/20 hover:bg-emerald-500 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
+  <button onClick={() => openApprovalModal(selectedApp)} className="flex-[2] min-h-[48px] rounded-2xl bg-emerald-600 py-3.5 px-5 text-sm font-bold text-white shadow-emerald-600/20 hover:bg-emerald-500 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
   <CheckCircle2 className="size-4" />
-  {t("Finalize Approval & Create Lease")}
+  {t("Finalize Approval")}
   </button>
   </div>
   ) : (
@@ -2191,6 +2358,7 @@ export function RentApplications() {
      unitId={unitHoldModalState.unitId}
      unitName={unitHoldModalState.unitName}
      propertyName={unitHoldModalState.propertyName}
+     applicantOptions={unitHoldModalState.applicantOptions}
      defaultApplicantName={unitHoldModalState.defaultApplicantName}
      defaultApplicationId={unitHoldModalState.defaultApplicationId}
      competingApplicantsCount={unitHoldModalState.competingApplicantsCount}
@@ -2773,6 +2941,32 @@ export function RentApplications() {
             </div>
           )}
         </AnimatePresence>
+
+        {selectedApp && (() => {
+          const unitKey = selectedApp.unitId || `${selectedApp.propertyId ?? ""}:${selectedApp.unitNumber}`;
+          const competingCount = (activeApplicantsByUnitKey.get(unitKey) ?? []).filter((a) => a.id !== selectedApp.id).length;
+          return (
+            <ApproveConfirmationModal
+              isOpen={showQuickApproveConfirm}
+              onClose={() => {
+                if (updatingStatusId !== selectedApp.id) {
+                  setShowQuickApproveConfirm(false);
+                  setActionError(null);
+                }
+              }}
+              onConfirm={handleQuickApprove}
+              submitting={updatingStatusId === selectedApp.id}
+              applicantName={selectedApp.applicant.name}
+              applicantOccupation={selectedApp.applicant.occupation}
+              monthlyIncomeFormatted={selectedApp.applicant.monthlyIncome ? formatCurrency(selectedApp.applicant.monthlyIncome) : null}
+              propertyName={selectedApp.propertyName}
+              unitLabel={selectedApp.unitNumber}
+              monthlyRentFormatted={formatCurrency(selectedApp.monthlyRent)}
+              competingApplicantsCount={competingCount}
+              errorMessage={actionError}
+            />
+          );
+        })()}
 
  </div>
  );

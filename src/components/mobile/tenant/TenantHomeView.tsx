@@ -26,6 +26,7 @@ import { triggerHaptic } from '@/lib/haptics';
 import { MobileAmenityBookingDrawer } from './MobileAmenityBookingDrawer';
 import { useLanguageContext } from '@/context/LanguageContext';
 import { formatPhMobile } from "@/lib/phone";
+import { readViewCache, writeViewCache, hasViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 
 interface LeaseInfo {
     id: string;
@@ -68,8 +69,8 @@ interface DashboardData {
 export function TenantHomeView() {
     const { profile, user } = useAuth();
     const { t, locale } = useLanguageContext();
-    const [data, setData] = useState<DashboardData | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState<DashboardData | null>(() => readViewCache<DashboardData>('tenant-dashboard') ?? null);
+    const [loading, setLoading] = useState(() => !hasViewCache('tenant-dashboard'));
     const [isAmenityDrawerOpen, setIsAmenityDrawerOpen] = useState(false);
 
     const rawName = 
@@ -85,11 +86,9 @@ export function TenantHomeView() {
 
     const fetchDashboard = async () => {
         try {
-            const res = await fetch('/api/tenant/dashboard');
-            if (res.ok) {
-                const json = await res.json();
-                setData(json);
-            }
+            const json = await fetchJsonDeduped<DashboardData>('/api/tenant/dashboard');
+            setData(json);
+            writeViewCache('tenant-dashboard', json);
         } catch (err) {
             console.error('[TenantHome] Failed to load dashboard:', err);
         } finally {

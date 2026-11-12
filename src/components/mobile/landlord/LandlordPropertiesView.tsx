@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { useLanguageContext } from '@/context/LanguageContext';
 import { toast } from 'sonner';
 import { tr } from '@/hooks/useLanguage';
+import { readViewCache, writeViewCache, hasViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 
 const UNIT_STATUS_LABELS: Record<string, string> = {
     occupied: 'Occupied',
@@ -64,8 +65,10 @@ export function LandlordPropertiesView() {
     const router = useRouter();
     const { t } = useLanguageContext();
 
-    const [properties, setProperties] = useState<PropertyCardData[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [properties, setProperties] = useState<PropertyCardData[]>(
+        () => readViewCache<PropertyCardData[]>('landlord-properties') ?? []
+    );
+    const [loading, setLoading] = useState(() => !hasViewCache('landlord-properties'));
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<'all' | 'vacant' | 'full'>('all');
     
@@ -73,15 +76,20 @@ export function LandlordPropertiesView() {
     const [expandedPropertyId, setExpandedPropertyId] = useState<string | null>(null);
 
     const fetchProperties = useCallback(async () => {
+        const snapshot = readViewCache<PropertyCardData[]>('landlord-properties');
+        if (!snapshot) setLoading(true);
         try {
-            setLoading(true);
-            const [overviewRes, unitsRes] = await Promise.all([
-                fetch('/api/landlord/properties/overview'),
-                fetch('/api/landlord/property-units')
+            const [overviewResult, unitsResult] = await Promise.allSettled([
+                fetchJsonDeduped<{ properties?: any[] }>('/api/landlord/properties/overview'),
+                fetchJsonDeduped<{ properties?: any[] }>('/api/landlord/property-units')
             ]);
 
-            const overviewData = overviewRes.ok ? await overviewRes.json() : { properties: [] };
-            const unitsData = unitsRes.ok ? await unitsRes.json() : { properties: [] };
+            if (overviewResult.status === 'rejected') {
+                throw overviewResult.reason;
+            }
+
+            const overviewData = overviewResult.value ?? { properties: [] };
+            const unitsData = unitsResult.status === 'fulfilled' ? unitsResult.value : { properties: [] };
 
             const unitsMap = new Map<string, PropertyUnitItem[]>();
             if (Array.isArray(unitsData.properties)) {
@@ -96,9 +104,12 @@ export function LandlordPropertiesView() {
             }));
 
             setProperties(merged);
+            writeViewCache('landlord-properties', merged);
         } catch (err) {
             console.error('Error fetching landlord properties:', err);
-            toast.error(tr('Failed to load properties'));
+            if (!hasViewCache('landlord-properties')) {
+                toast.error(tr('Failed to load properties'));
+            }
         } finally {
             setLoading(false);
         }

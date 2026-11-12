@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -33,6 +33,7 @@ import { useLanguageContext } from '@/context/LanguageContext';
 import { toast } from 'sonner';
 import { formatTenure, leaseEndState, leaseTermLabel } from '@/lib/lease-term';
 import { tr } from '@/hooks/useLanguage';
+import { readViewCache, writeViewCache, hasViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 
 interface TenantItem {
     id: string;
@@ -102,9 +103,13 @@ export function LandlordTenantsView() {
     const router = useRouter();
     const { selectedPropertyId } = useProperty();
     const { t, locale, language } = useLanguageContext();
+    const tenantsCacheKey = `landlord-tenants:${selectedPropertyId || 'all'}`;
+    const fetchRequestRef = useRef(0);
 
-    const [tenants, setTenants] = useState<TenantItem[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [tenants, setTenants] = useState<TenantItem[]>(
+        () => readViewCache<TenantItem[]>(tenantsCacheKey) ?? []
+    );
+    const [loading, setLoading] = useState(() => !hasViewCache(tenantsCacheKey));
     const [activeTab, setActiveTab] = useState<'all' | 'active' | 'late' | 'moving_out'>('all');
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -115,22 +120,35 @@ export function LandlordTenantsView() {
     const [detailLease, setDetailLease] = useState<TenantDetailLease | null>(null);
 
     const fetchTenants = useCallback(async () => {
-        try {
+        const requestId = ++fetchRequestRef.current;
+        const cacheKey = `landlord-tenants:${selectedPropertyId || 'all'}`;
+        const snapshot = readViewCache<TenantItem[]>(cacheKey);
+        if (snapshot) {
+            setTenants(snapshot);
+            setLoading(false);
+        } else {
             setLoading(true);
+        }
+
+        try {
             const params = new URLSearchParams();
             if (selectedPropertyId && selectedPropertyId !== 'all') {
                 params.set('propertyId', selectedPropertyId);
             }
 
-            const res = await fetch(`/api/landlord/tenants?${params.toString()}`);
-            if (!res.ok) throw new Error('Failed to load tenants');
-            const data = await res.json();
-            setTenants(Array.isArray(data.tenants) ? data.tenants : []);
+            const data = await fetchJsonDeduped<{ tenants?: TenantItem[] }>(`/api/landlord/tenants?${params.toString()}`);
+            if (requestId !== fetchRequestRef.current) return;
+            const list = Array.isArray(data.tenants) ? data.tenants : [];
+            setTenants(list);
+            writeViewCache(cacheKey, list);
         } catch (err) {
+            if (requestId !== fetchRequestRef.current) return;
             console.error('Error fetching landlord tenants:', err);
-            toast.error(tr('Failed to load tenant roster'));
+            if (!hasViewCache(cacheKey)) {
+                toast.error(tr('Failed to load tenant roster'));
+            }
         } finally {
-            setLoading(false);
+            if (requestId === fetchRequestRef.current) setLoading(false);
         }
     }, [selectedPropertyId]);
 

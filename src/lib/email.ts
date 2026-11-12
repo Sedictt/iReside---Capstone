@@ -331,6 +331,7 @@ export async function sendProspectPaymentRequestEmail({
     expiresAt,
     advanceAmount,
     securityAmount,
+    statusTrackerUrl,
 }: {
     to: string;
     applicantName: string;
@@ -340,6 +341,7 @@ export async function sendProspectPaymentRequestEmail({
     expiresAt: Date;
     advanceAmount: number;
     securityAmount: number;
+    statusTrackerUrl?: string | null;
 }) {
     const subject = `Action Required: Submit Move-in Payment (${propertyName} - ${unitName})`;
     const expiresLabel = expiresAt.toLocaleString("en-US", {
@@ -368,6 +370,7 @@ export async function sendProspectPaymentRequestEmail({
             )}
             ${button(paymentPortalUrl, "Open Payment Portal →", { center: true, marginBottom: 16 })}
             ${linkFallback(paymentPortalUrl, "Or click or copy this direct link:")}
+            ${renderStatusTrackerCard(statusTrackerUrl)}
             ${muted(`This secure link expires on <strong style="color:#0f172a;">${esc(expiresLabel)}</strong>.`, { marginBottom: 10 })}
             ${muted("We will only finalize approval after both required payments are landlord-confirmed.")}
         `,
@@ -387,7 +390,7 @@ Required amounts:
 Link expires on: ${expiresLabel}
 
 We will only finalize approval after both payments are landlord-confirmed.
-`;
+${renderStatusTrackerText(statusTrackerUrl)}`;
 
     return await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
@@ -753,6 +756,75 @@ ${resetUrl}
     await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
+function renderStatusTrackerCard(statusTrackerUrl?: string | null): string {
+    if (!statusTrackerUrl) return "";
+    return card(
+        `<p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#0f172a;">Track Your Application Status</p>
+         <p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.5;">You can view your live application progress anytime using the read-only tracker below.</p>
+         ${button(statusTrackerUrl, "Track Application Status →", { tone: "outline", small: true, center: true, marginBottom: 0 })}`,
+        { center: true, padding: 16, marginBottom: 16 },
+    );
+}
+
+function renderStatusTrackerText(statusTrackerUrl?: string | null): string {
+    if (!statusTrackerUrl) return "";
+    return `\nTrack your application status anytime: ${statusTrackerUrl}\n`;
+}
+
+export async function sendApplicationReceivedEmail({
+    to,
+    applicantName,
+    propertyName,
+    unitName,
+    referenceCode,
+    statusTrackerUrl,
+}: {
+    to: string;
+    applicantName: string;
+    propertyName: string;
+    unitName?: string | null;
+    referenceCode?: string | null;
+    statusTrackerUrl: string;
+}) {
+    const cleanUnit = unitName ? ` (${unitName})` : "";
+    const subject = `Application Received — ${propertyName}${cleanUnit}`;
+
+    const rows: Array<{ label: string; value: string; mono?: boolean; accent?: boolean }> = [
+        { label: "Property", value: propertyName },
+    ];
+    if (unitName) rows.push({ label: "Room / Unit", value: unitName, accent: true });
+    if (referenceCode) rows.push({ label: "Reference Code", value: referenceCode, mono: true });
+
+    const html = renderEmail({
+        title: "Application Received",
+        preheader: `We received your rental application for ${propertyName}${cleanUnit}.`,
+        header: { eyebrow: "Application Confirmation" },
+        width: 520,
+        body: `
+            ${greeting(applicantName)}
+            ${heading("We Received Your Application")}
+            ${paragraph(`Thank you for applying at <strong>${esc(propertyName)}${esc(cleanUnit)}</strong>. Your application is now waiting for landlord review.`, { marginBottom: 20 })}
+            ${card(keyValueRows(rows), { marginBottom: 20, padding: 18 })}
+            ${button(statusTrackerUrl, "Track Application Status →", { center: true, marginBottom: 16 })}
+            ${linkFallback(statusTrackerUrl, "Save or copy your status tracker link:")}
+            ${muted("This status link is view-only so you can check your progress anytime. We will email you whenever any action is needed.")}
+        `,
+    });
+
+    const text = `Hi ${applicantName},
+
+We received your rental application for ${propertyName}${cleanUnit}.
+${referenceCode ? `Reference Code: ${referenceCode}\n` : ""}
+Track your application status anytime (view-only):
+${statusTrackerUrl}
+
+We will email you whenever any action is needed.
+
+— iReside Property Management`;
+
+    return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
+}
+
 export async function sendApplicationRejectedEmail({
     to,
     applicantName,
@@ -760,6 +832,7 @@ export async function sendApplicationRejectedEmail({
     unitName,
     rejectionReason,
     resubmitUrl,
+    statusTrackerUrl,
 }: {
     to: string;
     applicantName: string;
@@ -767,6 +840,7 @@ export async function sendApplicationRejectedEmail({
     unitName?: string | null;
     rejectionReason: string;
     resubmitUrl?: string | null;
+    statusTrackerUrl?: string | null;
 }) {
     const subject = `Application Status Update — ${propertyName}${unitName ? ` (${unitName})` : ""}`;
     const cleanUnit = unitName ? ` (${unitName})` : "";
@@ -790,6 +864,7 @@ export async function sendApplicationRejectedEmail({
                  ${button(resubmitUrl, "Submit New Application →", { center: true, marginBottom: 0 })}`,
                 { center: true },
             ) : ""}
+            ${renderStatusTrackerCard(statusTrackerUrl)}
             ${muted("If you have questions regarding this decision, please reach out directly to the landlord or property management office.")}
         `,
     });
@@ -799,7 +874,7 @@ export async function sendApplicationRejectedEmail({
 Thank you for your application for ${propertyName}${cleanUnit}. The property manager has reviewed your application and was unable to approve it at this time.
 
 Reason: ${rejectionReason}
-${resubmitUrl ? `\nIf you would like to submit a new application, you may do so here: ${resubmitUrl}` : ""}
+${resubmitUrl ? `\nIf you would like to submit a new application, you may do so here: ${resubmitUrl}` : ""}${renderStatusTrackerText(statusTrackerUrl)}
 
 — iReside Property Management`;
 
@@ -817,6 +892,7 @@ export async function sendPaymentReviewResolutionEmail({
     note,
     proofUrl,
     paymentPortalUrl,
+    statusTrackerUrl,
 }: {
     to: string;
     applicantName: string;
@@ -828,6 +904,7 @@ export async function sendPaymentReviewResolutionEmail({
     note?: string | null;
     proofUrl?: string | null;
     paymentPortalUrl?: string | null;
+    statusTrackerUrl?: string | null;
 }) {
     const cleanUnit = unitName ? ` (${unitName})` : "";
     const pesoFormat = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
@@ -883,6 +960,7 @@ export async function sendPaymentReviewResolutionEmail({
                 { center: true, padding: 16 },
             ) : ""}
             ${paymentPortalUrl ? button(paymentPortalUrl, "Open Payment Portal →", { center: true }) + linkFallback(paymentPortalUrl, "Or copy this link:") : ""}
+            ${renderStatusTrackerCard(statusTrackerUrl)}
             ${muted("If you have any questions, please contact your landlord or property administrator.")}
         `,
     });
@@ -891,7 +969,7 @@ export async function sendPaymentReviewResolutionEmail({
 
 ${message}
 System Reference: ${transactionReference}
-${formattedAmount ? `Amount: ${formattedAmount}\n` : ""}${note ? `Note: ${note}\n` : ""}${proofUrl ? `Proof Receipt: ${proofUrl}\n` : ""}${paymentPortalUrl ? `Payment Portal: ${paymentPortalUrl}\n` : ""}
+${formattedAmount ? `Amount: ${formattedAmount}\n` : ""}${note ? `Note: ${note}\n` : ""}${proofUrl ? `Proof Receipt: ${proofUrl}\n` : ""}${paymentPortalUrl ? `Payment Portal: ${paymentPortalUrl}\n` : ""}${renderStatusTrackerText(statusTrackerUrl)}
 — iReside Property Management`;
 
     return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
@@ -938,7 +1016,7 @@ export async function sendNewApplicationReceivedEmail({
             ${greeting(landlordName)}
             ${paragraph(`You have received a new rental application for <strong>${esc(propertyName)}${esc(cleanUnit)}</strong>.`, { marginBottom: 20 })}
             ${card(keyValueRows(rows))}
-            ${button(dossierUrl, "Review Application Dossier →", { center: true })}
+            ${button(dossierUrl, "Review Application →", { center: true })}
             ${muted("You can approve, request payment, or decline this application with feedback directly from your landlord command center.")}
         `,
     });
@@ -950,7 +1028,7 @@ You have received a new rental application for ${propertyName}${cleanUnit}.
 Applicant: ${applicantName}
 Email: ${applicantEmail}
 ${applicantPhone ? `Phone: ${formatPhMobile(applicantPhone)}\n` : ""}${moveInDate ? `Move-in Date: ${moveInDate}\n` : ""}
-Review the application dossier here: ${dossierUrl}
+Review the application details here: ${dossierUrl}
 
 — iReside Property Management`;
 
@@ -1022,6 +1100,7 @@ export async function sendUnitReassignedRecommendationEmail({
     newMonthlyRent,
     landlordNote,
     offerResponseUrl,
+    statusTrackerUrl,
 }: {
     to: string;
     applicantName: string;
@@ -1031,6 +1110,7 @@ export async function sendUnitReassignedRecommendationEmail({
     newMonthlyRent: number;
     landlordNote?: string | null;
     offerResponseUrl?: string | null;
+    statusTrackerUrl?: string | null;
 }) {
     const subject = `Room Offer: ${newUnitName} Is Available for Your Application — ${propertyName}`;
 
@@ -1060,11 +1140,12 @@ export async function sendUnitReassignedRecommendationEmail({
                 { marginBottom: 20, padding: 18 },
             )}
             ${offerResponseUrl ? button(offerResponseUrl, "Accept Room or Cancel Application", { center: true }) : ""}
+            ${renderStatusTrackerCard(statusTrackerUrl)}
             ${muted("You can use the button above to accept the offered room or withdraw your application at any time.")}
         `,
     });
 
-    const text = `Hi ${applicantName},\n\n${previousUnitName} at ${propertyName} was just leased to another applicant. Your landlord would like to offer you ${newUnitName} (${peso(newMonthlyRent)}/month) instead.\n\nIf you choose to accept, your submitted details and uploaded IDs will carry over automatically. If you prefer not to switch, you can cancel your application.\n${landlordNote ? `\nNote from Landlord: ${landlordNote}\n` : ""}${offerResponseUrl ? `\nRespond to this offer (Accept or Cancel Application): ${offerResponseUrl}\n` : ""}\n— iReside Property Management`;
+    const text = `Hi ${applicantName},\n\n${previousUnitName} at ${propertyName} was just leased to another applicant. Your landlord would like to offer you ${newUnitName} (${peso(newMonthlyRent)}/month) instead.\n\nIf you choose to accept, your submitted details and uploaded IDs will carry over automatically. If you prefer not to switch, you can cancel your application.\n${landlordNote ? `\nNote from Landlord: ${landlordNote}\n` : ""}${offerResponseUrl ? `\nRespond to this offer (Accept or Cancel Application): ${offerResponseUrl}\n` : ""}${renderStatusTrackerText(statusTrackerUrl)}\n— iReside Property Management`;
 
     return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
@@ -1075,12 +1156,14 @@ export async function sendUnitOnHoldStatusEmail({
     propertyName,
     unitName,
     holdNote,
+    statusTrackerUrl,
 }: {
     to: string;
     applicantName: string;
     propertyName: string;
     unitName: string;
     holdNote?: string | null;
+    statusTrackerUrl?: string | null;
 }) {
     const subject = `Application Status Update — ${propertyName} (${unitName})`;
 
@@ -1099,11 +1182,12 @@ export async function sendUnitOnHoldStatusEmail({
                  <span style="font-size:13px;color:#334155;line-height:1.5;">${esc(holdNote)}</span>`,
                 { marginBottom: 20, padding: 16 },
             ) : ""}
+            ${renderStatusTrackerCard(statusTrackerUrl)}
             ${muted("Thank you for your patience and interest in our property.")}
         `,
     });
 
-    const text = `Hi ${applicantName},\n\nThank you for applying for ${unitName} at ${propertyName}. Another applicant is currently finalizing their move-in payment for this room, so it has been placed on a temporary hold.\n\nYour application remains active on our priority list, and we will update you if the room reopens or if another room is available for you.\n${holdNote ? `\nNote from Landlord: ${holdNote}\n` : ""}\n— iReside Property Management`;
+    const text = `Hi ${applicantName},\n\nThank you for applying for ${unitName} at ${propertyName}. Another applicant is currently finalizing their move-in payment for this room, so it has been placed on a temporary hold.\n\nYour application remains active on our priority list, and we will update you if the room reopens or if another room is available for you.\n${holdNote ? `\nNote from Landlord: ${holdNote}\n` : ""}${renderStatusTrackerText(statusTrackerUrl)}\n— iReside Property Management`;
 
     return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }

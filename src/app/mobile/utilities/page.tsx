@@ -13,7 +13,7 @@ export default function MobileUtilitiesPage() {
     return (
         <div className="flex flex-col min-h-full">
             <MobileHeader 
-                title="Utility Submeters" 
+                title="Water & Electricity" 
                 showBack={true}
                 backHref={fallbackBack}
             />

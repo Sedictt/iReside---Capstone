@@ -111,6 +111,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
     const [, setTouchedFields] = useState<Partial<Record<FormErrorKey, boolean>>>({});
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [statusTrackerUrl, setStatusTrackerUrl] = useState<string | null>(null);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -358,7 +359,11 @@ export function InviteApplicationClient({ token }: { token: string }) {
                     message: formData.message,
                 }),
             });
-            const payload = (await response.json().catch(() => ({}))) as { error?: string; fieldErrors?: Record<string, string> };
+            const payload = (await response.json().catch(() => ({}))) as {
+                error?: string;
+                fieldErrors?: Record<string, string>;
+                statusTrackerUrl?: string;
+            };
             if (!response.ok) {
                 const mapped = mapApplicationFieldErrors(payload.fieldErrors);
                 if (mapped.firstStep !== null) {
@@ -371,6 +376,11 @@ export function InviteApplicationClient({ token }: { token: string }) {
                 }
                 throw new Error(payload.error || t("Failed to submit application."));
             }
+            setStatusTrackerUrl(
+                typeof payload.statusTrackerUrl === "string" && payload.statusTrackerUrl.trim()
+                    ? payload.statusTrackerUrl.trim()
+                    : null
+            );
             setSubmitted(true);
         } catch (error) {
             setSubmitError(error instanceof Error ? t(error.message) : t("Failed to submit application."));
@@ -477,12 +487,26 @@ export function InviteApplicationClient({ token }: { token: string }) {
                             {t("Your application for")} <span className="text-foreground font-black">{invite.propertyName}</span> {t("has been received and is now being reviewed. You'll be contacted as soon as your application is processed.")}
                         </p>
 
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                            {statusTrackerUrl && (
+                                <a
+                                    href={statusTrackerUrl}
+                                    className="w-full sm:w-auto min-h-[48px] px-7 py-3.5 rounded-2xl bg-primary text-primary-foreground font-black hover:bg-primary/90 transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                                >
+                                    <span>{t("View Live Status Tracker")}</span>
+                                    <ArrowRight className="size-4" aria-hidden="true" />
+                                </a>
+                            )}
                             <Link
                                 href="/login"
-                                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-black hover:bg-primary/90 transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-primary/20"
+                                className={cn(
+                                    "w-full sm:w-auto min-h-[48px] px-8 py-3.5 rounded-2xl font-black transition-all flex items-center justify-center gap-2 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                                    statusTrackerUrl
+                                        ? "border border-border bg-background text-foreground hover:bg-muted"
+                                        : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
+                                )}
                             >
-                                <User className="size-4" />
+                                <User className="size-4" aria-hidden="true" />
                                 {t("Return Home")}
                             </Link>
                         </div>

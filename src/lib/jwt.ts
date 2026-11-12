@@ -33,6 +33,11 @@ interface RoomOfferTokenPayload {
   type: 'room_offer';
 }
 
+export interface ApplicationStatusTokenPayload {
+  applicationId: string;
+  type: 'application_status';
+}
+
 interface VerifyTokenResult {
   valid: boolean;
   payload?: SigningTokenPayload;
@@ -42,6 +47,12 @@ interface VerifyTokenResult {
 interface VerifyRoomOfferTokenResult {
   valid: boolean;
   payload?: RoomOfferTokenPayload;
+  error?: string;
+}
+
+interface VerifyApplicationStatusTokenResult {
+  valid: boolean;
+  payload?: ApplicationStatusTokenPayload;
   error?: string;
 }
 
@@ -180,6 +191,58 @@ export function verifyRoomOfferToken(token: string): VerifyRoomOfferTokenResult 
 export function generateRoomOfferLink(applicationId: string, targetUnitId: string): string {
   const token = generateRoomOfferToken(applicationId, targetUnitId);
   return `${getAppBaseUrl()}/apply/offer?token=${encodeURIComponent(token)}`;
+}
+
+/**
+ * Generate a read-only JWT token for tracking a single application's status (30-day expiry).
+ */
+export function generateApplicationStatusToken(applicationId: string): string {
+  const payload: ApplicationStatusTokenPayload = {
+    applicationId,
+    type: 'application_status',
+  };
+
+  return jwt.sign(payload, getJwtSecret(), {
+    expiresIn: '30d',
+  });
+}
+
+/**
+ * Verify a read-only application status token and extract its payload.
+ */
+export function verifyApplicationStatusToken(token: string): VerifyApplicationStatusTokenResult {
+  try {
+    const decoded = jwt.verify(token, getJwtSecret()) as ApplicationStatusTokenPayload;
+
+    if (decoded.type !== 'application_status') {
+      return { valid: false, error: 'Invalid token type' };
+    }
+
+    if (typeof decoded.applicationId !== 'string' || !decoded.applicationId.trim()) {
+      return { valid: false, error: 'Missing required token fields' };
+    }
+
+    return { valid: true, payload: decoded };
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      return { valid: false, error: 'This status link has expired.' };
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      return { valid: false, error: 'Invalid status link.' };
+    }
+    return { valid: false, error: 'Unable to verify status link.' };
+  }
+}
+
+/**
+ * Build the public read-only application status tracker URL.
+ */
+export function generateApplicationStatusLink(
+  applicationId: string,
+  requestOrigin?: string | null
+): string {
+  const token = generateApplicationStatusToken(applicationId);
+  return `${getAppBaseUrl(requestOrigin)}/apply/status?token=${encodeURIComponent(token)}`;
 }
 
 /**

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     Megaphone,
@@ -40,6 +40,7 @@ import { toast } from 'sonner';
 import type { CommunityPost } from '@/lib/community/types';
 import { useLanguageContext } from '@/context/LanguageContext';
 import { tr } from '@/hooks/useLanguage';
+import { readViewCache, writeViewCache, hasViewCache } from '@/lib/mobile/view-cache';
 
 export function MobileCommunityView() {
     const router = useRouter();
@@ -49,8 +50,13 @@ export function MobileCommunityView() {
     const role = (profile?.role as 'tenant' | 'landlord') || 'tenant';
     const isLandlord = role === 'landlord';
 
-    const [posts, setPosts] = useState<CommunityPost[]>([]);
-    const [loading, setLoading] = useState(true);
+    const communityCacheKey = `community:${role}:${isLandlord ? selectedPropertyId || 'all' : 'tenant'}`;
+    const fetchRequestRef = useRef(0);
+
+    const [posts, setPosts] = useState<CommunityPost[]>(
+        () => readViewCache<CommunityPost[]>(communityCacheKey) ?? []
+    );
+    const [loading, setLoading] = useState(() => !hasViewCache(communityCacheKey));
     const [activeTab, setActiveTab] = useState<'all' | 'announcements' | 'discussions'>('all');
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -69,21 +75,33 @@ export function MobileCommunityView() {
     const [submittingComment, setSubmittingComment] = useState(false);
 
     const fetchFeed = useCallback(async () => {
-        try {
+        const requestId = ++fetchRequestRef.current;
+        const cacheKey = `community:${role}:${isLandlord ? selectedPropertyId || 'all' : 'tenant'}`;
+        const snapshot = readViewCache<CommunityPost[]>(cacheKey);
+        if (snapshot) {
+            setPosts(snapshot);
+            setLoading(false);
+        } else {
             setLoading(true);
+        }
+
+        try {
             const propId = isLandlord && selectedPropertyId && selectedPropertyId !== 'all' 
                 ? selectedPropertyId 
                 : undefined;
 
             const res = await getCurrentCommunityPosts(30, undefined, propId);
-            setPosts(res?.posts || []);
+            if (requestId !== fetchRequestRef.current) return;
+            const nextPosts = res?.posts || [];
+            setPosts(nextPosts);
+            writeViewCache(cacheKey, nextPosts);
         } catch (err) {
             console.error('Error fetching community feed:', err);
             // Non-critical toast: graceful fallback
         } finally {
-            setLoading(false);
+            if (requestId === fetchRequestRef.current) setLoading(false);
         }
-    }, [isLandlord, selectedPropertyId]);
+    }, [isLandlord, role, selectedPropertyId]);
 
     useEffect(() => {
         fetchFeed();

@@ -10,6 +10,7 @@ import { NotificationProvider } from '@/context/NotificationContext'
 import { PropertyProvider } from '@/context/PropertyContext'
 import { cn } from '@/lib/utils'
 import { useLanguageContext } from '@/context/LanguageContext'
+import { setViewCacheOwner } from '@/lib/mobile/view-cache'
 import '../../styles/mobile.css'
 
 /* ----------------------------------------------------------
@@ -47,6 +48,10 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
             window.location.replace('/login?redirect=/mobile')
         }
     }, [loading, profile, router])
+
+    // Scope cached tab snapshots to the signed-in user (idempotent; wipes the
+    // cache when the account changes so no data leaks across sessions).
+    if (!loading) setViewCacheOwner(profile?.id ?? null)
 
     const role = profile?.role as 'tenant' | 'landlord' | undefined
 

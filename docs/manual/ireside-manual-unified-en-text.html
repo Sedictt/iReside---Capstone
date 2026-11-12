@@ -1,0 +1,4082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iReside - Comprehensive System Operations & IT Administration Manual</title>
+  <style>
+
+    /* CSS Paged Media & Print Specifications */
+    @page {
+      size: A5 portrait;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 8.8pt;
+      line-height: 1.26;
+      color: #111;
+      background: #e5e5e5;
+    }
+
+    /* Screen Preview Container */
+    .book-container {
+      width: 148mm;
+      margin: 20px auto;
+    }
+
+    /* Page Canvas */
+    .page {
+      width: 148mm;
+      height: 210mm;
+      padding: 7mm 10mm 8mm 10mm;
+      background: #ffffff;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      page-break-after: always;
+      break-after: page;
+      box-sizing: border-box;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      .book-container {
+        margin: 0;
+        width: 100%;
+      }
+      .page {
+        margin: 0;
+        box-shadow: none;
+      }
+    }
+
+    /* Dedicated Enterprise Cover Page (Page 1 & Page 17) */
+    .page.cover-page {
+      padding: 8.5mm 9.5mm !important;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #ffffff;
+    }
+
+    .cover-frame {
+      border: 2px solid #111;
+      outline: 1px solid #666;
+      outline-offset: -3.5mm;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 6.5mm 7.5mm;
+      box-sizing: border-box;
+    }
+
+    .cover-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1.5px solid #111;
+      padding-bottom: 2mm;
+      font-size: 6.8pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #222;
+      white-space: nowrap !important;
+    }
+
+    .cover-header-top span {
+      white-space: nowrap !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cover-hero {
+      text-align: center;
+      margin: 2.5mm 0 1.5mm 0;
+    }
+
+    .cover-wordmark {
+      font-size: 26pt;
+      font-weight: 900;
+      letter-spacing: -0.6px;
+      line-height: 1.1;
+      color: #000;
+      margin: 0 0 1.8mm 0;
+      text-transform: none;
+    }
+
+    .cover-tagline {
+      font-size: 7.2pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      line-height: 1.35;
+      color: #333;
+      margin: 0 0 3.5mm 0;
+    }
+
+    .cover-rule {
+      width: 44mm;
+      height: 1.5px;
+      background: #111;
+      margin: 0 auto 3.5mm auto;
+    }
+
+    .cover-title {
+      font-size: 11.5pt;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      line-height: 1.45;
+      color: #000;
+      text-transform: uppercase;
+      margin: 0 auto 2.5mm auto;
+      max-width: 115mm;
+    }
+
+    .cover-subtitle {
+      font-size: 7.6pt;
+      font-weight: 500;
+      line-height: 1.45;
+      color: #333;
+      max-width: 108mm;
+      margin: 0 auto;
+    }
+
+    .cover-emblem-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 2.5mm 0;
+    }
+
+    .cover-logo-img {
+      width: 22mm;
+      height: 22mm;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+      filter: grayscale(100%) contrast(120%);
+    }
+
+    .cover-doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid #222;
+      font-size: 6.8pt;
+      margin: 2mm 0 1mm 0;
+    }
+
+    .cover-doc-table td {
+      padding: 0.75mm 1.8mm;
+      border: 1px solid #ccc;
+      line-height: 1.22;
+    }
+
+    .cover-doc-table .meta-label {
+      width: 25%;
+      font-weight: 800;
+      color: #222;
+      background: #eeeeee;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      font-size: 6.5pt;
+    }
+
+    .cover-doc-table .meta-value {
+      font-weight: 600;
+      color: #111;
+    }
+
+    .cover-imprint {
+      display: flex;
+      justify-content: space-between;
+      border-top: 1.5px solid #111;
+      padding-top: 1.8mm;
+      font-size: 6.2pt;
+      font-weight: 600;
+      color: #555;
+    }
+
+    /* Running Headers & Footers */
+    .running-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1.5px solid #222;
+      padding-bottom: 1.2mm;
+      margin-bottom: 2mm;
+      font-size: 6.8pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #444;
+      flex-shrink: 0;
+    }
+
+    .running-header .app-brand {
+      color: #000;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 1.2mm;
+    }
+
+    .running-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1.5px solid #222;
+      padding-top: 1.2mm;
+      margin-top: 1.5mm;
+      font-size: 6.8pt;
+      color: #555;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .running-footer .page-number {
+      font-weight: 800;
+      color: #000;
+    }
+
+    /* Content Area */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      min-height: 0;
+    }
+
+    /* Typography & Hierarchy */
+    h1, h2, h3, h4 {
+      margin: 0;
+      color: #000;
+      white-space: nowrap !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    h1 {
+      font-size: 13pt;
+      font-weight: 900;
+      letter-spacing: -0.3px;
+      margin-bottom: 1.5mm;
+    }
+
+    h2 {
+      font-size: 9.8pt;
+      font-weight: 800;
+      letter-spacing: -0.1px;
+      margin: 1.2mm 0 1.2mm 0;
+      border-bottom: 1px solid #111;
+      padding-bottom: 0.6mm;
+    }
+
+    h3 {
+      font-size: 8.6pt;
+      font-weight: 800;
+      margin: 1mm 0 0.8mm 0;
+    }
+
+    p {
+      margin: 0 0 1.2mm 0;
+      line-height: 1.26;
+      color: #111;
+    }
+
+    ul, ol {
+      margin: 0 0 1.4mm 0;
+      padding-left: 4.5mm;
+    }
+
+    li {
+      margin-bottom: 0.8mm;
+      line-height: 1.24;
+    }
+
+    strong {
+      font-weight: 800;
+      color: #000;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 7.8pt;
+      background: #f0f0f0;
+      border: 1px solid #d4d4d4;
+      padding: 0.2px 2.5px;
+      border-radius: 2px;
+      color: #111;
+    }
+
+    /* Single-Row Task Block Discipline */
+    .task-block {
+      margin-bottom: 1.6mm;
+    }
+
+    .task-title {
+      display: flex;
+      align-items: center;
+      gap: 1.8mm;
+      font-size: 8.8pt !important;
+      font-weight: 800;
+      color: #000;
+      margin: 1mm 0 1.2mm 0;
+      white-space: nowrap !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      height: 22px;
+      line-height: 22px;
+    }
+
+    .task-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #eee;
+      border: 1.2px solid #222;
+      border-radius: 3px;
+      padding: 0 5px;
+      font-size: 7pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #111;
+      white-space: nowrap !important;
+      flex-shrink: 0;
+      height: 18px;
+      line-height: 18px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1mm 0 1.6mm 0;
+      font-size: 7.6pt;
+    }
+
+    th, td {
+      border: 1px solid #333;
+      padding: 0.8mm 1.5mm;
+      text-align: left;
+      line-height: 1.22;
+    }
+
+    th {
+      background: #f0f0f0;
+      font-weight: 800;
+      color: #000;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      font-size: 7pt;
+    }
+
+    /* Table of Contents */
+    .toc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7.9pt;
+      margin: 0.8mm 0 1.5mm 0;
+    }
+
+    .toc-table td {
+      border: none;
+      padding: 0.65mm 0;
+      line-height: 1.22;
+    }
+
+    .toc-table .toc-title {
+      font-weight: 600;
+      color: #111;
+      white-space: nowrap !important;
+      padding-right: 2mm;
+    }
+
+    .toc-table .toc-leader {
+      width: 100%;
+      border-bottom: 1px dotted #666;
+      position: relative;
+      top: -3px;
+    }
+
+    .toc-table .toc-page {
+      padding-left: 2mm;
+      text-align: right;
+      font-weight: 800;
+      color: #000;
+      white-space: nowrap !important;
+    }
+
+    /* Callouts & Highlights */
+    .tip-box {
+      border-left: 3px solid #333;
+      background: #f8f8f8;
+      padding: 0.9mm 2mm;
+      margin: 0.9mm 0 1.2mm 0;
+      font-size: 7.8pt;
+      line-height: 1.22;
+      color: #222;
+    }
+
+    .warning-box {
+      border-left: 3.5px solid #000;
+      background: #f1f1f1;
+      padding: 0.9mm 2mm;
+      margin: 0.9mm 0 1.2mm 0;
+      font-size: 7.8pt;
+      line-height: 1.22;
+      font-weight: 600;
+      color: #111;
+    }
+
+    /* Screenshot Figures (Pure Monochrome Grayscale) */
+    .screenshot-figure {
+      border: 1.5px solid #333;
+      background: #fafafa;
+      padding: 1mm;
+      margin: 1mm 0 1.4mm 0;
+      text-align: center;
+    }
+
+    .screenshot-img {
+      max-width: 100%;
+      height: auto;
+      max-height: 38mm;
+      object-fit: contain;
+      filter: grayscale(100%) contrast(110%);
+      display: block;
+      margin: 0 auto;
+      border: 1px solid #ddd;
+    }
+
+    .screenshot-caption {
+      font-size: 6.8pt;
+      font-weight: 700;
+      color: #444;
+      margin-top: 0.8mm;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Vector Flow Diagrams (NO ASCII ART) */
+    .flow-diagram {
+      border: 1.5px solid #333;
+      background: #fafafa;
+      padding: 1.5mm 2mm;
+      margin: 1.2mm 0 1.5mm 0;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1mm;
+    }
+
+    .flow-card {
+      border: 1.5px solid #222;
+      background: #ffffff;
+      border-radius: 3px;
+      padding: 1mm 2mm;
+      text-align: center;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .flow-card-title {
+      font-weight: 800;
+      font-size: 7.6pt;
+      color: #000;
+      margin-bottom: 0.4mm;
+      white-space: nowrap !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .flow-card-desc {
+      font-size: 6.6pt;
+      color: #333;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      white-space: nowrap !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .flow-connector-v {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3mm;
+    }
+
+    .flow-stem {
+      width: 1.5px;
+      height: 3.5mm;
+      background: #333;
+    }
+
+    .flow-badge {
+      font-size: 6.3pt;
+      font-weight: 800;
+      background: #eee;
+      border: 1px solid #444;
+      border-radius: 2px;
+      padding: 0.2px 4px;
+      white-space: nowrap !important;
+      color: #111;
+      margin: 0.2mm 0;
+    }
+
+    /* Q&A & Troubleshooting Blocks */
+    .qa-block {
+      border: 1px solid #ccc;
+      background: #fafafa;
+      padding: 0.8mm 1.6mm;
+      margin-bottom: 1mm;
+      border-left: 2.5px solid #222;
+    }
+
+    .qa-q {
+      font-weight: 800;
+      font-size: 7.6pt;
+      color: #000;
+      margin-bottom: 0.3mm;
+      white-space: nowrap !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .qa-a {
+      font-size: 7.2pt;
+      color: #222;
+      line-height: 1.22;
+      margin: 0;
+    }
+
+    /* Glossary Items */
+    .glossary-item {
+      font-size: 7.2pt;
+      line-height: 1.22;
+      margin-bottom: 0.8mm;
+    }
+
+    .glossary-term {
+      font-weight: 800;
+      color: #000;
+      text-transform: uppercase;
+      font-size: 7pt;
+      letter-spacing: 0.3px;
+    }
+  
+  </style>
+</head>
+<body>
+
+<div class="book-container">
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 1: UNIFIED MASTER COVER PAGE                                         -->
+  <!-- ========================================================================= -->
+  <div class="page cover-page" id="page-1">
+    <div class="cover-frame">
+      <div class="cover-header-top">
+        <span>iReside Operations Platform</span>
+        <span>Comprehensive Reference Suite</span>
+      </div>
+
+      <div class="cover-hero">
+        <div class="cover-wordmark">iReside</div>
+        <div class="cover-tagline">Comprehensive Property Operations &amp; Technical Administration Suite</div>
+        <div class="cover-rule"></div>
+        <div class="cover-title">COMPREHENSIVE SYSTEM OPERATIONS &amp; TECHNICAL ADMINISTRATION MANUAL</div>
+        <div class="cover-subtitle">Complete User Operations Guide, Financial Workflows &amp; IT Technical Reference Handbook</div>
+      </div>
+
+      <div class="cover-emblem-wrap">
+        <img src="images/ireside-logo-bw.png" alt="iReside Logo" class="cover-logo-img" />
+      </div>
+
+      <table class="cover-doc-table">
+        <tr>
+          <td class="meta-label">Document ID</td>
+          <td class="meta-value">DOC REF: IR-UNIFIED-2026-EN-V1.0</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Classification</td>
+          <td class="meta-value">Official Comprehensive System Standard (Parts I &amp; II &bull; 32 Pages)</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Audience</td>
+          <td class="meta-value">Landlords, Tenants, Systems Administrators &amp; DevOps Engineers</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Stack</td>
+          <td class="meta-value">Next.js 16 (React 19), Supabase PostgreSQL 15, Vercel &amp; Capacitor 7</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Pilot Scope</td>
+          <td class="meta-value">Barangay Marulas Pilot Implementation, Valenzuela City</td>
+        </tr>
+      </table>
+
+      <div class="cover-imprint">
+        <span>Published by iReside Documentation &amp; Systems Engineering Team</span>
+        <span>Authorized Comprehensive Edition &bull; 2026</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 2: UNIFIED MASTER TABLE OF CONTENTS                                  -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-2">
+    <div class="running-header">
+      <span class="app-brand">iReside Comprehensive Suite</span>
+      <span>Master Table of Contents</span>
+    </div>
+
+    <div class="content">
+      <div style="font-size: 8.4pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; background: #eee; padding: 0.6mm 2mm; margin-bottom: 1mm; border-left: 3px solid #000;">
+        Part I: User Operations Manual for Landlords &amp; Tenants (Pages 3&ndash;16)
+      </div>
+      <table class="toc-table">
+        <tr><td class="toc-title">1. Getting Started: System Requirements &amp; Sign In</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 3</td></tr>
+        <tr><td class="toc-title">2. Getting Started: App Setup &amp; Emergency Spare Key</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 4</td></tr>
+        <tr><td class="toc-title">3. Tenant Guide: Digital Leases &amp; Monthly Dues</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 5</td></tr>
+        <tr><td class="toc-title">4. Tenant Guide: Rent Payments via GCash &amp; Cash</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 6</td></tr>
+        <tr><td class="toc-title">5. Tenant Guide: Repairs &amp; Direct Messaging</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 7</td></tr>
+        <tr><td class="toc-title">6. Tenant Guide: Move-Out Notice &amp; Spare Key Login</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 8</td></tr>
+        <tr><td class="toc-title">7. Landlord Guide: Property Setup &amp; Unit Map</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 9</td></tr>
+        <tr><td class="toc-title">8. Landlord Guide: Utility Rates &amp; Tenant Onboarding</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 10</td></tr>
+        <tr><td class="toc-title">9. Landlord Guide: Invites &amp; Walk-in Applicants</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 11</td></tr>
+        <tr><td class="toc-title">10. Landlord Guide: Payment Verification &amp; Submeters</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 12</td></tr>
+        <tr><td class="toc-title">11. Landlord Guide: Maintenance &amp; Announcements</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 13</td></tr>
+        <tr><td class="toc-title">12. Landlord Guide: Move-Out, Ledgers &amp; Reports</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 14</td></tr>
+        <tr><td class="toc-title">13. Troubleshooting Common Issues &amp; Security</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 15</td></tr>
+        <tr><td class="toc-title">14. Support Helpline, FAQs &amp; Operational Glossary</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 16</td></tr>
+      </table>
+
+      <div style="font-size: 8.4pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; background: #eee; padding: 0.6mm 2mm; margin: 1.2mm 0 1mm 0; border-left: 3px solid #000;">
+        Part II: IT Technical Documentation &amp; Operations (Pages 17&ndash;32)
+      </div>
+      <table class="toc-table">
+        <tr><td class="toc-title">15. Part II Divisional Cover &amp; Technical Directory</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 17–18</td></tr>
+        <tr><td class="toc-title">16. System Architecture &amp; Complete Tech Stack</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 19</td></tr>
+        <tr><td class="toc-title">17. Role Model, Zero Admin &amp; Environment Secrets</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 20–21</td></tr>
+        <tr><td class="toc-title">18. Relational Database Schema &amp; Row-Level Security</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 22–24</td></tr>
+        <tr><td class="toc-title">19. Authentication, 2FA, Spare Key &amp; Workspace Launch</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 25–27</td></tr>
+        <tr><td class="toc-title">20. REST APIs, Android Pipeline &amp; Schedulers</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 28–30</td></tr>
+        <tr><td class="toc-title">21. DevOps, Backups, Sign-Off &amp; IT Glossary</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 31–32</td></tr>
+      </table>
+
+      <h2>Comprehensive Suite Architecture &amp; Governance</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Document Division</th>
+            <th>Operational Target</th>
+            <th>Primary Deliverable</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Part I: Operations</strong></td>
+            <td>Landlords and Tenant Residents</td>
+            <td>Sequential workflows for daily property tasks.</td>
+          </tr>
+          <tr>
+            <td><strong>Part II: IT Technical</strong></td>
+            <td>DevOps and System Architects</td>
+            <td>Database schema, security invariants, and runbooks.</td>
+          </tr>
+          <tr>
+            <td><strong>Pilot Implementation</strong></td>
+            <td>Barangay Marulas, Valenzuela</td>
+            <td>Pilot compliance standards under RA 10173.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Master Suite</span>
+      <span class="page-number">Page 2 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 3: PART I USER OPERATIONS PAGE 3                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-3">
+    <div class="running-header">
+      <span class="app-brand">Getting Started</span>
+      <span>Requirements &amp; Sign In</span>
+    </div>
+
+    <div class="content">
+      <h2>Prerequisites Before Getting Started</h2>
+      <p>Ensure you have the following items ready before accessing iReside:</p>
+      <ul>
+        <li><strong>Smartphone or Computer:</strong> Any modern Android phone, iPhone, or laptop.</li>
+        <li><strong>Internet Connectivity:</strong> Active Wi-Fi or mobile cellular data connection.</li>
+        <li><strong>Valid Email Address:</strong> Used for login verification and digital receipts.</li>
+        <li><strong>Account Credentials:</strong> Email and temporary password provided by management.</li>
+      </ul>
+
+      <h2>How to Sign In to Your Account</h2>
+      <p>Follow these standard steps to authenticate into the system:</p>
+      <ol>
+        <li>Open your browser and navigate to the official iReside portal.</li>
+        <li>Enter your registered email address in the <strong>Email Address</strong> field.</li>
+        <li>Enter your password in the <strong>Password</strong> field.</li>
+        <li>Click the <strong>Sign In</strong> button.</li>
+        <li>Retrieve the 6-digit verification code sent to your email inbox.</li>
+        <li>Type the code into <strong>6-Digit Verification Code</strong> and click <strong>Verify &amp; Sign In</strong>.</li>
+      </ol>
+
+      <h2>Sign-In Credentials &amp; Verification Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Credential Field</th>
+            <th>Input Format</th>
+            <th>Verification Rule</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Email Address</strong></td>
+            <td>Standard valid email string</td>
+            <td>Must match active profile record.</td>
+          </tr>
+          <tr>
+            <td><strong>Account Password</strong></td>
+            <td>Minimum 8 alphanumeric characters</td>
+            <td>Case-sensitive credentials.</td>
+          </tr>
+          <tr>
+            <td><strong>Verification Code</strong></td>
+            <td>6-digit numeric OTP code</td>
+            <td>One-time code expiring in 10 minutes.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Authentication Step</th>
+            <th>User Action</th>
+            <th>System Response</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Submit Details</strong></td>
+            <td>Enter email and temporary password.</td>
+            <td>System validates registered account.</td>
+          </tr>
+          <tr>
+            <td><strong>2. Receive Code</strong></td>
+            <td>Retrieve 6-digit email passcode.</td>
+            <td>Code remains valid for ten minutes.</td>
+          </tr>
+          <tr>
+            <td><strong>3. Authorize</strong></td>
+            <td>Type code into verification prompt.</td>
+            <td>Redirects to role dashboard immediately.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="tip-box">
+        <strong>Login Standard:</strong> Two-factor verification protects accounts against unauthorized access.
+      </div>
+
+      <div class="warning-box">
+        Warning: Never share your password or verification code with anyone. Keep it confidential.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 3 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 4: PART I USER OPERATIONS PAGE 4                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-4">
+    <div class="running-header">
+      <span class="app-brand">Getting Started</span>
+      <span>App Setup &amp; Spare Key</span>
+    </div>
+
+    <div class="content">
+      <h2>How to Install the Mobile App</h2>
+      <p>You can install iReside on your mobile phone for fast daily access:</p>
+
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Android</span> Installing on Android Phone</div>
+        <ol>
+          <li>Open the left sidebar menu and click <strong>Download App</strong>.</li>
+          <li>Click <strong>Download iReside App</strong> to save the APK file.</li>
+          <li>Open your downloaded file and click <strong>Install</strong>.</li>
+          <li>When prompted by Android security, tap <strong>Allow</strong> to continue.</li>
+        </ol>
+      </div>
+
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">iPhone</span> Adding to iPhone Home Screen</div>
+        <ol>
+          <li>Open the Safari browser and navigate to the iReside portal.</li>
+          <li>Tap the <strong>Share</strong> button at the bottom of the screen.</li>
+          <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+          <li>Tap <strong>Add</strong> in the top-right corner to complete setup.</li>
+        </ol>
+      </div>
+
+      <h2>Mobile Device Compatibility &amp; Requirements</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Platform</th>
+            <th>Minimum System</th>
+            <th>Supported Features</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Android Client</strong></td>
+            <td>Android 8.0 (Oreo) or newer</td>
+            <td>Native APK wrapper, push alerts, camera uploads.</td>
+          </tr>
+          <tr>
+            <td><strong>Apple iOS</strong></td>
+            <td>iOS 14.0 or newer</td>
+            <td>Safari Home Screen PWA, camera uploads.</td>
+          </tr>
+          <tr>
+            <td><strong>Desktop Browser</strong></td>
+            <td>Chrome, Firefox, Safari, Edge</td>
+            <td>Full keyboard navigation, dual monitors, export tools.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>The Emergency Spare Key (Account Recovery)</h2>
+      <p>Just like a spare physical house key, this unlocks your account safely.</p>
+
+      <h2>Emergency Spare Key Specifications</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Security Parameter</th>
+            <th>Specification Standard</th>
+            <th>Safety Directive</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Code Structure</strong></td>
+            <td>16 uppercase alphanumeric characters</td>
+            <td>Divided into 4 hyphenated blocks.</td>
+          </tr>
+          <tr>
+            <td><strong>Storage Method</strong></td>
+            <td>One-way bcrypt cryptographic hash</td>
+            <td>Plaintext key is never stored online.</td>
+          </tr>
+          <tr>
+            <td><strong>Usage Restriction</strong></td>
+            <td>Single-use emergency recovery token</td>
+            <td>Automatically rotated upon successful login.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        Store your Emergency Spare Key safely on a flash drive or notepad.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 4 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 5: PART I USER OPERATIONS PAGE 5                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-5">
+    <div class="running-header">
+      <span class="app-brand">Tenant Guide</span>
+      <span>Contracts &amp; Monthly Dues</span>
+    </div>
+
+    <div class="content">
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task T1</span> Sign Digital Lease Agreement (Sign Lease)</div>
+        <p>Before moving in, residents must digitally execute their lease contract:</p>
+        <ol>
+          <li>Click <strong>Leases</strong> in the main navigation menu.</li>
+          <li>Click the <strong>Review &amp; sign</strong> button at the top of the screen.</li>
+          <li>Carefully review monthly rent, security deposit terms, and building rules.</li>
+          <li>Click <strong>Sign Document</strong> to open the digital signature pad.</li>
+          <li>Draw your signature using your finger or mouse cursor.</li>
+          <li>Click <strong>Finalize</strong> and confirm to submit your signed lease.</li>
+        </ol>
+      </div>
+
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task T2</span> Review Monthly Rent and Due Dates</div>
+        <p>Track your active rental dues, utility submeters, and payment history:</p>
+        <ol>
+          <li>Click <strong>Finance Hub</strong> in the main navigation menu.</li>
+          <li>Review the top balance summary card labeled <strong>Total Balance Due</strong>.</li>
+          <li>Inspect current water and electric consumption calculated from submeters.</li>
+          <li>Review upcoming payment deadlines to avoid late payment notices.</li>
+          <li>Click <strong>View Statement</strong> to inspect an itemized billing breakdown.</li>
+        </ol>
+      </div>
+
+      <h2>Lease Terms &amp; Invoice Status Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Term / Status</th>
+            <th>Operational Policy</th>
+            <th>Tenant Directive</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Monthly Rent</strong></td>
+            <td>Payable on the first day of each month.</td>
+            <td>Submit payment receipts promptly via portal.</td>
+          </tr>
+          <tr>
+            <td><strong>Security Deposit</strong></td>
+            <td>Guarantees damages and unpaid bills.</td>
+            <td>Refunded within 15 days following move-out.</td>
+          </tr>
+          <tr>
+            <td><strong>Unpaid / Overdue</strong></td>
+            <td>Current or past due invoice balance.</td>
+            <td>Settle balance immediately to prevent penalties.</td>
+          </tr>
+          <tr>
+            <td><strong>Paid / Pending</strong></td>
+            <td>Approved or queued for verification.</td>
+            <td>Download and archive digital payment receipt.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Philippine Tenancy Compliance &amp; Statutory Standards</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Regulatory Standard</th>
+            <th>Statutory Requirement</th>
+            <th>Compliance Policy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Rent Control Act</strong></td>
+            <td>Annual rent increase limits apply.</td>
+            <td>Automatic statutory rate capping.</td>
+          </tr>
+          <tr>
+            <td><strong>Deposit Ceiling</strong></td>
+            <td>Maximum two months advance rent.</td>
+            <td>Configurable deposit input constraints.</td>
+          </tr>
+          <tr>
+            <td><strong>Grace Period</strong></td>
+            <td>Standard 5-day payment leeway.</td>
+            <td>Penalties apply only after grace days.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 5 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 6: PART I USER OPERATIONS PAGE 6                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-6">
+    <div class="running-header">
+      <span class="app-brand">Tenant Guide</span>
+      <span>Rent Payments &amp; Receipts</span>
+    </div>
+
+    <div class="content">
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task T3</span> Pay Rent via GCash or Maya</div>
+        <p>You can settle rental payments electronically without leaving home:</p>
+        <ol>
+          <li>Open <strong>Finance Hub</strong> and click the <strong>Upload Payment</strong> button.</li>
+          <li>Scan the landlord GCash QR code or copy the recipient mobile number.</li>
+          <li>Complete payment inside GCash and capture a screenshot of your receipt.</li>
+          <li>Return to iReside and upload the payment proof screenshot image.</li>
+          <li>Type the exact <strong>Reference Number</strong> from your payment receipt.</li>
+          <li>Click <strong>Submit Payment</strong> to transmit verification to management.</li>
+        </ol>
+      </div>
+
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Settlement Stage</th>
+            <th>Responsible Role</th>
+            <th>Operational Deliverable</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Payment Submission</strong></td>
+            <td>Tenant Resident</td>
+            <td>Uploads payment receipt screenshot with reference number.</td>
+          </tr>
+          <tr>
+            <td><strong>2. Verification Queue</strong></td>
+            <td>Accounting Ledger</td>
+            <td>Transfers invoice to pending review ledger queue.</td>
+          </tr>
+          <tr>
+            <td><strong>3. Settlement Approval</strong></td>
+            <td>Landlord Manager</td>
+            <td>Approves payment proof and issues digital receipt.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="tip-box">
+        <strong>Payment Standard:</strong> Double check the 13-digit GCash reference number before submitting verification.
+      </div>
+
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task T4</span> Pay Cash Directly to Landlord</div>
+        <p>If you prefer paying rent with physical cash to management:</p>
+        <ol>
+          <li>Visit the management office and submit the exact cash amount.</li>
+          <li>Wait for the landlord to record the transaction in iReside.</li>
+          <li>Open your Finance Hub screen and refresh the page.</li>
+          <li>Locate your new receipt row under <strong>Payment History</strong>.</li>
+        </ol>
+      </div>
+
+      <h2>Payment Method Comparison &amp; Requirements</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Payment Method</th>
+            <th>Verification Data</th>
+            <th>Processing SLA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>GCash / Maya Transfer</strong></td>
+            <td>Screenshot and 13-digit reference number</td>
+            <td>Verified within 24 hours of upload.</td>
+          </tr>
+          <tr>
+            <td><strong>Cash to Landlord</strong></td>
+            <td>Handover to management office in person</td>
+            <td>Instant electronic ledger update on receipt.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 6 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 7: PART I USER OPERATIONS PAGE 7                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-7">
+    <div class="running-header">
+      <span class="app-brand">Tenant Guide</span>
+      <span>Repairs &amp; Direct Chat</span>
+    </div>
+
+    <div class="content">
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task T5</span> Submit Repair Request (Report Repairs)</div>
+        <p>When experiencing damaged fixtures, plumbing issues, or electrical faults:</p>
+        <ol>
+          <li>Click <strong>Maintenance</strong> in the main navigation menu.</li>
+          <li>Click the <strong>+ Submit Request</strong> button at the top right.</li>
+          <li>Select an issue category such as <strong>Plumbing</strong> or <strong>Electrical</strong>.</li>
+          <li>Type a clear, detailed description of the maintenance problem.</li>
+          <li>Click <strong>Upload Photo</strong> and choose clear picture evidence.</li>
+          <li>Click <strong>Submit Ticket</strong> to dispatch the repair work order.</li>
+        </ol>
+      </div>
+
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Repair Stage</th>
+            <th>Responsible Party</th>
+            <th>Operational Standard</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Ticket Creation</strong></td>
+            <td>Tenant Resident</td>
+            <td>Provides problem description and clear damage photos.</td>
+          </tr>
+          <tr>
+            <td><strong>2. Triage &amp; Schedule</strong></td>
+            <td>Landlord Manager</td>
+            <td>Reviews urgency and assigns technician to work order.</td>
+          </tr>
+          <tr>
+            <td><strong>3. Repair Completion</strong></td>
+            <td>Assigned Technician</td>
+            <td>Fixes reported fault and verifies physical restoration.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="tip-box">
+        <strong>Repair Standard:</strong> Include well-lit close-up photos of damages to speed up repair scheduling.
+      </div>
+
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task T6</span> Send Direct Message to Landlord</div>
+        <p>For inquiries, notices, or general questions with property management:</p>
+        <ol>
+          <li>Click <strong>Messages</strong> in the left navigation sidebar.</li>
+          <li>Select the conversation thread with your property manager.</li>
+          <li>Type your question or inquiry in the message composer.</li>
+          <li>Click the <strong>Send</strong> icon to dispatch your message immediately.</li>
+          <li>You will receive a notification alert once management replies.</li>
+        </ol>
+      </div>
+
+      <h2>Maintenance Priority Matrix &amp; SLA Times</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Fault Category</th>
+            <th>Representative Damage</th>
+            <th>Target Resolution SLA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Plumbing</strong></td>
+            <td>Water leaks, pipe burst, faucet failure</td>
+            <td>Resolved within 24 hours.</td>
+          </tr>
+          <tr>
+            <td><strong>Electrical</strong></td>
+            <td>Exposed wire, breaker trip, light failure</td>
+            <td>Resolved immediately or within 12 hours.</td>
+          </tr>
+          <tr>
+            <td><strong>General Fixture</strong></td>
+            <td>Window lock, door hinge, cabinet damage</td>
+            <td>Resolved within 48 to 72 hours.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 7 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 8: PART I USER OPERATIONS PAGE 8                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-8">
+    <div class="running-header">
+      <span class="app-brand">Tenant Guide</span>
+      <span>Move-Out &amp; Account Recovery</span>
+    </div>
+
+    <div class="content">
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task T7</span> Submit Move-Out Notice (Notice to Vacate)</div>
+        <p>When your lease concludes and you intend to vacate your unit:</p>
+        <ol>
+          <li>Click <strong>Leases</strong> in the main navigation menu.</li>
+          <li>Review your active tenancy contract specifications.</li>
+          <li>Click the <strong>Submit Move-Out Notice</strong> button.</li>
+          <li>Select your intended move-out departure date on the calendar.</li>
+          <li>Provide your moving reason and click <strong>Confirm Notice</strong>.</li>
+        </ol>
+      </div>
+
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task T8</span> Sign In Using Emergency Spare Key</div>
+        <p>If you lose your phone or cannot access your email inbox:</p>
+        <ol>
+          <li>On the login page, click the <strong>Use Emergency Key</strong> link.</li>
+          <li>Enter your registered account email address.</li>
+          <li>Enter your unique 16-character Emergency Spare Key code.</li>
+          <li>Click the <strong>Unlock Account</strong> button to authenticate.</li>
+          <li>Set a new password and save your replacement emergency key.</li>
+        </ol>
+      </div>
+
+      <h2>Move-Out Inspection &amp; Emergency Recovery Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Workflow Area</th>
+            <th>Required Action</th>
+            <th>Verification Standard</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Room Cleanliness</strong></td>
+            <td>Trash removed and surfaces cleaned.</td>
+            <td>Cleaning fee charged if left dirty.</td>
+          </tr>
+          <tr>
+            <td><strong>Key Handover</strong></td>
+            <td>All gate and unit keys returned.</td>
+            <td>Missing keys deducted from deposit.</td>
+          </tr>
+          <tr>
+            <td><strong>Final Submeters</strong></td>
+            <td>Final water and electric readings taken.</td>
+            <td>Final usage deducted from deposit balance.</td>
+          </tr>
+          <tr>
+            <td><strong>Spare Key Recovery</strong></td>
+            <td>Input 16-character emergency code.</td>
+            <td>Resets password and rotates recovery key.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Security Deposit Settlement &amp; Deduction Schedule</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Deduction Item</th>
+            <th>Assessment Standard</th>
+            <th>Settlement Window</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Unpaid Utilities</strong></td>
+            <td>Final electric and water submeter readings.</td>
+            <td>Deducted directly from deposit balance.</td>
+          </tr>
+          <tr>
+            <td><strong>Room Damage</strong></td>
+            <td>Physical inspection and repair estimate.</td>
+            <td>Itemized repair receipts provided to tenant.</td>
+          </tr>
+          <tr>
+            <td><strong>Remaining Balance</strong></td>
+            <td>Deposit funds minus verified deductions.</td>
+            <td>Refunded within 15 days of departure.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warning-box">
+        Security Directive: Store your Emergency Spare Key offline. Do not share it over messages.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 8 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 9: PART I USER OPERATIONS PAGE 9                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-9">
+    <div class="running-header">
+      <span class="app-brand">Landlord Guide</span>
+      <span>Property &amp; Unit Map</span>
+    </div>
+
+    <div class="content">
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task L1</span> Add New Rental Property and Units</div>
+        <p>Register a new rental building and its inventory in the portal:</p>
+        <ol>
+          <li>Click <strong>Properties</strong> in the left navigation sidebar.</li>
+          <li>Click the <strong>Add Property</strong> button in the top action bar.</li>
+          <li>Enter your building title under <strong>Property Name</strong>.</li>
+          <li>Provide the complete address and select number of floors.</li>
+          <li>Specify room counts for each floor level.</li>
+          <li>Click <strong>Create Property</strong> to register the building in iReside.</li>
+        </ol>
+      </div>
+
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Architectural Preset</th>
+            <th>Corridor Configuration</th>
+            <th>Recommended Property Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Double Loaded</strong></td>
+            <td>Central hallway with rooms on both sides.</td>
+            <td>Multi-story apartment and boarding buildings.</td>
+          </tr>
+          <tr>
+            <td><strong>Single Loaded</strong></td>
+            <td>Single corridor with open exterior railing.</td>
+            <td>Open-air rental complexes and row houses.</td>
+          </tr>
+          <tr>
+            <td><strong>U-Shape Layout</strong></td>
+            <td>Three-sided building enclosing central courtyard.</td>
+            <td>Multi-wing gated compound residential rental units.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="tip-box">
+        <strong>Unit Map Standard:</strong> Drag room cards along the interactive grid to match corridors.
+      </div>
+
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task L2</span> Configure Interactive Unit Map</div>
+        <p>Create visual 2D floorplans for effortless hallway oversight:</p>
+        <ol>
+          <li>Click <strong>Unit Map</strong> in the main navigation menu.</li>
+          <li>Choose an architectural preset like <strong>Double Loaded</strong> or <strong>Single Loaded</strong>.</li>
+          <li>Drag and drop room cards to match your corridor layout.</li>
+          <li>Click any unit card to edit numbers and monthly rates.</li>
+          <li>Click <strong>Save Layout</strong> to publish your floor plan.</li>
+        </ol>
+      </div>
+
+      <h2>Property Specifications &amp; Boundary Rules</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Configuration Field</th>
+            <th>Input Constraint</th>
+            <th>Operational Guidance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Property Title</strong></td>
+            <td>Maximum 60 alphanumeric characters</td>
+            <td>Use distinct building name for recognition.</td>
+          </tr>
+          <tr>
+            <td><strong>Complete Address</strong></td>
+            <td>Barangay Marulas street location</td>
+            <td>Must be physical location within pilot area.</td>
+          </tr>
+          <tr>
+            <td><strong>Floor Count</strong></td>
+            <td>Number from 1 to 10 floors</td>
+            <td>Generates structural floor plan levels.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 9 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 10: PART I USER OPERATIONS PAGE 10                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-10">
+    <div class="running-header">
+      <span class="app-brand">Landlord Guide</span>
+      <span>Utility Rates &amp; Tenants</span>
+    </div>
+
+    <div class="content">
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task L3</span> Configure Utility Rates &amp; Payment Details</div>
+        <p>Establish utility billing tariffs before calculating water and power:</p>
+        <ol>
+          <li>Click <strong>Utility Billing</strong> in the left navigation menu.</li>
+          <li>Open the <strong>Electricity &amp; Water Rates</strong> configuration tab.</li>
+          <li>Set electricity rate per kWh and water rate per cubic meter.</li>
+          <li>Enter your official <strong>GCash Mobile Number</strong> and account name.</li>
+          <li>Click <strong>Save Financial Configuration</strong> to apply rates across units.</li>
+        </ol>
+        <div class="tip-box">
+          Tip: Ensure your GCash account name matches official payment recipient details.
+        </div>
+      </div>
+
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task L4</span> Add New Resident Tenant (Quick Add)</div>
+        <p>The fastest onboarding method when meeting residents in person:</p>
+        <ol>
+          <li>Click <strong>Tenants</strong> in the sidebar and click <strong>+ Add Tenant</strong>.</li>
+          <li>Select the <strong>Quick Add</strong> onboarding tab.</li>
+          <li>Enter the resident Full Name, Email Address, and Phone Number.</li>
+          <li>Assign a vacant room, monthly rent, and lease start date.</li>
+          <li>Click <strong>Create Tenant Account</strong> to generate login credentials.</li>
+        </ol>
+      </div>
+
+      <h2>Utility Tariff Structure &amp; Billing Specifications</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Utility Service</th>
+            <th>Measurement Unit</th>
+            <th>Billing Formula</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Electricity</strong></td>
+            <td>Kilowatt-hour (kWh)</td>
+            <td>Usage multiplied by configured rate per kWh.</td>
+          </tr>
+          <tr>
+            <td><strong>Water</strong></td>
+            <td>Cubic meter (m&sup3;)</td>
+            <td>Usage multiplied by configured rate per cubic meter.</td>
+          </tr>
+          <tr>
+            <td><strong>GCash Account</strong></td>
+            <td>11-digit mobile number</td>
+            <td>Displayed directly on tenant invoices.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Tenant Onboarding Options &amp; Account Provisioning</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Onboarding Option</th>
+            <th>Intended Applicant</th>
+            <th>System Output</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Quick Add</strong></td>
+            <td>Walk-in tenants meeting in person.</td>
+            <td>Instant account with temporary password.</td>
+          </tr>
+          <tr>
+            <td><strong>Self-Onboarding</strong></td>
+            <td>Remote applicants using mobile phones.</td>
+            <td>Secure application link sent via SMS or chat.</td>
+          </tr>
+          <tr>
+            <td><strong>Digital Lease</strong></td>
+            <td>Approved incoming residents.</td>
+            <td>Binding electronic contract ready to sign.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>Privacy Standard:</strong> Tenant phone numbers and contact details remain protected under Republic Act 10173.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 10 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 11: PART I USER OPERATIONS PAGE 11                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-11">
+    <div class="running-header">
+      <span class="app-brand">Landlord Guide</span>
+      <span>Invites &amp; Walk-in Applicants</span>
+    </div>
+
+    <div class="content">
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task L5</span> Generate Self-Onboarding Invite Link</div>
+        <p>Allow prospective tenants to complete application forms on mobile:</p>
+        <ol>
+          <li>Inside the Add Tenant dialog, click <strong>Self-Onboarding Link</strong>.</li>
+          <li>Select the target vacant unit and link expiration timeframe.</li>
+          <li>Click <strong>Generate Onboarding Link</strong> to create the registration URL.</li>
+          <li>Click <strong>Copy Link</strong> or show the QR code to the applicant.</li>
+          <li>You receive an instant alert when the tenant submits their application.</li>
+        </ol>
+      </div>
+
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Onboarding Channel</th>
+            <th>Workflow Method</th>
+            <th>Primary Benefit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Quick Add Form</strong></td>
+            <td>Landlord enters resident details directly.</td>
+            <td>Instant credentials created for walk-in residents.</td>
+          </tr>
+          <tr>
+            <td><strong>Self-Onboarding Link</strong></td>
+            <td>Applicant completes mobile registration form.</td>
+            <td>Eliminates manual paperwork during remote leasing.</td>
+          </tr>
+          <tr>
+            <td><strong>QR Code Poster</strong></td>
+            <td>Prospective tenant scans physical sign.</td>
+            <td>Instant access during on-site property walkthroughs.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="tip-box">
+        <strong>Onboarding Standard:</strong> Verify government ID photos and mobile numbers before executing contracts.
+      </div>
+
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task L6</span> Review and Process Walk-in Applications</div>
+        <p>Process rental applicants who visit your management office:</p>
+        <ol>
+          <li>Open <strong>Tenants</strong> in the sidebar and choose the <strong>Applications</strong> tab.</li>
+          <li>Click the applicant name to inspect uploaded identity credentials.</li>
+          <li>If documentation is approved, click the <strong>Approve Application</strong> button.</li>
+          <li>Select the unit assignment and generate the digital lease agreement.</li>
+          <li>The platform automatically sends sign-in credentials to their verified email.</li>
+        </ol>
+      </div>
+
+      <h2>Applicant Verification &amp; Document Review Criteria</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Verification Item</th>
+            <th>Required Evidence</th>
+            <th>Approval Directive</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Government ID</strong></td>
+            <td>UMID, Passport, or Driver License</td>
+            <td>Verify photo matches applicant name clearly.</td>
+          </tr>
+          <tr>
+            <td><strong>Mobile Contact</strong></td>
+            <td>11-digit Philippine mobile number</td>
+            <td>Perform test phone call or SMS inquiry.</td>
+          </tr>
+          <tr>
+            <td><strong>Assigned Room</strong></td>
+            <td>Vacant unit on interactive map</td>
+            <td>Confirm room status before lease generation.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 11 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 12: PART I USER OPERATIONS PAGE 12                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-12">
+    <div class="running-header">
+      <span class="app-brand">Landlord Guide</span>
+      <span>Payments &amp; Submeters</span>
+    </div>
+
+    <div class="content">
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task L7</span> Verify and Settle Tenant Payments</div>
+        <p>Confirm electronic GCash transfers or direct cash collections:</p>
+        <ol>
+          <li>Click <strong>Finance Hub</strong> in the left navigation sidebar.</li>
+          <li>Under <strong>Pending Verification</strong>, click the submitted tenant payment row.</li>
+          <li>Review the uploaded receipt screenshot and match the reference number.</li>
+          <li>Click the <strong>Confirm Payment</strong> button to approve the transaction.</li>
+          <li>The tenant balance updates instantly and a receipt is issued.</li>
+        </ol>
+      </div>
+
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task L8</span> Record Submeter Readings (Electric &amp; Water)</div>
+        <p>Automate tenant utility billing calculations effortlessly:</p>
+        <ol>
+          <li>Click <strong>Utility Billing</strong> and open the <strong>Submeters</strong> tab.</li>
+          <li>Select a room and enter current numbers into <strong>Current Reading</strong>.</li>
+          <li>The system computes exact consumption from previous recorded readings.</li>
+          <li>Total charges are calculated using your configured utility tariff rates.</li>
+          <li>Click <strong>Save Reading &amp; Generate Bill</strong> to post charges.</li>
+        </ol>
+      </div>
+
+      <h2>Payment Settlement &amp; Submeter Invoicing Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Workflow Action</th>
+            <th>Verification Data</th>
+            <th>Ledger Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>GCash / Maya</strong></td>
+            <td>Match 13-digit reference number against statement.</td>
+            <td>Mark invoice paid and issue receipt.</td>
+          </tr>
+          <tr>
+            <td><strong>Physical Cash</strong></td>
+            <td>Confirm exact cash received in office.</td>
+            <td>Record cash transaction in ledger.</td>
+          </tr>
+          <tr>
+            <td><strong>Partial Payment</strong></td>
+            <td>Accepted payment is less than total due.</td>
+            <td>Deduct paid amount and retain remaining balance.</td>
+          </tr>
+          <tr>
+            <td><strong>Submeter Billing</strong></td>
+            <td>Net usage multiplied by tariff rate.</td>
+            <td>Consolidated invoice posted to tenant portal.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Utility Tariff Standards &amp; Meter Variance Policies</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Utility Service</th>
+            <th>Billing Baseline</th>
+            <th>Audit Verification Standard</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Electricity (kWh)</strong></td>
+            <td>Submeter consumption multiplied by tariff rate.</td>
+            <td>Monthly photo documentation of analog dials.</td>
+          </tr>
+          <tr>
+            <td><strong>Water (Cubic Meters)</strong></td>
+            <td>Net volume usage times configured rate.</td>
+            <td>Checked against master water utility bill.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>Audit Standard:</strong> Take reference photos of analog meters during monthly inspections to verify records.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 12 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 13: PART I USER OPERATIONS PAGE 13                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-13">
+    <div class="running-header">
+      <span class="app-brand">Landlord Guide</span>
+      <span>Maintenance &amp; Announcements</span>
+    </div>
+
+    <div class="content">
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task L9</span> Manage and Resolve Maintenance Requests</div>
+        <p>Process repair work orders submitted by building residents:</p>
+        <ol>
+          <li>Click <strong>Maintenance</strong> in the left navigation sidebar.</li>
+          <li>Click any ticket marked with a red tag or <strong>Pending</strong> status.</li>
+          <li>Review the problem description and photo evidence submitted by resident.</li>
+          <li>Assign the repair: <strong>Landlord Repair</strong> or <strong>Third Party Repair</strong>.</li>
+          <li>Click the <strong>To Process</strong> button to start scheduling.</li>
+          <li>Once work is finished, click the <strong>Mark as Completed</strong> button.</li>
+        </ol>
+      </div>
+
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Advisory Type</th>
+            <th>Broadcast Scope</th>
+            <th>Priority Indicator</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Utility Interruption</strong></td>
+            <td>Scheduled water or electrical repair outages.</td>
+            <td>Urgent banner on tenant dashboard.</td>
+          </tr>
+          <tr>
+            <td><strong>Payment Reminder</strong></td>
+            <td>Upcoming monthly rent settlement deadlines.</td>
+            <td>Standard notification alert feed.</td>
+          </tr>
+          <tr>
+            <td><strong>Building Advisory</strong></td>
+            <td>Waste disposal schedules and quiet hours.</td>
+            <td>Community bulletin post on board.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="tip-box">
+        <strong>Communication Standard:</strong> Published announcements broadcast instantly across all active resident mobile devices.
+      </div>
+
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task L10</span> Post Building Announcements</div>
+        <p>Broadcast essential building advisories (such as water maintenance):</p>
+        <ol>
+          <li>Click <strong>Community Hub</strong> in the left navigation sidebar.</li>
+          <li>In the composer toolbar, select the <strong>Announcement</strong> tab.</li>
+          <li>Type the full notice details for your building residents.</li>
+          <li>Click <strong>Photo</strong> if you wish to attach an informative image.</li>
+          <li>Click the <strong>Publish</strong> button in the bottom right corner.</li>
+        </ol>
+      </div>
+
+      <h2>Maintenance Workflow &amp; Resolution Protocol</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Workflow Stage</th>
+            <th>Responsible Actor</th>
+            <th>Target Resolution Standard</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Initial Review</strong></td>
+            <td>Landlord Property Manager</td>
+            <td>Review damage photo within 12 hours.</td>
+          </tr>
+          <tr>
+            <td><strong>Work Assignment</strong></td>
+            <td>Internal Caretaker or Vendor</td>
+            <td>Schedule physical repair date with tenant.</td>
+          </tr>
+          <tr>
+            <td><strong>Final Sign-Off</strong></td>
+            <td>Landlord and Resident Tenant</td>
+            <td>Confirm repairs and close maintenance ticket.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 13 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 14: PART I USER OPERATIONS PAGE 14                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-14">
+    <div class="running-header">
+      <span class="app-brand">Landlord Guide</span>
+      <span>Move-Out, Ledgers &amp; Reports</span>
+    </div>
+
+    <div class="content">
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task L11</span> Process Move-Out and Security Deposit</div>
+        <p>Execute structured move-out settlements when residents vacate:</p>
+        <ol>
+          <li>Click <strong>Leases</strong> in the sidebar and open <strong>Move-Out Requests</strong>.</li>
+          <li>Complete the physical room inspection using the built-in checklist.</li>
+          <li>Enter itemized deductions for damages or outstanding utility balances.</li>
+          <li>The system calculates the net refundable <strong>Security Deposit</strong> amount.</li>
+          <li>Click <strong>Finalize Move-Out</strong> and disburse remaining funds to tenant.</li>
+          <li>The assigned room status returns to <strong>Vacant</strong> automatically.</li>
+        </ol>
+        <div class="tip-box">
+          Tip: The system automatically deducts unpaid utility bills from deposits.
+        </div>
+      </div>
+
+      <div class="task-block">
+        <div class="task-title"><span class="task-badge">Task L12</span> Export Financial Reports and Ledgers</div>
+        <p>Extract verified income and expense records for financial auditing:</p>
+        <ol>
+          <li>Click <strong>Finance Hub</strong> in the menu and select <strong>Reports</strong>.</li>
+          <li>Select your reporting period by month, quarter, or annual range.</li>
+          <li>Inspect total collected rent, electricity fees, and water charges.</li>
+          <li>Click the <strong>Export PDF</strong> button to download a formatted statement.</li>
+          <li>Save or print the document for official property bookkeeping records.</li>
+        </ol>
+      </div>
+
+      <h2>Move-Out Settlement &amp; Security Deposit Deductions</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Deduction Item</th>
+            <th>Assessment Standard</th>
+            <th>Settlement Directive</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Utility Arrears</strong></td>
+            <td>Final submeter meter readings.</td>
+            <td>Deducted directly from deposit balance.</td>
+          </tr>
+          <tr>
+            <td><strong>Room Damages</strong></td>
+            <td>Damage exceeding normal wear and tear.</td>
+            <td>Itemized repair receipts provided to tenant.</td>
+          </tr>
+          <tr>
+            <td><strong>Net Refund</strong></td>
+            <td>Remaining security deposit balance.</td>
+            <td>Transferred via GCash or cash within 15 days.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Financial Reporting &amp; Tax Audit Export Reference</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Report Format</th>
+            <th>Coverage Period</th>
+            <th>Key Financial Metrics</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Monthly Rent Ledger</strong></td>
+            <td>Current billing month</td>
+            <td>Total collected rent, unpaid arrears, utility fees.</td>
+          </tr>
+          <tr>
+            <td><strong>Annual Revenue Sheet</strong></td>
+            <td>12-month calendar year</td>
+            <td>Gross rental collections, deductions, net income.</td>
+          </tr>
+          <tr>
+            <td><strong>Submeter Utility Audit</strong></td>
+            <td>Monthly meter readings</td>
+            <td>Initial reading, final reading, total billable units.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>Bookkeeping Directive:</strong> Retain exported PDF financial reports for 5 years for tax compliance.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 14 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 15: PART I USER OPERATIONS PAGE 15                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-15">
+    <div class="running-header">
+      <span class="app-brand">Support &amp; Security</span>
+      <span>Troubleshooting Guide</span>
+    </div>
+
+    <div class="content">
+      <h2>Troubleshooting Frequently Encountered Issues</h2>
+
+      <div class="qa-block">
+        <div class="qa-q">1. Did not receive 2FA verification email?</div>
+        <p class="qa-a">Check your Spam or Junk folder. Wait 60 seconds before clicking Resend Code.</p>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">2. Forgotten password and unable to access email?</div>
+        <p class="qa-a">Use your Emergency Spare Key. Click Use Emergency Key on the login screen.</p>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">3. Weak internet connection while submitting payments?</div>
+        <p class="qa-a">Save your receipt screenshot. Upload proof once your internet connection is restored.</p>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">4. Submitted payment not yet deducted from balance?</div>
+        <p class="qa-a">Landlords must review and confirm receipts before balances update on screen.</p>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">5. How to upload clear repair request photos?</div>
+        <p class="qa-a">Turn on room lighting. Capture close-up photos of the specific damaged fixtures.</p>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">6. Who to contact during building emergencies?</div>
+        <p class="qa-a">Contact management emergency hotlines or Barangay Marulas Rescue Services immediately.</p>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">7. How to resolve camera permission errors when uploading receipts?</div>
+        <p class="qa-a">Open phone browser settings. Tap Site Settings, select Camera, and choose Allow.</p>
+      </div>
+
+      <h2>Data Privacy &amp; Legal Compliance Standards</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Regulatory Mandate</th>
+            <th>Protected Domain</th>
+            <th>Compliance Implementation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>RA 10173 (Data Privacy)</strong></td>
+            <td>Tenant personal information</td>
+            <td>Encrypted storage of ID photos and phone numbers.</td>
+          </tr>
+          <tr>
+            <td><strong>RA 8792 (E-Commerce)</strong></td>
+            <td>Digital lease agreements</td>
+            <td>Legally binding electronic signatures on contracts.</td>
+          </tr>
+          <tr>
+            <td><strong>Audit Trail Standard</strong></td>
+            <td>Financial payment records</td>
+            <td>Immutable transaction timestamps on receipts.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Essential Security Guidelines</h2>
+      <ul>
+        <li><strong>Keep Passwords Secret:</strong> Never share passwords with anyone. Use mixed letters and numbers.</li>
+        <li><strong>Store Emergency Keys Safely:</strong> Save your spare key on a flash drive or notebook.</li>
+        <li><strong>Beware of Phishing Messages:</strong> Never log in through text message links. Use official URLs.</li>
+        <li><strong>Archive Payment Receipts:</strong> Save reference numbers and keep digital payment proof files.</li>
+        <li><strong>Protect Personal Identity Data:</strong> Government IDs remain encrypted and restricted to verified management.</li>
+      </ul>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 15 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 16: PART I USER OPERATIONS PAGE 16                             -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-16">
+    <div class="running-header">
+      <span class="app-brand">Support &amp; Reference</span>
+      <span>FAQs, Helpline &amp; Glossary</span>
+    </div>
+
+    <div class="content">
+      <h2>Frequently Asked Questions (FAQs)</h2>
+
+      <div class="qa-block">
+        <div class="qa-q">Q: How are monthly electricity and water bills computed?</div>
+        <p class="qa-a">System subtracts previous meter readings from current readings and multiplies tariffs.</p>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">Q: Are digital lease signatures legally binding in the Philippines?</div>
+        <p class="qa-a">Yes. Electronic signatures comply with Philippine Republic Act No. 8792.</p>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">Q: How is resident personal data protected inside iReside?</div>
+        <p class="qa-a">System complies with the Philippine Data Privacy Act of 2012 (RA 10173).</p>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">Q: What should I do if my GCash payment fails during transfer?</div>
+        <p class="qa-a">Wait 5 minutes, verify GCash wallet balance, and re-attempt payment transfer.</p>
+      </div>
+
+      <h2>Official Helpline &amp; Technical Support</h2>
+      <p style="font-size: 7.2pt; margin-bottom: 1.2mm;">
+        For operational support, reach out to:
+        <strong>support@ireside.ph</strong> | Tel: <strong>(02) 8292-1000</strong> (Monday through Saturday, 8:00 AM &ndash; 5:00 PM).
+        Barangay Marulas Hall, MacArthur Highway, Valenzuela City.
+      </p>
+
+      <h2>Local Emergency &amp; Assistance Hotlines</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Public Agency</th>
+            <th>Service Scope</th>
+            <th>Emergency Contact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Barangay Hall</strong></td>
+            <td>Barangay Marulas Community Desk</td>
+            <td>(02) 8292-1000</td>
+          </tr>
+          <tr>
+            <td><strong>Fire Station</strong></td>
+            <td>Valenzuela Fire Protection Service</td>
+            <td>160 / (02) 8292-2222</td>
+          </tr>
+          <tr>
+            <td><strong>Police Substation</strong></td>
+            <td>Marulas Police Community Precinct</td>
+            <td>166 / (02) 8292-1111</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Operational Glossary</h2>
+      <div class="glossary-item"><span class="glossary-term">2FA:</span> Two-Factor Authentication securing logins with 6-digit email codes.</div>
+      <div class="glossary-item"><span class="glossary-term">Base Rent:</span> Fixed monthly accommodation fee excluding utility submeter charges.</div>
+      <div class="glossary-item"><span class="glossary-term">Submeter:</span> Individual utility meter dedicated to recording room water or electric usage.</div>
+      <div class="glossary-item"><span class="glossary-term">Maintenance Ticket:</span> Digital work order tracking property repairs and resolutions.</div>
+      <div class="glossary-item"><span class="glossary-term">Emergency Spare Key:</span> Cryptographic backup code restoring access when phones are lost.</div>
+      <div class="glossary-item"><span class="glossary-term">Dashboard:</span> Operational overview displaying rent statuses, announcements, and quick tools.</div>
+      <div class="glossary-item"><span class="glossary-term">Ledger:</span> Comprehensive financial ledger tracking debits, credits, and rent collections.</div>
+      <div class="glossary-item"><span class="glossary-term">Invoice:</span> Itemized monthly billing statement specifying exact payments due.</div>
+      <div class="glossary-item"><span class="glossary-term">Unit Map:</span> Visual floorplan displaying vacant and occupied rental rooms.</div>
+      <div class="glossary-item"><span class="glossary-term">Security Deposit:</span> Upfront refundable deposit protecting landlords against property damages.</div>
+      <div class="glossary-item"><span class="glossary-term">Upload:</span> Submitting images or documents from your device to iReside.</div>
+      <div class="glossary-item"><span class="glossary-term">Move-Out Notice:</span> Formal notification declaring intention to vacate rental premises.</div>
+      <div class="glossary-item"><span class="glossary-term">Tariff Rate:</span> Unit cost per kilowatt-hour or cubic meter of water.</div>
+
+      <p style="font-size: 6.8pt; color: #666; text-align: center; margin-top: 1.2mm; border-top: 1px solid #ddd; padding-top: 0.6mm;">
+        &copy; 2026 iReside Technologies. All rights reserved. Authorized Operational Guide.
+      </p>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part I</span>
+      <span class="page-number">Page 16 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 17: PART II DIVISIONAL COVER & IT TECHNICAL DIRECTORY                -->
+  <!-- ========================================================================= -->
+  <div class="page cover-page" id="page-17">
+    <div class="cover-frame">
+      <div class="cover-header-top">
+        <span>iReside Engineering Group</span>
+        <span>Part II Technical Suite</span>
+      </div>
+
+      <div class="cover-hero">
+        <div class="cover-wordmark">iReside</div>
+        <div class="cover-tagline">Part II: IT Technical Documentation &amp; Systems Administration</div>
+        <div class="cover-rule"></div>
+        <div class="cover-title">SYSTEM ARCHITECTURE &amp; TECHNICAL ADMINISTRATION HANDBOOK</div>
+        <div class="cover-subtitle">Production Topology, Security Invariants, Database Schema &amp; Operational Runbooks</div>
+      </div>
+
+      <div class="cover-emblem-wrap">
+        <img src="images/ireside-logo-bw.png" alt="iReside Logo" class="cover-logo-img" />
+      </div>
+
+      <table class="cover-doc-table">
+        <tr>
+          <td class="meta-label">Part II Ref</td>
+          <td class="meta-value">DOC REF: IR-UNIFIED-PART-II</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Classification</td>
+          <td class="meta-value">Internal Technical Reference &bull; Systems Operations</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Audience</td>
+          <td class="meta-value">Systems Architects, DevOps Engineers, and Database Administrators</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Stack</td>
+          <td class="meta-value">Next.js 16 (React 19), Supabase PostgreSQL 15, Vercel &amp; Capacitor 7</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Scope</td>
+          <td class="meta-value">Pages 17 to 32 of Unified Comprehensive Documentation</td>
+        </tr>
+      </table>
+
+      <div class="cover-imprint">
+        <span>Published by iReside Core Engineering Group</span>
+        <span>Authorized Technical Custody &bull; Part II</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 18: PART II TECHNICAL TABLE OF CONTENTS                              -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-18">
+    <div class="running-header">
+      <span class="app-brand">iReside Engineering</span>
+      <span>Part II Directory &amp; Executive Summary</span>
+    </div>
+
+    <div class="content">
+      <h2>Part II Table of Contents</h2>
+      <table class="toc-table">
+        <tr><td class="toc-title">1. System Architecture &amp; Complete Tech Stack</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 19</td></tr>
+        <tr><td class="toc-title">2. Strict Two-Role Model &amp; Zero Admin Architecture</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 20</td></tr>
+        <tr><td class="toc-title">3. Environment Variables &amp; Secrets Governance</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 21</td></tr>
+        <tr><td class="toc-title">4. Database Schema: Users, Profiles &amp; Buildings</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 22</td></tr>
+        <tr><td class="toc-title">5. Database Schema: Leases, Financials &amp; Operations</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 23</td></tr>
+        <tr><td class="toc-title">6. Row-Level Security (RLS) Policy Governance</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 24</td></tr>
+        <tr><td class="toc-title">7. Authentication Engine &amp; 2FA Session Guards</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 25</td></tr>
+        <tr><td class="toc-title">8. Cryptographic Emergency Spare Key Engine</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 26</td></tr>
+        <tr><td class="toc-title">9. Turnkey Workspace Launch Lifecycle (/api/setup)</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 27</td></tr>
+        <tr><td class="toc-title">10. Core Application REST API Directory</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 28</td></tr>
+        <tr><td class="toc-title">11. Mobile Client Architecture &amp; Android Build Pipeline</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 29</td></tr>
+        <tr><td class="toc-title">12. Automated Schedulers &amp; Serverless Cron Workers</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 30</td></tr>
+        <tr><td class="toc-title">13. Database Backups, Disaster Recovery &amp; Runbooks</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 31</td></tr>
+        <tr><td class="toc-title">14. Commissioning Sign-Off, Support &amp; Glossary</td><td><div class="toc-leader"></div></td><td class="toc-page">Page 32</td></tr>
+      </table>
+
+      <h2>Part II Executive Architecture Overview</h2>
+      <p>This technical division documents production architecture and security invariants.</p>
+      <p>The platform decouples presentation, serverless edge compute, and managed relational persistence.</p>
+      <p>The system enforces a strict two-role model: <strong>Landlord</strong> and <strong>Tenant</strong> with zero human admin.</p>
+      <p>All automated tasks execute through secure service role tokens.</p>
+
+      <h2>Part II Technical Baseline &amp; Governance Rules</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Technical Pillar</th>
+            <th>Production Architecture</th>
+            <th>System Guarantee</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Zero Human Admin</strong></td>
+            <td>Pure two-role authorization boundary.</td>
+            <td>No human administrator security backdoors.</td>
+          </tr>
+          <tr>
+            <td><strong>Data Isolation</strong></td>
+            <td>PostgreSQL Row-Level Security policies.</td>
+            <td>Strict isolation preventing cross-tenant leakage.</td>
+          </tr>
+          <tr>
+            <td><strong>Toolchain Purity</strong></td>
+            <td>Dedicated android/ native Gradle wrapper.</td>
+            <td>Zero Next.js root directory pollution.</td>
+          </tr>
+          <tr>
+            <td><strong>Asynchronous Sync</strong></td>
+            <td>Bounded non-blocking token refresh.</td>
+            <td>Eliminates browser thread navigation stalls.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>Technical Standard:</strong> All production updates must satisfy automated test suites without regression.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 18 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 19: PART II IT TECHNICAL CHAPTER 1          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-19">
+    <div class="running-header">
+      <span class="app-brand">System Architecture</span>
+      <span>Production Topology &amp; Tech Stack</span>
+    </div>
+
+    <div class="content">
+      <h2>Production Topology Architecture</h2>
+      <p>iReside deploys a modern three-tier serverless topology with edge acceleration:</p>
+
+      <div class="flow-diagram">
+        <div class="flow-card">
+          <div class="flow-card-title">Client Tier: Web &amp; Android PWA (Capacitor 7)</div>
+          <div class="flow-card-desc">React 19 &bull; Tailwind CSS &bull; Local Storage Offline Caching</div>
+        </div>
+        <div class="flow-connector-v">
+          <div class="flow-stem"></div>
+          <span class="flow-badge">HTTPS / TLS 1.3 / Edge Middleware</span>
+          <svg width="10" height="9" viewBox="0 0 10 9">
+            <line x1="5" y1="0" x2="5" y2="5" stroke="#333" stroke-width="1.5" />
+            <polygon points="2,4 5,9 8,4" fill="#333" />
+          </svg>
+        </div>
+        <div class="flow-card">
+          <div class="flow-card-title">Application Tier: Vercel Serverless Edge (Next.js 16)</div>
+          <div class="flow-card-desc">App Router &bull; Server Actions &bull; REST API Routes &bull; Vercel Crons</div>
+        </div>
+        <div class="flow-connector-v">
+          <div class="flow-stem"></div>
+          <span class="flow-badge">TLS 1.3 / Port 5432 / HTTPS</span>
+          <svg width="10" height="9" viewBox="0 0 10 9">
+            <line x1="5" y1="0" x2="5" y2="5" stroke="#333" stroke-width="1.5" />
+            <polygon points="2,4 5,9 8,4" fill="#333" />
+          </svg>
+        </div>
+        <div class="flow-card">
+          <div class="flow-card-title">Managed Cloud BaaS: Supabase PostgreSQL 15 &amp; Storage CDN</div>
+          <div class="flow-card-desc">PostgreSQL RLS Policies &bull; PgBouncer Pooler &bull; S3 Bucket CDN</div>
+        </div>
+      </div>
+
+      <h2>Complete Technology Stack Specifications</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Subsystem</th>
+            <th>Technology</th>
+            <th>Runtime / Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Frontend</strong></td>
+            <td>Next.js 16 (App Router)</td>
+            <td>React 19 Server Components and Server Actions</td>
+          </tr>
+          <tr>
+            <td><strong>Language</strong></td>
+            <td>TypeScript 5.x</td>
+            <td>Strict mode, end-to-end type safety</td>
+          </tr>
+          <tr>
+            <td><strong>Styling</strong></td>
+            <td>Tailwind CSS v3.4</td>
+            <td>Mobile-responsive, high-contrast accessible</td>
+          </tr>
+          <tr>
+            <td><strong>Database</strong></td>
+            <td>PostgreSQL 15.x</td>
+            <td>Supabase BaaS with Row-Level Security</td>
+          </tr>
+          <tr>
+            <td><strong>Connection Pool</strong></td>
+            <td>PgBouncer</td>
+            <td>Transaction connection pooling on port 6543</td>
+          </tr>
+          <tr>
+            <td><strong>Mobile</strong></td>
+            <td>Capacitor 7 Native Wrapper</td>
+            <td>Android SDK 34, standalone Gradle project</td>
+          </tr>
+          <tr>
+            <td><strong>File Storage</strong></td>
+            <td>Supabase Storage</td>
+            <td>S3-compatible encrypted CDN buckets</td>
+          </tr>
+          <tr>
+            <td><strong>Edge Compute</strong></td>
+            <td>Vercel Serverless</td>
+            <td>Edge middleware and serverless functions</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Network Ingress Routing &amp; Protocol Bindings</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Traffic Layer</th>
+            <th>Protocol / Port</th>
+            <th>Destination Subsystem</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Web &amp; Mobile Traffic</strong></td>
+            <td>HTTPS / TLS 1.3 (Port 443)</td>
+            <td>Vercel Edge Serverless Gateway.</td>
+          </tr>
+          <tr>
+            <td><strong>Database Pool</strong></td>
+            <td>TCP Port 6543 (PgBouncer)</td>
+            <td>PostgreSQL 15 Managed Cluster.</td>
+          </tr>
+          <tr>
+            <td><strong>Object Storage CDN</strong></td>
+            <td>HTTPS API (Port 443)</td>
+            <td>Encrypted S3-compatible buckets.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 19 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 20: PART II IT TECHNICAL CHAPTER 2          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-20">
+    <div class="running-header">
+      <span class="app-brand">Access Control</span>
+      <span>Strict Two-Role Human User Model</span>
+    </div>
+
+    <div class="content">
+      <h2>Strict Two-Role Human User Model</h2>
+      <p>Per system rules, iReside implements a strict two-role model with <strong>zero admin role</strong>:</p>
+      <ul>
+        <li><strong>Landlord:</strong> Property owner. Manages properties, unit maps, leases, invoices, and maintenance.</li>
+        <li><strong>Tenant:</strong> Resident occupant. Signs digital leases, submits payments, logs maintenance tickets.</li>
+      </ul>
+
+      <h2>Service Role Operational Model</h2>
+      <p>Automated processes that require cross-tenant or system-level access use secure service role tokens:</p>
+      <ul>
+        <li><strong>Automated Billing Cron:</strong> Daily midnight worker generates recurring rent and overdue charges.</li>
+        <li><strong>Workspace Initialization (/api/setup/launch):</strong> Bypasses client RLS to stamp initial configuration.</li>
+        <li><strong>Disaster Recovery &amp; Seeding:</strong> Dedicated CLI maintenance scripts run via service role key.</li>
+      </ul>
+
+      <h2>Access Control Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Resource / Scope</th>
+            <th>Landlord</th>
+            <th>Tenant</th>
+            <th>Service Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Property Configuration</td>
+            <td>Read / Write (Own)</td>
+            <td>Read Only (Assigned)</td>
+            <td>Full Bypass</td>
+          </tr>
+          <tr>
+            <td>Lease Contracts</td>
+            <td>Create / Sign (Own)</td>
+            <td>Sign / View (Own)</td>
+            <td>Full Bypass</td>
+          </tr>
+          <tr>
+            <td>Payment Verification</td>
+            <td>Verify / Reject</td>
+            <td>Submit / View (Own)</td>
+            <td>Automated Audit</td>
+          </tr>
+          <tr>
+            <td>System Initialization</td>
+            <td>Execute Launch</td>
+            <td>No Access</td>
+            <td>Atomic Write</td>
+          </tr>
+          <tr>
+            <td>Submeter Readings</td>
+            <td>Record &amp; Bill (Own)</td>
+            <td>View Bills (Assigned)</td>
+            <td>Automated Billing</td>
+          </tr>
+          <tr>
+            <td>Repair Work Orders</td>
+            <td>Assign &amp; Close (Own)</td>
+            <td>Create &amp; View (Own)</td>
+            <td>Work Order Worker</td>
+          </tr>
+          <tr>
+            <td>Emergency Spare Key</td>
+            <td>Reset &amp; Generate (Own)</td>
+            <td>Reset &amp; Generate (Own)</td>
+            <td>Bcrypt Hash Engine</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Human Role vs. Service Role Boundary Specifications</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Security Boundary</th>
+            <th>Design Constraint</th>
+            <th>Enforcement Architecture</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Zero Human Admin</strong></td>
+            <td>No master user exists.</td>
+            <td>Database lacks admin enum values.</td>
+          </tr>
+          <tr>
+            <td><strong>Service Automation</strong></td>
+            <td>Background tasks use tokens.</td>
+            <td>Bypasses RLS through server credentials.</td>
+          </tr>
+          <tr>
+            <td><strong>Role Segregation</strong></td>
+            <td>Landlords cannot access tenants.</td>
+            <td>Strict foreign key tenant checks.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>Data Flow Invariant:</strong> External entities never communicate directly without mediating processes.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 20 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 21: PART II IT TECHNICAL CHAPTER 3          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-21">
+    <div class="running-header">
+      <span class="app-brand">Configuration</span>
+      <span>Environment Secrets &amp; Credentials</span>
+    </div>
+
+    <div class="content">
+      <h2>Required Environment Variables (.env.local)</h2>
+      <p>All production instances must supply the following environment secrets in <code>.env.local</code>:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Scope</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>NEXT_PUBLIC_SUPABASE_URL</code></td>
+            <td>Public / Browser</td>
+            <td>Supabase HTTPS project endpoint</td>
+          </tr>
+          <tr>
+            <td><code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code></td>
+            <td>Public / Browser</td>
+            <td>Client-side anonymous key (RLS enforced)</td>
+          </tr>
+          <tr>
+            <td><code>SUPABASE_SERVICE_ROLE_KEY</code></td>
+            <td>Server Only</td>
+            <td>Bypasses RLS for setup, launch, and crons</td>
+          </tr>
+          <tr>
+            <td><code>CRON_SECRET</code></td>
+            <td>Server Only</td>
+            <td>Bearer token authenticating Vercel cron triggers</td>
+          </tr>
+          <tr>
+            <td><code>NEXT_PUBLIC_APP_URL</code></td>
+            <td>Public / Browser</td>
+            <td>Production canonical URL for invite generation</td>
+          </tr>
+          <tr>
+            <td><code>DATABASE_URL</code></td>
+            <td>Server Only</td>
+            <td>Direct connection for migrations and seeds</td>
+          </tr>
+          <tr>
+            <td><code>CAPACITOR_SERVER_URL</code></td>
+            <td>Public / Build</td>
+            <td>Canonical web URL for Android APK</td>
+          </tr>
+          <tr>
+            <td><code>NEXT_PUBLIC_APP_ENV</code></td>
+            <td>Public / Browser</td>
+            <td>Deployment target environment name</td>
+          </tr>
+          <tr>
+            <td><code>RESEND_API_KEY</code></td>
+            <td>Server Only</td>
+            <td>Transactional email delivery for 2FA OTP codes.</td>
+          </tr>
+          <tr>
+            <td><code>JWT_EXPIRY_SECONDS</code></td>
+            <td>Server Only</td>
+            <td>Session token lifecycle duration setting.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Environment Secret Rotation &amp; Key Lifecycle Standards</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Secret Key</th>
+            <th>Rotation Period</th>
+            <th>Rotation Runbook</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>SERVICE_ROLE_KEY</strong></td>
+            <td>Annual or post-incident</td>
+            <td>Rotate in Supabase dashboard and Vercel.</td>
+          </tr>
+          <tr>
+            <td><strong>CRON_SECRET</strong></td>
+            <td>Semi-annually</td>
+            <td>Generate 32-byte hex string in CLI.</td>
+          </tr>
+          <tr>
+            <td><strong>ANON_KEY</strong></td>
+            <td>Major release cycles</td>
+            <td>Bound to client browser environment.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Secret Isolation &amp; Rotation Guidelines</h2>
+      <ul>
+        <li><strong>Service Role Key Isolation:</strong> Never prefix <code>SUPABASE_SERVICE_ROLE_KEY</code> with <code>NEXT_PUBLIC_</code>.</li>
+        <li><strong>Git Hygiene:</strong> Ensure <code>.env*</code> patterns remain in <code>.gitignore</code>.</li>
+        <li><strong>Zero Compromise:</strong> Compromise of the service role key grants full unrestricted database write access.</li>
+      </ul>
+
+      <div class="warning-box">
+        Secret Governance: Never commit environment files to public version control.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 21 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 22: PART II IT TECHNICAL CHAPTER 4          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-22">
+    <div class="running-header">
+      <span class="app-brand">Database Schema</span>
+      <span>Users, Profiles &amp; Buildings</span>
+    </div>
+
+    <div class="content">
+      <h2>Entity Hierarchy: Properties &amp; 2D Floor Plans</h2>
+      <p>Properties represent rental buildings in Barangay Marulas with floor levels and individual units:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Table</th>
+            <th>Primary Key</th>
+            <th>Foreign Keys</th>
+            <th>Key Columns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>profiles</code></td>
+            <td><code>id (UUID)</code></td>
+            <td><code>auth.users(id)</code></td>
+            <td><code>role</code>, <code>full_name</code>, <code>phone</code>, <code>emergency_spare_key</code></td>
+          </tr>
+          <tr>
+            <td><code>properties</code></td>
+            <td><code>id (UUID)</code></td>
+            <td><code>landlord_id &rarr; profiles(id)</code></td>
+            <td><code>name</code>, <code>address</code>, <code>total_units</code>, <code>gcash_qr_url</code></td>
+          </tr>
+          <tr>
+            <td><code>floors</code></td>
+            <td><code>id (UUID)</code></td>
+            <td><code>property_id &rarr; properties(id)</code></td>
+            <td><code>floor_number</code>, <code>label</code>, <code>display_order</code></td>
+          </tr>
+          <tr>
+            <td><code>units</code></td>
+            <td><code>id (UUID)</code></td>
+            <td><code>floor_id &rarr; floors(id)</code></td>
+            <td><code>unit_number</code>, <code>monthly_rent</code>, <code>status</code> (vacant, occupied)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Relational Integrity &amp; Foreign Key Cascade Actions</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Parent Table</th>
+            <th>Child Table</th>
+            <th>Foreign Key Column</th>
+            <th>Cascade Policy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>profiles</code></td>
+            <td><code>properties</code></td>
+            <td><code>landlord_id</code></td>
+            <td><code>ON DELETE RESTRICT</code></td>
+          </tr>
+          <tr>
+            <td><code>properties</code></td>
+            <td><code>floors</code></td>
+            <td><code>property_id</code></td>
+            <td><code>ON DELETE CASCADE</code></td>
+          </tr>
+          <tr>
+            <td><code>floors</code></td>
+            <td><code>units</code></td>
+            <td><code>floor_id</code></td>
+            <td><code>ON DELETE CASCADE</code></td>
+          </tr>
+          <tr>
+            <td><code>units</code></td>
+            <td><code>leases</code></td>
+            <td><code>unit_id</code></td>
+            <td><code>ON DELETE RESTRICT</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Unit Map Coordinate Layout Constraints</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Layout Attribute</th>
+            <th>Data Type</th>
+            <th>Database Constraint</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>grid_x, grid_y</code></td>
+            <td><code>INTEGER</code></td>
+            <td>Clamped to non-negative grid coordinates.</td>
+          </tr>
+          <tr>
+            <td><code>layout_preset</code></td>
+            <td><code>VARCHAR(30)</code></td>
+            <td>Checked against valid architectural presets.</td>
+          </tr>
+          <tr>
+            <td><code>status</code></td>
+            <td><code>VARCHAR(20)</code></td>
+            <td>B-tree index for rapid vacancy filtering.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Unit Status Enum Transitions &amp; Availability Rules</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Status Enum</th>
+            <th>Business Condition</th>
+            <th>Automated Transition Rule</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>vacant</code></td>
+            <td>Unit has no active lease.</td>
+            <td>Available for tenant application assignment.</td>
+          </tr>
+          <tr>
+            <td><code>occupied</code></td>
+            <td>Active signed tenancy lease.</td>
+            <td>Locked against duplicate resident assignment.</td>
+          </tr>
+          <tr>
+            <td><code>maintenance</code></td>
+            <td>Active critical repair order.</td>
+            <td>Temporarily hidden from tenant listings.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 22 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 23: PART II IT TECHNICAL CHAPTER 5          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-23">
+    <div class="running-header">
+      <span class="app-brand">Database Schema</span>
+      <span>Financial Engine &amp; Operations</span>
+    </div>
+
+    <div class="content">
+      <h2>Financial Engine &amp; Ledger Relational Architecture</h2>
+      <p>iReside models the complete tenancy lifecycle from digital signing to submetered utility invoicing:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Table</th>
+            <th>Foreign Keys</th>
+            <th>Key Columns</th>
+            <th>Enums / Constraints</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>leases</code></td>
+            <td><code>unit_id</code>, <code>tenant_id</code></td>
+            <td><code>start_date</code>, <code>end_date</code>, <code>rent_amount</code></td>
+            <td><code>status</code>: active, pending, ended</td>
+          </tr>
+          <tr>
+            <td><code>invoices</code></td>
+            <td><code>lease_id</code>, <code>property_id</code></td>
+            <td><code>amount_due</code>, <code>due_date</code>, <code>billing_period</code></td>
+            <td><code>status</code>: unpaid, pending, paid</td>
+          </tr>
+          <tr>
+            <td><code>payments</code></td>
+            <td><code>invoice_id</code>, <code>tenant_id</code></td>
+            <td><code>amount_paid</code>, <code>reference_no</code>, <code>proof_url</code></td>
+            <td><code>method</code>: gcash, cash, maya</td>
+          </tr>
+          <tr>
+            <td><code>maintenance_tickets</code></td>
+            <td><code>unit_id</code>, <code>tenant_id</code></td>
+            <td><code>category</code>, <code>description</code>, <code>photo_url</code></td>
+            <td><code>status</code>: pending, in_progress, completed</td>
+          </tr>
+          <tr>
+            <td><code>utility_readings</code></td>
+            <td><code>unit_id</code>, <code>property_id</code></td>
+            <td><code>meter_type</code>, <code>current_reading</code>, <code>total_cost</code></td>
+            <td><code>meter_type</code>: electricity, water</td>
+          </tr>
+          <tr>
+            <td><code>announcements</code></td>
+            <td><code>property_id</code>, <code>author_id</code></td>
+            <td><code>title</code>, <code>content</code>, <code>category</code></td>
+            <td>Broadcast to property residents</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Financial State Machine &amp; Invoice Lifecycle</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>State Transition</th>
+            <th>Trigger Event</th>
+            <th>Ledger Balance Impact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Null &rarr; unpaid</code></td>
+            <td>Daily billing cron runs</td>
+            <td>Posts monthly invoice debit.</td>
+          </tr>
+          <tr>
+            <td><code>unpaid &rarr; pending</code></td>
+            <td>Tenant uploads proof</td>
+            <td>Places receipt in review queue.</td>
+          </tr>
+          <tr>
+            <td><code>pending &rarr; paid</code></td>
+            <td>Landlord confirms receipt</td>
+            <td>Credits balance and settles invoice.</td>
+          </tr>
+          <tr>
+            <td><code>unpaid &rarr; overdue</code></td>
+            <td>Due date passes grace period</td>
+            <td>Flags account for collection action.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Payment Rail Ledger Validation Protocols</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Payment Rail</th>
+            <th>Validation Check</th>
+            <th>Accounting Ledger Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>GCash / Maya</strong></td>
+            <td>13-digit reference checksum.</td>
+            <td>Automated receipt creation upon approval.</td>
+          </tr>
+          <tr>
+            <td><strong>Direct Cash</strong></td>
+            <td>Physical cash receipt verification.</td>
+            <td>Instant ledger credit stamp.</td>
+          </tr>
+          <tr>
+            <td><strong>Bank Transfer</strong></td>
+            <td>Account transfer confirmation slip.</td>
+            <td>Reconciled against monthly bank statements.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>Data Durability:</strong> Financial transactions utilize ACID compliance to prevent double settlements.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 23 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 24: PART II IT TECHNICAL CHAPTER 6          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-24">
+    <div class="running-header">
+      <span class="app-brand">Security Governance</span>
+      <span>Row-Level Security Policies</span>
+    </div>
+
+    <div class="content">
+      <h2>PostgreSQL Row-Level Security (RLS) Architecture</h2>
+      <p>Every table in the iReside database enforces strict Row-Level Security. Unauthenticated queries return zero rows:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Table</th>
+            <th>Command</th>
+            <th>Target Role</th>
+            <th>Policy Condition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>properties</code></td>
+            <td>SELECT, UPDATE</td>
+            <td>Landlord</td>
+            <td><code>landlord_id = auth.uid()</code></td>
+          </tr>
+          <tr>
+            <td><code>leases</code></td>
+            <td>SELECT</td>
+            <td>Tenant</td>
+            <td><code>tenant_id = auth.uid()</code></td>
+          </tr>
+          <tr>
+            <td><code>invoices</code></td>
+            <td>SELECT</td>
+            <td>Tenant</td>
+            <td><code>lease_id IN (SELECT id FROM leases WHERE tenant_id = auth.uid())</code></td>
+          </tr>
+          <tr>
+            <td><code>payments</code></td>
+            <td>INSERT</td>
+            <td>Tenant</td>
+            <td><code>tenant_id = auth.uid()</code></td>
+          </tr>
+          <tr>
+            <td><code>maintenance_tickets</code></td>
+            <td>INSERT, SELECT</td>
+            <td>Tenant</td>
+            <td><code>tenant_id = auth.uid()</code></td>
+          </tr>
+          <tr>
+            <td><code>utility_readings</code></td>
+            <td>SELECT</td>
+            <td>Tenant</td>
+            <td><code>unit_id IN (SELECT unit_id FROM leases WHERE tenant_id = auth.uid())</code></td>
+          </tr>
+          <tr>
+            <td><code>utility_readings</code></td>
+            <td>ALL</td>
+            <td>Landlord</td>
+            <td><code>property_id IN (SELECT id FROM properties WHERE landlord_id = auth.uid())</code></td>
+          </tr>
+          <tr>
+            <td><code>announcements</code></td>
+            <td>SELECT</td>
+            <td>Tenant</td>
+            <td><code>property_id IN (SELECT property_id FROM leases WHERE tenant_id = auth.uid())</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Automated RLS Regression Test Coverage</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Test Suite</th>
+            <th>Verification Scope</th>
+            <th>Assertion Expectation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>rls-tenant.test.ts</code></td>
+            <td>Tenant isolation across units</td>
+            <td>Returns 403 on cross-tenant access.</td>
+          </tr>
+          <tr>
+            <td><code>rls-landlord.test.ts</code></td>
+            <td>Landlord property management</td>
+            <td>Disallows updates to foreign buildings.</td>
+          </tr>
+          <tr>
+            <td><code>rls-bypass.test.ts</code></td>
+            <td>Service role cron tasks</td>
+            <td>Successfully inserts recurring billing rows.</td>
+          </tr>
+          <tr>
+            <td><code>rls-anon.test.ts</code></td>
+            <td>Public and anonymous queries</td>
+            <td>Returns 0 rows for unauthenticated requests.</td>
+          </tr>
+          <tr>
+            <td><code>rls-audit.test.ts</code></td>
+            <td>Multi-tenant data isolation</td>
+            <td>Confirms zero cross-property data leakage.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warning-box">
+        Security Invariant: Row-level security is enforced at the PostgreSQL kernel level.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 24 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 25: PART II IT TECHNICAL CHAPTER 7          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-25">
+    <div class="running-header">
+      <span class="app-brand">Authentication</span>
+      <span>2FA Engine &amp; Session Guards</span>
+    </div>
+
+    <div class="content">
+      <h2>Two-Factor Authentication (2FA) Lifecycle</h2>
+      <p>iReside implements mandatory email-delivered 6-digit OTP verification for secure sessions:</p>
+      <ol>
+        <li>User submits credentials at <code>/login</code> via Supabase Auth PKCE flow.</li>
+        <li>Server generates an ephemeral 6-digit cryptographic token (10-minute expiry).</li>
+        <li>Token is dispatched via transactional SMTP to the verified email.</li>
+        <li>User inputs token; upon verification, Supabase issues signed JWT and refresh tokens.</li>
+      </ol>
+
+      <h2>Authentication Threat Model &amp; Defense Mechanisms</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Threat Vector</th>
+            <th>Risk Level</th>
+            <th>Defense Architecture</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Brute Force Login</strong></td>
+            <td>High</td>
+            <td>Rate limit: 5 failed attempts per IP.</td>
+          </tr>
+          <tr>
+            <td><strong>Session Hijacking</strong></td>
+            <td>Critical</td>
+            <td>HTTP-only SameSite cookies and TLS 1.3.</td>
+          </tr>
+          <tr>
+            <td><strong>OTP Replay Attack</strong></td>
+            <td>Medium</td>
+            <td>10-minute expiry on single-use OTP codes.</td>
+          </tr>
+          <tr>
+            <td><strong>Client Lock Stalls</strong></td>
+            <td>High</td>
+            <td>Background non-blocking auth refresh execution.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Session Token Specifications &amp; Lifecycle</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Token Identifier</th>
+            <th>Storage Medium</th>
+            <th>Validity Window</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Access Token (JWT)</strong></td>
+            <td>Secure HTTP-only cookie</td>
+            <td>60 minutes with auto-refresh.</td>
+          </tr>
+          <tr>
+            <td><strong>Refresh Token</strong></td>
+            <td>Encrypted HTTP-only cookie</td>
+            <td>30 days rolling validity window.</td>
+          </tr>
+          <tr>
+            <td><strong>Setup Cookie</strong></td>
+            <td>Browser session cookie</td>
+            <td>Instant client navigation signal.</td>
+          </tr>
+          <tr>
+            <td><strong>CSRF Token</strong></td>
+            <td>Client Header</td>
+            <td>Protects state-changing REST endpoints.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Next.js Edge Middleware Evaluation Pipeline (middleware.ts)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Route Pattern</th>
+            <th>Session Requirement</th>
+            <th>Middleware Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/landlord/*</code></td>
+            <td>Valid session with Landlord role</td>
+            <td>Redirects to login if unauthenticated.</td>
+          </tr>
+          <tr>
+            <td><code>/tenant/*</code></td>
+            <td>Valid session with Tenant role</td>
+            <td>Redirects to login if unauthenticated.</td>
+          </tr>
+          <tr>
+            <td><code>/setup/*</code></td>
+            <td>Pending setup profile flag</td>
+            <td>Enforces onboarding wizard completion.</td>
+          </tr>
+          <tr>
+            <td><code>/api/cron/*</code></td>
+            <td>Valid CRON_SECRET header</td>
+            <td>Rejects missing tokens with HTTP 401.</td>
+          </tr>
+          <tr>
+            <td><code>/login, /signup</code></td>
+            <td>Anonymous / Unauthenticated</td>
+            <td>Redirects active sessions to home dashboard.</td>
+          </tr>
+        </tbody>
+      </table>
+
+
+      <div class="warning-box">
+        Client-side SDK token refreshes must NEVER be awaited on the critical navigation path.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 25 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 26: PART II IT TECHNICAL CHAPTER 8          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-26">
+    <div class="running-header">
+      <span class="app-brand">Cryptography</span>
+      <span>Emergency Spare Key Architecture</span>
+    </div>
+
+    <div class="content">
+      <h2>The Emergency Spare Key Architecture</h2>
+      <p>The Emergency Spare Key provides failsafe account recovery when losing phone or email access:</p>
+
+      <h2>Cryptographic Engine Specifications</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Cryptographic Standard</th>
+            <th>Operational Implementation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Entropy Source</strong></td>
+            <td>CSPRNG 128-bit random bytes</td>
+            <td>Secure browser crypto API source.</td>
+          </tr>
+          <tr>
+            <td><strong>String Format</strong></td>
+            <td>16 uppercase alphanumeric chars</td>
+            <td>4 blocks separated by hyphens.</td>
+          </tr>
+          <tr>
+            <td><strong>Hashing Algorithm</strong></td>
+            <td>Bcrypt (Cost factor 12)</td>
+            <td>Plaintext key is never stored in DB.</td>
+          </tr>
+          <tr>
+            <td><strong>Revocation Rule</strong></td>
+            <td>Single-use consumption rule</td>
+            <td>Key is deleted upon successful recovery.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Account Recovery Verification Protocol</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Recovery Step</th>
+            <th>Verification Check</th>
+            <th>Expected System Response</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Submit Email</strong></td>
+            <td>Verifies user profile exists</td>
+            <td>Checks active user in PostgreSQL.</td>
+          </tr>
+          <tr>
+            <td><strong>2. Submit Spare Key</strong></td>
+            <td>Constant-time hash verification</td>
+            <td>Prevents timing side-channel attacks.</td>
+          </tr>
+          <tr>
+            <td><strong>3. Session Reset</strong></td>
+            <td>Revokes existing refresh tokens</td>
+            <td>Issues authenticated recovery session.</td>
+          </tr>
+          <tr>
+            <td><strong>4. Key Rotation</strong></td>
+            <td>Generates new spare key</td>
+            <td>Old key is rendered permanently invalid.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Atomic Recovery Lifecycle (/api/auth/spare-key-recovery)</h2>
+      <p>The recovery endpoint validates the submitted key hash using constant-time verification.</p>
+      <p>Upon verification, existing tokens are revoked and a replacement key is generated.</p>
+
+      <h2>Emergency Spare Key Error Handling &amp; Failure Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Failure Scenario</th>
+            <th>Detection Mechanism</th>
+            <th>Recovery Resolution Runbook</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Invalid Key Input</strong></td>
+            <td>Constant-time hash comparison fails</td>
+            <td>Prompts retry with clear inline error message.</td>
+          </tr>
+          <tr>
+            <td><strong>Consumed Key Reuse</strong></td>
+            <td>Database flag checks key deletion</td>
+            <td>Rejects used key; guides user to support.</td>
+          </tr>
+          <tr>
+            <td><strong>Rate Limit Exceeded</strong></td>
+            <td>Exceeds 5 attempts per IP</td>
+            <td>Throttles requests for 15 minutes.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        Senior Landlord Invariant: Recovery keys use the Emergency Spare Key physical metaphor. Touch targets measure at least 48px.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 26 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 27: PART II IT TECHNICAL CHAPTER 9          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-27">
+    <div class="running-header">
+      <span class="app-brand">System Lifecycle</span>
+      <span>Turnkey Workspace Launch</span>
+    </div>
+
+    <div class="content">
+      <h2>The Turnkey Workspace Launch Lifecycle</h2>
+      <p>The 5-stage onboarding pipeline guides new landlords through required system initialization:</p>
+
+      <h2>5-Stage Onboarding Route Locking Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Stage</th>
+            <th>Identifier</th>
+            <th>Accessible Routes</th>
+            <th>Locked Routes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Stage 1: Property</strong></td>
+            <td><code>no_property</code></td>
+            <td><code>/landlord/properties</code>, <code>/new</code></td>
+            <td>All other sidebar navigation items.</td>
+          </tr>
+          <tr>
+            <td><strong>Stage 2: Unit Map</strong></td>
+            <td><code>no_unit_map</code></td>
+            <td><code>/landlord/unit-map</code></td>
+            <td>Operations and Finance workspaces.</td>
+          </tr>
+          <tr>
+            <td><strong>Stage 3: Billing Rails</strong></td>
+            <td><code>no_billing_rails</code></td>
+            <td>Dashboard, Properties, Utility</td>
+            <td>Finance Hub and Tenant records.</td>
+          </tr>
+          <tr>
+            <td><strong>Stage 4: Tenants</strong></td>
+            <td><code>no_tenant</code></td>
+            <td>Dashboard, Properties, Tenants</td>
+            <td>Deep operational financial pages.</td>
+          </tr>
+          <tr>
+            <td><strong>Stage 5: Dashboard</strong></td>
+            <td><code>setupCompleted</code></td>
+            <td>All production workspaces</td>
+            <td>None (All features fully unlocked).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Launch Atomic Validation Contract (/api/setup/launch)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Validation Check</th>
+            <th>Required Entity</th>
+            <th>Failure Behavior</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Property Exists</strong></td>
+            <td>At least 1 registered property</td>
+            <td>Rejects launch with HTTP 400.</td>
+          </tr>
+          <tr>
+            <td><strong>Units Configured</strong></td>
+            <td>At least 1 configured rental unit</td>
+            <td>Rejects launch with HTTP 400.</td>
+          </tr>
+          <tr>
+            <td><strong>Utility Rates Set</strong></td>
+            <td>Non-zero water and electric rates</td>
+            <td>Rejects launch with HTTP 400.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Atomic Finalization Rail</h2>
+      <p>When the landlord completes configuration, the workspace executes an atomic launch sequence:</p>
+      <ol>
+        <li>Client submits setup state to <code>/api/setup/launch</code>.</li>
+        <li>Service role verifies property and utility rates exist.</li>
+        <li>Sets <code>is_setup_completed = true</code> in the profile database record.</li>
+        <li>Sets HTTP-only cookie <code>ireside_setup_completed=true</code> for immediate middleware evaluation.</li>
+        <li>Redirects to <code>/landlord/dashboard</code> via <code>router.replace</code>.</li>
+      </ol>
+
+      <div class="tip-box">
+        <strong>Navigation Rule:</strong> Use router.replace to avoid back-navigation loops into setup wizards.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 27 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 28: PART II IT TECHNICAL CHAPTER 10          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-28">
+    <div class="running-header">
+      <span class="app-brand">API Reference</span>
+      <span>Core REST Application Directory</span>
+    </div>
+
+    <div class="content">
+      <h2>Core Application API Directory</h2>
+      <p>iReside exposes structured REST endpoints for application and worker operations:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Route</th>
+            <th>Method</th>
+            <th>Auth</th>
+            <th>Payload &amp; Behavior</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/api/setup/launch</code></td>
+            <td>POST</td>
+            <td>Landlord</td>
+            <td>Stamps workspace completion and issues cookie signal.</td>
+          </tr>
+          <tr>
+            <td><code>/api/cron/daily-billing</code></td>
+            <td>POST</td>
+            <td>CRON_SECRET</td>
+            <td>Generates recurring invoices and assesses late fees.</td>
+          </tr>
+          <tr>
+            <td><code>/api/auth/spare-key-recovery</code></td>
+            <td>POST</td>
+            <td>Public</td>
+            <td>Redeems Emergency Spare Key for recovery session.</td>
+          </tr>
+          <tr>
+            <td><code>/api/leases/e-sign</code></td>
+            <td>POST</td>
+            <td>Tenant</td>
+            <td>Appends digital signature and countersigns lease.</td>
+          </tr>
+          <tr>
+            <td><code>/api/payments/verify</code></td>
+            <td>POST</td>
+            <td>Landlord</td>
+            <td>Verifies GCash reference number and settles invoice.</td>
+          </tr>
+          <tr>
+            <td><code>/api/mobile/version</code></td>
+            <td>GET</td>
+            <td>Public</td>
+            <td>Returns latest release APK version and download URL.</td>
+          </tr>
+          <tr>
+            <td><code>/api/units/update-layout</code></td>
+            <td>POST</td>
+            <td>Landlord</td>
+            <td>Saves 2D coordinates of room cards on unit map.</td>
+          </tr>
+          <tr>
+            <td><code>/api/maintenance/update-status</code></td>
+            <td>POST</td>
+            <td>Landlord</td>
+            <td>Advances repair work orders to completed status.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>HTTP Status Code &amp; Error Envelope Specifications</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>HTTP Code</th>
+            <th>Error Code</th>
+            <th>Meaning &amp; Corrective Directive</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>200 OK</strong></td>
+            <td><code>SUCCESS</code></td>
+            <td>Request succeeded; payload delivered in data object.</td>
+          </tr>
+          <tr>
+            <td><strong>400 Bad Request</strong></td>
+            <td><code>VALIDATION_ERROR</code></td>
+            <td>Request payload failed schema validation rules.</td>
+          </tr>
+          <tr>
+            <td><strong>401 Unauthorized</strong></td>
+            <td><code>SESSION_EXPIRED</code></td>
+            <td>User session expired; re-authenticate at login.</td>
+          </tr>
+          <tr>
+            <td><strong>403 Forbidden</strong></td>
+            <td><code>RLS_RESTRICTION</code></td>
+            <td>Target record belongs to another user account.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>API Rate Limiting &amp; Throttling Thresholds</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint Group</th>
+            <th>Window Size</th>
+            <th>Maximum Requests Allowed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Authentication APIs</strong></td>
+            <td>60 seconds</td>
+            <td>5 requests per IP address.</td>
+          </tr>
+          <tr>
+            <td><strong>Public Onboarding Links</strong></td>
+            <td>60 seconds</td>
+            <td>20 requests per IP address.</td>
+          </tr>
+          <tr>
+            <td><strong>Standard App Workspaces</strong></td>
+            <td>60 seconds</td>
+            <td>120 requests per IP address.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 28 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 29: PART II IT TECHNICAL CHAPTER 11          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-29">
+    <div class="running-header">
+      <span class="app-brand">Mobile Client</span>
+      <span>Android APK Compilation Protocol</span>
+    </div>
+
+    <div class="content">
+      <h2>Mobile Client Architecture &amp; Isolation</h2>
+      <p>iReside provides a native Android experience via a standalone Capacitor 7 wrapper. Per <code>mobile-apk-build.md</code>, all native source is strictly isolated inside <code>android/</code>:</p>
+
+      <div class="flow-diagram">
+        <div class="flow-card">
+          <div class="flow-card-title">Web App Production Endpoint</div>
+          <div class="flow-card-desc">https://i-reside-capstone.vercel.app/mobile</div>
+        </div>
+        <div class="flow-connector-v">
+          <div class="flow-stem"></div>
+          <span class="flow-badge">Capacitor 7 Bridge (WebView)</span>
+          <svg width="10" height="9" viewBox="0 0 10 9">
+            <line x1="5" y1="0" x2="5" y2="5" stroke="#333" stroke-width="1.5" />
+            <polygon points="2,4 5,9 8,4" fill="#333" />
+          </svg>
+        </div>
+        <div class="flow-card">
+          <div class="flow-card-title">Android Native Wrapper: android/ (Gradle 8.x)</div>
+          <div class="flow-card-desc">Package: ph.ireside.mobile &bull; Android SDK 34 &bull; Java JBR 17/21</div>
+        </div>
+        <div class="flow-connector-v">
+          <div class="flow-stem"></div>
+          <span class="flow-badge">Build Script: scripts/build-mobile.mjs</span>
+          <svg width="10" height="9" viewBox="0 0 10 9">
+            <line x1="5" y1="0" x2="5" y2="5" stroke="#333" stroke-width="1.5" />
+            <polygon points="2,4 5,9 8,4" fill="#333" />
+          </svg>
+        </div>
+        <div class="flow-card">
+          <div class="flow-card-title">Output Production Artifacts</div>
+          <div class="flow-card-desc">output/iReside-release.apk (v1+v2 signed, zipalign verified)</div>
+        </div>
+      </div>
+
+      <h2>Android Build Toolchain Invariants &amp; Paths</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Toolchain Component</th>
+            <th>Target Environment</th>
+            <th>Invariant Directive</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Bundled JDK</strong></td>
+            <td>Android Studio JBR 17/21</td>
+            <td>Incompatible system JDKs must not be used.</td>
+          </tr>
+          <tr>
+            <td><strong>Android SDK</strong></td>
+            <td>Android SDK API 34</td>
+            <td>Resolved from local user app data directory.</td>
+          </tr>
+          <tr>
+            <td><strong>Gradle Wrapper</strong></td>
+            <td>Gradle 8.x in android/</td>
+            <td>Native build logic remains inside android/.</td>
+          </tr>
+          <tr>
+            <td><strong>Target URL</strong></td>
+            <td>Production Vercel endpoint</td>
+            <td>Overridable via --url command flag.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Mobile Build Commands &amp; Artifact Output</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Build Command</th>
+            <th>Target Function</th>
+            <th>Output File</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>npm run mobile:build</code></td>
+            <td>Compiles signed release APK</td>
+            <td><code>output/iReside-release.apk</code></td>
+          </tr>
+          <tr>
+            <td><code>npm run mobile:clean</code></td>
+            <td>Purges Gradle compilation cache</td>
+            <td>Cleans temporary build directories.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>Zero Regression Invariant:</strong> Mobile changes must pass Next.js build and TypeScript audits.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 29 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 30: PART II IT TECHNICAL CHAPTER 12          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-30">
+    <div class="running-header">
+      <span class="app-brand">System Automation</span>
+      <span>Serverless Cron Architecture</span>
+    </div>
+
+    <div class="content">
+      <h2>Vercel Serverless Cron Architecture</h2>
+      <p>Automated processes run via Vercel Cron jobs declared in <code>vercel.json</code>:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Job Name</th>
+            <th>Schedule</th>
+            <th>Target Route</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>daily-billing</code></td>
+            <td><code>0 0 * * *</code> (Midnight UTC)</td>
+            <td><code>/api/cron/daily-billing</code></td>
+            <td>Generate recurring invoices and late payment penalties.</td>
+          </tr>
+          <tr>
+            <td><code>lease-expiry-check</code></td>
+            <td><code>0 2 * * *</code> (02:00 UTC)</td>
+            <td><code>/api/cron/lease-status</code></td>
+            <td>Transition expired leases to ended status.</td>
+          </tr>
+          <tr>
+            <td><code>payment-reminders</code></td>
+            <td><code>0 8 * * *</code> (08:00 UTC)</td>
+            <td><code>/api/cron/reminders</code></td>
+            <td>Dispatches rent reminders before due dates.</td>
+          </tr>
+          <tr>
+            <td><code>purge-temp-tokens</code></td>
+            <td><code>0 4 * * 0</code> (Weekly Sun)</td>
+            <td><code>/api/cron/purge-temp</code></td>
+            <td>Cleans up expired onboarding invitations.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Billing Idempotency &amp; Fault Tolerance Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Failure Mode</th>
+            <th>Detection Mechanism</th>
+            <th>Recovery Runbook</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Network Timeout</strong></td>
+            <td>Vercel 15s execution ceiling</td>
+            <td>Worker resumes on next scheduled run.</td>
+          </tr>
+          <tr>
+            <td><strong>Duplicate Trigger</strong></td>
+            <td>Unique constraint on billing period</td>
+            <td>Database rejects duplicate insert attempts.</td>
+          </tr>
+          <tr>
+            <td><strong>Database Unreachable</strong></td>
+            <td>Supabase 503 HTTP status</td>
+            <td>Telemetry alert dispatched to operations.</td>
+          </tr>
+          <tr>
+            <td><strong>Partial Batch Error</strong></td>
+            <td>SQL transactional execution</td>
+            <td>Unprocessed leases are re-queued.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Cron Worker Security Validation Standards</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Security Check</th>
+            <th>Expected Value</th>
+            <th>Security Policy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Authorization Header</strong></td>
+            <td><code>Bearer $CRON_SECRET</code></td>
+            <td>Constant-time bearer token verification.</td>
+          </tr>
+          <tr>
+            <td><strong>HTTP Method</strong></td>
+            <td>HTTP POST</td>
+            <td>Non-POST requests rejected with HTTP 405.</td>
+          </tr>
+          <tr>
+            <td><strong>User Agent Header</strong></td>
+            <td><code>vercel-cron/*</code></td>
+            <td>Validated against serverless provider.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Cron Telemetry &amp; Alerting Thresholds</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Automation Metric</th>
+            <th>Target Threshold</th>
+            <th>Automated Alerting Policy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Cron Execution Duration</strong></td>
+            <td>Under 10 seconds execution time</td>
+            <td>Alerts operations on execution timeouts.</td>
+          </tr>
+          <tr>
+            <td><strong>Job Failure Rate</strong></td>
+            <td>Zero consecutive job failures</td>
+            <td>Dispatches emergency SMS to on-call engineer.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 30 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 31: PART II IT TECHNICAL CHAPTER 13          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-31">
+    <div class="running-header">
+      <span class="app-brand">DevOps &amp; Security</span>
+      <span>Backup &amp; Disaster Recovery</span>
+    </div>
+
+    <div class="content">
+      <h2>Database Backup Tiers &amp; Retention Policies</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Backup Tier</th>
+            <th>Frequency</th>
+            <th>Retention Window</th>
+            <th>Storage Location</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>WAL Archiving (PITR)</strong></td>
+            <td>Continuous streaming</td>
+            <td>7 days rolling</td>
+            <td>Supabase multi-region storage.</td>
+          </tr>
+          <tr>
+            <td><strong>Daily Snapshot Dump</strong></td>
+            <td>03:00 UTC daily</td>
+            <td>30 days retention</td>
+            <td>Encrypted offsite cloud bucket.</td>
+          </tr>
+          <tr>
+            <td><strong>Schema Migration History</strong></td>
+            <td>Every git commit</td>
+            <td>Permanent</td>
+            <td>Versioned in git repository.</td>
+          </tr>
+          <tr>
+            <td><strong>Weekly Offsite Backup</strong></td>
+            <td>Sunday 04:00 UTC</td>
+            <td>90 days retention</td>
+            <td>Encrypted secondary cloud bucket.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Disaster Recovery Target Objectives (RTO &amp; RPO)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Disaster Scenario</th>
+            <th>Target RTO</th>
+            <th>Target RPO</th>
+            <th>Recovery Procedure</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Database Node Outage</strong></td>
+            <td>&le; 15 minutes</td>
+            <td>&le; 1 minute</td>
+            <td>Automatic failover to replica node.</td>
+          </tr>
+          <tr>
+            <td><strong>Accidental Row Deletion</strong></td>
+            <td>&le; 30 minutes</td>
+            <td>&le; 5 minutes</td>
+            <td>Point-in-time recovery via Supabase CLI.</td>
+          </tr>
+          <tr>
+            <td><strong>Failed Schema Migration</strong></td>
+            <td>&le; 10 minutes</td>
+            <td>Zero data loss</td>
+            <td>Downward migration rollback script.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Infrastructure Telemetry &amp; Alerting Thresholds</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Operational Metric</th>
+            <th>Warning Threshold</th>
+            <th>Escalation Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Database CPU Usage</strong></td>
+            <td>Exceeds 80% for 5 minutes</td>
+            <td>Dispatches pager alert to engineering.</td>
+          </tr>
+          <tr>
+            <td><strong>Connection Pool Level</strong></td>
+            <td>Exceeds 90% capacity</td>
+            <td>PgBouncer auto-scales worker pool.</td>
+          </tr>
+          <tr>
+            <td><strong>Server Error Rate</strong></td>
+            <td>Exceeds 1% of total traffic</td>
+            <td>Vercel edge alerts operations team.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Disaster Recovery Step-by-Step Incident Runbook</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Runbook Phase</th>
+            <th>Primary Objective</th>
+            <th>Operational Command</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Phase 1: Triage</strong></td>
+            <td>Identify outage root cause</td>
+            <td>Inspect Vercel and Supabase dashboards.</td>
+          </tr>
+          <tr>
+            <td><strong>Phase 2: Isolation</strong></td>
+            <td>Prevent dirty data writes</td>
+            <td>Enable maintenance mode in edge middleware.</td>
+          </tr>
+          <tr>
+            <td><strong>Phase 3: Restore</strong></td>
+            <td>Recover database to valid state</td>
+            <td>Execute point-in-time recovery via Supabase CLI.</td>
+          </tr>
+          <tr>
+            <td><strong>Phase 4: Verify</strong></td>
+            <td>Validate data integrity</td>
+            <td>Run automated verification test suite.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>Maintenance Protocol:</strong> Set maintenance flag in edge middleware during major restoration events.
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 31 of 32</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 32: PART II IT TECHNICAL CHAPTER 14          -->
+  <!-- ========================================================================= -->
+  <div class="page" id="page-32">
+    <div class="running-header">
+      <span class="app-brand">System Commissioning</span>
+      <span>Sign-Off, Support &amp; Glossary</span>
+    </div>
+
+    <div class="content">
+      <h2>Engineering Commissioning Sign-Off</h2>
+      <p>This technical manual certifies that the iReside platform satisfies all architectural standards:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Name / Organization</th>
+            <th>Status</th>
+            <th>Sign-Off Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Lead Systems Architect</td>
+            <td>iReside Engineering Group</td>
+            <td>Verified &amp; Certified</td>
+            <td>Q1 2026</td>
+          </tr>
+          <tr>
+            <td>DevOps &amp; Security Officer</td>
+            <td>Systems Security Committee</td>
+            <td>Production Approved</td>
+            <td>Q1 2026</td>
+          </tr>
+          <tr>
+            <td>Lead Mobile Engineer</td>
+            <td>Native Mobile Division</td>
+            <td>Verified &amp; Signed</td>
+            <td>Q1 2026</td>
+          </tr>
+          <tr>
+            <td>Quality Assurance Lead</td>
+            <td>Validation &amp; Test Operations</td>
+            <td>100% Suite Pass</td>
+            <td>Q1 2026</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Automated Verification Suite Pass Record</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Verification Suite</th>
+            <th>Execution Command</th>
+            <th>Result Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>TypeScript Type Check</strong></td>
+            <td><code>npx tsc --noEmit</code></td>
+            <td>Clean Pass (0 errors).</td>
+          </tr>
+          <tr>
+            <td><strong>Validation Test Suite</strong></td>
+            <td><code>npx vitest run src/__tests__/validation</code></td>
+            <td>Clean Pass (100% passing).</td>
+          </tr>
+          <tr>
+            <td><strong>Production Next.js Build</strong></td>
+            <td><code>npm run build</code></td>
+            <td>Clean Pass (Zero build errors).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Production Deployment Pipeline &amp; Release Verification Protocol</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Deployment Stage</th>
+            <th>Automated Gate</th>
+            <th>Pass Criteria</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Continuous Integration</strong></td>
+            <td>Automated GitHub Actions CI</td>
+            <td>Clean typecheck and 100% test pass.</td>
+          </tr>
+          <tr>
+            <td><strong>2. Production Vercel</strong></td>
+            <td>Edge Serverless Promotion</td>
+            <td>Zero route compilation errors.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Technical Glossary</h2>
+      <div class="glossary-item"><span class="glossary-term">RLS:</span> Row-Level Security in PostgreSQL restricting row access per user session.</div>
+      <div class="glossary-item"><span class="glossary-term">JWT:</span> JSON Web Token used for cryptographically signed stateless session verification.</div>
+      <div class="glossary-item"><span class="glossary-term">Service Role:</span> Privileged PostgreSQL role that bypasses RLS for administrative workers.</div>
+      <div class="glossary-item"><span class="glossary-term">Capacitor 7:</span> Cross-platform runtime executing the web app inside an Android WebView.</div>
+      <div class="glossary-item"><span class="glossary-term">Vercel Cron:</span> Serverless scheduler invoking authenticated API endpoints at defined intervals.</div>
+      <div class="glossary-item"><span class="glossary-term">Bcrypt:</span> Adaptive cryptographic hash function used for Emergency Spare Key verification.</div>
+      <div class="glossary-item"><span class="glossary-term">CSPRNG:</span> Cryptographically Secure Pseudo-Random Number Generator.</div>
+      <div class="glossary-item"><span class="glossary-term">PgBouncer:</span> Lightweight connection pooler for PostgreSQL database.</div>
+      <div class="glossary-item"><span class="glossary-term">WAL:</span> Write-Ahead Logging ensuring durability and point-in-time recovery.</div>
+      <div class="glossary-item"><span class="glossary-term">PKCE:</span> Proof Key for Code Exchange securing authorization flows.</div>
+      <div class="glossary-item"><span class="glossary-term">RTO:</span> Recovery Time Objective specifying maximum allowable downtime.</div>
+      <div class="glossary-item"><span class="glossary-term">RPO:</span> Recovery Point Objective specifying maximum allowable data loss.</div>
+
+      <p style="font-size: 6.8pt; color: #666; text-align: center; margin-top: 1.2mm; border-top: 1px solid #ddd; padding-top: 0.6mm;">
+        &copy; 2026 iReside Technologies. All rights reserved. Confidential technical standard.
+      </p>
+    </div>
+
+    <div class="running-footer">
+      <span>iReside Comprehensive System Handbook &bull; Part II</span>
+      <span class="page-number">Page 32 of 32</span>
+    </div>
+  </div>
+
+
+</div>
+
+</body>
+</html>

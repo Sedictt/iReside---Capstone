@@ -1,88 +1,58 @@
 'use client';
 
-import { useState, useEffect, useMemo, useReducer } from 'react';
+import { useState, useEffect, useMemo, useReducer, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { m as motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
     CreditCard,
     Wrench,
-    Users,
     AlertTriangle,
     CheckCircle2,
-    TrendingUp,
     MessageSquare,
     Zap,
     Building2,
     QrCode,
-    Printer,
-    Map,
-    HelpCircle,
     Banknote,
     UserPlus,
     FilePlus2,
     TrendingDown,
     RefreshCw,
-    SlidersHorizontal,
-    EyeOff,
-    RotateCcw,
     Check,
-    Plus,
     ArrowUpRight,
     ShieldCheck,
-    Pencil,
-    FolderOpen,
     X,
     Camera,
-    FolderSearch2,
-    Calendar,
     ChevronRight,
-    GripVertical,
+    Bed,
+    ArrowRight,
+    ClipboardCheck,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    SortableContext,
-    sortableKeyboardCoordinates,
-    rectSortingStrategy,
-} from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
 import { useLanguageContext } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { useProperty } from '@/context/PropertyContext';
 import { useBrand } from '@/context/BrandContext';
+import { useNotifications } from '@/context/NotificationContext';
 import { useTimeFormat } from '@/hooks/useTimeFormat';
-import { useQuickActions } from '@/hooks/useQuickActions';
-import {
-    DEFAULT_QUICK_ACTIONS,
-    type QuickActionId,
-    type QuickActionItem,
-} from '@/lib/landlord/quick-actions';
-import { SortableActionCard } from '@/components/landlord/dashboard/SortableActionCard';
+import { readViewCache, writeViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropertySelector';
 import { ActionRequired } from '@/components/landlord/dashboard/ActionRequired';
 import { MobilePaymentDrawer } from '@/components/mobile/landlord/MobilePaymentDrawer';
 import { MobileVacantUnitsDrawer } from '@/components/mobile/landlord/MobileVacantUnitsDrawer';
+import { QuickToolsFab } from '@/components/mobile/landlord/QuickToolsFab';
 import { triggerHaptic } from '@/lib/haptics';
 import { MobileCollectPaymentDrawer } from '@/components/mobile/landlord/MobileCollectPaymentDrawer';
 import { MobileIssueInvoiceDrawer } from '@/components/mobile/landlord/MobileIssueInvoiceDrawer';
 import { MobileRecordExpenseDrawer } from '@/components/mobile/landlord/MobileRecordExpenseDrawer';
 import { WalkInApplicationModal } from '@/components/landlord/applications/WalkInApplicationModal';
-import { VacantUnitsModal } from '@/components/landlord/dashboard/VacantUnitsModal';
 import { TenantInviteManager } from '@/components/landlord/applications/TenantInviteManager';
 import { LobbyFlyerModal } from '@/components/landlord/flyer/LobbyFlyerModal';
 import { LandlordWelcomeLightbox } from '@/components/landlord/dashboard/LandlordWelcomeLightbox';
 import { BannerCustomizerModal, DEFAULT_BANNER_URL } from '@/components/landlord/dashboard/BannerCustomizerModal';
-import { ART } from "@/lib/art/abstract-art";
+import { getSafeAvatarBgColor, DEFAULT_AVATAR_URL } from '@/lib/constants';
+import { ART } from '@/lib/art/abstract-art';
 
 type PaymentCategory = 'Overdue' | 'Near Due' | 'Paid';
 
@@ -126,12 +96,106 @@ function paymentsReducer(state: PaymentsState, action: PaymentsAction): Payments
 
 const OPEN_UNIT_STATUSES = ['available', 'vacant', 'open', 'listed'];
 const INACTIVE_INVITE_STATUSES = ['expired', 'revoked', 'inactive', 'disabled', 'cancelled'];
-const FALLBACK_AVATAR = ART.avatar;
+const FALLBACK_AVATAR = DEFAULT_AVATAR_URL || ART.avatar;
+
+type OverviewUnit = {
+    id: string;
+    name: string;
+    rent_amount: number;
+    property_id: string;
+    property_name: string;
+    property_address?: string;
+    property_image?: string | null;
+    status?: string;
+    has_ongoing_application?: boolean;
+    ongoing_application_status?: string | null;
+};
+
+type OverviewInvite = {
+    id: string;
+    mode: 'property' | 'unit';
+    applicationType: 'online' | 'face_to_face';
+    requiredRequirements: string[];
+    status: string;
+    propertyId: string;
+    propertyName: string;
+    unitId: string | null;
+    unitName: string | null;
+    expiresAt: string | null;
+    useCount: number;
+    maxUses: number;
+    lastUsedAt: string | null;
+    createdAt: string;
+    shareUrl: string;
+    qrUrl: string;
+};
+
+type OverviewSnapshot = {
+    paymentsByCategory: Record<PaymentCategory, PaymentListItem[]>;
+    availableUnits: OverviewUnit[];
+    tenantInvites: OverviewInvite[];
+    pendingMoveOutCount: number;
+    pendingRenewalsCount: number;
+};
+
+const getManilaTime = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+
+/**
+ * Ticking Manila clock, isolated in its own component so the per-second update
+ * re-renders only these few nodes instead of the entire dashboard tree.
+ * Ticks on the minute boundary since seconds are not displayed.
+ */
+function useManilaNow() {
+    const [now, setNow] = useState<Date>(() => getManilaTime());
+    useEffect(() => {
+        let interval: ReturnType<typeof setInterval> | undefined;
+        const tick = () => setNow(getManilaTime());
+        const msToNextMinute = 60_000 - (Date.now() % 60_000);
+        const timeout = setTimeout(() => {
+            tick();
+            interval = setInterval(tick, 60_000);
+        }, msToNextMinute);
+        return () => {
+            clearTimeout(timeout);
+            if (interval) clearInterval(interval);
+        };
+    }, []);
+    return now;
+}
+
+function ManilaDateLabel() {
+    const { locale } = useLanguageContext();
+    const now = useManilaNow();
+    return <span>{now.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' })}</span>;
+}
+
+function ManilaClockButton() {
+    const { t } = useLanguageContext();
+    const { is24Hour, formatTimeParts, toggleTimeFormat } = useTimeFormat();
+    const now = useManilaNow();
+    const { hours, minutes, period } = formatTimeParts(now);
+    return (
+        <button
+            type="button"
+            onClick={toggleTimeFormat}
+            className="m-pill m-pill-ghost py-1 px-2.5 text-[11px] font-mono tabular-nums select-none active:scale-95 transition-all min-h-[28px] cursor-pointer"
+            title={is24Hour ? t('Tap to switch to 12-hour format') : t('Tap to switch to 24-hour format')}
+            aria-label={t("Digital clock toggle")}
+        >
+            <span>{hours}:{minutes}</span>
+            {period ? (
+                <span className="text-[10px] opacity-85">{period}</span>
+            ) : (
+                <span className="text-[10px] opacity-85">24H</span>
+            )}
+        </button>
+    );
+}
 
 const PAYMENT_CATEGORIES: Array<{ key: PaymentCategory; label: string; hint: string; emptyState: string; tone: string; dot: string }> = [
     {
         key: 'Overdue',
-        label: 'Past Due Rent',
+        label: 'Unpaid Rent',
         hint: 'Unpaid after due date',
         emptyState: 'No overdue rent',
         tone: 'text-red-500',
@@ -139,16 +203,16 @@ const PAYMENT_CATEGORIES: Array<{ key: PaymentCategory; label: string; hint: str
     },
     {
         key: 'Near Due',
-        label: 'Due in Next 7 Days',
-        hint: 'Pending invoices due soon',
+        label: 'Due in 7 Days',
+        hint: 'Invoices due this week',
         emptyState: 'No rent due this week',
         tone: 'text-amber-500',
         dot: 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]',
     },
     {
         key: 'Paid',
-        label: 'Recently Paid Rent',
-        hint: 'Latest confirmed payments',
+        label: 'Recently Paid',
+        hint: 'Confirmed settlements',
         emptyState: 'No recent payments',
         tone: 'text-emerald-500',
         dot: 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]',
@@ -159,19 +223,17 @@ export function LandlordOverviewView() {
     const { profile, user } = useAuth();
     const { properties, selectedPropertyId } = useProperty();
     const brand = useBrand();
-    const { is24Hour, formatTimeParts, toggleTimeFormat } = useTimeFormat();
-    const { t, locale } = useLanguageContext();
+    const { counts } = useNotifications();
+    const { t } = useLanguageContext();
+    const shouldReduceMotion = useReducedMotion();
 
-    // Live Manila Clock
-    const getManilaTime = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
-    const [currentTime, setCurrentTime] = useState<Date>(() => getManilaTime());
+    // Snapshot of the last loaded dashboard data for this property scope.
+    // Lets the tab render instantly when revisited; it still revalidates on mount.
+    const overviewCacheKey = `landlord-overview:${selectedPropertyId || 'all'}`;
+    const cachedOverview = readViewCache<OverviewSnapshot>(overviewCacheKey);
 
-    useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(getManilaTime()), 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    const { hours, minutes, period } = formatTimeParts(currentTime);
+    // Progressive Disclosure Tab State (matching desktop simplicity)
+    const [activeDashboardTab, setActiveDashboardTab] = useState<'cash-flow' | 'utilities' | 'renewals'>('cash-flow');
 
     // Active Banner with BrandContext & LocalStorage Persistence
     const [activeBanner, setActiveBanner] = useState<string>(() => {
@@ -204,7 +266,7 @@ export function LandlordOverviewView() {
         setActiveBanner(DEFAULT_BANNER_URL);
     }, [brand.bannerUrl]);
 
-    // Modals state
+    // Modals and Drawers State
     const [openPaymentModal, setOpenPaymentModal] = useState<PaymentCategory | null>(null);
     const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
     const [selectedWalkInUnitId, setSelectedWalkInUnitId] = useState<string | undefined>(undefined);
@@ -218,83 +280,19 @@ export function LandlordOverviewView() {
     const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
 
     // Payments, Units, Invites data state
-    const [paymentsState, dispatchPayments] = useReducer(paymentsReducer, {
-        paymentsByCategory: { Overdue: [], 'Near Due': [], Paid: [] },
-        loading: true,
+    const [paymentsState, dispatchPayments] = useReducer(paymentsReducer, undefined, () => ({
+        paymentsByCategory: cachedOverview?.paymentsByCategory ?? { Overdue: [], 'Near Due': [], Paid: [] },
+        loading: !cachedOverview,
         error: null,
-    });
-    const [loadingUnits, setLoadingUnits] = useState(true);
-    const [loadingInvites, setLoadingInvites] = useState(true);
-    const [pendingMoveOutCount, setPendingMoveOutCount] = useState(0);
-    const [pendingRenewalsCount, setPendingRenewalsCount] = useState(0);
-    const [availableUnits, setAvailableUnits] = useState<Array<{
-        id: string;
-        name: string;
-        rent_amount: number;
-        property_id: string;
-        property_name: string;
-        property_address?: string;
-        property_image?: string | null;
-        status?: string;
-        has_ongoing_application?: boolean;
-        ongoing_application_status?: string | null;
-    }>>([]);
-    const [tenantInvites, setTenantInvites] = useState<Array<{
-        id: string;
-        mode: 'property' | 'unit';
-        applicationType: 'online' | 'face_to_face';
-        requiredRequirements: string[];
-        status: string;
-        propertyId: string;
-        propertyName: string;
-        unitId: string | null;
-        unitName: string | null;
-        expiresAt: string | null;
-        useCount: number;
-        maxUses: number;
-        lastUsedAt: string | null;
-        createdAt: string;
-        shareUrl: string;
-        qrUrl: string;
-    }>>([]);
+    }));
+    const [loadingUnits, setLoadingUnits] = useState(!cachedOverview);
+    const [loadingInvites, setLoadingInvites] = useState(!cachedOverview);
+    const [pendingMoveOutCount, setPendingMoveOutCount] = useState(cachedOverview?.pendingMoveOutCount ?? 0);
+    const [pendingRenewalsCount, setPendingRenewalsCount] = useState(cachedOverview?.pendingRenewalsCount ?? 0);
+    const [availableUnits, setAvailableUnits] = useState<OverviewUnit[]>(cachedOverview?.availableUnits ?? []);
+    const [tenantInvites, setTenantInvites] = useState<OverviewInvite[]>(cachedOverview?.tenantInvites ?? []);
 
-    // Quick actions catalog tailored for mobile
-    const mobileActionsCatalog = useMemo(() => {
-        return DEFAULT_QUICK_ACTIONS.map(action => {
-            if (action.id === 'invoice-ledger') return { ...action, href: '/mobile/landlord/payments' };
-            if (action.id === 'maintenance-desk') return { ...action, href: '/mobile/landlord/tickets' };
-            return action;
-        });
-    }, []);
-
-    const {
-        config,
-        displayedActions,
-        hiddenActions,
-        isCustomizing,
-        startCustomizing,
-        finishCustomizing,
-        reorderActions,
-        toggleVisibility,
-        restoreAll,
-        setSortMode,
-        trackActionUsage,
-        resetToDefaults,
-    } = useQuickActions(mobileActionsCatalog);
-
-    const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-    );
-
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-        if (over && active.id !== over.id) {
-            reorderActions(active.id as QuickActionId, over.id as QuickActionId);
-        }
-    };
-
-    // User greeting name
+    // Greeting name
     const rawName =
         profile?.full_name ||
         user?.user_metadata?.first_name ||
@@ -305,31 +303,48 @@ export function LandlordOverviewView() {
     const firstName = rawName.trim() ? rawName.trim().split(' ')[0] : t('Landlord');
     const formattedFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
 
-    // Fetch all real-time dashboard data
+    // Fetch all real-time dashboard data. When a snapshot is already on screen this
+    // runs as a silent background refresh: failed requests keep the last good values
+    // instead of blanking the dashboard.
+    const loadRequestRef = useRef(0);
     const loadAll = async () => {
+        const requestId = ++loadRequestRef.current;
+        const cacheKey = overviewCacheKey;
+        const previous = readViewCache<OverviewSnapshot>(cacheKey);
         try {
             const queryParam = selectedPropertyId && selectedPropertyId !== 'all'
                 ? `?propertyId=${selectedPropertyId}`
                 : '';
 
             const [paymentsRes, unitsRes, invitesRes, moveOutRes, renewalsRes] = await Promise.allSettled([
-                fetch(`/api/landlord/payments/overview${queryParam}`).then(r => r.ok ? r.json() : Promise.reject(r)),
-                fetch('/api/landlord/properties/overview').then(r => r.ok ? r.json() : Promise.reject(r)),
-                fetch('/api/landlord/invites').then(r => r.ok ? r.json() : Promise.reject(r)),
-                fetch('/api/landlord/move-out?status=pending').then(r => r.ok ? r.json() : Promise.reject(r)),
-                fetch('/api/landlord/renewals?status=pending').then(r => r.ok ? r.json() : Promise.reject(r)),
+                fetchJsonDeduped(`/api/landlord/payments/overview${queryParam}`),
+                fetchJsonDeduped('/api/landlord/property-units'),
+                fetchJsonDeduped('/api/landlord/invites'),
+                fetchJsonDeduped('/api/landlord/move-out?status=pending'),
+                fetchJsonDeduped('/api/landlord/renewals?status=pending'),
             ]);
+
+            // A newer load (e.g. property switch) superseded this one.
+            if (requestId !== loadRequestRef.current) return;
+
+            const snapshot: OverviewSnapshot = {
+                paymentsByCategory: previous?.paymentsByCategory ?? { Overdue: [], 'Near Due': [], Paid: [] },
+                availableUnits: previous?.availableUnits ?? [],
+                tenantInvites: previous?.tenantInvites ?? [],
+                pendingMoveOutCount: previous?.pendingMoveOutCount ?? 0,
+                pendingRenewalsCount: previous?.pendingRenewalsCount ?? 0,
+            };
 
             if (paymentsRes.status === 'fulfilled') {
                 const payload = paymentsRes.value;
-                dispatchPayments({
-                    type: 'LOAD_SUCCESS',
-                    payload: {
-                        Overdue: payload.payments?.Overdue ?? [],
-                        'Near Due': payload.payments?.['Near Due'] ?? [],
-                        Paid: payload.payments?.Paid ?? [],
-                    },
-                });
+                snapshot.paymentsByCategory = {
+                    Overdue: payload.payments?.Overdue ?? [],
+                    'Near Due': payload.payments?.['Near Due'] ?? [],
+                    Paid: payload.payments?.Paid ?? [],
+                };
+                dispatchPayments({ type: 'LOAD_SUCCESS', payload: snapshot.paymentsByCategory });
+            } else if (previous) {
+                dispatchPayments({ type: 'LOAD_SUCCESS', payload: previous.paymentsByCategory });
             } else {
                 dispatchPayments({ type: 'LOAD_ERROR', error: 'Unable to load payments' });
             }
@@ -337,7 +352,7 @@ export function LandlordOverviewView() {
             if (unitsRes.status === 'fulfilled') {
                 const data = unitsRes.value;
                 const options = Array.isArray(data.properties) ? data.properties : [];
-                const unitsList = options.flatMap((property: any) => {
+                const unitsList: OverviewUnit[] = options.flatMap((property: any) => {
                     const units = Array.isArray(property.units) ? property.units : [];
                     return units.map((unit: any) => ({
                         id: unit.id,
@@ -352,36 +367,38 @@ export function LandlordOverviewView() {
                         ongoing_application_status: unit.ongoingApplicationStatus ?? null,
                     }));
                 });
+                snapshot.availableUnits = unitsList;
                 setAvailableUnits(unitsList);
             }
             setLoadingUnits(false);
 
             if (invitesRes.status === 'fulfilled') {
                 const payload = invitesRes.value;
-                setTenantInvites(Array.isArray(payload.invites) ? payload.invites : []);
-            } else {
-                setTenantInvites([]);
+                snapshot.tenantInvites = Array.isArray(payload.invites) ? payload.invites : [];
             }
+            setTenantInvites(snapshot.tenantInvites);
             setLoadingInvites(false);
 
             if (moveOutRes.status === 'fulfilled' && Array.isArray(moveOutRes.value)) {
                 const list = moveOutRes.value;
-                const count = (!selectedPropertyId || selectedPropertyId === 'all')
+                snapshot.pendingMoveOutCount = (!selectedPropertyId || selectedPropertyId === 'all')
                     ? list.length
                     : list.filter((r: any) => r.lease?.unit?.property?.id === selectedPropertyId || r.property_id === selectedPropertyId).length;
-                setPendingMoveOutCount(count);
-            } else {
-                setPendingMoveOutCount(0);
             }
+            setPendingMoveOutCount(snapshot.pendingMoveOutCount);
 
             if (renewalsRes.status === 'fulfilled' && Array.isArray(renewalsRes.value)) {
                 const list = renewalsRes.value;
-                const count = (!selectedPropertyId || selectedPropertyId === 'all')
+                snapshot.pendingRenewalsCount = (!selectedPropertyId || selectedPropertyId === 'all')
                     ? list.length
                     : list.filter((r: any) => r.current_lease?.unit?.property?.id === selectedPropertyId || r.current_lease?.unit?.property_id === selectedPropertyId).length;
-                setPendingRenewalsCount(count);
-            } else {
-                setPendingRenewalsCount(0);
+            }
+            setPendingRenewalsCount(snapshot.pendingRenewalsCount);
+
+            // Only cache when the core payload succeeded, so a failed refresh never
+            // becomes the "last good" snapshot.
+            if (paymentsRes.status === 'fulfilled' || unitsRes.status === 'fulfilled') {
+                writeViewCache(cacheKey, snapshot);
             }
         } catch (err) {
             console.error('[MobileOverview] Error loading data:', err);
@@ -389,9 +406,21 @@ export function LandlordOverviewView() {
     };
 
     useEffect(() => {
-        dispatchPayments({ type: 'LOAD_START' });
-        setLoadingUnits(true);
-        setLoadingInvites(true);
+        const snapshot = readViewCache<OverviewSnapshot>(overviewCacheKey);
+        if (snapshot) {
+            // Show the cached dashboard for this scope immediately, then refresh silently.
+            dispatchPayments({ type: 'LOAD_SUCCESS', payload: snapshot.paymentsByCategory });
+            setAvailableUnits(snapshot.availableUnits);
+            setTenantInvites(snapshot.tenantInvites);
+            setPendingMoveOutCount(snapshot.pendingMoveOutCount);
+            setPendingRenewalsCount(snapshot.pendingRenewalsCount);
+            setLoadingUnits(false);
+            setLoadingInvites(false);
+        } else {
+            dispatchPayments({ type: 'LOAD_START' });
+            setLoadingUnits(true);
+            setLoadingInvites(true);
+        }
         void loadAll();
     }, [selectedPropertyId]);
 
@@ -411,24 +440,29 @@ export function LandlordOverviewView() {
     }, [filteredUnits]);
 
     const openUnitsCount = vacantUnitsList.length;
+    const totalUnits = filteredUnits.length;
+    const occupiedUnits = Math.max(0, totalUnits - openUnitsCount);
+    const occupancyPercentage = totalUnits > 0
+        ? Math.min(100, Math.round((occupiedUnits / totalUnits) * 100))
+        : 0;
+
+    const overdueCount = paymentsState.paymentsByCategory.Overdue.length;
+    const nearDueCount = paymentsState.paymentsByCategory['Near Due'].length;
+    const hasOverdue = overdueCount > 0;
+
+    const overdueAmount = useMemo(() => {
+        return paymentsState.paymentsByCategory.Overdue.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+    }, [paymentsState.paymentsByCategory.Overdue]);
+
+    const maintenanceCount = counts?.maintenance ?? 0;
+    const needsAttention = hasOverdue || maintenanceCount > 0 || pendingMoveOutCount > 0 || pendingRenewalsCount > 0;
+    const isRoomsEmpty = totalUnits === 0;
+    const isRentPaymentsEmpty = !loadingUnits && (totalUnits === 0 || (occupiedUnits === 0 && !hasOverdue && paymentsState.paymentsByCategory.Paid.length === 0 && paymentsState.paymentsByCategory['Near Due'].length === 0));
 
     const filteredInvites = useMemo(() => {
         if (!selectedPropertyId || selectedPropertyId === "all") return tenantInvites;
         return tenantInvites.filter(i => i.propertyId === selectedPropertyId);
     }, [tenantInvites, selectedPropertyId]);
-
-    const activeInviteCount = useMemo(() => {
-        return filteredInvites.filter((invite) => {
-            const normalizedStatus = String(invite.status || '').toLowerCase().trim();
-            const isExplicitlyInactive = INACTIVE_INVITE_STATUSES.includes(normalizedStatus);
-            const isExpired = invite.expiresAt ? new Date(invite.expiresAt).getTime() < Date.now() : false;
-            const isExhausted = invite.maxUses > 0 && invite.useCount >= invite.maxUses;
-            return !isExplicitlyInactive && !isExpired && !isExhausted;
-        }).length;
-    }, [filteredInvites]);
-
-    const overdueCount = paymentsState.paymentsByCategory.Overdue.length;
-    const nearDueCount = paymentsState.paymentsByCategory['Near Due'].length;
 
     // Popout payment action card state
     const [selectedActionPayment, setSelectedActionPayment] = useState<PaymentListItem | null>(null);
@@ -436,14 +470,14 @@ export function LandlordOverviewView() {
 
     return (
         <PullToRefresh onRefresh={loadAll} className="h-full flex flex-col">
-            <div className="m-stagger flex-1 min-h-0 flex flex-col gap-4 px-3.5 pt-2.5 pb-32 overflow-y-auto custom-scrollbar-premium">
-                {/* 1. Property Selector */}
+            <div className="flex-1 min-h-0 flex flex-col gap-4 px-3.5 pt-2.5 pb-28 overflow-y-auto custom-scrollbar-premium">
+                {/* 1. Property Selector (Context Switcher) */}
                 <div className="shrink-0">
                     <MobilePropertySelector />
                 </div>
 
-                {/* 2. Hero Card with Branded Background & Mobile Digital Clock */}
-                <div className="m-hero group p-5 flex flex-col gap-4 shrink-0">
+                {/* 2. Hero Card (Compacted height for clear visual hierarchy) */}
+                <div className="m-hero group p-4 flex flex-col gap-3 shrink-0">
                     {/* Background Layer with Custom Banner */}
                     <div className="absolute inset-0 overflow-hidden rounded-[var(--m-radius-hero)] pointer-events-none">
                         <Image
@@ -454,57 +488,40 @@ export function LandlordOverviewView() {
                             sizes="(max-width: 768px) 100vw, 500px"
                             className="object-cover opacity-25 mix-blend-luminosity transition-transform duration-[2000ms] group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/15 to-transparent" />
                     </div>
 
                     {/* Top Row: Date Pill & Manila Digital Clock + Banner Customizer */}
                     <div className="relative z-10 flex items-center justify-between gap-2">
-                        {/* Date Pill with Live Indicator */}
-                        <div className="m-pill m-pill-ghost gap-2">
-                            <span className="relative flex size-2">
+                        <div className="m-pill m-pill-ghost gap-1.5 py-1 px-2.5 text-[11px]">
+                            <span className="relative flex size-1.5">
                                 <span className="absolute inline-flex h-full w-full rounded-full bg-[#5ee0ea] opacity-75 animate-ping" />
-                                <span className="relative inline-flex size-2 rounded-full bg-[#5ee0ea]" />
+                                <span className="relative inline-flex size-1.5 rounded-full bg-[#5ee0ea]" />
                             </span>
-                            <span>
-                                {currentTime.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' })}
-                            </span>
+                            <ManilaDateLabel />
                         </div>
 
-                        {/* Top-Right: Manila Digital Clock Pill & Banner Edit */}
                         <div className="flex items-center gap-1.5">
-                            <button
-                                type="button"
-                                onClick={toggleTimeFormat}
-                                className="m-pill m-pill-ghost font-mono tabular-nums select-none active:scale-95 transition-all min-h-[32px]"
-                                title={is24Hour ? t('Tap to switch to 12-hour format') : t('Tap to switch to 24-hour format')}
-                                aria-label={t("Digital clock toggle")}
-                            >
-                                <span>{hours}:{minutes}</span>
-                                {period ? (
-                                    <span className="text-[11px] opacity-85">{period}</span>
-                                ) : (
-                                    <span className="text-[11px] opacity-85">24H</span>
-                                )}
-                            </button>
+                            <ManilaClockButton />
 
                             <button
                                 type="button"
                                 onClick={() => setIsCustomizerOpen(true)}
-                                className="size-8 rounded-full bg-white/18 text-inherit flex items-center justify-center transition-all active:scale-95"
+                                className="size-7 rounded-full bg-white/20 text-inherit flex items-center justify-center transition-all active:scale-95 cursor-pointer"
                                 title={t("Customize banner photo")}
                                 aria-label={t("Customize banner photo")}
                             >
-                                <Camera className="size-4" />
+                                <Camera className="size-3.5" />
                             </button>
                         </div>
                     </div>
 
-                    {/* Middle Row: Full-Width Prominent Greeting */}
-                    <div className="relative z-10 flex flex-col gap-1">
-                        <h1 className="m-display text-[24px] sm:text-[28px]">
+                    {/* Middle Row: Concise Greeting */}
+                    <div className="relative z-10 flex flex-col gap-0.5">
+                        <h1 className="m-display text-[20px] sm:text-[22px] leading-tight">
                             {t('Welcome back, {name}', { name: formattedFirstName })}
                         </h1>
-                        <p className="m-hero-muted text-sm line-clamp-1">
+                        <p className="m-hero-muted text-xs line-clamp-1">
                             {overdueCount > 0
                                 ? (overdueCount > 1
                                     ? t('⚠️ {count} payments are overdue for review', { count: overdueCount })
@@ -513,565 +530,651 @@ export function LandlordOverviewView() {
                         </p>
                     </div>
 
-                    {/* Primary Companion Action Grid (4-Column Balanced Grid) */}
+                    {/* Compact 4-Column Primary Action Grid (>= 48px Touch Target) */}
                     <div className="relative z-10 grid grid-cols-4 gap-2">
-                        {/* 1. Collect Payment */}
-                        <button
-                            type="button"
-                            onClick={() => setIsCollectPaymentModalOpen(true)}
-                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-white/14 p-2 min-h-[64px] active:scale-95 transition-all text-inherit group/action"
-                        >
-                            <Banknote className="size-[22px] group-hover/action:scale-110 transition-transform" />
-                            <span className="text-xs font-semibold">{t("Collect")}</span>
-                        </button>
-
-                        {/* 2. Walk-in App */}
                         <button
                             type="button"
                             onClick={() => {
+                                triggerHaptic('light');
+                                setIsCollectPaymentModalOpen(true);
+                            }}
+                            className="flex flex-col items-center justify-center gap-1 rounded-xl bg-white/15 hover:bg-white/25 py-2 px-1.5 min-h-[48px] active:scale-95 transition-all text-inherit cursor-pointer"
+                        >
+                            <Banknote className="size-[18px]" />
+                            <span className="text-[11px] font-bold leading-none">{t("Record")}</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                triggerHaptic('light');
                                 setSelectedWalkInUnitId(undefined);
                                 setIsWalkInModalOpen(true);
                             }}
-                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-white/14 p-2 min-h-[64px] active:scale-95 transition-all text-inherit group/action"
+                            className="flex flex-col items-center justify-center gap-1 rounded-xl bg-white/15 hover:bg-white/25 py-2 px-1.5 min-h-[48px] active:scale-95 transition-all text-inherit cursor-pointer"
                         >
-                            <UserPlus className="size-[22px] group-hover/action:scale-110 transition-transform" />
-                            <span className="text-xs font-semibold">{t("Walk-In")}</span>
+                            <UserPlus className="size-[18px]" />
+                            <span className="text-[11px] font-bold leading-none">{t("New App")}</span>
                         </button>
-
-                        {/* 3. Invite Resident */}
-                        <button
-                            type="button"
-                            onClick={() => setIsInviteModalOpen(true)}
-                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-white/14 p-2 min-h-[64px] active:scale-95 transition-all text-inherit group/action"
-                        >
-                            <QrCode className="size-[22px] group-hover/action:scale-110 transition-transform" />
-                            <span className="text-xs font-semibold">{t("Invite")}</span>
-                        </button>
-
-                        {/* 4. Building Calendar */}
-                        <Link
-                            href="/mobile/landlord/calendar"
-                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-white/14 p-2 min-h-[64px] active:scale-95 transition-all text-inherit group/action text-center"
-                        >
-                            <Calendar className="size-[22px] group-hover/action:scale-110 transition-transform" />
-                            <span className="text-xs font-semibold">{t("Calendar")}</span>
-                        </Link>
-                    </div>
-
-                    {/* Secondary Mobile Utility Strip (Touch-Accessible >= 44px) */}
-                    <div className="relative z-10 flex items-center justify-between gap-2 pt-3 border-t border-white/15">
-                        <Link
-                            href="/mobile/landlord/tickets"
-                            className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-2 rounded-full bg-white/14 text-inherit text-xs font-bold active:scale-95 transition-all"
-                        >
-                            <Wrench className="size-4" />
-                            <span>{t('Tickets')}</span>
-                        </Link>
 
                         <button
                             type="button"
-                            onClick={() => setIsFlyerModalOpen(true)}
-                            className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-2 rounded-full bg-white/14 text-inherit text-xs font-bold active:scale-95 transition-all"
+                            onClick={() => {
+                                triggerHaptic('light');
+                                setIsInviteModalOpen(true);
+                            }}
+                            className="flex flex-col items-center justify-center gap-1 rounded-xl bg-white/15 hover:bg-white/25 py-2 px-1.5 min-h-[48px] active:scale-95 transition-all text-inherit cursor-pointer"
                         >
-                            <Printer className="size-4" />
-                            <span>{t('Flyer')}</span>
+                            <QrCode className="size-[18px]" />
+                            <span className="text-[11px] font-bold leading-none">{t("Invite")}</span>
                         </button>
 
                         <Link
-                            href="/mobile/tenant/manual"
-                            className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-2 rounded-full bg-white/14 text-inherit text-xs font-bold active:scale-95 transition-all"
+                            href="/mobile/landlord/applications"
+                            onClick={() => triggerHaptic('light')}
+                            className="relative flex flex-col items-center justify-center gap-1 rounded-xl bg-white/15 hover:bg-white/25 py-2 px-1.5 min-h-[48px] active:scale-95 transition-all text-inherit cursor-pointer"
                         >
-                            <FolderSearch2 className="size-4" />
-                            <span>{t('Manual')}</span>
+                            {(counts?.applications ?? 0) > 0 && (
+                                <span
+                                    aria-label={t('{count} pending applications', { count: counts.applications })}
+                                    className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold tabular-nums flex items-center justify-center shadow-xs"
+                                >
+                                    {counts.applications}
+                                </span>
+                            )}
+                            <ClipboardCheck className="size-[18px]" />
+                            <span className="text-[11px] font-bold leading-none">{t("Applications")}</span>
                         </Link>
                     </div>
                 </div>
 
-                {/* 3. Intelligence Hub (4 Status Badges in 2x2 Grid) */}
-                <div className="flex flex-col gap-2 shrink-0">
-                    <div className="flex items-center gap-2.5 px-1">
-                        <div className="m-tile m-tile-brand size-8 rounded-xl">
-                            <ShieldCheck className="size-4" />
+                {/* 3. Today's Overview (Adapted Desktop SeniorOverviewHub Look & Compact Hierarchy) */}
+                <section aria-label={t("Today's Overview")} className="flex flex-col gap-2.5 shrink-0">
+                    <div className="flex items-center justify-between px-0.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
+                                {t("Today's Overview")}
+                            </h2>
+                            {needsAttention ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
+                                    <span className="relative flex size-1.5 shrink-0" aria-hidden="true">
+                                        <span className="animate-ping motion-reduce:hidden absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-60" />
+                                        <span className="relative inline-flex rounded-full size-1.5 bg-rose-600 dark:bg-rose-400" />
+                                    </span>
+                                    <span>{t("Needs Attention")}</span>
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                                    <CheckCircle2 className="size-3 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+                                    <span>{t("All Good! No Issues Today")}</span>
+                                </span>
+                            )}
                         </div>
-                        <h2 className="m-display text-[18px] text-foreground">
-                            {t('Intelligence Hub')}
-                        </h2>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2.5">
-                        {/* Overdue */}
-                        <button
-                            type="button"
-                            onClick={() => setOpenPaymentModal('Overdue')}
-                            className="m-card p-3.5 flex items-center justify-between gap-2 active:scale-95 transition-all text-left"
-                        >
-                            <div className="min-w-0">
-                                <span className="m-eyebrow text-[11px] text-[var(--m-coral-text)] flex items-center gap-1">
-                                    {t('Overdue')}
-                                </span>
-                                <h3 className="m-amount text-[26px] text-foreground mt-1.5 tabular-nums">
-                                    {paymentsState.loading ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : overdueCount}
-                                </h3>
-                                <p className="text-xs text-muted-foreground truncate mt-1">{t("Tap to review")}</p>
-                            </div>
-                            <div className="m-tile m-tile-coral size-10">
-                                <Zap className="size-[18px]" />
-                            </div>
-                        </button>
+                    {/* Primary Focal Card: Rent Payments (Exact Desktop SeniorOverviewHub Look) */}
+                    <div
+                        className={cn(
+                            "group/hero relative rounded-2xl p-4 overflow-hidden flex flex-col justify-between transition-all duration-200 border",
+                            "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.22),0_4px_14px_-4px_rgba(0,0,0,0.12)]",
+                            isRentPaymentsEmpty
+                                ? "bg-slate-900 dark:bg-zinc-800/90 text-white border-slate-800 dark:border-zinc-700"
+                                : "bg-primary text-primary-foreground border-primary/30"
+                        )}
+                    >
+                        {/* Directional depth gradient */}
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/28 via-transparent to-white/14" aria-hidden="true" />
 
-                        {/* Near Due */}
-                        <button
-                            type="button"
-                            onClick={() => setOpenPaymentModal('Near Due')}
-                            className="m-card p-3.5 flex items-center justify-between gap-2 active:scale-95 transition-all text-left"
-                        >
-                            <div className="min-w-0">
-                                <span className="m-eyebrow text-[11px] text-[var(--m-amber-text)] flex items-center gap-1">
-                                    {t('Near Due')}
-                                </span>
-                                <h3 className="m-amount text-[26px] text-foreground mt-1.5 tabular-nums">
-                                    {paymentsState.loading ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : nearDueCount}
-                                </h3>
-                                <p className="text-xs text-muted-foreground truncate mt-1">{t("Next 7 days")}</p>
-                            </div>
-                            <div className="m-tile m-tile-amber size-10">
-                                <TrendingUp className="size-[18px]" />
-                            </div>
-                        </button>
+                        {/* Tactile architectural grid & dot-node surface texture */}
+                        <div className="overview-grid-texture-hero pointer-events-none absolute inset-0" aria-hidden="true" />
 
-                        {/* Vacant */}
-                        <button
-                            type="button"
-                            onClick={() => setIsVacantUnitsModalOpen(true)}
-                            className="m-card p-3.5 flex items-center justify-between gap-2 active:scale-95 transition-all text-left"
-                        >
-                            <div className="min-w-0">
-                                <span className="m-eyebrow text-[11px] text-[var(--m-teal-text)] flex items-center gap-1">
-                                    {t('Vacant')}
-                                </span>
-                                <h3 className="m-amount text-[26px] text-foreground mt-1.5 tabular-nums">
-                                    {loadingUnits ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : openUnitsCount}
-                                </h3>
-                                <p className="text-xs text-muted-foreground truncate mt-1">{t("Available units")}</p>
-                            </div>
-                            <div className="m-tile m-tile-teal size-10">
-                                <Building2 className="size-[18px]" />
-                            </div>
-                        </button>
+                        {/* Periodic satin light sheen */}
+                        {!shouldReduceMotion && (
+                            <motion.div
+                                initial={{ x: "-140%" }}
+                                animate={{ x: "420%" }}
+                                transition={{
+                                    duration: 1.4,
+                                    delay: 0.6,
+                                    repeat: Infinity,
+                                    repeatDelay: 5,
+                                    ease: [0.22, 1, 0.36, 1],
+                                }}
+                                className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+                                aria-hidden="true"
+                            />
+                        )}
 
-                        {/* Invites */}
-                        <button
-                            type="button"
-                            onClick={() => setIsInviteModalOpen(true)}
-                            className="m-card p-3.5 flex items-center justify-between gap-2 active:scale-95 transition-all text-left"
-                        >
-                            <div className="min-w-0">
-                                <span className="m-eyebrow text-[11px] text-[var(--brand-primary-900)] dark:text-primary flex items-center gap-1">
-                                    {t('Invites')}
-                                </span>
-                                <h3 className="m-amount text-[26px] text-foreground mt-1.5 tabular-nums">
-                                    {loadingInvites ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : activeInviteCount}
-                                </h3>
-                                <p className="text-xs text-muted-foreground truncate mt-1">{t("Active referral tokens")}</p>
-                            </div>
-                            <div className="m-tile m-tile-brand size-10">
-                                <QrCode className="size-[18px]" />
-                            </div>
-                        </button>
-                    </div>
-                </div>
-
-                {/* 4. Smart Action Center: Next Priorities & Urgent Tasks */}
-                <div className="flex flex-col gap-2.5 shrink-0">
-                    <h3 className="m-display text-[18px] text-foreground px-1">
-                        {t('Action Center')}
-                    </h3>
-
-                    <div className="flex flex-col gap-2.5">
-                        {/* High Priority: Lease Renewal Requests Alert */}
-                        {pendingRenewalsCount > 0 ? (
-                            <div className="m-card p-3.5 flex items-center justify-between gap-3">
-                                <div className="min-w-0 flex-1 flex flex-col gap-1.5 items-start">
-                                    <span className="m-pill m-pill-brand text-[11px] py-1 px-2.5">
-                                        {t('Lease Renewal')}
+                        <div className="relative z-10">
+                            {/* Top Meta Row */}
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className={cn(
+                                    "flex items-center gap-2",
+                                    isRentPaymentsEmpty ? "text-slate-200" : "text-primary-foreground/90"
+                                )}>
+                                    <div className={cn(
+                                        "flex size-7 items-center justify-center rounded-lg border shadow-2xs",
+                                        isRentPaymentsEmpty ? "bg-white/10 border-white/15" : "bg-black/15 border-white/15"
+                                    )}>
+                                        <CreditCard className="size-3.5 shrink-0" aria-hidden="true" />
+                                    </div>
+                                    <span className="text-[11px] font-bold uppercase tracking-wider">
+                                        {t("Rent Payments")}
                                     </span>
-                                    <h4 className="text-[15px] font-bold text-foreground truncate w-full">
-                                        {t('{count} Pending Lease Renewal Request{s}', { count: pendingRenewalsCount, s: pendingRenewalsCount > 1 ? 's' : '' })}
-                                    </h4>
-                                    <p className="text-[13px] text-muted-foreground">{t('Tenant submitted extension terms. Review & approve.')}</p>
                                 </div>
-                                <Link
-                                    href="/mobile/landlord/leases?tab=renewals"
-                                    className="m-btn m-btn-primary min-h-[40px] px-4 text-[13px] shrink-0"
-                                >
-                                    {t('Review')}
-                                </Link>
-                            </div>
-                        ) : null}
 
-                        {/* High Priority: Move-Out Notice Alert */}
-                        {pendingMoveOutCount > 0 ? (
-                            <div className="m-card p-3.5 flex items-center justify-between gap-3">
-                                <div className="min-w-0 flex-1 flex flex-col gap-1.5 items-start">
-                                    <span className="m-pill m-pill-amber text-[11px] py-1 px-2.5">
-                                        Move-Out Notice
+                                {hasOverdue ? (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white text-rose-700 shadow-xs">
+                                        <span className="relative flex size-1.5 shrink-0" aria-hidden="true">
+                                            <span className="animate-ping motion-reduce:hidden absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75" />
+                                            <span className="relative inline-flex rounded-full size-1.5 bg-rose-600" />
+                                        </span>
+                                        <span>
+                                            {overdueCount === 1
+                                                ? t("{count} tenant has not paid", { count: overdueCount })
+                                                : t("{count} tenants have not paid", { count: overdueCount })}
+                                        </span>
                                     </span>
-                                    <h4 className="text-[15px] font-bold text-foreground truncate w-full">
-                                        {pendingMoveOutCount} Pending Move-Out Request{pendingMoveOutCount > 1 ? 's' : ''}
-                                    </h4>
-                                    <p className="text-[13px] text-muted-foreground">Tenant notice submitted. Review & schedule inspection.</p>
-                                </div>
-                                <Link
-                                    href="/mobile/landlord/move-out"
-                                    className="m-btn m-btn-primary min-h-[40px] px-4 text-[13px] shrink-0"
-                                >
-                                    Review
-                                </Link>
-                            </div>
-                        ) : null}
-
-                        {/* High Priority: Overdue Invoices Alert */}
-                        {overdueCount > 0 ? (
-                            <div className="m-card p-3.5 flex items-center justify-between gap-3">
-                                <div className="min-w-0 flex-1 flex flex-col gap-1.5 items-start">
-                                    <span className="m-pill m-pill-coral text-[11px] py-1 px-2.5">
-                                        {t('High Priority')}
+                                ) : isRentPaymentsEmpty ? (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-white/10 text-slate-200 border border-white/10">
+                                        <span className="size-1.5 rounded-full bg-slate-400 shrink-0" aria-hidden="true" />
+                                        <span>{totalUnits === 0 ? t("No properties added yet") : t("No active tenants yet")}</span>
                                     </span>
-                                    <h4 className="text-[15px] font-bold text-foreground truncate w-full">
-                                        {overdueCount > 1 ? t('{count} Overdue Rent Invoices', { count: overdueCount }) : t('{count} Overdue Rent Invoice', { count: overdueCount })}
-                                    </h4>
-                                    <p className="text-[13px] text-muted-foreground">{t("Immediate follow-up required with tenants.")}</p>
-                                </div>
-                                <button
-                                    onClick={() => setOpenPaymentModal('Overdue')}
-                                    className="m-btn m-btn-primary min-h-[40px] px-4 text-[13px] shrink-0"
-                                >
-                                    {t('Review')}
-                                </button>
-                            </div>
-                        ) : null}
-
-                        {/* Medium Priority: Vacant Units Occupancy */}
-                        {openUnitsCount > 0 ? (
-                            <div className="m-card p-3.5 flex items-center justify-between gap-3">
-                                <div className="min-w-0 flex-1 flex flex-col gap-1.5 items-start">
-                                    <span className="m-pill m-pill-amber text-[11px] py-1 px-2.5">
-                                        {t('Occupancy')}
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-black/15 text-primary-foreground border border-white/15">
+                                        <CheckCircle2 className="size-3 shrink-0" aria-hidden="true" />
+                                        <span>{t("All rent paid on time")}</span>
                                     </span>
-                                    <h4 className="text-xs font-black text-foreground mt-1 truncate">
-                                        {openUnitsCount > 1 ? t('{count} Vacant Units Awaiting Residents', { count: openUnitsCount }) : t('{count} Vacant Unit Awaiting Residents', { count: openUnitsCount })}
-                                    </h4>
-                                    <p className="text-[10px] text-muted-foreground">{t("Start walk-in application or share invite QR.")}</p>
-                                </div>
-                                <button
-                                    onClick={() => setIsVacantUnitsModalOpen(true)}
-                                    className="shrink-0 px-3 py-1.5 rounded-xl neumorphic-extruded text-[10px] font-black uppercase text-primary tracking-wider active:scale-95"
-                                >
-                                    {t('View')}
-                                </button>
-                            </div>
-                        ) : null}
-
-                        {/* Low Priority / Healthy Check */}
-                        {overdueCount === 0 && openUnitsCount === 0 && pendingMoveOutCount === 0 && pendingRenewalsCount === 0 ? (
-                            <div className="neumorphic-panel rounded-2xl p-3 border-l-4 border-l-emerald-500 flex items-center justify-between gap-3">
-                                <div className="min-w-0 flex-1">
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                                        {t('System Healthy')}
-                                    </span>
-                                    <h4 className="text-xs font-black text-foreground mt-1">
-                                        {t('Every Account is Up to Date')}
-                                    </h4>
-                                    <p className="text-[10px] text-muted-foreground">{t("Properties are fully occupied and rents are current.")}</p>
-                                </div>
-                                <Link
-                                    href="/mobile/landlord/payments"
-                                    className="shrink-0 px-3 py-1.5 rounded-xl neumorphic-extruded text-[10px] font-black uppercase text-foreground tracking-wider active:scale-95"
-                                >
-                                    {t('Ledger')}
-                                </Link>
-                            </div>
-                        ) : null}
-                    </div>
-
-                    {/* ActionRequired Live Task Operations Queue */}
-                    <div className="mt-1">
-                        <ActionRequired />
-                    </div>
-                </div>
-
-                {/* 5. Operations Center (Modular 2-Column App Grid) */}
-                <div className="flex flex-col gap-2 shrink-0">
-                    <div className="flex items-center justify-between px-1">
-                        <div className="flex items-center gap-2">
-                            <span className="size-2 rounded-full bg-primary" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                                {t('Operations Center')}
-                            </h3>
-                        </div>
-
-                        {/* Custom / Frequent Sorting & Customize Toggle */}
-                        <div className="flex items-center gap-1.5">
-                            <div className="flex items-center rounded-lg neumorphic-inset p-0.5 text-[9px] font-bold">
-                                <button
-                                    onClick={() => setSortMode('custom')}
-                                    className={cn(
-                                        'px-2 py-0.5 rounded-md transition-all',
-                                        config.sortMode === 'custom'
-                                            ? 'bg-primary text-primary-foreground font-black shadow-xs'
-                                            : 'text-muted-foreground hover:text-foreground'
-                                    )}
-                                >
-                                    {t('Custom')}
-                                </button>
-                                <button
-                                    onClick={() => setSortMode('frequently_used')}
-                                    className={cn(
-                                        'px-2 py-0.5 rounded-md transition-all',
-                                        config.sortMode === 'frequently_used'
-                                            ? 'bg-primary text-primary-foreground font-black shadow-xs'
-                                            : 'text-muted-foreground hover:text-foreground'
-                                    )}
-                                >
-                                    {t('Frequent')}
-                                </button>
-                            </div>
-
-                            <button
-                                onClick={isCustomizing ? finishCustomizing : startCustomizing}
-                                className={cn(
-                                    'px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1 transition-all active:scale-95',
-                                    isCustomizing
-                                        ? 'bg-emerald-500 text-white shadow-xs'
-                                        : 'neumorphic-extruded text-muted-foreground hover:text-foreground'
                                 )}
-                            >
-                                {isCustomizing ? <Check className="size-3" /> : <SlidersHorizontal className="size-3 text-primary" />}
-                                <span>{isCustomizing ? t('Done') : t('Edit')}</span>
-                            </button>
+                            </div>
+
+                            {/* Compact Hero Metric */}
+                            <div className="my-3 space-y-0.5">
+                                <p className={cn(
+                                    "text-[11px] font-medium",
+                                    isRentPaymentsEmpty ? "text-slate-300" : "text-primary-foreground/80"
+                                )}>
+                                    {hasOverdue ? t("Unpaid Rent") : t("Unpaid Balance")}
+                                </p>
+                                <div className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums leading-none">
+                                    {hasOverdue
+                                        ? `₱${overdueAmount.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                        : "₱0.00"}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Footer */}
+                        <div className={cn(
+                            "relative z-10 pt-3 border-t flex flex-wrap items-center gap-2",
+                            isRentPaymentsEmpty ? "border-white/15" : "border-primary-foreground/15"
+                        )}>
+                            {hasOverdue ? (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            triggerHaptic('light');
+                                            setOpenPaymentModal('Overdue');
+                                        }}
+                                        className="group flex-1 min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold bg-primary-foreground hover:opacity-95 text-primary shadow-xs transition-all active:scale-[0.98] inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                                    >
+                                        <span>{t("View Unpaid Rent")}</span>
+                                        <ArrowRight className="size-3.5 transition-transform motion-reduce:transition-none group-hover:translate-x-0.5" aria-hidden="true" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            triggerHaptic('light');
+                                            setIsCollectPaymentModalOpen(true);
+                                        }}
+                                        className="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold bg-black/15 hover:bg-black/25 text-primary-foreground border border-primary-foreground/20 transition-all active:scale-[0.98] inline-flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                        <Banknote className="size-3.5" aria-hidden="true" />
+                                        <span>{t("Record Payment")}</span>
+                                    </button>
+                                </>
+                            ) : isRentPaymentsEmpty ? (
+                                totalUnits === 0 ? (
+                                    <Link
+                                        href="/landlord/properties/new"
+                                        className="group min-h-[40px] px-4 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-900 shadow-xs transition-all active:scale-[0.98] inline-flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                        <span>{t("Add Property")}</span>
+                                        <ArrowRight className="size-3.5" aria-hidden="true" />
+                                    </Link>
+                                ) : (
+                                    <Link
+                                        href="/mobile/landlord/tenants"
+                                        className="group min-h-[40px] px-4 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-900 shadow-xs transition-all active:scale-[0.98] inline-flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                        <span>{t("Add First Tenant")}</span>
+                                        <ArrowRight className="size-3.5" aria-hidden="true" />
+                                    </Link>
+                                )
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        triggerHaptic('light');
+                                        setIsCollectPaymentModalOpen(true);
+                                    }}
+                                    className="group min-h-[40px] px-4 py-2 rounded-xl text-xs font-bold bg-primary-foreground hover:opacity-95 text-primary shadow-xs transition-all active:scale-[0.98] inline-flex items-center gap-1.5 cursor-pointer"
+                                >
+                                    <span>{t("Record Payment")}</span>
+                                    <ArrowRight className="size-3.5" aria-hidden="true" />
+                                </button>
+                            )}
                         </div>
                     </div>
 
-                    {/* Customize Mode Banner */}
-                    {isCustomizing && (
-                        <div className="p-3 rounded-2xl border border-primary/20 bg-primary/5 flex items-center justify-between text-[10px]">
-                            <span className="font-semibold text-primary">{t("Tap eye to hide, or drag to reorder.")}</span>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={restoreAll}
-                                    className="font-bold text-muted-foreground hover:text-primary underline"
-                                >
-                                    {t('Restore All')}
-                                </button>
-                                <button
-                                    onClick={resetToDefaults}
-                                    className="font-bold text-muted-foreground hover:text-red-400"
-                                >
-                                    {t('Reset')}
-                                </button>
+                    {/* Stacked Compact Secondary Cards (Exact Desktop SeniorOverviewHub Look) */}
+                    <div className="flex flex-col gap-2.5">
+                        {/* ROW 1: Room Occupancy */}
+                        <div className="relative overflow-hidden rounded-2xl bg-card dark:bg-zinc-900 border border-border p-3.5 shadow-xs dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07)] flex flex-col justify-between gap-2.5">
+                            <div className="overview-grid-texture-surface pointer-events-none absolute inset-0" aria-hidden="true" />
+
+                            <div className="relative z-10 flex items-start justify-between gap-3">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                        <div className="flex size-6 items-center justify-center rounded-md bg-muted/80 border border-border text-foreground/80">
+                                            <Bed className="size-3.5 shrink-0" aria-hidden="true" />
+                                        </div>
+                                        <span className="text-[11px] font-bold uppercase tracking-wider">
+                                            {t("Room Occupancy")}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-baseline gap-1.5 tabular-nums">
+                                        {isRoomsEmpty ? (
+                                            <span className="text-xl sm:text-2xl font-black tracking-tight text-muted-foreground">
+                                                0 {t("of")} 0
+                                            </span>
+                                        ) : (
+                                            <>
+                                                <span className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
+                                                    {occupiedUnits}
+                                                </span>
+                                                <span className="text-xs font-semibold text-muted-foreground">
+                                                    {t("of")} {totalUnits}
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {isRoomsEmpty ? (
+                                    <Link
+                                        href="/landlord/unit-map"
+                                        className="group min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-bold bg-muted/60 hover:bg-muted text-foreground border border-border transition-all active:scale-[0.98] inline-flex items-center gap-1 shrink-0 cursor-pointer"
+                                    >
+                                        <span>{t("Set Up Rooms")}</span>
+                                        <ArrowRight className="size-3.5" aria-hidden="true" />
+                                    </Link>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            triggerHaptic('light');
+                                            setIsVacantUnitsModalOpen(true);
+                                        }}
+                                        className="group min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-bold bg-muted/60 hover:bg-muted text-foreground border border-border transition-all active:scale-[0.98] inline-flex items-center gap-1 shrink-0 cursor-pointer"
+                                    >
+                                        <span>{t("View Empty Rooms")}</span>
+                                        <ArrowRight className="size-3.5" aria-hidden="true" />
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="relative z-10 space-y-1.5">
+                                <div className="h-1.5 w-full rounded-full bg-muted/80 border border-border/50 overflow-hidden" aria-hidden="true">
+                                    <div
+                                        className="h-full rounded-full bg-primary transition-all duration-500"
+                                        style={{ width: `${occupancyPercentage}%` }}
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between text-[11px]">
+                                    {isRoomsEmpty ? (
+                                        <span className="font-medium text-muted-foreground">
+                                            {t("No rooms added yet")}
+                                        </span>
+                                    ) : openUnitsCount > 0 ? (
+                                        <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-600 dark:text-emerald-400">
+                                            <span className="size-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 shrink-0" aria-hidden="true" />
+                                            <span>{openUnitsCount} {t(openUnitsCount === 1 ? "room ready for move-in" : "rooms ready for move-in")}</span>
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1.5 font-medium text-muted-foreground">
+                                            <CheckCircle2 className="size-3 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+                                            <span>{t("All rooms occupied")}</span>
+                                        </span>
+                                    )}
+                                    {!isRoomsEmpty && (
+                                        <span className="font-mono text-[11px] font-semibold text-muted-foreground tabular-nums">
+                                            {occupancyPercentage}%
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ROW 2: Repairs & Maintenance */}
+                        <div className="relative overflow-hidden rounded-2xl bg-card dark:bg-zinc-900 border border-border p-3.5 shadow-xs dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07)] flex items-center justify-between gap-3">
+                            <div className="overview-grid-texture-surface pointer-events-none absolute inset-0" aria-hidden="true" />
+
+                            <div className="relative z-10 space-y-1 min-w-0">
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <div className="flex size-6 items-center justify-center rounded-md bg-muted/80 border border-border text-foreground/80">
+                                        <Wrench className="size-3.5 shrink-0" aria-hidden="true" />
+                                    </div>
+                                    <span className="text-[11px] font-bold uppercase tracking-wider">
+                                        {t("Repairs & Maintenance")}
+                                    </span>
+                                </div>
+
+                                <div className="flex items-baseline gap-1.5 tabular-nums">
+                                    <span className={cn(
+                                        "text-xl sm:text-2xl font-black tracking-tight",
+                                        maintenanceCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground"
+                                    )}>
+                                        {maintenanceCount}
+                                    </span>
+                                    <span className="text-xs font-semibold text-muted-foreground">
+                                        {t("Open Requests")}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    {maintenanceCount > 0 ? (
+                                        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                                            <span className="relative flex size-1.5 shrink-0" aria-hidden="true">
+                                                <span className="animate-ping motion-reduce:hidden absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-65" />
+                                                <span className="relative inline-flex rounded-full size-1.5 bg-amber-500" />
+                                            </span>
+                                            <span>{t("Needs landlord review")}</span>
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+                                            <CheckCircle2 className="size-3 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+                                            <span>{t("All repairs resolved")}</span>
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <Link
+                                href="/mobile/landlord/tickets"
+                                onClick={() => triggerHaptic('light')}
+                                className="relative z-10 group min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-bold bg-muted/60 hover:bg-muted text-foreground border border-border transition-all active:scale-[0.98] inline-flex items-center gap-1 shrink-0 cursor-pointer"
+                            >
+                                <span>{t("View Repair Requests")}</span>
+                                <ArrowRight className="size-3.5" aria-hidden="true" />
+                            </Link>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 4. Progressive Disclosure Tabs (Eliminating Endless Scrolling) */}
+                <div className="flex flex-col gap-3 shrink-0 pt-1">
+                    {/* Segmented Tab Switcher — 3 equal stacked columns prevent horizontal overflow on narrow phones */}
+                    <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-muted/50 border border-border/60 w-full shrink-0 select-none">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                triggerHaptic('light');
+                                setActiveDashboardTab('cash-flow');
+                            }}
+                            className={cn(
+                                'relative flex flex-col items-center justify-center gap-1 py-2 px-1.5 min-h-[54px] rounded-xl text-[11px] font-bold leading-[1.15] text-center transition-all active:scale-[0.98] cursor-pointer',
+                                activeDashboardTab === 'cash-flow'
+                                    ? 'bg-card text-foreground shadow-xs border border-border/60'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            )}
+                        >
+                            <CreditCard className={cn('size-4 shrink-0', activeDashboardTab === 'cash-flow' ? 'text-primary' : 'text-muted-foreground')} />
+                            <span className="break-words">{t('Rent & Payments')}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                triggerHaptic('light');
+                                setActiveDashboardTab('utilities');
+                            }}
+                            className={cn(
+                                'relative flex flex-col items-center justify-center gap-1 py-2 px-1.5 min-h-[54px] rounded-xl text-[11px] font-bold leading-[1.15] text-center transition-all active:scale-[0.98] cursor-pointer',
+                                activeDashboardTab === 'utilities'
+                                    ? 'bg-card text-foreground shadow-xs border border-border/60'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            )}
+                        >
+                            <Zap className={cn('size-4 shrink-0', activeDashboardTab === 'utilities' ? 'text-amber-500' : 'text-muted-foreground')} />
+                            <span className="break-words">{t('Water & Electricity')}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                triggerHaptic('light');
+                                setActiveDashboardTab('renewals');
+                            }}
+                            className={cn(
+                                'relative flex flex-col items-center justify-center gap-1 py-2 px-1.5 min-h-[54px] rounded-xl text-[11px] font-bold leading-[1.15] text-center transition-all active:scale-[0.98] cursor-pointer',
+                                activeDashboardTab === 'renewals'
+                                    ? 'bg-card text-foreground shadow-xs border border-border/60'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            )}
+                        >
+                            {pendingRenewalsCount + pendingMoveOutCount > 0 && (
+                                <span className="absolute top-1.5 right-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold tabular-nums">
+                                    {pendingRenewalsCount + pendingMoveOutCount}
+                                </span>
+                            )}
+                            <RefreshCw className={cn('size-4 shrink-0', activeDashboardTab === 'renewals' ? 'text-primary' : 'text-muted-foreground')} />
+                            <span className="break-words">{t('Contracts & Tasks')}</span>
+                        </button>
+                    </div>
+
+                    {/* Tab 1: Rent & Payments */}
+                    {activeDashboardTab === 'cash-flow' && (
+                        <div className="flex flex-col gap-3.5 animate-in fade-in duration-200">
+                            <div className="m-card p-4 border border-border/60 rounded-2xl flex flex-col gap-3.5 shadow-xs">
+                                {/* Header (Full width so title and subtitle never truncate) */}
+                                <div className="flex items-center gap-3 w-full">
+                                    <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/15 shrink-0">
+                                        <CreditCard className="size-5" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="text-sm font-bold text-foreground leading-snug">{t('Rent & Payments')}</h3>
+                                        <p className="text-xs text-muted-foreground leading-snug">{t('Unpaid, due soon, and settled rent')}</p>
+                                    </div>
+                                </div>
+
+                                {/* 3 Quick Action Buttons — Equal 3-column grid with >= 44px touch targets */}
+                                <div className="grid grid-cols-3 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            triggerHaptic('light');
+                                            setIsIssueInvoiceDrawerOpen(true);
+                                        }}
+                                        className="px-2 py-2 min-h-[44px] rounded-xl text-xs font-bold bg-primary/10 hover:bg-primary/15 text-primary border border-primary/20 flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+                                        aria-label={t('Issue invoice')}
+                                    >
+                                        <FilePlus2 className="size-3.5 shrink-0" />
+                                        <span className="truncate">{t('Issue Bill')}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            triggerHaptic('light');
+                                            setIsRecordExpenseDrawerOpen(true);
+                                        }}
+                                        className="px-2 py-2 min-h-[44px] rounded-xl text-xs font-bold bg-rose-500/10 hover:bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+                                        aria-label={t('Record expense')}
+                                    >
+                                        <TrendingDown className="size-3.5 shrink-0" />
+                                        <span className="truncate">{t('Expense')}</span>
+                                    </button>
+                                    <Link
+                                        href="/mobile/landlord/payments"
+                                        className="px-2 py-2 min-h-[44px] rounded-xl text-xs font-bold bg-muted/70 hover:bg-muted text-foreground border border-border flex items-center justify-center gap-1 active:scale-95 transition-all"
+                                    >
+                                        <span className="truncate">{t('All Bills')}</span>
+                                        <ArrowUpRight className="size-3.5 shrink-0" />
+                                    </Link>
+                                </div>
+
+                                {/* 3 Payment Category Status Tiles */}
+                                <div className="grid grid-cols-3 gap-2">
+                                    {PAYMENT_CATEGORIES.map(({ key, label, dot, tone }) => {
+                                        const items = paymentsState.paymentsByCategory[key] ?? [];
+                                        return (
+                                            <button
+                                                key={key}
+                                                type="button"
+                                                onClick={() => {
+                                                    triggerHaptic('light');
+                                                    setOpenPaymentModal(key);
+                                                }}
+                                                className="p-3 rounded-xl bg-muted/35 hover:bg-muted/55 border border-border/60 flex flex-col items-center justify-between text-center active:scale-95 transition-all min-h-[82px] cursor-pointer"
+                                            >
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className={cn('size-2 rounded-full shrink-0', dot)} aria-hidden="true" />
+                                                    <span className={cn('text-[11px] font-bold tracking-tight truncate', tone)}>
+                                                        {t(key)}
+                                                    </span>
+                                                </div>
+                                                <h4 className="text-xl font-black text-foreground my-0.5 tabular-nums">
+                                                    {paymentsState.loading ? '…' : items.length}
+                                                </h4>
+                                                <span className="text-[11px] text-muted-foreground font-semibold">{t('View list')}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Recent Payment Activity / Preview Card */}
+                                <div className="pt-2 border-t border-border/40">
+                                    <p className="text-xs font-bold text-muted-foreground mb-2">{t('Recent Activity')}</p>
+                                    {paymentsState.loading ? (
+                                        <div className="p-3 rounded-2xl bg-muted/20 animate-pulse flex items-center gap-3">
+                                            <div className="size-10 rounded-full bg-muted/40 shrink-0" />
+                                            <div className="flex-1 space-y-2">
+                                                <div className="h-3 w-1/2 rounded bg-muted/40" />
+                                                <div className="h-2 w-1/3 rounded bg-muted/30" />
+                                            </div>
+                                        </div>
+                                    ) : paymentsState.paymentsByCategory.Overdue[0] ? (
+                                        <PaymentCard
+                                            payment={paymentsState.paymentsByCategory.Overdue[0]}
+                                            fallbackAvatar={FALLBACK_AVATAR}
+                                            onClick={() => setSelectedActionPayment(paymentsState.paymentsByCategory.Overdue[0])}
+                                        />
+                                    ) : paymentsState.paymentsByCategory['Near Due'][0] ? (
+                                        <PaymentCard
+                                            payment={paymentsState.paymentsByCategory['Near Due'][0]}
+                                            fallbackAvatar={FALLBACK_AVATAR}
+                                            onClick={() => setSelectedActionPayment(paymentsState.paymentsByCategory['Near Due'][0])}
+                                        />
+                                    ) : paymentsState.paymentsByCategory.Paid[0] ? (
+                                        <PaymentCard
+                                            payment={paymentsState.paymentsByCategory.Paid[0]}
+                                            fallbackAvatar={FALLBACK_AVATAR}
+                                            onClick={() => setSelectedActionPayment(paymentsState.paymentsByCategory.Paid[0])}
+                                        />
+                                    ) : (
+                                        <div className="p-4 rounded-2xl bg-muted/20 text-center text-muted-foreground flex flex-col items-center justify-center gap-1.5">
+                                            <CheckCircle2 className="size-6 text-emerald-500 opacity-80" />
+                                            <p className="text-xs font-bold text-foreground">{t('All Good! No Issues Today')}</p>
+                                            <p className="text-[11px] text-muted-foreground">{t('No pending or overdue rent records.')}</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}
 
-                    {/* 2-Column Action Cards Grid with DndContext */}
-                    <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleDragEnd}
-                    >
-                        <SortableContext
-                            items={displayedActions.map((a) => a.id)}
-                            strategy={rectSortingStrategy}
-                        >
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {displayedActions.map((action) => (
-                                    <SortableActionCard
-                                        key={action.id}
-                                        action={action}
-                                        isCustomizing={isCustomizing}
-                                        onHide={toggleVisibility}
-                                        onTrackUsage={trackActionUsage}
-                                    />
-                                ))}
-                            </div>
-                        </SortableContext>
-                    </DndContext>
-                </div>
-
-                {/* 6. Cash Flow Ledger Section */}
-                <div className="rounded-[2rem] neumorphic-panel p-4 flex flex-col gap-3.5 shrink-0">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                            <div className="flex size-9 items-center justify-center rounded-xl neumorphic-inset-card text-primary shrink-0">
-                                <CreditCard className="size-4" />
-                            </div>
-                            <div>
-                                <h3 className="text-xs font-black uppercase tracking-wider text-foreground">{t("Cash Flow Ledger")}</h3>
-                                <p className="text-[10px] text-muted-foreground">{t("What is overdue, due soon, and paid")}</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    triggerHaptic('light');
-                                    setIsIssueInvoiceDrawerOpen(true);
-                                }}
-                                className="px-2 py-1.5 rounded-xl text-[10px] font-black neumorphic-extruded border border-primary/20 text-primary flex items-center gap-1 active:scale-95 cursor-pointer"
-                                aria-label={t("Issue invoice")}
-                            >
-                                <FilePlus2 className="size-3 shrink-0" />
-                                <span>{t("Bill")}</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    triggerHaptic('light');
-                                    setIsRecordExpenseDrawerOpen(true);
-                                }}
-                                className="px-2 py-1.5 rounded-xl text-[10px] font-black neumorphic-extruded border border-rose-500/20 text-rose-500 flex items-center gap-1 active:scale-95 cursor-pointer"
-                                aria-label={t("Record expense")}
-                            >
-                                <TrendingDown className="size-3 shrink-0" />
-                                <span>{t("Expense")}</span>
-                            </button>
-                            <Link
-                                href="/mobile/landlord/payments"
-                                className="px-2 py-1.5 rounded-xl text-[10px] font-bold neumorphic-extruded text-muted-foreground hover:text-primary flex items-center gap-1 active:scale-95"
-                            >
-                                <span>{t('Ledger')}</span>
-                                <ArrowUpRight className="size-3" />
-                            </Link>
-                        </div>
-                    </div>
-
-                    {/* 3 Payment Category Tabs / Cards */}
-                    <div className="grid grid-cols-3 gap-2">
-                        {PAYMENT_CATEGORIES.map(({ key, label, hint, tone }) => {
-                            const items = paymentsState.paymentsByCategory[key] ?? [];
-                            return (
-                                <button
-                                    key={key}
-                                    type="button"
-                                    onClick={() => setOpenPaymentModal(key)}
-                                    className="neumorphic-inset rounded-xl p-2.5 flex flex-col items-center justify-between text-center active:scale-95 transition-all"
-                                >
-                                    <span className={cn('text-[9px] font-black uppercase tracking-tight', tone)}>
-                                        {t(key)}
+                    {/* Tab 2: Water & Electricity */}
+                    {activeDashboardTab === 'utilities' && (
+                        <div className="flex flex-col gap-3.5 animate-in fade-in duration-200">
+                            <div className="m-card p-4 border border-border/60 rounded-2xl flex flex-col gap-3.5 shadow-xs">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 shrink-0">
+                                            <Zap className="size-5" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h3 className="text-sm font-bold text-foreground leading-snug">{t('Water & Electricity')}</h3>
+                                            <p className="text-xs text-muted-foreground leading-snug">{t('Monthly Submeter Cycle')}</p>
+                                        </div>
+                                    </div>
+                                    <span className="m-pill m-pill-amber text-[10px] py-1 px-2.5 shrink-0">
+                                        {t('Active')}
                                     </span>
-                                    <h4 className="text-base font-black text-foreground my-0.5 tabular-nums">
-                                        {paymentsState.loading ? '…' : items.length}
-                                    </h4>
-                                    <span className="text-[8px] text-muted-foreground font-semibold">{t("View list")}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
+                                </div>
 
-                    {/* Top Payment Item Preview Card */}
-                    <div className="mt-1">
-                        {paymentsState.loading ? (
-                            <div className="neumorphic-inset rounded-2xl p-3 animate-pulse flex items-center gap-3">
-                                <div className="size-10 rounded-full neumorphic-inset shrink-0" />
-                                <div className="flex-1 space-y-2">
-                                    <div className="h-3 w-1/2 rounded bg-muted/30" />
-                                    <div className="h-2 w-1/3 rounded bg-muted/20" />
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                    {t('Record water and electric meter readings, calculate monthly consumption, and bill residents automatically.')}
+                                </p>
+
+                                <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-border/40">
+                                    <Link
+                                        href="/mobile/utilities?tab=verify"
+                                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-muted/60 hover:bg-muted text-foreground border border-border text-xs font-bold active:scale-95 transition-all text-center min-h-[44px]"
+                                    >
+                                        <span>{t('Review Payments')}</span>
+                                        <ArrowUpRight className="size-4 shrink-0" />
+                                    </Link>
+                                    <Link
+                                        href="/mobile/utilities"
+                                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-bold active:scale-95 transition-all text-center min-h-[44px] shadow-xs"
+                                    >
+                                        <Zap className="size-4 shrink-0" />
+                                        <span>{t('Record Readings')}</span>
+                                    </Link>
                                 </div>
                             </div>
-                        ) : paymentsState.paymentsByCategory.Overdue[0] ? (
-                            <PaymentCard
-                                payment={paymentsState.paymentsByCategory.Overdue[0]}
-                                fallbackAvatar={FALLBACK_AVATAR}
-                                onClick={() => setSelectedActionPayment(paymentsState.paymentsByCategory.Overdue[0])}
-                            />
-                        ) : paymentsState.paymentsByCategory['Near Due'][0] ? (
-                            <PaymentCard
-                                payment={paymentsState.paymentsByCategory['Near Due'][0]}
-                                fallbackAvatar={FALLBACK_AVATAR}
-                                onClick={() => setSelectedActionPayment(paymentsState.paymentsByCategory['Near Due'][0])}
-                            />
-                        ) : paymentsState.paymentsByCategory.Paid[0] ? (
-                            <PaymentCard
-                                payment={paymentsState.paymentsByCategory.Paid[0]}
-                                fallbackAvatar={FALLBACK_AVATAR}
-                                onClick={() => setSelectedActionPayment(paymentsState.paymentsByCategory.Paid[0])}
-                            />
-                        ) : (
-                            <div className="neumorphic-inset rounded-2xl p-4 text-center text-muted-foreground/60">
-                                <CheckCircle2 className="size-5 mx-auto mb-1 text-emerald-500 opacity-70" />
-                                <p className="text-[11px] font-bold">{t("No Pending Payments")}</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                        </div>
+                    )}
 
-                {/* 7. Dedicated Operational Modules: Utility Submeters & Lease Renewals */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0">
-                    {/* Utility Submeters Card */}
-                    <div className="rounded-[1.75rem] neumorphic-panel p-3.5 flex flex-col justify-between gap-2.5 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="flex size-8 items-center justify-center rounded-xl neumorphic-inset-card text-amber-500">
-                                    <Zap className="size-4" />
+                    {/* Tab 3: Contracts & Tasks */}
+                    {activeDashboardTab === 'renewals' && (
+                        <div className="flex flex-col gap-3.5 animate-in fade-in duration-200">
+                            <div className="m-card p-4 border border-border/60 rounded-2xl flex flex-col gap-3.5 shadow-xs">
+                                <div className="flex items-center gap-3 w-full">
+                                    <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0">
+                                        <RefreshCw className="size-5" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="text-sm font-bold text-foreground leading-snug">{t('Contracts & Tasks')}</h3>
+                                        <p className="text-xs text-muted-foreground leading-snug">{t('Review lease contracts and tenant requests.')}</p>
+                                    </div>
                                 </div>
-                                <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                                    {t('Utility Submeters')}
-                                </h3>
-                            </div>
-                            <span className="text-[9px] font-bold text-muted-foreground">{t("Monthly Cycle")}</span>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground leading-relaxed">
-                            {t('Record water & electric submeter readings, calculate consumption, and update active invoices.')}
-                        </p>
-                        <div className="flex items-center gap-2 pt-1 border-t border-border/40">
-                            <Link
-                                href="/mobile/utilities?tab=verify"
-                                className="flex-1 text-center py-2 rounded-xl neumorphic-extruded text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-primary active:scale-95 transition-all"
-                            >
-                                {t('Verify Queue')}
-                            </Link>
-                            <Link
-                                href="/mobile/utilities"
-                                className="flex-1 text-center py-2 rounded-xl neumorphic-primary text-[10px] font-black uppercase tracking-wider text-primary-foreground active:scale-95 transition-all"
-                            >
-                                {t('Record')}
-                            </Link>
-                        </div>
-                    </div>
 
-                    {/* Lease Renewals Card */}
-                    <div className="rounded-[1.75rem] neumorphic-panel p-3.5 flex flex-col justify-between gap-2.5 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="flex size-8 items-center justify-center rounded-xl neumorphic-inset-card text-primary">
-                                    <RefreshCw className="size-4" />
-                                </div>
-                                <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                                    {t('Lease Renewals')}
-                                </h3>
+                                <Link
+                                    href="/mobile/landlord/leases?tab=renewals"
+                                    className="w-full py-2.5 px-4 min-h-[44px] rounded-xl text-xs font-bold bg-muted/70 hover:bg-muted text-foreground border border-border flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all"
+                                >
+                                    <span>{t('View All Contracts')}</span>
+                                    <ArrowUpRight className="size-4 shrink-0" />
+                                </Link>
                             </div>
-                            <span className="text-[9px] font-bold text-emerald-500">{t("Active")}</span>
+
+                            {/* Live Task Operations Queue */}
+                            <div className="pt-1">
+                                <ActionRequired variant="mobile" />
+                            </div>
                         </div>
-                        <p className="text-[10px] text-muted-foreground leading-relaxed">
-                            {t('Review and manage tenant lease renewal requests, expiration dates, and tenancy extensions.')}
-                        </p>
-                        <div className="pt-1 border-t border-border/40">
-                            <Link
-                                href="/mobile/landlord/leases?tab=renewals"
-                                className="w-full block text-center py-2 rounded-xl neumorphic-extruded text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-primary active:scale-95 transition-all"
-                            >
-                                {t('View All Renewals')}
-                            </Link>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </div>
+
+            {/* Peeking Edge Quick Tools FAB + Bottom Sheet */}
+            <QuickToolsFab onOpenFlyer={() => setIsFlyerModalOpen(true)} />
 
             {/* Welcome Lightbox */}
             <LandlordWelcomeLightbox />
 
-            {/* 8. All 7 Modals and Overlays */}
+            {/* Modals, Drawers and Overlays */}
             <MobilePaymentDrawer
                 isOpen={openPaymentModal !== null}
                 onClose={() => setOpenPaymentModal(null)}
@@ -1097,6 +1200,7 @@ export function LandlordOverviewView() {
                 selectedUnitId={selectedWalkInUnitId}
                 onSuccess={() => {
                     setSelectedWalkInUnitId(undefined);
+                    void loadAll();
                 }}
             />
 
@@ -1137,10 +1241,10 @@ export function LandlordOverviewView() {
                                         <QrCode className="size-5" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h2 className="text-base font-black text-foreground truncate">
-                                            {t('Resident Invite Links')}
+                                        <h2 className="text-base font-bold text-foreground truncate">
+                                            {t('Private Referral Link')}
                                         </h2>
-                                        <p className="text-[11px] text-muted-foreground truncate">
+                                        <p className="text-xs text-muted-foreground truncate">
                                             {t('Generate referral tokens for applicant intake')}
                                         </p>
                                     </div>
@@ -1251,8 +1355,8 @@ export function LandlordOverviewView() {
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3">
                                             <div
-                                                className="relative size-14 rounded-full flex items-center justify-center overflow-hidden"
-                                                style={{ backgroundColor: (selectedActionPayment as any).avatarBgColor || '#8B5CF6' }}
+                                                className="relative size-14 rounded-full flex items-center justify-center overflow-hidden border-2 border-background/50 shadow-xs"
+                                                style={{ backgroundColor: getSafeAvatarBgColor((selectedActionPayment as any).avatarBgColor) }}
                                             >
                                                 {selectedActionPayment.avatar ? (
                                                     <Image
@@ -1267,13 +1371,13 @@ export function LandlordOverviewView() {
                                                 )}
                                             </div>
                                             <div>
-                                                <h3 className="text-lg font-black text-foreground truncate">{selectedActionPayment.tenant}</h3>
-                                                <p className="text-xs font-bold text-muted-foreground uppercase">{selectedActionPayment.unit}</p>
+                                                <h3 className="text-lg font-bold text-foreground truncate">{selectedActionPayment.tenant}</h3>
+                                                <p className="text-xs font-semibold text-muted-foreground uppercase">{t('Unit {unit}', { unit: selectedActionPayment.unit })}</p>
                                             </div>
                                         </div>
                                         <button
                                             onClick={() => setSelectedActionPayment(null)}
-                                            className="size-8 flex items-center justify-center rounded-full bg-muted/40 text-muted-foreground"
+                                            className="size-8 flex items-center justify-center rounded-full bg-muted/40 text-muted-foreground hover:text-foreground cursor-pointer"
                                             aria-label={t('Close')}
                                         >
                                             <X className="size-4" />
@@ -1282,26 +1386,26 @@ export function LandlordOverviewView() {
 
                                     <div className="rounded-2xl bg-muted/30 p-4 border border-border/50">
                                         <div className="flex items-center justify-between mb-1">
-                                            <span className="text-[10px] font-black uppercase tracking-wider text-primary">{t("Settlement Due")}</span>
-                                            <span className="text-[10px] font-black text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full">
+                                            <span className="text-xs font-bold uppercase tracking-wider text-primary">{t("Settlement Due")}</span>
+                                            <span className="text-xs font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full">
                                                 {t(selectedActionPayment.status)}
                                             </span>
                                         </div>
-                                        <h4 className="text-2xl font-black text-foreground">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
-                                        <p className="text-[10px] text-muted-foreground mt-0.5">{t('Due date: {date}', { date: selectedActionPayment.date })}</p>
+                                        <h4 className="text-2xl font-black text-foreground tabular-nums">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
+                                        <p className="text-xs text-muted-foreground mt-0.5">{t('Due date: {date}', { date: selectedActionPayment.date })}</p>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 pt-1">
                                         <Link
                                             href="/mobile/landlord/messages"
-                                            className="flex-1 flex items-center justify-center gap-2 rounded-xl neumorphic-extruded py-3 text-xs font-bold text-foreground active:scale-95"
+                                            className="flex-1 min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground border border-border text-xs font-bold active:scale-95 transition-all"
                                         >
                                             <MessageSquare className="size-4 text-primary" />
                                             <span>{t('Message')}</span>
                                         </Link>
                                         <button
                                             onClick={() => setIsConfirmingAction(true)}
-                                            className="flex-1 flex items-center justify-center gap-2 rounded-xl neumorphic-primary py-3 text-xs font-black uppercase tracking-wider text-primary-foreground active:scale-95"
+                                            className="flex-1 min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold active:scale-95 transition-all shadow-xs cursor-pointer"
                                         >
                                             <CheckCircle2 className="size-4" />
                                             <span>{t('Settle')}</span>
@@ -1314,7 +1418,7 @@ export function LandlordOverviewView() {
                                         <AlertTriangle className="size-7" />
                                     </div>
                                     <div>
-                                        <h3 className="text-base font-black text-foreground">{t("Confirm Settlement")}</h3>
+                                        <h3 className="text-base font-bold text-foreground">{t("Confirm Settlement")}</h3>
                                         <p className="text-xs text-muted-foreground mt-1">
                                             {t('Make sure that the tenant has paid rent. Verify bank or GCash proof of payment.')}
                                         </p>
@@ -1322,16 +1426,19 @@ export function LandlordOverviewView() {
                                     <div className="flex flex-col gap-2 pt-2">
                                         <button
                                             onClick={() => {
+                                                const targetId = selectedActionPayment.id;
                                                 setSelectedActionPayment(null);
                                                 setIsConfirmingAction(false);
+                                                setCollectPaymentInvoiceId(targetId);
+                                                setIsCollectPaymentModalOpen(true);
                                             }}
-                                            className="w-full rounded-xl neumorphic-primary py-3 text-xs font-black uppercase tracking-wider text-primary-foreground active:scale-95"
+                                            className="w-full min-h-[44px] rounded-xl bg-primary text-primary-foreground text-xs font-bold uppercase tracking-wider active:scale-95 transition-all shadow-xs cursor-pointer"
                                         >
                                             {t('Complete Settlement')}
                                         </button>
                                         <button
                                             onClick={() => setIsConfirmingAction(false)}
-                                            className="w-full rounded-xl neumorphic-extruded py-3 text-xs font-bold text-muted-foreground active:scale-95"
+                                            className="w-full min-h-[44px] rounded-xl bg-muted hover:bg-muted/80 text-foreground border border-border text-xs font-bold active:scale-95 transition-all cursor-pointer"
                                         >
                                             {t('Go Back')}
                                         </button>
@@ -1364,19 +1471,19 @@ function PaymentCard({
         <button
             type="button"
             onClick={onClick}
-            className="group relative flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-2xl p-3 neumorphic-extruded active:scale-[0.98] transition-all text-left"
+            className="group relative flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-2xl p-3.5 m-card border border-border/50 active:scale-[0.98] transition-all text-left min-h-[56px]"
         >
-            <div className="flex items-center gap-2.5 relative z-10 min-w-0 flex-1 mr-2">
+            <div className="flex items-center gap-3 relative z-10 min-w-0 flex-1 mr-2">
                 <div className="relative shrink-0">
                     <div
-                        className="relative size-10 rounded-full border-2 border-background/50 overflow-hidden shadow-xs"
-                        style={{ backgroundColor: (payment as any).avatarBgColor || '#171717' }}
+                        className="relative size-11 rounded-full border-2 border-background/50 overflow-hidden shadow-xs"
+                        style={{ backgroundColor: getSafeAvatarBgColor((payment as any).avatarBgColor) }}
                     >
-                        <Image src={avatar || fallbackAvatar} alt="" fill sizes="40px" className="object-cover" />
+                        <Image src={avatar || fallbackAvatar} alt="" fill sizes="44px" className="object-cover" />
                     </div>
                     <div
                         className={cn(
-                            'absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-background',
+                            'absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-background',
                             isPaid
                                 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
                                 : isNearDue
@@ -1386,16 +1493,16 @@ function PaymentCard({
                     />
                 </div>
                 <div className="min-w-0 flex-1">
-                    <h4 className="truncate text-xs font-black text-foreground group-hover:text-primary transition-colors">
+                    <h4 className="truncate text-sm font-bold text-foreground group-hover:text-primary transition-colors">
                         {tenant}
                     </h4>
-                    <p className="text-[10px] font-semibold text-muted-foreground truncate">{t('Unit {unit}', { unit })}</p>
+                    <p className="text-xs font-semibold text-muted-foreground truncate">{t('Unit {unit}', { unit })}</p>
                 </div>
             </div>
 
             <div className="text-right relative z-10 flex flex-col items-end shrink-0">
-                <h4 className="text-xs font-black text-foreground whitespace-nowrap">PHP {amount.toLocaleString()}</h4>
-                <span className="text-[9px] font-semibold text-muted-foreground whitespace-nowrap mt-0.5">{date}</span>
+                <h4 className="text-sm font-bold text-foreground whitespace-nowrap tabular-nums">PHP {amount.toLocaleString()}</h4>
+                <span className="text-[11px] font-semibold text-muted-foreground whitespace-nowrap mt-0.5">{date}</span>
             </div>
         </button>
     );
