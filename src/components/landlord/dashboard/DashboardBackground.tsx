@@ -22,23 +22,18 @@ export function DashboardBackground({ image: rawImage, className }: DashboardBac
         image.includes("api.qrserver.com");
 
     return (
-        <div className={cn("absolute inset-0 overflow-hidden rounded-[2.5rem]", className)}>
+        <div className={cn("absolute inset-0 overflow-hidden rounded-2xl", className)}>
             <Image
                 src={image}
                 alt={t("Dashboard Banner")}
                 fill
                 sizes="100vw"
                 unoptimized={!isWhitelistedHost}
-                className="object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-60 dark:opacity-40"
+                className="object-cover opacity-80 dark:opacity-55"
             />
             
-            {/* Progressive Gradients */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-background via-background/90 to-background/20" />
-            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background/95 to-transparent" />
-            
-            {/* Decorative Spotlight */}
-            <div className="absolute -top-24 -right-24 size-96 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
-            <div className="absolute -bottom-24 -left-24 size-64 rounded-full bg-white/5 blur-[80px] pointer-events-none" />
+            {/* Clean directional readability scrim (keeps left greeting & right clock legible without milky blur blobs) */}
+            <div className="absolute inset-0 bg-gradient-to-r from-card via-card/85 to-card/45 dark:from-zinc-900 dark:via-zinc-900/85 dark:to-zinc-900/50" />
         </div>
     );
 }

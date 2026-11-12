@@ -1,14 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { m as motion, useReducedMotion } from "framer-motion";
 import { 
     CreditCard, 
     Bed, 
     Wrench, 
-    ShieldCheck, 
     ArrowRight,
-    CheckCircle2 
+    CheckCircle2,
+    Banknote
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -42,6 +43,7 @@ export function SeniorOverviewHub({
     className,
 }: SeniorOverviewHubProps) {
     const { t } = useLanguage();
+    const shouldReduceMotion = useReducedMotion();
     const hasOverdue = overdueCount > 0;
     const hasMaintenance = maintenanceCount > 0;
     const needsAttention = hasOverdue || hasMaintenance;
@@ -51,136 +53,213 @@ export function SeniorOverviewHub({
     const isRoomsEmpty = totalUnits === 0;
     const isMaintenanceEmpty = totalUnits === 0;
 
+    const occupancyPercentage = totalUnits > 0
+        ? Math.min(100, Math.round((occupiedUnits / totalUnits) * 100))
+        : 0;
+
+    // Smooth ease-out count-up for the overdue rent figure
+    const [displayOverdueAmount, setDisplayOverdueAmount] = useState(overdueAmount);
+    useEffect(() => {
+        if (shouldReduceMotion || !hasOverdue || overdueAmount <= 0) {
+            setDisplayOverdueAmount(overdueAmount);
+            return;
+        }
+
+        let rafId = 0;
+        const duration = 650;
+        const startTime = performance.now();
+
+        const tick = (now: number) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(1, elapsed / duration);
+            // Ease-out quart
+            const eased = 1 - Math.pow(1 - progress, 4);
+            setDisplayOverdueAmount(overdueAmount * eased);
+            if (progress < 1) {
+                rafId = requestAnimationFrame(tick);
+            } else {
+                setDisplayOverdueAmount(overdueAmount);
+            }
+        };
+
+        rafId = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(rafId);
+    }, [overdueAmount, hasOverdue, shouldReduceMotion]);
+
+    const formattedOverdueAmount = displayOverdueAmount.toLocaleString("en-PH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+
     return (
         <section 
             aria-label={t("Today's Overview")} 
             className={cn(
-                "relative z-0 h-auto w-full rounded-[2rem] p-6 sm:p-8 bg-card dark:bg-zinc-900 border border-border/60 shadow-sm transition-all space-y-6 overflow-hidden",
+                "relative z-0 w-full space-y-4",
                 className
             )}
         >
-            {/* Subtle Decorative Skyline Graphic in Top Right (matches mockup) */}
-            <div className="absolute top-0 right-0 h-44 w-72 pointer-events-none opacity-20 dark:opacity-5 select-none overflow-hidden" aria-hidden="true">
-                <svg viewBox="0 0 320 190" fill="none" className="w-full h-full text-amber-600/40 dark:text-zinc-500">
-                    <path d="M220 70 L260 40 L300 70 V190 H220 Z" fill="currentColor" fillOpacity="0.4" />
-                    <path d="M250 100 H270 V125 H250 Z" fill="white" fillOpacity="0.6" />
-                    <path d="M160 110 L195 85 L230 110 V190 H160 Z" fill="currentColor" fillOpacity="0.25" />
-                    <path d="M180 130 H195 V150 H180 Z" fill="white" fillOpacity="0.5" />
-                    <path d="M110 130 L135 110 L160 130 V190 H110 Z" fill="currentColor" fillOpacity="0.15" />
-                    <path d="M60 190 C130 160 210 115 320 50 V190 H60 Z" fill="currentColor" fillOpacity="0.08" />
-                </svg>
+            {/* Section Header: Unboxed, clean typographic hierarchy */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-0.5">
+                <div className="flex flex-wrap items-center gap-3">
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                        {t("Today's Overview")}
+                    </h2>
+                    {needsAttention ? (
+                        <span className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
+                            <span className="relative flex size-2 shrink-0" aria-hidden="true">
+                                <span className="animate-ping motion-reduce:hidden absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-60" />
+                                <span className="relative inline-flex rounded-full size-2 bg-rose-600 dark:bg-rose-400" />
+                            </span>
+                            <span>{t("Needs Attention")}</span>
+                        </span>
+                    ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                            <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+                            <span>{t("All Good! No Issues Today")}</span>
+                        </span>
+                    )}
+                </div>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                    {t("Quick summary of unpaid rent, room vacancies, and repair requests.")}
+                </p>
             </div>
 
-            {/* Header: Today's Overview Banner */}
-            <div className="relative z-10 flex items-center justify-between gap-4">
-                <div className="flex items-start sm:items-center gap-4">
-                    {/* Golden Shield Container */}
-                    <div className="flex size-12 sm:size-14 items-center justify-center rounded-2xl bg-amber-100/70 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 text-amber-700 dark:text-amber-400 shrink-0 shadow-xs">
-                        <ShieldCheck className="size-6 sm:size-7" aria-hidden="true" />
-                    </div>
+            {/* Asymmetric Priority Grid: 60% Tactile Brand Primary Card (Left) + 40% Quiet Elevated Secondary Rows (Right) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                {/* PRIMARY FOCAL CARD (Left ~60%): Tactile dot texture + periodic light sheen + inset rim highlight */}
+                <motion.div
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className={cn(
+                        "group/hero relative lg:col-span-7 rounded-2xl p-6 overflow-hidden flex flex-col justify-between transition-all duration-200 border",
+                        "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.22),0_4px_14px_-4px_rgba(0,0,0,0.12)]",
+                        "hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.28),0_10px_24px_-6px_rgba(0,0,0,0.16)]",
+                        isRentPaymentsEmpty
+                            ? "bg-slate-900 dark:bg-zinc-800/90 text-white border-slate-800 dark:border-zinc-700"
+                            : "bg-primary text-primary-foreground border-primary/30"
+                    )}
+                >
+                    {/* Directional bottom-left to upper-right depth gradient */}
+                    <div
+                        className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/28 via-transparent to-white/14"
+                        aria-hidden="true"
+                    />
 
-                    <div>
-                        <div className="flex flex-wrap items-center gap-2.5">
-                            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-                                {t("Today's Overview")}
-                            </h2>
-                            {needsAttention ? (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100/80 dark:bg-rose-950/50 text-rose-700 dark:text-rose-200 border border-rose-200/80 dark:border-rose-800/60">
-                                    <span className="flex size-3.5 items-center justify-center rounded-full bg-rose-600 dark:bg-rose-500 text-white text-[9px] font-black leading-none shrink-0">!</span>
-                                    <span>{t("Needs Attention")}</span>
+                    {/* Tactile architectural grid & dot-node surface texture */}
+                    <div
+                        className="overview-grid-texture-hero pointer-events-none absolute inset-0"
+                        aria-hidden="true"
+                    />
+
+                    {/* Periodic satin light sheen (sweeps cleanly across the card on load & every 5s) */}
+                    {!shouldReduceMotion && (
+                        <motion.div
+                            initial={{ x: "-140%" }}
+                            animate={{ x: "420%" }}
+                            transition={{
+                                duration: 1.4,
+                                delay: 0.6,
+                                repeat: Infinity,
+                                repeatDelay: 5,
+                                ease: [0.22, 1, 0.36, 1],
+                            }}
+                            className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+                            aria-hidden="true"
+                        />
+                    )}
+
+                    <div className="relative z-10">
+                        {/* Top Meta Row: Anchored icon badge on left, live status pill on right */}
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className={cn(
+                                "flex items-center gap-2.5",
+                                isRentPaymentsEmpty ? "text-slate-200" : "text-primary-foreground/90"
+                            )}>
+                                <div className={cn(
+                                    "flex size-8 items-center justify-center rounded-lg border shadow-2xs",
+                                    isRentPaymentsEmpty
+                                        ? "bg-white/10 border-white/15"
+                                        : "bg-black/15 border-white/15"
+                                )}>
+                                    <CreditCard className="size-4 shrink-0" aria-hidden="true" />
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-wider">
+                                    {t("Rent Payments")}
+                                </span>
+                            </div>
+
+                            {hasOverdue ? (
+                                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-white text-rose-700 shadow-xs">
+                                    <span className="relative flex size-2 shrink-0" aria-hidden="true">
+                                        <span className="animate-ping motion-reduce:hidden absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75" />
+                                        <span className="relative inline-flex rounded-full size-2 bg-rose-600" />
+                                    </span>
+                                    <span>
+                                        {overdueCount === 1
+                                            ? t("{count} tenant has not paid", { count: overdueCount })
+                                            : t("{count} tenants have not paid", { count: overdueCount })}
+                                    </span>
+                                </span>
+                            ) : isRentPaymentsEmpty ? (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-slate-200 border border-white/10">
+                                    <span className="size-2 rounded-full bg-slate-400 shrink-0" aria-hidden="true" />
+                                    <span>{totalUnits === 0 ? t("No properties added yet") : t("No active tenants yet")}</span>
                                 </span>
                             ) : (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100/80 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800/60">
-                                    <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
-                                    <span>{t("All Good! No Issues Today")}</span>
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-black/15 text-primary-foreground border border-white/15">
+                                    <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" />
+                                    <span>{t("All rent paid on time")}</span>
                                 </span>
                             )}
                         </div>
-                        <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-1">
-                            {t("Quick summary of unpaid rent, room vacancies, and repair requests.")}
-                        </p>
-                    </div>
-                </div>
-            </div>
 
-            {/* The 3 Themed Overview Cards */}
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-5">
-                {/* CARD 1: Rent Payments */}
-                <div className={cn(
-                    "relative rounded-2xl p-6 flex flex-col justify-between overflow-hidden shadow-xs min-h-[250px] transition-all",
-                    hasOverdue
-                        ? "border border-rose-200/80 bg-rose-50/60 dark:border-rose-900/50 dark:bg-zinc-950/70"
-                        : isRentPaymentsEmpty
-                            ? "border border-border/70 bg-card/60 dark:border-zinc-800/80 dark:bg-zinc-950/40"
-                            : "border border-emerald-200/80 bg-emerald-50/60 dark:border-emerald-900/50 dark:bg-zinc-950/70"
-                )}>
-                    <div className="z-10">
-                        {/* Header Chip */}
-                        <div className="flex items-center gap-2.5">
-                            <div className={cn(
-                                "flex size-7 items-center justify-center rounded-lg text-white shadow-xs shrink-0 transition-colors",
-                                hasOverdue
-                                    ? "bg-rose-700 dark:bg-rose-700"
-                                    : isRentPaymentsEmpty
-                                        ? "bg-muted text-muted-foreground border border-border/60 dark:border-zinc-700"
-                                        : "bg-emerald-700 dark:bg-emerald-700"
+                        {/* Dominant Hero Metric */}
+                        <div className="my-6 space-y-1.5">
+                            <p className={cn(
+                                "text-xs font-medium",
+                                isRentPaymentsEmpty ? "text-slate-300" : "text-primary-foreground/80"
                             )}>
-                                <CreditCard className="size-4" aria-hidden="true" />
-                            </div>
-                            <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground/80 dark:text-zinc-400">
-                                {t("Rent Payments")}
-                            </span>
-                        </div>
-
-                        {/* Metric & Status Pill */}
-                        <div className="my-5 space-y-3">
-                            <div className={cn(
-                                "text-3xl sm:text-4xl font-black tracking-tight tabular-nums transition-colors",
-                                hasOverdue
-                                    ? "text-rose-700 dark:text-rose-400"
-                                    : isRentPaymentsEmpty
-                                        ? "text-muted-foreground/80 dark:text-zinc-500"
-                                        : "text-emerald-950 dark:text-emerald-400"
-                            )}>
-                                {hasOverdue ? `₱${overdueAmount.toLocaleString()}` : "₱0.00"}
-                            </div>
-                            <div>
-                                {hasOverdue ? (
-                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100/90 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-900/60">
-                                        <span className="flex size-3.5 items-center justify-center rounded-full bg-rose-600 dark:bg-rose-500 text-white text-[9px] font-black leading-none shrink-0">!</span>
-                                        <span>{overdueCount === 1 ? t("{count} tenant has not paid", { count: overdueCount }) : t("{count} tenants have not paid", { count: overdueCount })}</span>
-                                    </div>
-                                ) : isRentPaymentsEmpty ? (
-                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-muted dark:bg-zinc-800/60 text-muted-foreground dark:text-zinc-300 border border-border/60 dark:border-zinc-700/50">
-                                        <span className="size-2 rounded-full bg-muted-foreground/50 dark:bg-zinc-400 shrink-0" />
-                                        <span>{totalUnits === 0 ? t("No properties added yet") : t("No active tenants yet")}</span>
-                                    </div>
-                                ) : (
-                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100/90 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60">
-                                        <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
-                                        <span>{t("All rent paid on time")}</span>
-                                    </div>
-                                )}
+                                {hasOverdue ? t("Unpaid Rent") : t("Unpaid Balance")}
+                            </p>
+                            <div className="text-4xl sm:text-5xl font-black tracking-tight tabular-nums leading-none">
+                                {hasOverdue ? `₱${formattedOverdueAmount}` : "₱0.00"}
                             </div>
                         </div>
                     </div>
 
-                    {/* Bottom CTA Button */}
-                    <div className="pt-2 z-10">
+                    {/* Action Footer: Grouped left-aligned CTAs with crisp WCAG-safe contrast */}
+                    <div className={cn(
+                        "relative z-10 pt-4 border-t flex flex-wrap items-center gap-3",
+                        isRentPaymentsEmpty ? "border-white/15" : "border-primary-foreground/15"
+                    )}>
                         {hasOverdue && onOpenOverduePayments ? (
-                            <button
-                                type="button"
-                                onClick={onOpenOverduePayments}
-                                className="group w-full min-h-[44px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold bg-rose-800 hover:bg-rose-900 dark:bg-rose-900/80 dark:hover:bg-rose-800 dark:border dark:border-rose-700/60 text-white shadow-xs transition-all flex items-center justify-between cursor-pointer"
-                            >
-                                <span>{t("View Unpaid Rent")}</span>
-                                <ArrowRight className="size-4 transition-transform motion-reduce:transition-none group-hover:translate-x-1" aria-hidden="true" />
-                            </button>
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={onOpenOverduePayments}
+                                    className="group min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-primary-foreground hover:opacity-95 text-primary shadow-xs transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2 cursor-pointer"
+                                >
+                                    <span>{t("View Unpaid Rent")}</span>
+                                    <ArrowRight className="size-4 transition-transform motion-reduce:transition-none group-hover:translate-x-1" aria-hidden="true" />
+                                </button>
+                                {onRecordPayment && (
+                                    <button
+                                        type="button"
+                                        onClick={onRecordPayment}
+                                        className="min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-black/15 hover:bg-black/25 text-primary-foreground border border-primary-foreground/20 transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer"
+                                    >
+                                        <Banknote className="size-4" aria-hidden="true" />
+                                        <span>{t("Record Payment")}</span>
+                                    </button>
+                                )}
+                            </>
                         ) : isRentPaymentsEmpty ? (
                             totalUnits === 0 ? (
                                 <Link
                                     href="/landlord/properties/new"
-                                    className="group w-full min-h-[44px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs transition-all flex items-center justify-between cursor-pointer"
+                                    className="group min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white hover:bg-slate-100 text-slate-900 shadow-xs transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer"
                                 >
                                     <span>{t("Add Property")}</span>
                                     <ArrowRight className="size-4 transition-transform motion-reduce:transition-none group-hover:translate-x-1" aria-hidden="true" />
@@ -188,7 +267,7 @@ export function SeniorOverviewHub({
                             ) : (
                                 <Link
                                     href="/landlord/tenants"
-                                    className="group w-full min-h-[44px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs transition-all flex items-center justify-between cursor-pointer"
+                                    className="group min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white hover:bg-slate-100 text-slate-900 shadow-xs transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer"
                                 >
                                     <span>{t("Add First Tenant")}</span>
                                     <ArrowRight className="size-4 transition-transform motion-reduce:transition-none group-hover:translate-x-1" aria-hidden="true" />
@@ -198,7 +277,7 @@ export function SeniorOverviewHub({
                             <button
                                 type="button"
                                 onClick={onRecordPayment}
-                                className="group w-full min-h-[44px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-900/80 dark:hover:bg-emerald-800 dark:border dark:border-emerald-700/60 text-white shadow-xs transition-all flex items-center justify-between cursor-pointer"
+                                className="group min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-primary-foreground hover:opacity-95 text-primary shadow-xs transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer"
                             >
                                 <span>{t("Record Payment")}</span>
                                 <ArrowRight className="size-4 transition-transform motion-reduce:transition-none group-hover:translate-x-1" aria-hidden="true" />
@@ -206,186 +285,186 @@ export function SeniorOverviewHub({
                         ) : (
                             <Link
                                 href="/landlord/invoices"
-                                className="group w-full min-h-[44px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-900/80 dark:hover:bg-emerald-800 dark:border dark:border-emerald-700/60 text-white shadow-xs transition-all flex items-center justify-between cursor-pointer"
+                                className="group min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-primary-foreground hover:opacity-95 text-primary shadow-xs transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer"
                             >
                                 <span>{t("View Bills & Receipts")}</span>
                                 <ArrowRight className="size-4 transition-transform motion-reduce:transition-none group-hover:translate-x-1" aria-hidden="true" />
                             </Link>
                         )}
                     </div>
-                </div>
+                </motion.div>
 
-                {/* CARD 2: Room Occupancy */}
-                <div className={cn(
-                    "relative rounded-2xl p-6 flex flex-col justify-between overflow-hidden shadow-xs min-h-[250px] transition-all",
-                    isRoomsEmpty
-                        ? "border border-border/70 bg-card/60 dark:border-zinc-800/80 dark:bg-zinc-950/40"
-                        : "border border-emerald-200/80 bg-emerald-50/60 dark:border-emerald-900/50 dark:bg-zinc-950/70"
-                )}>
-                    <div className="z-10">
-                        {/* Header Chip */}
-                        <div className="flex items-center gap-2.5">
-                            <div className={cn(
-                                "flex size-7 items-center justify-center rounded-lg text-white shadow-xs shrink-0 transition-colors",
-                                isRoomsEmpty
-                                    ? "bg-muted text-muted-foreground border border-border/60 dark:border-zinc-700"
-                                    : "bg-emerald-800 dark:bg-emerald-700"
-                            )}>
-                                <Bed className="size-4" aria-hidden="true" />
+                {/* SECONDARY COMPACT STACK (Right ~40%): Room Occupancy & Repairs with subtle dot grain & hover lift */}
+                <div className="lg:col-span-5 flex flex-col gap-4">
+                    {/* ROW 1: Room Occupancy */}
+                    <motion.div
+                        initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative overflow-hidden flex-1 rounded-2xl bg-card dark:bg-zinc-900 border border-border p-5 shadow-xs dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07)] hover:border-primary/35 hover:-translate-y-0.5 hover:shadow-sm motion-reduce:hover:translate-y-0 transition-all duration-200 flex flex-col justify-between gap-4"
+                    >
+                        {/* Subtle architectural surface texture */}
+                        <div className="overview-grid-texture-surface pointer-events-none absolute inset-0" aria-hidden="true" />
+
+                        <div className="relative z-10 flex items-start justify-between gap-4">
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <div className="flex size-7 items-center justify-center rounded-lg bg-muted/80 border border-border text-foreground/80">
+                                        <Bed className="size-3.5 shrink-0" aria-hidden="true" />
+                                    </div>
+                                    <span className="text-xs font-bold uppercase tracking-wider">
+                                        {t("Room Occupancy")}
+                                    </span>
+                                </div>
+
+                                <div className="flex items-baseline gap-1.5 tabular-nums">
+                                    {isRoomsEmpty ? (
+                                        <span className="text-2xl sm:text-3xl font-black tracking-tight text-muted-foreground">
+                                            0 {t("of")} 0
+                                        </span>
+                                    ) : (
+                                        <>
+                                            <span className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                                                {occupiedUnits}
+                                            </span>
+                                            <span className="text-sm font-semibold text-muted-foreground">
+                                                {t("of")} {totalUnits}
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
                             </div>
-                            <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground/80 dark:text-zinc-400">
-                                {t("Room Occupancy")}
-                            </span>
+
+                            {/* Compact Secondary Action */}
+                            {isRoomsEmpty ? (
+                                <Link
+                                    href="/landlord/unit-map"
+                                    className="group min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold bg-muted/60 hover:bg-muted text-foreground border border-border transition-all active:scale-[0.98] inline-flex items-center gap-1.5 shrink-0 cursor-pointer"
+                                >
+                                    <span>{t("Set Up Rooms")}</span>
+                                    <ArrowRight className="size-3.5 transition-transform motion-reduce:transition-none group-hover:translate-x-0.5" aria-hidden="true" />
+                                </Link>
+                            ) : openUnitsCount > 0 && onOpenVacantUnits ? (
+                                <button
+                                    type="button"
+                                    onClick={onOpenVacantUnits}
+                                    className="group min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold bg-muted/60 hover:bg-muted text-foreground border border-border transition-all active:scale-[0.98] inline-flex items-center gap-1.5 shrink-0 cursor-pointer"
+                                >
+                                    <span>{t("View Empty Rooms")}</span>
+                                    <ArrowRight className="size-3.5 transition-transform motion-reduce:transition-none group-hover:translate-x-0.5" aria-hidden="true" />
+                                </button>
+                            ) : (
+                                <Link
+                                    href="/landlord/unit-map"
+                                    className="group min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold bg-muted/60 hover:bg-muted text-foreground border border-border transition-all active:scale-[0.98] inline-flex items-center gap-1.5 shrink-0 cursor-pointer"
+                                >
+                                    <span>{t("View Empty Rooms")}</span>
+                                    <ArrowRight className="size-3.5 transition-transform motion-reduce:transition-none group-hover:translate-x-0.5" aria-hidden="true" />
+                                </Link>
+                            )}
                         </div>
 
-                        {/* Metric & Status Pill */}
-                        <div className="my-5 space-y-3">
-                            <div className={cn(
-                                "text-3xl sm:text-4xl font-black tracking-tight tabular-nums flex items-baseline transition-colors",
-                                isRoomsEmpty
-                                    ? "text-muted-foreground/80 dark:text-zinc-500"
-                                    : "text-emerald-950 dark:text-emerald-400"
-                            )}>
-                                {isRoomsEmpty ? (
-                                    <span>0 {t("of")} 0</span>
-                                ) : (
-                                    <>
-                                        <span className="text-emerald-950 dark:text-emerald-400">{occupiedUnits}</span>
-                                        <span className="text-xl sm:text-2xl font-medium text-muted-foreground/80 dark:text-zinc-400 mx-2">{t("of")}</span>
-                                        <span className="text-emerald-950 dark:text-zinc-100">{totalUnits}</span>
-                                    </>
-                                )}
+                        {/* Animated Occupancy Progress Bar & Status Line */}
+                        <div className="relative z-10 space-y-2">
+                            <div className="h-2 w-full rounded-full bg-muted/80 border border-border/50 overflow-hidden" aria-hidden="true">
+                                <motion.div
+                                    initial={shouldReduceMotion ? { width: `${occupancyPercentage}%` } : { width: 0 }}
+                                    animate={{ width: `${occupancyPercentage}%` }}
+                                    transition={{ duration: 0.7, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+                                    className="h-full rounded-full bg-primary"
+                                />
                             </div>
-                            <div>
+                            <div className="flex items-center justify-between text-xs">
                                 {isRoomsEmpty ? (
-                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-muted dark:bg-zinc-800/60 text-muted-foreground dark:text-zinc-300 border border-border/60 dark:border-zinc-700/50">
-                                        <span className="size-2 rounded-full bg-muted-foreground/50 dark:bg-zinc-400 shrink-0" />
-                                        <span>{t("No rooms added yet")}</span>
-                                    </div>
+                                    <span className="font-medium text-muted-foreground">
+                                        {t("No rooms added yet")}
+                                    </span>
                                 ) : openUnitsCount > 0 ? (
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100/90 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60">
-                                        <span className="size-2 rounded-full bg-emerald-600 dark:bg-emerald-400 shrink-0" />
+                                    <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-600 dark:text-emerald-400">
+                                        <span className="size-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 shrink-0" aria-hidden="true" />
                                         <span>{openUnitsCount} {t(openUnitsCount === 1 ? "room ready for move-in" : "rooms ready for move-in")}</span>
-                                    </div>
+                                    </span>
                                 ) : (
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100/90 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60">
+                                    <span className="inline-flex items-center gap-1.5 font-medium text-muted-foreground">
                                         <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
                                         <span>{t("All rooms occupied")}</span>
-                                    </div>
+                                    </span>
+                                )}
+                                {!isRoomsEmpty && (
+                                    <span className="font-mono text-[11px] font-semibold text-muted-foreground tabular-nums">
+                                        {occupancyPercentage}%
+                                    </span>
                                 )}
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    {/* Bottom CTA Button */}
-                    <div className="pt-2 z-10">
-                        {isRoomsEmpty ? (
-                            <Link
-                                href="/landlord/unit-map"
-                                className="group w-full min-h-[44px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs transition-all flex items-center justify-between cursor-pointer"
-                            >
-                                <span>{t("Set Up Rooms")}</span>
-                                <ArrowRight className="size-4 transition-transform motion-reduce:transition-none group-hover:translate-x-1" aria-hidden="true" />
-                            </Link>
-                        ) : openUnitsCount > 0 && onOpenVacantUnits ? (
-                            <button
-                                type="button"
-                                onClick={onOpenVacantUnits}
-                                className="group w-full min-h-[44px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold bg-white dark:bg-zinc-800/80 hover:bg-zinc-50 dark:hover:bg-zinc-700/80 text-foreground dark:text-zinc-100 border border-border/80 dark:border-zinc-700/80 shadow-xs transition-all flex items-center justify-between cursor-pointer"
-                            >
-                                <span>{t("View Empty Rooms")}</span>
-                                <ArrowRight className="size-4 transition-transform motion-reduce:transition-none group-hover:translate-x-1" aria-hidden="true" />
-                            </button>
-                        ) : (
-                            <Link
-                                href="/landlord/unit-map"
-                                className="group w-full min-h-[44px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold bg-white dark:bg-zinc-800/80 hover:bg-zinc-50 dark:hover:bg-zinc-700/80 text-foreground dark:text-zinc-100 border border-border/80 dark:border-zinc-700/80 shadow-xs transition-all flex items-center justify-between cursor-pointer"
-                            >
-                                <span>{openUnitsCount > 0 ? t("View Empty Rooms") : t("View Empty Rooms")}</span>
-                                <ArrowRight className="size-4 transition-transform motion-reduce:transition-none group-hover:translate-x-1" aria-hidden="true" />
-                            </Link>
-                        )}
-                    </div>
-                </div>
+                    {/* ROW 2: Repairs & Maintenance */}
+                    <motion.div
+                        initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative overflow-hidden flex-1 rounded-2xl bg-card dark:bg-zinc-900 border border-border p-5 shadow-xs dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07)] hover:border-primary/35 hover:-translate-y-0.5 hover:shadow-sm motion-reduce:hover:translate-y-0 transition-all duration-200 flex items-center justify-between gap-4"
+                    >
+                        {/* Subtle architectural surface texture */}
+                        <div className="overview-grid-texture-surface pointer-events-none absolute inset-0" aria-hidden="true" />
 
-                {/* CARD 3: Repairs & Maintenance */}
-                <div className={cn(
-                    "relative rounded-2xl p-6 flex flex-col justify-between overflow-hidden shadow-xs min-h-[250px] transition-all",
-                    hasMaintenance
-                        ? "border border-amber-200/80 bg-amber-50/60 dark:border-amber-900/50 dark:bg-zinc-950/70"
-                        : isMaintenanceEmpty
-                            ? "border border-border/70 bg-card/60 dark:border-zinc-800/80 dark:bg-zinc-950/40"
-                            : "border border-emerald-200/80 bg-emerald-50/60 dark:border-emerald-900/50 dark:bg-zinc-950/70"
-                )}>
-                    <div className="z-10">
-                        {/* Header Chip */}
-                        <div className="flex items-center gap-2.5">
-                            <div className={cn(
-                                "flex size-7 items-center justify-center rounded-lg text-white shadow-xs shrink-0 transition-colors",
-                                hasMaintenance
-                                    ? "bg-amber-700 dark:bg-amber-600"
-                                    : isMaintenanceEmpty
-                                        ? "bg-muted text-muted-foreground border border-border/60 dark:border-zinc-700"
-                                        : "bg-emerald-700 dark:bg-emerald-600"
-                            )}>
-                                <Wrench className="size-4" aria-hidden="true" />
+                        <div className="relative z-10 space-y-2">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <div className="flex size-7 items-center justify-center rounded-lg bg-muted/80 border border-border text-foreground/80">
+                                    <Wrench className="size-3.5 shrink-0" aria-hidden="true" />
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-wider">
+                                    {t("Repairs & Maintenance")}
+                                </span>
                             </div>
-                            <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground/80 dark:text-zinc-400">
-                                {t("Repairs & Maintenance")}
-                            </span>
-                        </div>
 
-                        {/* Metric & Status Pill */}
-                        <div className="my-5 space-y-3">
-                            <div className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums flex items-baseline gap-2">
+                            <div className="flex items-baseline gap-2 tabular-nums">
                                 <span className={cn(
-                                    "transition-colors",
+                                    "text-2xl sm:text-3xl font-black tracking-tight",
                                     hasMaintenance
-                                        ? "text-amber-700 dark:text-amber-400"
+                                        ? "text-amber-600 dark:text-amber-400"
                                         : isMaintenanceEmpty
-                                            ? "text-muted-foreground/80 dark:text-zinc-500"
-                                            : "text-emerald-950 dark:text-emerald-400"
+                                            ? "text-muted-foreground"
+                                            : "text-foreground"
                                 )}>
                                     {maintenanceCount}
                                 </span>
-                                <span className={cn(
-                                    "text-xl sm:text-2xl font-bold transition-colors",
-                                    isMaintenanceEmpty ? "text-muted-foreground dark:text-zinc-400" : "text-foreground dark:text-zinc-100"
-                                )}>
+                                <span className="text-sm font-semibold text-muted-foreground">
                                     {t("Open Requests")}
                                 </span>
                             </div>
+
                             <div>
                                 {hasMaintenance ? (
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-amber-100/90 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-900/60">
-                                        <span className="size-2 rounded-full bg-amber-600 dark:bg-amber-400 shrink-0" />
+                                    <span className="inline-flex items-center gap-2 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                                        <span className="relative flex size-2 shrink-0" aria-hidden="true">
+                                            <span className="animate-ping motion-reduce:hidden absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-65" />
+                                            <span className="relative inline-flex rounded-full size-2 bg-amber-500" />
+                                        </span>
                                         <span>{t("Needs landlord review")}</span>
-                                    </div>
+                                    </span>
                                 ) : isMaintenanceEmpty ? (
-                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-muted dark:bg-zinc-800/60 text-muted-foreground dark:text-zinc-300 border border-border/60 dark:border-zinc-700/50">
-                                        <span className="size-2 rounded-full bg-muted-foreground/50 dark:bg-zinc-400 shrink-0" />
-                                        <span>{t("No maintenance records")}</span>
-                                    </div>
+                                    <span className="text-xs font-medium text-muted-foreground">
+                                        {t("No maintenance records")}
+                                    </span>
                                 ) : (
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100/90 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60">
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                                         <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
                                         <span>{t("All repairs resolved")}</span>
-                                    </div>
+                                    </span>
                                 )}
                             </div>
                         </div>
-                    </div>
 
-                    {/* Bottom CTA Button */}
-                    <div className="pt-2 z-10">
                         <Link
                             href="/landlord/maintenance"
-                            className="group w-full min-h-[44px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold bg-white dark:bg-zinc-800/80 hover:bg-zinc-50 dark:hover:bg-zinc-700/80 text-foreground dark:text-zinc-100 border border-border/80 dark:border-zinc-700/80 shadow-xs transition-all flex items-center justify-between cursor-pointer"
+                            className="relative z-10 group min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold bg-muted/60 hover:bg-muted text-foreground border border-border transition-all active:scale-[0.98] inline-flex items-center gap-1.5 shrink-0 cursor-pointer"
                         >
                             <span>{isMaintenanceEmpty ? t("Maintenance Desk") : t("View Repair Requests")}</span>
-                            <ArrowRight className="size-4 transition-transform motion-reduce:transition-none group-hover:translate-x-1" aria-hidden="true" />
+                            <ArrowRight className="size-3.5 transition-transform motion-reduce:transition-none group-hover:translate-x-0.5" aria-hidden="true" />
                         </Link>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </section>

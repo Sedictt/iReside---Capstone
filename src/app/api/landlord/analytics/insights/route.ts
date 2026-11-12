@@ -134,9 +134,9 @@ export async function POST(request: Request) {
 
         const openai = getOpenAIClient();
         const completion = await openai.chat.completions.create({
-            model: "groq/compound-mini",
+            model: "openai/gpt-oss-120b",
             temperature: 0.4,
-            max_tokens: 900,
+            max_tokens: 1500,
             messages: [
                 { role: "system", content: systemPrompt },
                 {

@@ -92,10 +92,10 @@ export class IrisService {
     let completion: OpenAI.Chat.ChatCompletion;
     try {
       completion = await this.aiClient.chat.completions.create({
-        model: "groq/compound-mini",
+        model: "openai/gpt-oss-120b",
         messages,
         temperature: 0.7,
-        max_tokens: 500,
+        max_tokens: 1024,
         presence_penalty: 0.6,
         frequency_penalty: 0.3,
       });
@@ -190,7 +190,7 @@ export class IrisService {
           role: "assistant",
           content: aiResponse,
           metadata: {
-            model: "groq/compound-mini",
+            model: "openai/gpt-oss-120b",
             tokens: totalTokens,
             card: card ?? null,
           },
@@ -204,7 +204,7 @@ export class IrisService {
       hasDataCard,
       card,
       metadata: {
-        model: "groq/compound-mini",
+        model: "openai/gpt-oss-120b",
         tokens: totalTokens,
       },
     };

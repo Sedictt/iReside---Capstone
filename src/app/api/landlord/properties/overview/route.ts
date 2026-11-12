@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { ART, artOr } from "@/lib/art/abstract-art";
+import { getCachedPropertiesOverview, setCachedPropertiesOverview } from "@/lib/cache/properties-overview-cache";
 
 type PortfolioStatus = "Performing" | "Stable" | "Attention Required";
 
@@ -31,11 +32,8 @@ const getStatus = (occupied: number, total: number, maintenanceCount: number): P
     return "Stable";
 };
 
-interface CachedOverview {
-    data: any;
-    expiresAt: number;
-}
-const overviewMemoryCache = new Map<string, CachedOverview>();
+// The browser must always revalidate: property edits (e.g. a new cover photo) have to show immediately.
+const NO_STORE_HEADERS = { "Cache-Control": "private, no-store, must-revalidate" };
 
 export const dynamic = "force-dynamic";
 
@@ -44,12 +42,9 @@ export async function GET() {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
-    const cached = overviewMemoryCache.get(userId);
-    if (cached && Date.now() < cached.expiresAt) {
-        return NextResponse.json(
-            { properties: cached.data },
-            { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" } }
-        );
+    const cached = getCachedPropertiesOverview<unknown[]>(userId);
+    if (cached) {
+        return NextResponse.json({ properties: cached }, { headers: NO_STORE_HEADERS });
     }
 
     const { data: properties, error: propertiesError } = await supabase
@@ -223,13 +218,7 @@ export async function GET() {
         };
     });
 
-    overviewMemoryCache.set(userId, {
-        data: result,
-        expiresAt: Date.now() + 20_000,
-    });
+    setCachedPropertiesOverview(userId, result);
 
-    return NextResponse.json(
-        { properties: result },
-        { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" } }
-    );
+    return NextResponse.json({ properties: result }, { headers: NO_STORE_HEADERS });
 }

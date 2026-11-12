@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { invalidatePropertiesOverview } from "@/lib/cache/properties-overview-cache";
 import { PropertyService } from "@/lib/services/property";
 import { PropertyNotFoundError } from "@/lib/services/property/property.errors";
 import { generateUnitName } from "@/lib/unit-naming";
@@ -181,6 +182,8 @@ export async function PUT(
             console.error("Failed to update property:", updateError);
             return databaseErrorResponse(updateError, "Failed to update property.");
         }
+
+        invalidatePropertiesOverview(userId);
 
         // Sync Environment Policy
         const policyMapping: Record<string, { mode: string; split: string }> = {

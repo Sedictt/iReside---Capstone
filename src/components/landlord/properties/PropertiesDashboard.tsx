@@ -90,6 +90,7 @@ export function PropertiesDashboard() {
         fetcher: async (signal) => {
             const response = await fetch("/api/landlord/properties/overview", {
                 method: "GET",
+                cache: "no-store",
                 signal,
             });
             const payload = (await response.json()) as { properties?: PropertyCard[]; error?: string };

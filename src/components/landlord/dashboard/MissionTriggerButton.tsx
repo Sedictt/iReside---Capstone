@@ -65,7 +65,7 @@ export function MissionTriggerButton({ onOpen, className }: MissionTriggerButton
             data-tour-id="tour-quest-trigger"
             aria-label={labelText}
             className={cn(
-                "relative group flex size-10 sm:size-11 items-center justify-center rounded-xl sm:rounded-2xl neumorphic-extruded active:scale-95 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer shrink-0 transition-all",
+                "relative group/mission flex size-10 sm:size-11 items-center justify-center rounded-xl sm:rounded-2xl neumorphic-extruded active:scale-95 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer shrink-0 transition-all",
                 isCompleted && "ring-1 ring-emerald-500/30",
                 className
             )}
@@ -105,19 +105,19 @@ export function MissionTriggerButton({ onOpen, className }: MissionTriggerButton
                 {/* Center Value / Status */}
                 <div className="absolute inset-0 flex items-center justify-center">
                     {isCompleted ? (
-                        <Check className="size-3.5 stroke-[3] text-emerald-500 transition-transform group-hover:scale-110" />
+                        <Check className="size-3.5 stroke-[3] text-emerald-500 transition-transform group-hover/mission:scale-110" />
                     ) : progress > 0 ? (
-                        <span className="font-mono text-[9px] font-black text-foreground group-hover:text-primary transition-colors tracking-tighter tabular-nums select-none">
+                        <span className="font-mono text-[9px] font-black text-foreground group-hover/mission:text-primary transition-colors tracking-tighter tabular-nums select-none">
                             {progress}%
                         </span>
                     ) : (
-                        <Compass className="size-3.5 text-primary transition-transform group-hover:scale-110" />
+                        <Compass className="size-3.5 text-primary transition-transform group-hover/mission:scale-110" />
                     )}
                 </div>
             </div>
 
             {/* Accessible Hover Tooltip */}
-            <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 scale-0 px-2.5 py-1 rounded-lg bg-popover text-[10px] font-bold text-popover-foreground opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all whitespace-nowrap border border-border shadow-xl pointer-events-none z-50">
+            <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 scale-0 px-2.5 py-1 rounded-lg bg-popover text-[10px] font-bold text-popover-foreground opacity-0 group-hover/mission:scale-100 group-hover/mission:opacity-100 transition-all whitespace-nowrap border border-border shadow-xl pointer-events-none z-50">
                 {labelText}
             </span>
         </button>

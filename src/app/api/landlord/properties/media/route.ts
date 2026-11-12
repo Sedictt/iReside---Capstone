@@ -7,6 +7,9 @@ const BUCKET_NAME = "property-images";
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 const MAX_FILES = 12;
 
+// Must match the types accepted by inspectImageUpload, or Storage rejects files the API already approved.
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"];
+
 const sanitizeFileName = (name: string) =>
     name
         .toLowerCase()
@@ -19,12 +22,25 @@ const ensureBucket = async () => {
     const { data: bucket, error } = await admin.storage.getBucket(BUCKET_NAME);
 
     if (!error && bucket) {
+        // Keep the bucket limits in sync with the API (older buckets were created with a 5 MB cap).
+        const bucketLimit = Number(bucket.file_size_limit ?? 0);
+        const bucketTypes = bucket.allowed_mime_types ?? null;
+        const missingType = bucketTypes ? ALLOWED_MIME_TYPES.some((type) => !bucketTypes.includes(type)) : false;
+        if ((bucketLimit > 0 && bucketLimit < MAX_FILE_SIZE_BYTES) || missingType) {
+            const { error: updateError } = await admin.storage.updateBucket(BUCKET_NAME, {
+                public: true,
+                fileSizeLimit: MAX_FILE_SIZE_BYTES,
+                allowedMimeTypes: ALLOWED_MIME_TYPES,
+            });
+            if (updateError) console.error("Failed to sync property-images bucket limits:", updateError);
+        }
         return;
     }
 
     const { error: createError } = await admin.storage.createBucket(BUCKET_NAME, {
         public: true,
-        fileSizeLimit: `${MAX_FILE_SIZE_BYTES}`,
+        fileSizeLimit: MAX_FILE_SIZE_BYTES,
+        allowedMimeTypes: ALLOWED_MIME_TYPES,
     });
 
     if (createError && !createError.message.toLowerCase().includes("already exists")) {
@@ -103,6 +119,7 @@ export async function POST(request: Request) {
             });
 
             if (uploadError) {
+                console.error("Property image upload failed:", uploadError);
                 return NextResponse.json({ error: "Failed to upload one or more images." }, { status: 500 });
             }
 

@@ -1682,3 +1682,34 @@ body {
     radial-gradient(circle at 85% 15%, rgba(99, 102, 241, 0.07), transparent 40%);
   min-height: 100vh;
 }
+
+
+/* Tactile Architectural Grid + Dot-Node Texture for Overview Cards */
+.overview-grid-texture-hero {
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.32) 1.3px, transparent 1.3px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -0.5px -0.5px, 0 0, 0 0;
+  -webkit-mask-image: radial-gradient(ellipse 110% 110% at 85% 15%, #000 35%, rgba(0, 0, 0, 0.25) 100%);
+  mask-image: radial-gradient(ellipse 110% 110% at 85% 15%, #000 35%, rgba(0, 0, 0, 0.25) 100%);
+}
+
+.overview-grid-texture-surface {
+  background-image:
+    radial-gradient(rgba(15, 23, 42, 0.14) 1.2px, transparent 1.2px),
+    linear-gradient(to right, rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.045) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -0.5px -0.5px, 0 0, 0 0;
+  -webkit-mask-image: radial-gradient(ellipse 110% 110% at 85% 15%, #000 30%, rgba(0, 0, 0, 0.2) 100%);
+  mask-image: radial-gradient(ellipse 110% 110% at 85% 15%, #000 30%, rgba(0, 0, 0, 0.2) 100%);
+}
+
+.dark .overview-grid-texture-surface {
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.2) 1.2px, transparent 1.2px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+}

@@ -638,11 +638,11 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                             }
                         }}
                         onKeyDown={handleKeyDown}
-                        className="w-48 md:w-56 lg:w-64 rounded-xl sm:rounded-2xl neumorphic-extruded bg-card/90 backdrop-blur-xl py-2 pl-10 pr-4 text-xs sm:text-sm text-foreground transition-all placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:w-64 lg:focus:w-80"
+                        className="w-48 md:w-56 lg:w-64 rounded-xl bg-card/95 hover:bg-card focus:bg-card border border-border py-2 pl-10 pr-4 text-xs sm:text-sm text-foreground transition-all placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:w-64 lg:focus:w-80 shadow-2xs"
                     />
                     
                     {isSearchOpen && searchQuery.trim() && (
-                        <div className="absolute right-0 top-full z-50 mt-2 w-96 overflow-hidden rounded-3xl border border-white/10 neumorphic-panel shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div className="absolute right-0 top-full z-50 mt-2 w-96 overflow-hidden rounded-2xl border border-border bg-card shadow-xl animate-in fade-in zoom-in-95 duration-150">
                             {/* Search Header Info */}
                             <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                                 <span>{t("Fast Search")}</span>

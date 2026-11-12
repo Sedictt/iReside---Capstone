@@ -187,9 +187,9 @@ export async function POST(request: Request) {
 
         const groq = getGroqClient();
         const completion = await groq.chat.completions.create({
-            model: "groq/compound-mini",
+            model: "openai/gpt-oss-120b",
             temperature: 0.6,
-            max_tokens: 1000,
+            max_tokens: 1500,
             top_p: 0.95,
             messages: [
                 { role: "system", content: systemPrompt },

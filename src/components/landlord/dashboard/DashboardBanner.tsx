@@ -126,10 +126,10 @@ export function DashboardBanner({
     return (
         <div
             className={cn(
-                "group relative min-h-[170px] sm:min-h-[190px] md:min-h-[210px] w-full shrink-0 overflow-visible rounded-[2.5rem] bg-card dark:bg-zinc-900 border border-border/60 shadow-sm transition-all duration-500",
+                "group/banner relative min-h-[170px] sm:min-h-[190px] w-full shrink-0 overflow-visible rounded-2xl bg-card dark:bg-zinc-900 border border-border shadow-xs transition-colors",
                 className
             )}>
-            {/* Background Layer */}
+            {/* Background Photo Layer */}
             <DashboardBackground image={activeBanner} />
 
             {/* Header Actions (Floating Controls & Dropdown with top z-index z-50) */}
@@ -140,7 +140,7 @@ export function DashboardBanner({
             />
 
             {/* Main Content Area */}
-            <div className="relative z-10 w-full px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 pointer-events-none">
+            <div className="relative z-10 w-full px-4 py-4 sm:px-6 sm:py-5 md:px-7 md:py-6 pointer-events-none">
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] items-end justify-between gap-4 pointer-events-auto">
                     <DashboardMainContent
                         title={displayTitle}
@@ -154,24 +154,23 @@ export function DashboardBanner({
                         onOpenFlyer={onOpenFlyer}
                     />
 
-                    {/* Digital Clock - positioned neatly below the header actions */}
-                    <div className="hidden lg:block shrink-0 pb-1">
-                        <DashboardDigitalClock time={time} />
+                    {/* Right Footer Cluster: Customize Banner sits cleanly beside the Clock with zero overlap */}
+                    <div className="flex items-end justify-end gap-3 shrink-0 pb-0.5">
+                        <button
+                            type="button"
+                            onClick={() => setIsCustomizerOpen(true)}
+                            className="opacity-90 sm:opacity-0 sm:group-hover/banner:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 px-3 py-1.5 rounded-xl bg-card hover:bg-muted border border-border text-[11px] font-bold text-foreground flex items-center gap-1.5 shadow-xs active:scale-95 cursor-pointer shrink-0"
+                            title={t("Customize banner image")}
+                        >
+                            <Camera className="size-3.5 text-primary" />
+                            <span>{t("Customize Banner")}</span>
+                        </button>
+
+                        <div className="hidden lg:block shrink-0">
+                            <DashboardDigitalClock time={time} />
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Floating Action Controls (Banner Customizer Only - Guided Tour chip removed) */}
-            <div className="absolute bottom-3 right-4 z-20 pointer-events-auto">
-                <button
-                    type="button"
-                    onClick={() => setIsCustomizerOpen(true)}
-                    className="opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 px-3 py-1.5 rounded-xl bg-background/80 hover:bg-background border border-border/60 backdrop-blur-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
-                    title={t("Customize banner image")}
-                >
-                    <Camera className="size-3.5 text-primary" />
-                    <span>{t("Customize Banner")}</span>
-                </button>
             </div>
 
             {/* Side Quest Panel */}

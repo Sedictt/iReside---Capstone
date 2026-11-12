@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser, requireRole } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { invalidatePropertiesOverview } from "@/lib/cache/properties-overview-cache";
 import { generateUnitList } from "@/lib/unit-naming";
 import { databaseErrorResponse, parseJsonBody } from "@/lib/validation/server";
 import { propertyCreateSchema } from "@/lib/validation/schemas/properties.schema";
@@ -176,6 +177,7 @@ export async function POST(request: Request) {
             .from("property_floor_configs")
             .upsert(floorConfigs, { onConflict: "property_id,floor_key" });
 
+        invalidatePropertiesOverview(userId);
         return NextResponse.json({ success: true, propertyId });
     } catch (error) {
         console.error("Failed to create property:", error);
