@@ -1021,6 +1021,7 @@ export async function sendUnitReassignedRecommendationEmail({
     newUnitName,
     newMonthlyRent,
     landlordNote,
+    offerResponseUrl,
 }: {
     to: string;
     applicantName: string;
@@ -1029,26 +1030,27 @@ export async function sendUnitReassignedRecommendationEmail({
     newUnitName: string;
     newMonthlyRent: number;
     landlordNote?: string | null;
+    offerResponseUrl?: string | null;
 }) {
-    const subject = `Room Update: We Reserved ${newUnitName} for Your Application — ${propertyName}`;
+    const subject = `Room Offer: ${newUnitName} Is Available for Your Application — ${propertyName}`;
 
     const rows: Array<{ label: string; value: string; accent?: boolean; strong?: boolean }> = [
         { label: "Property", value: propertyName },
-        { label: "Previous Room", value: previousUnitName, strong: false },
-        { label: "New Recommended Room", value: newUnitName, accent: true },
+        { label: "Room Originally Applied For", value: previousUnitName, strong: false },
+        { label: "Offered Available Room", value: newUnitName, accent: true },
         { label: "Monthly Rent", value: peso(newMonthlyRent) },
     ];
 
     const html = renderEmail({
-        title: "Your Application Was Moved to an Available Room",
-        preheader: `${previousUnitName} was just taken, so we moved your application to ${newUnitName} at ${propertyName}.`,
-        header: { eyebrow: "Application Room Update", tone: "info" },
+        title: "Another Room Is Available for Your Application",
+        preheader: `${previousUnitName} was just taken. Choose whether to switch your application to ${newUnitName} at ${propertyName} or cancel.`,
+        header: { eyebrow: "Room Offer — Your Choice", tone: "info" },
         width: 520,
         body: `
             ${greeting(applicantName)}
-            ${heading("Good News — We Have Another Room for You!")}
-            ${paragraph(`<strong>${esc(previousUnitName)}</strong> at <strong>${esc(propertyName)}</strong> was just leased, so your landlord moved your application to <strong>${esc(newUnitName)}</strong> so you don't lose your spot.`, { marginBottom: 16 })}
-            ${paragraph("All of your submitted details and uploaded IDs have been carried over automatically — you do not need to fill out the form again.", { marginBottom: 20 })}
+            ${heading("Another Room Is Available If You're Interested")}
+            ${paragraph(`<strong>${esc(previousUnitName)}</strong> at <strong>${esc(propertyName)}</strong> was just leased to another applicant. Your landlord would like to offer you <strong>${esc(newUnitName)}</strong> instead — it's completely up to you whether to accept this room or cancel your application.`, { marginBottom: 16 })}
+            ${paragraph("If you choose to accept, all of your submitted details and uploaded IDs will carry over automatically so you don't need to fill out the form again.", { marginBottom: 20 })}
             ${card(
                 `${keyValueRows(rows)}
                  ${landlordNote ? `<div style="border-top:1px solid #e2e8f0;padding-top:10px;margin-top:10px;">
@@ -1057,11 +1059,12 @@ export async function sendUnitReassignedRecommendationEmail({
                  </div>` : ""}`,
                 { marginBottom: 20, padding: 18 },
             )}
-            ${muted("If you are happy with this room, your landlord will follow up with the next steps. If you prefer not to proceed, simply reply or let your landlord know.")}
+            ${offerResponseUrl ? button(offerResponseUrl, "Accept Room or Cancel Application", { center: true }) : ""}
+            ${muted("You can use the button above to accept the offered room or withdraw your application at any time.")}
         `,
     });
 
-    const text = `Hi ${applicantName},\n\n${previousUnitName} at ${propertyName} was just leased, so your landlord moved your application to ${newUnitName} (${peso(newMonthlyRent)}/month).\n\nAll of your submitted details and uploaded IDs have been carried over automatically.\n${landlordNote ? `\nNote from Landlord: ${landlordNote}\n` : ""}\n— iReside Property Management`;
+    const text = `Hi ${applicantName},\n\n${previousUnitName} at ${propertyName} was just leased to another applicant. Your landlord would like to offer you ${newUnitName} (${peso(newMonthlyRent)}/month) instead.\n\nIf you choose to accept, your submitted details and uploaded IDs will carry over automatically. If you prefer not to switch, you can cancel your application.\n${landlordNote ? `\nNote from Landlord: ${landlordNote}\n` : ""}${offerResponseUrl ? `\nRespond to this offer (Accept or Cancel Application): ${offerResponseUrl}\n` : ""}\n— iReside Property Management`;
 
     return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }

@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { generateSigningToken, verifySigningToken, generateSigningLink } from '../jwt';
+import {
+  generateSigningToken,
+  verifySigningToken,
+  generateSigningLink,
+  generateRoomOfferToken,
+  verifyRoomOfferToken,
+  generateRoomOfferLink,
+} from '../jwt';
 
 describe('JWT Utilities for Lease Signing', () => {
   beforeAll(() => {
@@ -116,6 +123,37 @@ describe('JWT Utilities for Lease Signing', () => {
         expect(result.payload?.leaseId).toBe(leaseId);
         expect(result.payload?.actorId).toBe(tenantId);
       }
+    });
+  });
+
+  describe('room offer tokens', () => {
+    it('generates and verifies a room offer token', () => {
+      const token = generateRoomOfferToken('app-123', 'unit-456');
+      const result = verifyRoomOfferToken(token);
+
+      expect(result.valid).toBe(true);
+      expect(result.payload?.applicationId).toBe('app-123');
+      expect(result.payload?.targetUnitId).toBe('unit-456');
+      expect(result.payload?.type).toBe('room_offer');
+    });
+
+    it('rejects lease signing tokens when verifying room offer tokens', () => {
+      const leaseToken = generateSigningToken('lease-123', 'tenant-456');
+      const result = verifyRoomOfferToken(leaseToken);
+
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Invalid token type');
+    });
+
+    it('generates a verifiable /apply/offer link', () => {
+      const link = generateRoomOfferLink('app-123', 'unit-456');
+      expect(link).toContain('/apply/offer?token=');
+
+      const tokenParam = decodeURIComponent(link.split('?token=')[1]);
+      const result = verifyRoomOfferToken(tokenParam);
+      expect(result.valid).toBe(true);
+      expect(result.payload?.applicationId).toBe('app-123');
+      expect(result.payload?.targetUnitId).toBe('unit-456');
     });
   });
 });

@@ -5,6 +5,7 @@ import { parseJsonBody } from "@/lib/validation/server";
 import { isId, reassignApplicationUnitSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { getActiveUnitHold } from "@/lib/unit-hold";
 import { sendUnitReassignedRecommendationEmail } from "@/lib/email";
+import { generateRoomOfferLink } from "@/lib/jwt";
 import { invalidatePropertyUnitsCache } from "@/app/api/landlord/property-units/route";
 
 export async function POST(
@@ -122,33 +123,23 @@ export async function POST(
             ? { ...(application.requirements_checklist as Record<string, unknown>) }
             : {};
 
-    const history = Array.isArray(existingChecklist.reassignment_history)
-        ? [...existingChecklist.reassignment_history]
-        : [];
-
-    history.push({
+    const offeredMonthlyRent = Number(targetUnit.rent_amount ?? 0);
+    existingChecklist.pending_unit_offer = {
+        target_unit_id: targetUnit.id,
+        target_unit_name: targetUnit.name,
+        target_monthly_rent: offeredMonthlyRent,
         previous_unit_id: application.unit_id,
-        previous_unit_name: sourceUnit?.name ?? "Previous Unit",
-        new_unit_id: targetUnit.id,
-        new_unit_name: targetUnit.name,
-        reassigned_at: nowIso,
-        reassigned_by: userId,
+        previous_unit_name: sourceUnit?.name ?? "Previous Room",
+        offered_at: nowIso,
+        offered_by: userId,
         landlord_note: landlord_note ?? null,
-    });
-
-    existingChecklist.reassignment_history = history;
-
-    // If the application was previously rejected or withdrawn (e.g. unit taken), reopen as reviewing
-    const nextStatus =
-        application.status === "rejected" || application.status === "withdrawn"
-            ? "reviewing"
-            : application.status;
+        status: "pending",
+        responded_at: null,
+    };
 
     const { error: updateErr } = await adminClient
         .from("applications")
         .update({
-            unit_id: targetUnit.id,
-            status: nextStatus,
             requirements_checklist: existingChecklist as any,
             updated_at: nowIso,
         } as any)
@@ -157,10 +148,12 @@ export async function POST(
 
     if (updateErr) {
         console.error("[reassign-unit POST] Update error:", updateErr);
-        return NextResponse.json({ error: "Failed to move application to the selected unit." }, { status: 500 });
+        return NextResponse.json({ error: "Failed to save room offer for this application." }, { status: 500 });
     }
 
     invalidatePropertyUnitsCache(userId);
+
+    const offerResponseUrl = generateRoomOfferLink(applicationId, targetUnit.id);
 
     let emailSent = false;
     const applicantEmail = application.applicant_email?.trim();
@@ -172,8 +165,9 @@ export async function POST(
                 propertyName: targetProperty.name || "Property",
                 previousUnitName: sourceUnit?.name || "Previous Room",
                 newUnitName: targetUnit.name || "New Room",
-                newMonthlyRent: Number(targetUnit.rent_amount ?? 0),
+                newMonthlyRent: offeredMonthlyRent,
                 landlordNote: landlord_note,
+                offerResponseUrl,
             });
             emailSent = true;
         } catch (emailErr) {
@@ -186,10 +180,14 @@ export async function POST(
         application_id: applicationId,
         previous_unit_id: application.unit_id,
         previous_unit_name: sourceUnit?.name ?? "Unit",
+        offered_unit_id: targetUnit.id,
+        offered_unit_name: targetUnit.name,
         new_unit_id: targetUnit.id,
         new_unit_name: targetUnit.name,
-        new_monthly_rent: Number(targetUnit.rent_amount ?? 0),
-        status: nextStatus,
+        new_monthly_rent: offeredMonthlyRent,
+        offer_status: "pending",
+        offer_response_url: offerResponseUrl,
+        status: application.status,
         email_sent: emailSent,
     });
 }

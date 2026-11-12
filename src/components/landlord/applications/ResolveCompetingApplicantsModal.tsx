@@ -8,8 +8,9 @@ import {
     X,
     Users,
     Building2,
-    Send,
     XCircle,
+    ExternalLink,
+    Copy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguageContext } from "@/context/LanguageContext";
@@ -64,8 +65,9 @@ export function ResolveCompetingApplicantsModal({
     const [selectedTargetUnits, setSelectedTargetUnits] = useState<Record<string, string>>({});
     const [customNotes, setCustomNotes] = useState<Record<string, string>>({});
     const [resolvedMap, setResolvedMap] = useState<
-        Record<string, { action: "reassigned" | "declined"; detail: string }>
+        Record<string, { action: "reassigned" | "declined"; detail: string; offerUrl?: string | null }>
     >({});
+    const [copiedApplicantId, setCopiedApplicantId] = useState<string | null>(null);
     const [loadingId, setLoadingId] = useState<string | null>(null);
     const [errorMap, setErrorMap] = useState<Record<string, string>>({});
 
@@ -113,6 +115,8 @@ export function ResolveCompetingApplicantsModal({
         setLoadingId(applicant.id);
 
         try {
+            const chosenUnit = candidateUnits.find((u) => u.id === targetUnitId);
+            const offeredUnitLabel = chosenUnit?.name || "another available room";
             const res = await fetch(`/api/landlord/applications/${applicant.id}/reassign-unit`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -120,27 +124,30 @@ export function ResolveCompetingApplicantsModal({
                     target_unit_id: targetUnitId,
                     landlord_note:
                         customNotes[applicant.id]?.trim() ||
-                        `Hi ${applicant.name}, ${takenUnitName} was just taken, so we reserved a spot for your application in another available room!`,
+                        `Hi ${applicant.name}, ${takenUnitName} is no longer available, so we'd like to offer you ${offeredUnitLabel} instead. You can choose to accept this room or cancel your application.`,
                     notify_applicant: true,
                 }),
             });
             const data = (await res.json()) as any;
             if (!res.ok) {
-                throw new Error(data.error || "Failed to move applicant to the selected room.");
+                throw new Error(data.error || "Failed to send room offer.");
             }
 
             setResolvedMap((prev) => ({
                 ...prev,
                 [applicant.id]: {
                     action: "reassigned",
-                    detail: t("Moved to {unit} & notified by email", { unit: data.new_unit_name || "new room" }),
+                    detail: t("Offered {unit} — awaiting prospect's choice", {
+                        unit: data.offered_unit_name || data.new_unit_name || "new room",
+                    }),
+                    offerUrl: data.offer_response_url ?? null,
                 },
             }));
             onResolved();
         } catch (err: any) {
             setErrorMap((prev) => ({
                 ...prev,
-                [applicant.id]: err.message || "Could not move applicant.",
+                [applicant.id]: err.message || "Could not send room offer.",
             }));
         } finally {
             setLoadingId(null);
@@ -197,7 +204,7 @@ export function ResolveCompetingApplicantsModal({
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4"
+            className="fixed inset-0 z-[350] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4"
             onClick={onClose}
         >
             <div
@@ -236,11 +243,11 @@ export function ResolveCompetingApplicantsModal({
                 <p className="text-sm leading-relaxed text-muted-foreground">
                     {winnerName
                         ? t(
-                              "{unit} is now assigned to {winner}. You can move the other waiting applicant(s) to another vacant room in 1 click (their uploaded IDs and details stay intact), or send a polite notice.",
+                              "{unit} is now assigned to {winner}. You can offer another vacant room to the waiting applicant(s) so they can choose to accept it or cancel their application, or send a polite notice.",
                               { unit: takenUnitName, winner: winnerName }
                           )
                         : t(
-                              "Move this applicant to another vacant room in 1 click without asking them to re-upload their IDs, or send a polite decline notice."
+                              "Offer this applicant another vacant room so they can choose whether to switch without re-uploading their IDs or cancel their application, or send a polite decline notice."
                           )}
                 </p>
 
@@ -277,17 +284,44 @@ export function ResolveCompetingApplicantsModal({
                                     </div>
 
                                     {resolved && (
-                                        <span
-                                            className={cn(
-                                                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold",
-                                                resolved.action === "reassigned"
-                                                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                                                    : "bg-zinc-500/15 text-zinc-700 dark:text-zinc-300"
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span
+                                                className={cn(
+                                                    "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold",
+                                                    resolved.action === "reassigned"
+                                                        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                                                        : "bg-zinc-500/15 text-zinc-700 dark:text-zinc-300"
+                                                )}
+                                            >
+                                                <CheckCircle2 className="size-4" />
+                                                {resolved.detail}
+                                            </span>
+                                            {resolved.offerUrl && (
+                                                <>
+                                                    <a
+                                                        href={resolved.offerUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-xs font-bold text-foreground hover:bg-muted transition-colors"
+                                                    >
+                                                        <ExternalLink className="size-3.5" />
+                                                        {t("Open Choice Page")}
+                                                    </a>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            void navigator.clipboard?.writeText(resolved.offerUrl!);
+                                                            setCopiedApplicantId(applicant.id);
+                                                            setTimeout(() => setCopiedApplicantId(null), 2000);
+                                                        }}
+                                                        className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                                                    >
+                                                        <Copy className="size-3.5" />
+                                                        {copiedApplicantId === applicant.id ? t("Copied") : t("Copy Link")}
+                                                    </button>
+                                                </>
                                             )}
-                                        >
-                                            <CheckCircle2 className="size-4" />
-                                            {resolved.detail}
-                                        </span>
+                                        </div>
                                     )}
                                 </div>
 
@@ -299,7 +333,7 @@ export function ResolveCompetingApplicantsModal({
                                                     htmlFor={`target-unit-${applicant.id}`}
                                                     className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
                                                 >
-                                                    {t("Select Vacant Room to Recommend")}
+                                                    {t("Select Vacant Room to Offer")}
                                                 </label>
                                                 <select
                                                     id={`target-unit-${applicant.id}`}
@@ -371,12 +405,12 @@ export function ResolveCompetingApplicantsModal({
                                                     type="button"
                                                     disabled={isBusy}
                                                     onClick={() => handleReassign(applicant)}
-                                                    className="flex-1 flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 transition-all"
+                                                    className="flex-1 flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 transition-all cursor-pointer"
                                                 >
                                                     <ArrowRightLeft className="size-4 shrink-0" />
                                                     {isBusy
-                                                        ? t("Moving...")
-                                                        : t("Move to {unit} & Notify", {
+                                                        ? t("Sending Offer...")
+                                                        : t("Offer {unit} & Notify", {
                                                               unit: chosenUnit?.name || t("Selected Room"),
                                                           })}
                                                 </button>

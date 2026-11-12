@@ -630,6 +630,15 @@ export async function GET(request: Request) {
             leaseAuditEvents: lease ? auditByLeaseId.get(lease.id) ?? [] : [],
             preApprovalPayments: paymentRequestsByApplication.get(row.id) ?? [],
             paymentTerms: ((row.requirements_checklist as Record<string, unknown> | null)?.payment_terms as InvitePaymentTerms | null) ?? null,
+            unitOffer: ((row.requirements_checklist as Record<string, unknown> | null)?.pending_unit_offer as {
+                target_unit_id?: string;
+                target_unit_name?: string;
+                target_monthly_rent?: number;
+                previous_unit_name?: string;
+                offered_at?: string;
+                status?: "pending" | "accepted" | "cancelled";
+                responded_at?: string | null;
+            } | null) ?? null,
         };
     });
 

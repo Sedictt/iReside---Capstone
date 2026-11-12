@@ -99,12 +99,21 @@ interface Applicant {
  avatarBgColor?: string | null;
 }
 
-interface RentApplication {
+ interface RentApplication {
  id: string;
  propertyId?: string | null;
  unitId?: string | null;
  source?: "walk_in_application" | "invite_link";
  paymentTerms?: InvitePaymentTerms | null;
+ unitOffer?: {
+  target_unit_id?: string;
+  target_unit_name?: string;
+  target_monthly_rent?: number;
+  previous_unit_name?: string;
+  offered_at?: string;
+  status?: "pending" | "accepted" | "cancelled";
+  responded_at?: string | null;
+ } | null;
  applicant: Applicant;
  propertyName: string;
  propertyContractTemplate?: Record<string, unknown> | null;
@@ -1230,6 +1239,12 @@ export function RentApplications() {
            {t("Held for {name}", { name: unitObj.hold_info?.held_for_name || "Applicant" })}
          </span>
        )}
+       {app.unitOffer?.status === "pending" && app.unitOffer.target_unit_name && (
+         <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 border border-primary/30 px-2.5 py-0.5 text-[10px] font-bold text-primary">
+           <ArrowRightLeft className="size-3" />
+           {t("Offered {unit} • Awaiting Choice", { unit: app.unitOffer.target_unit_name })}
+         </span>
+       )}
      </>
    );
  })()}
@@ -1420,7 +1435,6 @@ export function RentApplications() {
              takenUnitName: selectedApp.unitNumber,
              propertyName: selectedApp.propertyName,
              propertyId: selectedApp.propertyId ?? null,
-             winnerName: selectedApp.applicant.name,
              competingApplicants: competingList.map(c => ({
                id: c.id,
                name: c.applicant.name,

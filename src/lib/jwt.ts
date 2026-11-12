@@ -27,9 +27,21 @@ interface SigningTokenPayload {
   type: 'lease_signing';
 }
 
+interface RoomOfferTokenPayload {
+  applicationId: string;
+  targetUnitId: string;
+  type: 'room_offer';
+}
+
 interface VerifyTokenResult {
   valid: boolean;
   payload?: SigningTokenPayload;
+  error?: string;
+}
+
+interface VerifyRoomOfferTokenResult {
+  valid: boolean;
+  payload?: RoomOfferTokenPayload;
   error?: string;
 }
 
@@ -127,6 +139,47 @@ export function generateSigningLink(leaseId: string, tenantId: string): string {
 export function generateLandlordSigningLink(leaseId: string, landlordId: string): string {
   const token = generateSigningToken(leaseId, landlordId, 'landlord');
   return `${getAppBaseUrl()}/signing/landlord/${leaseId}?token=${token}`;
+}
+
+export function generateRoomOfferToken(applicationId: string, targetUnitId: string): string {
+  const payload: RoomOfferTokenPayload = {
+    applicationId,
+    targetUnitId,
+    type: 'room_offer',
+  };
+
+  return jwt.sign(payload, getJwtSecret(), {
+    expiresIn: '30d',
+  });
+}
+
+export function verifyRoomOfferToken(token: string): VerifyRoomOfferTokenResult {
+  try {
+    const decoded = jwt.verify(token, getJwtSecret()) as RoomOfferTokenPayload;
+
+    if (decoded.type !== 'room_offer') {
+      return { valid: false, error: 'Invalid token type' };
+    }
+
+    if (!decoded.applicationId || !decoded.targetUnitId) {
+      return { valid: false, error: 'Missing required token fields' };
+    }
+
+    return { valid: true, payload: decoded };
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      return { valid: false, error: 'This room offer link has expired.' };
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      return { valid: false, error: 'Invalid room offer link.' };
+    }
+    return { valid: false, error: 'Unable to verify room offer link.' };
+  }
+}
+
+export function generateRoomOfferLink(applicationId: string, targetUnitId: string): string {
+  const token = generateRoomOfferToken(applicationId, targetUnitId);
+  return `${getAppBaseUrl()}/apply/offer?token=${encodeURIComponent(token)}`;
 }
 
 /**
