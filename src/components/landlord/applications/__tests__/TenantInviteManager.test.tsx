@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
-import { TenantInviteManager } from "../TenantInviteManager";
+import { TenantInviteManager, type InviteListItem } from "../TenantInviteManager";
 
 // Mock toast hook
 vi.mock("@/hooks/useAppToast", () => ({
@@ -40,12 +40,33 @@ const mockAvailableUnits = [
     },
 ];
 
+function makeMockInvites(count: number): InviteListItem[] {
+    return Array.from({ length: count }, (_, idx) => ({
+        id: `inv-${idx + 1}`,
+        mode: "property",
+        applicationType: "face_to_face",
+        requiredRequirements: [],
+        status: idx === 0 ? "active" : "consumed",
+        propertyId: "prop-1",
+        propertyName: `Pinecrest Residences ${idx + 1}`,
+        unitId: null,
+        unitName: null,
+        expiresAt: "2026-12-01T00:00:00.000Z",
+        useCount: idx === 0 ? 1 : 5,
+        maxUses: 5,
+        lastUsedAt: null,
+        createdAt: "2026-11-01T00:00:00.000Z",
+        shareUrl: `https://ireside.ph/apply/token-${idx + 1}`,
+        qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=token-${idx + 1}`,
+    }));
+}
+
 describe("TenantInviteManager", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it("renders Simple mode by default with generator settings", () => {
+    it("renders streamlined 3-step invite creator by default", () => {
         render(
             <TenantInviteManager
                 availableUnits={mockAvailableUnits}
@@ -54,20 +75,19 @@ describe("TenantInviteManager", () => {
             />
         );
 
-        expect(screen.getByText("Private Links & QR Codes")).toBeDefined();
-        expect(screen.getByText("Generator Settings")).toBeDefined();
-        expect(screen.getByText("Simple")).toBeDefined();
-        expect(screen.getByText("Advanced")).toBeDefined();
-        expect(screen.getByText("Select Property")).toBeDefined();
-        expect(screen.getByText("Link Expiration")).toBeDefined();
-        expect(screen.getByText("Generate Invite")).toBeDefined();
+        expect(screen.getByText("Invite a Tenant")).toBeDefined();
+        expect(screen.getByText("Which property and room?")).toBeDefined();
+        expect(screen.getByText("How will the tenant apply?")).toBeDefined();
+        expect(screen.getByText("Link limits & move-in payment")).toBeDefined();
+        expect(screen.getByText("How many people can use this link?")).toBeDefined();
+        expect(screen.getAllByText("Create Invite Link").length).toBeGreaterThan(0);
 
-        // Advanced controls are hidden in Simple mode
-        expect(screen.queryByText("1. Select Scope")).toBeNull();
-        expect(screen.queryByText("2. Application Mode")).toBeNull();
+        // Specific unit dropdown and online docs are hidden until selected
+        expect(screen.queryByText("Choose Vacant Room")).toBeNull();
+        expect(screen.queryByText("Documents the tenant must upload:")).toBeNull();
     });
 
-    it("reveals Scope and Screening Mode when toggled to Advanced mode", () => {
+    it("reveals room combobox when One Specific Room is selected and filters suggestions", () => {
         render(
             <TenantInviteManager
                 availableUnits={mockAvailableUnits}
@@ -76,18 +96,23 @@ describe("TenantInviteManager", () => {
             />
         );
 
-        // Click Advanced toggle
-        fireEvent.click(screen.getByText("Advanced"));
+        fireEvent.click(screen.getByText("One Specific Room"));
+        expect(screen.getByText("Choose Vacant Room")).toBeDefined();
 
-        expect(screen.getByText("1. Select Scope")).toBeDefined();
-        expect(screen.getByText("Property Wide")).toBeDefined();
-        expect(screen.getByText("Specific Unit")).toBeDefined();
-        expect(screen.getByText("2. Application Mode")).toBeDefined();
-        expect(screen.getByText("In-Person")).toBeDefined();
-        expect(screen.getByText("Online App")).toBeDefined();
+        const combobox = screen.getByRole("combobox", { name: "Choose Vacant Room" });
+        fireEvent.focus(combobox);
+        expect(screen.getByText("101")).toBeDefined();
+        expect(screen.getByText("102")).toBeDefined();
+
+        fireEvent.change(combobox, { target: { value: "102" } });
+        expect(screen.queryByRole("option", { name: /101/ })).toBeNull();
+        expect(screen.getByRole("option", { name: /102/ })).toBeDefined();
+
+        fireEvent.click(screen.getByRole("option", { name: /102/ }));
+        expect((combobox as HTMLInputElement).value).toBe("102");
     });
 
-    it("shows Required Documents section when Online App mode is active in Advanced mode", () => {
+    it("reveals document checkboxes when Online Application is selected", () => {
         render(
             <TenantInviteManager
                 availableUnits={mockAvailableUnits}
@@ -96,42 +121,19 @@ describe("TenantInviteManager", () => {
             />
         );
 
-        fireEvent.click(screen.getByText("Advanced"));
-        expect(screen.queryByText("3. Required Documents")).toBeNull();
-
-        // Switch to Online App
-        fireEvent.click(screen.getByText("Online App"));
-        expect(screen.getByText("3. Required Documents")).toBeDefined();
-        expect(screen.getByText(/Tenant must upload these/i)).toBeDefined();
+        fireEvent.click(screen.getByText("Online Application"));
+        expect(screen.getByText("Documents the tenant must upload:")).toBeDefined();
+        expect(screen.getByText("Valid ID")).toBeDefined();
+        expect(screen.getByText("Proof of Income")).toBeDefined();
     });
 
-    it("switches back to Simple mode and hides advanced controls", () => {
-        render(
-            <TenantInviteManager
-                availableUnits={mockAvailableUnits}
-                invites={[]}
-                onRefresh={vi.fn()}
-            />
-        );
-
-        // Switch to Advanced
-        fireEvent.click(screen.getByText("Advanced"));
-        expect(screen.getByText("1. Select Scope")).toBeDefined();
-
-        // Switch back to Simple
-        fireEvent.click(screen.getByText("Simple"));
-        expect(screen.queryByText("1. Select Scope")).toBeNull();
-        expect(screen.getByText("Select Property")).toBeDefined();
-    });
-
-    it("submits invite creation in Simple mode", async () => {
+    it("submits selected maxUses limit when creating an invite", async () => {
         const handleRefresh = vi.fn();
         const fetchMock = vi.fn().mockResolvedValue({
             ok: true,
             json: async () => ({
                 invite: {
                     id: "inv-1",
-                    token: "token-123",
                     shareUrl: "https://ireside.ph/apply/token-123",
                     qrUrl: "data:image/png;base64,mock",
                     status: "active",
@@ -142,11 +144,11 @@ describe("TenantInviteManager", () => {
                     mode: "property",
                     applicationType: "face_to_face",
                     requiredRequirements: [],
-                    expiresAt: "2026-10-01T00:00:00.000Z",
+                    expiresAt: "2026-12-01T00:00:00.000Z",
                     useCount: 0,
-                    maxUses: 1,
+                    maxUses: 5,
                     lastUsedAt: null,
-                    createdAt: "2026-09-26T00:00:00.000Z",
+                    createdAt: "2026-11-13T00:00:00.000Z",
                 },
             }),
         });
@@ -160,7 +162,8 @@ describe("TenantInviteManager", () => {
             />
         );
 
-        fireEvent.click(screen.getByText("Generate Invite"));
+        fireEvent.click(screen.getByText("5 People"));
+        fireEvent.click(screen.getAllByText("Create Invite Link")[0]);
 
         await waitFor(() => {
             expect(fetchMock).toHaveBeenCalledWith(
@@ -170,7 +173,32 @@ describe("TenantInviteManager", () => {
                     headers: { "Content-Type": "application/json" },
                 })
             );
+            const [, init] = fetchMock.mock.calls[0];
+            const parsedBody = JSON.parse((init as RequestInit).body as string);
+            expect(parsedBody.maxUses).toBe(5);
             expect(handleRefresh).toHaveBeenCalledTimes(1);
         });
+    });
+
+    it("supports custom maxUses input and paginates Past Links", () => {
+        const invites = makeMockInvites(6);
+        render(
+            <TenantInviteManager
+                availableUnits={mockAvailableUnits}
+                invites={invites}
+                onRefresh={vi.fn()}
+            />
+        );
+
+        // Switch to Past Links tab
+        fireEvent.click(screen.getByRole("tab", { name: /Past Links/i }));
+
+        expect(screen.getByText("Showing 1–4 of 6")).toBeDefined();
+        expect(screen.getByText("Pinecrest Residences 1")).toBeDefined();
+        expect(screen.queryByText("Pinecrest Residences 5")).toBeNull();
+
+        fireEvent.click(screen.getByText("Next"));
+        expect(screen.getByText("Showing 5–6 of 6")).toBeDefined();
+        expect(screen.getByText("Pinecrest Residences 5")).toBeDefined();
     });
 });

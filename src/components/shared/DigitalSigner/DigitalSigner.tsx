@@ -531,7 +531,7 @@ export function DigitalSigner({
         {/* Main View Area */}
         <main 
           ref={scrollContainerRef}
-          className="flex-1 overflow-auto bg-neutral-100 dark:bg-[#050505] relative custom-scrollbar p-6 md:p-16 lg:p-20 scroll-smooth"
+          className="flex-1 overflow-auto bg-neutral-100 dark:bg-surface-0 relative custom-scrollbar p-6 md:p-16 lg:p-20 scroll-smooth"
           onScroll={(e) => {
             const scrollPos = (e.target as HTMLDivElement).scrollTop;
             const pageHeights = pageRefs.current.map(p => p?.offsetHeight || 0);

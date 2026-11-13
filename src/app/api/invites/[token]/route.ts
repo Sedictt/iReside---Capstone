@@ -384,7 +384,8 @@ export async function POST(
                 status: nextStatus,
                 last_used_at: new Date().toISOString(),
             })
-            .eq("id", invite.id);
+            .eq("id", invite.id)
+            .lt("use_count", invite.max_uses);
 
         await adminClient.from("tenant_intake_invite_events" as any).insert({
             invite_id: invite.id,

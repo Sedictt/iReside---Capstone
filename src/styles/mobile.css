@@ -114,8 +114,14 @@ html.mobile-viewport:not(.mobile-branded) {
 .m-hero::after {
     content: "";
     position: absolute;
+    z-index: 0;
     border-radius: 50%;
     pointer-events: none;
+}
+
+.m-hero > * {
+    position: relative;
+    z-index: 1;
 }
 
 .m-hero::before {
@@ -723,7 +729,7 @@ body.mobile-viewport::-webkit-scrollbar {
 }
 
 .mobile-tab-item.active {
-    color: var(--primary);
+    color: var(--primary-foreground);
 }
 
 /* Sliding active pill (framer-motion layoutId moves it between tabs) */
@@ -731,13 +737,8 @@ body.mobile-viewport::-webkit-scrollbar {
     position: absolute;
     inset: 0;
     border-radius: 20px;
-    background: var(--brand-primary-100);
+    background: var(--primary);
     z-index: 0;
-}
-
-.mobile-viewport.dark .mobile-tab-indicator,
-.mobile-viewport .dark .mobile-tab-indicator {
-    background: rgba(var(--primary-rgb), 0.18);
 }
 
 .mobile-tab-item .tab-icon {

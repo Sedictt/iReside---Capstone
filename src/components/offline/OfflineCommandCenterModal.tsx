@@ -99,7 +99,7 @@ export function OfflineCommandCenterModal() {
           exit={{ opacity: 0, y: 50, scale: 0.95 }}
           className="fixed bottom-6 right-6 z-[999] max-w-sm w-auto"
         >
-          <div className="rounded-2xl border border-amber-500/30 bg-white/95 dark:bg-[#0f1117]/95 backdrop-blur-xl p-3.5 shadow-[0_15px_35px_rgba(0,0,0,0.15)] dark:shadow-[0_15px_35px_rgba(0,0,0,0.6)] flex items-center gap-3">
+          <div className="rounded-2xl border border-amber-500/30 bg-white dark:bg-card p-3.5 shadow-[0_15px_35px_rgba(0,0,0,0.15)] dark:shadow-[0_15px_35px_rgba(0,0,0,0.45)] flex items-center gap-3">
             <div className="relative flex items-center justify-center size-9 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
               {!isOnline ? <WifiOff className="size-4.5" /> : <BellRing className="size-4.5" />}
               {!isOnline && <span className="absolute -top-1 -right-1 size-2.5 bg-amber-500 rounded-full animate-ping" />}
@@ -140,8 +140,8 @@ export function OfflineCommandCenterModal() {
             className={cn(
               "relative w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-[2.25rem] border backdrop-blur-2xl shadow-[0_25px_70px_rgba(0,0,0,0.18)] dark:shadow-[0_25px_70px_rgba(0,0,0,0.7)] text-left transition-colors duration-500",
               isOnline
-                ? "border-emerald-500/40 bg-white/95 dark:bg-[#0f1117]/95 text-slate-900 dark:text-white"
-                : "border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-[#0f1117]/95 text-slate-900 dark:text-white"
+                ? "border-emerald-500/40 bg-white dark:bg-card text-slate-900 dark:text-white"
+                : "border-slate-200/80 dark:border-white/10 bg-white dark:bg-card text-slate-900 dark:text-white"
             )}
           >
             {/* Top Identity Bar */}

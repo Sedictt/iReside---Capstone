@@ -427,6 +427,12 @@ export const inviteCreateSchema = z
         if (message) ctx.addIssue({ code: "custom", message });
       }).nullish(),
     ),
+    maxUses: z.coerce
+      .number({ error: "Use limit must be a number." })
+      .int("Use limit must be a whole number.")
+      .min(1, "Use limit must be at least 1.")
+      .max(100, "Use limit cannot exceed 100.")
+      .default(1),
     paymentTerms: invitePaymentTermsSchema.nullish(),
   })
   .superRefine((value, ctx) => {

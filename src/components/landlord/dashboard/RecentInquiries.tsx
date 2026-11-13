@@ -137,7 +137,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
 
     return (
         <>
-            <div className="w-full rounded-3xl border border-border bg-gradient-to-br from-white to-surface-0 shadow-xl dark:border-white/5 dark:from-[#171717] dark:to-[#0a0a0a]">
+            <div className="w-full rounded-3xl border border-border bg-gradient-to-br from-white to-surface-0 shadow-xl dark:border-white/8 dark:from-card dark:to-surface-0">
                 {/* Header */}
                 <div className="border-b border-border p-6 dark:border-white/5">
                     <div className="flex items-center justify-between">

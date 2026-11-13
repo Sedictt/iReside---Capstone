@@ -13,6 +13,8 @@ interface TenantMapNotReadyProps {
     currentUnitName?: string;
     onRefresh?: () => void;
     isRefreshing?: boolean;
+    backHref?: string;
+    messagesHref?: string;
 }
 
 export function TenantMapNotReady({
@@ -21,6 +23,8 @@ export function TenantMapNotReady({
     currentUnitName,
     onRefresh,
     isRefreshing = false,
+    backHref = "/tenant/dashboard",
+    messagesHref = "/tenant/messages",
 }: TenantMapNotReadyProps) {
     const { t } = useLanguageContext();
     const propertyName = propertyNameProp || t("Your Residence");
@@ -44,7 +48,7 @@ export function TenantMapNotReady({
             {/* Top Navigation Bar */}
             <header className="h-16 px-6 sm:px-8 border-b border-border/60 flex items-center justify-between bg-background/80 backdrop-blur-md sticky top-0 z-20">
                 <Link
-                    href="/tenant/dashboard"
+                    href={backHref}
                     className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-xl hover:bg-muted/60 group"
                 >
                     <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5 text-emerald-500" />
@@ -131,7 +135,7 @@ export function TenantMapNotReady({
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
                             <Link
-                                href="/tenant/dashboard"
+                                href={backHref}
                                 className="sm:flex-1 py-3 px-5 rounded-xl text-xs font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] shadow-md shadow-emerald-600/20 whitespace-nowrap"
                             >
                                 <ArrowLeft className="size-4 shrink-0" />
@@ -139,7 +143,7 @@ export function TenantMapNotReady({
                             </Link>
 
                             <Link
-                                href="/tenant/messages"
+                                href={messagesHref}
                                 className="sm:flex-1 py-3 px-5 rounded-xl text-xs font-bold uppercase tracking-wider bg-muted/60 hover:bg-muted text-foreground border border-border/70 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] whitespace-nowrap"
                             >
                                 <MessageSquare className="size-4 shrink-0" />

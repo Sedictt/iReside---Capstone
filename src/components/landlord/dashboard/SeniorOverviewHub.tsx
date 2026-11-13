@@ -181,7 +181,7 @@ export function SeniorOverviewHub({
                                     "flex size-8 items-center justify-center rounded-lg border shadow-2xs",
                                     isRentPaymentsEmpty
                                         ? "bg-white/10 border-white/15"
-                                        : "bg-black/15 border-white/15"
+                                        : "bg-primary-foreground/10 border-primary-foreground/20"
                                 )}>
                                     <CreditCard className="size-4 shrink-0" aria-hidden="true" />
                                 </div>
@@ -208,7 +208,7 @@ export function SeniorOverviewHub({
                                     <span>{totalUnits === 0 ? t("No properties added yet") : t("No active tenants yet")}</span>
                                 </span>
                             ) : (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-black/15 text-primary-foreground border border-white/15">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-foreground/10 text-primary-foreground border border-primary-foreground/20">
                                     <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" />
                                     <span>{t("All rent paid on time")}</span>
                                 </span>
@@ -239,7 +239,7 @@ export function SeniorOverviewHub({
                                 <button
                                     type="button"
                                     onClick={onOpenOverduePayments}
-                                    className="group min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-primary-foreground hover:opacity-95 text-primary shadow-xs transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2 cursor-pointer"
+                                    className="group min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-primary-foreground hover:opacity-90 text-[var(--primary-foreground-inverse)] shadow-xs transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2 cursor-pointer"
                                 >
                                     <span>{t("View Unpaid Rent")}</span>
                                     <ArrowRight className="size-4 transition-transform motion-reduce:transition-none group-hover:translate-x-1" aria-hidden="true" />
@@ -248,7 +248,7 @@ export function SeniorOverviewHub({
                                     <button
                                         type="button"
                                         onClick={onRecordPayment}
-                                        className="min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-black/15 hover:bg-black/25 text-primary-foreground border border-primary-foreground/20 transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer"
+                                        className="min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-primary-foreground/10 hover:bg-primary-foreground/15 text-primary-foreground border border-primary-foreground/25 transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer"
                                     >
                                         <Banknote className="size-4" aria-hidden="true" />
                                         <span>{t("Record Payment")}</span>
@@ -277,7 +277,7 @@ export function SeniorOverviewHub({
                             <button
                                 type="button"
                                 onClick={onRecordPayment}
-                                className="group min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-primary-foreground hover:opacity-95 text-primary shadow-xs transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer"
+                                className="group min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-primary-foreground hover:opacity-90 text-[var(--primary-foreground-inverse)] shadow-xs transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer"
                             >
                                 <span>{t("Record Payment")}</span>
                                 <ArrowRight className="size-4 transition-transform motion-reduce:transition-none group-hover:translate-x-1" aria-hidden="true" />
@@ -285,7 +285,7 @@ export function SeniorOverviewHub({
                         ) : (
                             <Link
                                 href="/landlord/invoices"
-                                className="group min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-primary-foreground hover:opacity-95 text-primary shadow-xs transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer"
+                                className="group min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-primary-foreground hover:opacity-90 text-[var(--primary-foreground-inverse)] shadow-xs transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer"
                             >
                                 <span>{t("View Bills & Receipts")}</span>
                                 <ArrowRight className="size-4 transition-transform motion-reduce:transition-none group-hover:translate-x-1" aria-hidden="true" />

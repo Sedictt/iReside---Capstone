@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateDirectConversation } from "@/lib/billing/workflow";
+import { generateApplicationStatusToken } from "@/lib/jwt";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -1284,6 +1285,36 @@ export async function POST(request: NextRequest) {
                 isPublicRoute ? undefined : autoSwitchEmail,
                 isPublicRoute ? undefined : autoSwitchPassword,
             );
+        }
+
+        // 15b. Public Application Status Tracker (Kevin, payment_pending)
+        if (action === "prepare-application-tracker") {
+            const admin = getAdminClient();
+            const kevinId = demoIds?.key_ids?.kevin_application || uid("app:kevin");
+            const future3d = new Date(Date.now() + 3 * 86400_000).toISOString();
+
+            await admin
+                .from("applications")
+                .update({
+                    status: "payment_pending",
+                    payment_pending_expires_at: future3d,
+                })
+                .eq("id", kevinId);
+
+            await admin
+                .from("application_payment_requests")
+                .update({ status: "pending", due_at: future3d.slice(0, 10) })
+                .eq("application_id", kevinId);
+
+            const token = generateApplicationStatusToken(kevinId);
+            const trackerRoute = `/apply/status?token=${encodeURIComponent(token)}`;
+
+            return buildActionResponse({
+                ok: true,
+                action,
+                message: "Generated a 30-day Application Status Tracker link for Kevin (payment_pending on Room 303).",
+                recommendedRoute: trackerRoute,
+            });
         }
 
         // 16. Urgent Maintenance + AI Triage (Mark Lim, Unit 301)

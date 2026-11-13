@@ -59,7 +59,7 @@ export default function TenantLayout({
                                 "w-full z-[100] pointer-events-none",
                                 !useImmersiveLayout && "w-full px-4 sm:px-6 lg:px-8 md:pr-[104px] lg:pr-[112px]"
                             )}>
-                                {!isDocsPage && <NotificationBanner />}
+                                {!isDocsPage && !isUnitMapPage && <NotificationBanner />}
                                 {!useImmersiveLayout && <PendingLeaseSignatureBanner />}
                             </div>
                             <Suspense fallback={

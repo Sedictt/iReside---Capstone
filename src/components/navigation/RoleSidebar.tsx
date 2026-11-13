@@ -508,7 +508,7 @@ export function RoleSidebar({
             <aside
                 style={{ width: sidebarWidth }}
                 className={cn(
-                    "fixed left-0 top-0 z-40 flex h-screen flex-col bg-card dark:bg-zinc-900 text-foreground border-r border-border/60 shadow-xs select-none",
+                    "fixed left-0 top-0 z-40 flex h-screen flex-col bg-card dark:bg-surface-0 text-foreground border-r border-border/60 shadow-xs select-none",
                     className
                 )}
                 aria-label={t("Sidebar Navigation")}

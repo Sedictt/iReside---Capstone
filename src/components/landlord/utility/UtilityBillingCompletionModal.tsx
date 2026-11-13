@@ -97,17 +97,17 @@ export function UtilityBillingCompletionModal({
                         <button
                             type="button"
                             onClick={onContinueExploring}
-                            className="flex-1 inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-4 rounded-xl text-xs sm:text-sm font-semibold bg-muted/70 hover:bg-muted text-foreground border border-border/70 transition-all cursor-pointer active:scale-[0.98]"
+                            className="flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap h-11 sm:h-12 px-3.5 rounded-xl text-xs sm:text-sm font-semibold bg-muted/70 hover:bg-muted text-foreground border border-border/70 transition-all cursor-pointer active:scale-[0.98]"
                         >
-                            <Compass className="size-4" />
+                            <Compass className="size-4 shrink-0" />
                             <span>{t("Keep Viewing Rates")}</span>
                         </button>
                         <button
                             type="button"
                             onClick={onReturnToDashboard}
-                            className="flex-1 inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-4 rounded-xl text-xs sm:text-sm font-semibold bg-muted/70 hover:bg-muted text-foreground border border-border/70 transition-all cursor-pointer active:scale-[0.98]"
+                            className="flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap h-11 sm:h-12 px-3.5 rounded-xl text-xs sm:text-sm font-semibold bg-muted/70 hover:bg-muted text-foreground border border-border/70 transition-all cursor-pointer active:scale-[0.98]"
                         >
-                            <LayoutDashboard className="size-4" />
+                            <LayoutDashboard className="size-4 shrink-0" />
                             <span>{t("Go to Dashboard")}</span>
 
                         </button>

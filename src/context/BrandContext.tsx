@@ -70,7 +70,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
   const refreshBranding = useCallback(async () => {
     try {
       if (typeof navigator !== "undefined" && navigator.onLine) {
-        const res = await fetch("/api/branding");
+        const res = await fetch("/api/branding", { cache: "no-store" });
         if (res.ok) {
           const data: BrandConfig = await res.json();
           const localSnapshot = loadLocalSnapshot();
@@ -154,8 +154,9 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     refreshBranding();
 
     // Listen to custom cross-component update events
-    const handleBrandingEvent = () => {
-      const updated = loadLocalSnapshot();
+    const handleBrandingEvent = (e: Event) => {
+      const detail = (e as CustomEvent<BrandConfig> | undefined)?.detail;
+      const updated = detail && detail.propertyName ? detail : loadLocalSnapshot();
       setBranding(updated);
       applyBrandCssVariables(updated.primaryColor, updated.secondaryColor);
     };

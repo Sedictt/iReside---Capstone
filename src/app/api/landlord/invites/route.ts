@@ -20,6 +20,7 @@ import {
 } from "@/lib/tenant-invite-payment-terms";
 import { parseJsonBody } from "@/lib/validation/server";
 import { inviteCreateSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { invitesMemoryCache, invalidateInvitesCache } from "@/lib/tenant-invite-cache";
 
 type InviteRow = {
     id: string;
@@ -69,12 +70,6 @@ function formatInviteError(
     // Never surface raw database messages to the client.
     return fallback;
 }
-
-interface CachedInvites {
-    data: any;
-    expiresAt: number;
-}
-const invitesMemoryCache = new Map<string, CachedInvites>();
 
 export async function GET(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
@@ -225,6 +220,7 @@ export async function POST(request: Request) {
     const applicationType = body.applicationType;
     const propertyId = body.propertyId as string;
     const unitId = body.unitId ?? null;
+    const maxUses = body.maxUses ?? 1;
     const paymentTerms = body.paymentTerms ? sanitizePaymentTerms(body.paymentTerms) : null;
 
     const { data: property, error: propertyError } = await adminClient
@@ -314,7 +310,7 @@ export async function POST(request: Request) {
         public_token: token,
         token_hash: hashInviteToken(token),
         expires_at: expiresAt ? expiresAt.toISOString() : null,
-        max_uses: 1,
+        max_uses: maxUses,
         use_count: 0,
         status: "active",
         payment_terms: paymentTerms,
@@ -346,9 +342,12 @@ export async function POST(request: Request) {
             requiredRequirements,
             propertyId,
             unitId: mode === "unit" ? unitId : null,
+            maxUses,
             paymentTerms,
         },
     });
+
+    invalidateInvitesCache(userId);
 
     if (eventError) {
         console.error("[landlord invites POST] Failed to write invite event:", eventError);
@@ -381,7 +380,7 @@ export async function POST(request: Request) {
             status: "active",
             expiresAt: expiresAt ? expiresAt.toISOString() : null,
             useCount: 0,
-            maxUses: 1,
+            maxUses,
             lastUsedAt: null,
             createdAt: new Date().toISOString(),
             paymentTerms,

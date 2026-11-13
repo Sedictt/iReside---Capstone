@@ -62,7 +62,7 @@ export async function GET(request: Request) {
 
     const { data, error } = await (supabase
         .from("landlord_statistics_exports")
-        .select("id, format, metadata, created_at")
+        .select("id, format, report_range, metadata, created_at")
         .eq("landlord_id", userId)
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1) as any);
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
     const history = (data ?? []).map((row: any) => ({
         id: row.id,
         format: row.format,
-        range: null,
+        range: row.report_range ?? "",
         generatedAt: row.created_at,
         rows: (row.metadata as Record<string, unknown>)?.rows as ReportRow[] ?? [],
     }));
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true });
     }
 
-    const csvReport = buildCsvReport(payload);
+    const csvReport = "\uFEFF" + buildCsvReport(payload);
 
     return new NextResponse(csvReport, {
         status: 200,

@@ -11,6 +11,7 @@
 
 import * as nodemailer from "nodemailer";
 import { getAppBaseUrl } from "@/lib/app-url";
+import { emailPreviewStorage } from "./preview-store";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -112,6 +113,18 @@ export interface EmailOptions {
 export async function sendEmail(
   emailOptions: EmailOptions,
 ): Promise<boolean> {
+  const previewStore = emailPreviewStorage.getStore();
+  if (previewStore) {
+    previewStore.captured = {
+      ...emailOptions,
+      htmlBody: guardAgainstLocalLinks(emailOptions.htmlBody, emailOptions.subject),
+      textBody: emailOptions.textBody
+        ? guardAgainstLocalLinks(emailOptions.textBody, emailOptions.subject)
+        : emailOptions.textBody,
+    };
+    return true;
+  }
+
   let transporterData: ReturnType<typeof getTransporter>;
   try {
     transporterData = getTransporter();

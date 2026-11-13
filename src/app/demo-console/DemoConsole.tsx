@@ -16,16 +16,20 @@ import {
     Compass,
     Copy,
     CreditCard,
+    Download,
     ExternalLink,
+    FileText,
     KeyRound,
     LayoutDashboard,
     Loader2,
     LogOut,
+    Mail,
     MessageSquare,
     PenTool,
     RefreshCw,
     RotateCcw,
     Search,
+    Send,
     ShieldAlert,
     Smartphone,
     Trash2,
@@ -55,7 +59,18 @@ interface Props {
     resetAvailable: boolean;
 }
 
-type PrimaryTab = "cases" | "accounts" | "reset";
+type PrimaryTab = "cases" | "accounts" | "emails" | "reset";
+
+interface SampleEmailItem {
+    id: string;
+    category: string;
+    title: string;
+    recipientRole: string;
+    trigger: string;
+    subject: string;
+    htmlBody: string;
+    textBody: string;
+}
 
 interface CurrentSession {
     id?: string;
@@ -137,6 +152,19 @@ export function DemoConsole({
 
     // Accounts tab collapsible background residents
     const [showBackgroundResidents, setShowBackgroundResidents] = useState(false);
+
+    // Sample Emails tab states
+    const [sampleEmails, setSampleEmails] = useState<SampleEmailItem[]>([]);
+    const [emailsLoading, setEmailsLoading] = useState(false);
+    const [emailsError, setEmailsError] = useState<string | null>(null);
+    const [smtpConfigured, setSmtpConfigured] = useState(false);
+    const [selectedEmailCategory, setSelectedEmailCategory] = useState<string>("All");
+    const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
+    const [emailViewMode, setEmailViewMode] = useState<"html" | "text">("html");
+    const [testRecipientEmail, setTestRecipientEmail] = useState("");
+    const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
+    const [downloadingEmailId, setDownloadingEmailId] = useState<string | null>(null);
+    const [downloadingAllEmails, setDownloadingAllEmails] = useState(false);
 
     // Reset & Create tab states
     const [quickResetResult, setQuickResetResult] = useState<{
@@ -587,8 +615,143 @@ export function DemoConsole({
         );
     }, [extraResidents, searchQuery]);
 
-    const landlordAccounts = filteredAccounts.filter((a) => a.group === "landlord");
-    const keyTenantAccounts = filteredAccounts.filter((a) => a.group === "key_tenant");
+    const landlordAccounts = filteredAccounts.filter((a) => a.role === "landlord");
+    const tenantAccounts = filteredAccounts.filter((a) => a.role === "tenant");
+    const publicAccounts = filteredAccounts.filter((a) => a.role === "public");
+
+    // Sample Emails (Tab 3)
+    const loadSampleEmails = useCallback(async () => {
+        setEmailsLoading(true);
+        setEmailsError(null);
+        try {
+            const res = await fetch("/api/demo-console/emails", { cache: "no-store" });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json?.error || "Failed to load sample emails");
+            const list: SampleEmailItem[] = json.emails ?? [];
+            setSampleEmails(list);
+            setSmtpConfigured(Boolean(json.smtpConfigured));
+            setSelectedEmailId((prev) => prev ?? list[0]?.id ?? null);
+        } catch (err) {
+            setEmailsError(err instanceof Error ? err.message : "Failed to load sample emails");
+        } finally {
+            setEmailsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (activeTab === "emails" && sampleEmails.length === 0 && !emailsLoading && !emailsError) {
+            void loadSampleEmails();
+        }
+    }, [activeTab, sampleEmails.length, emailsLoading, emailsError, loadSampleEmails]);
+
+    const emailCategories = useMemo(
+        () => ["All", ...Array.from(new Set(sampleEmails.map((e) => e.category)))],
+        [sampleEmails]
+    );
+
+    const filteredSampleEmails = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        return sampleEmails.filter((e) => {
+            if (selectedEmailCategory !== "All" && e.category !== selectedEmailCategory) {
+                return false;
+            }
+            if (!q) return true;
+            return `${e.title} ${e.subject} ${e.category} ${e.recipientRole} ${e.trigger}`
+                .toLowerCase()
+                .includes(q);
+        });
+    }, [sampleEmails, selectedEmailCategory, searchQuery]);
+
+    const activeSampleEmail = useMemo(
+        () =>
+            filteredSampleEmails.find((e) => e.id === selectedEmailId) ??
+            filteredSampleEmails[0] ??
+            null,
+        [filteredSampleEmails, selectedEmailId]
+    );
+
+    const handleSendSampleEmail = async (emailItem: SampleEmailItem) => {
+        const target = testRecipientEmail.trim();
+        if (!target || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) {
+            showToast("Enter a valid Gmail/email address first", "error");
+            return;
+        }
+        setSendingEmailId(emailItem.id);
+        try {
+            const res = await fetch("/api/demo-console/emails", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: emailItem.id, to: target }),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json?.error || "Failed to send email");
+            showToast(json.message || `Sent "${emailItem.title}" to ${target}`, "success");
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : "Failed to send email", "error");
+        } finally {
+            setSendingEmailId(null);
+        }
+    };
+
+    const triggerBlobDownload = (blob: Blob, filename: string) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
+
+    const handleDownloadEmailPng = async (emailItem: SampleEmailItem) => {
+        setDownloadingEmailId(emailItem.id);
+        try {
+            const res = await fetch(
+                `/api/demo-console/emails/export?id=${encodeURIComponent(emailItem.id)}`,
+                { cache: "no-store" }
+            );
+            if (!res.ok) {
+                const json = await res.json().catch(() => ({}));
+                throw new Error(json?.error || "Failed to export PNG");
+            }
+            const blob = await res.blob();
+            if (blob.size === 0) throw new Error("Exported PNG was empty");
+            triggerBlobDownload(blob, `ireside-email-${emailItem.id}.png`);
+            showToast(`Downloaded ireside-email-${emailItem.id}.png`, "success");
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : "Failed to export PNG", "error");
+        } finally {
+            setDownloadingEmailId(null);
+        }
+    };
+
+    const handleDownloadAllEmailPngs = async () => {
+        if (filteredSampleEmails.length === 0) return;
+        setDownloadingAllEmails(true);
+        try {
+            const ids = filteredSampleEmails.map((e) => e.id).join(",");
+            const res = await fetch(
+                `/api/demo-console/emails/export?ids=${encodeURIComponent(ids)}`,
+                { cache: "no-store" }
+            );
+            if (!res.ok) {
+                const json = await res.json().catch(() => ({}));
+                throw new Error(json?.error || "Failed to export ZIP");
+            }
+            const blob = await res.blob();
+            if (blob.size === 0) throw new Error("Exported ZIP was empty");
+            triggerBlobDownload(blob, "ireside-sample-emails.zip");
+            showToast(
+                `Downloaded ireside-sample-emails.zip (${filteredSampleEmails.length} PNGs)`,
+                "success"
+            );
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : "Failed to export ZIP", "error");
+        } finally {
+            setDownloadingAllEmails(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-background text-foreground pb-20">
@@ -743,6 +906,22 @@ export function DemoConsole({
                                 Accounts &amp; Credentials
                                 <span className="rounded-full bg-background/20 px-2 py-0.5 text-[11px] tabular-nums">
                                     {accounts.length + extraResidents.length}
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab("emails")}
+                                className={`inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                                    activeTab === "emails"
+                                        ? "bg-foreground text-background shadow-xs"
+                                        : "border border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                }`}
+                            >
+                                <Mail className="size-4" />
+                                Sample Emails
+                                <span className="rounded-full bg-background/20 px-2 py-0.5 text-[11px] tabular-nums">
+                                    {sampleEmails.length || 24}
                                 </span>
                             </button>
 
@@ -1018,70 +1197,85 @@ export function DemoConsole({
                 {/* ============================================================ */}
                 {activeTab === "accounts" && (
                     <section aria-label="Accounts and Credentials" className="space-y-8">
-                        {/* Group 1: Landlord & Onboarding */}
-                        <div>
-                            <h2 className="mb-3 text-base font-bold text-foreground">
-                                Landlord &amp; Onboarding
-                            </h2>
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                                {landlordAccounts.map((acc) => (
-                                    <AccountCard
-                                        key={acc.key}
-                                        account={acc}
-                                        isCurrent={
-                                            Boolean(acc.email) &&
-                                            currentSession?.email?.toLowerCase() === acc.email?.toLowerCase()
-                                        }
-                                        isBusy={busyAccountKey === acc.key}
-                                        copiedKey={copiedKey}
-                                        onCopy={copyText}
-                                        onSwitchAndOpen={() =>
-                                            handleAccountSwitchAndOpen(
-                                                acc.key,
-                                                acc.label,
-                                                acc.email,
-                                                acc.password,
-                                                acc.role
-                                            )
-                                        }
-                                    />
-                                ))}
+                        {/* Role 1: Landlords */}
+                        {landlordAccounts.length > 0 && (
+                            <div>
+                                <div className="mb-3 flex items-center gap-2">
+                                    <h2 className="text-base font-bold text-foreground">
+                                        Landlords
+                                    </h2>
+                                    <span className="rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                                        {landlordAccounts.length}
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                    {landlordAccounts.map((acc) => (
+                                        <AccountCard
+                                            key={acc.key}
+                                            account={acc}
+                                            isCurrent={
+                                                Boolean(acc.email) &&
+                                                currentSession?.email?.toLowerCase() === acc.email?.toLowerCase()
+                                            }
+                                            isBusy={busyAccountKey === acc.key}
+                                            copiedKey={copiedKey}
+                                            onCopy={copyText}
+                                            onSwitchAndOpen={() =>
+                                                handleAccountSwitchAndOpen(
+                                                    acc.key,
+                                                    acc.label,
+                                                    acc.email,
+                                                    acc.password,
+                                                    acc.role
+                                                )
+                                            }
+                                        />
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
-                        {/* Group 2: Key Demo Tenants */}
-                        <div>
-                            <h2 className="mb-3 text-base font-bold text-foreground">
-                                Key Demo Tenants (Units 101–303)
-                            </h2>
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                                {keyTenantAccounts.map((acc) => (
-                                    <AccountCard
-                                        key={acc.key}
-                                        account={acc}
-                                        isCurrent={
-                                            Boolean(acc.email) &&
-                                            currentSession?.email?.toLowerCase() === acc.email?.toLowerCase()
-                                        }
-                                        isBusy={busyAccountKey === acc.key}
-                                        copiedKey={copiedKey}
-                                        onCopy={copyText}
-                                        onSwitchAndOpen={() =>
-                                            handleAccountSwitchAndOpen(
-                                                acc.key,
-                                                acc.label,
-                                                acc.email,
-                                                acc.password,
-                                                acc.role
-                                            )
-                                        }
-                                    />
-                                ))}
-                            </div>
-                        </div>
+                        {/* Role 2: Tenants */}
+                        {(tenantAccounts.length > 0 || filteredExtraResidents.length > 0) && (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-base font-bold text-foreground">
+                                        Tenants
+                                    </h2>
+                                    <span className="rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                                        {tenantAccounts.length + filteredExtraResidents.length}
+                                    </span>
+                                </div>
+                                {tenantAccounts.length > 0 && (
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                        {tenantAccounts.map((acc) => (
+                                            <AccountCard
+                                                key={acc.key}
+                                                account={acc}
+                                                isCurrent={
+                                                    Boolean(acc.email) &&
+                                                    currentSession?.email?.toLowerCase() === acc.email?.toLowerCase()
+                                                }
+                                                isBusy={busyAccountKey === acc.key}
+                                                copiedKey={copiedKey}
+                                                onCopy={copyText}
+                                                onSwitchAndOpen={() =>
+                                                    handleAccountSwitchAndOpen(
+                                                        acc.key,
+                                                        acc.label,
+                                                        acc.email,
+                                                        acc.password,
+                                                        acc.role
+                                                    )
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                )}
 
-                        {/* Group 3: Collapsible Background Residents */}
-                        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-xs">
+                                {/* Collapsible Additional & Assigned Tenants */}
+                                {filteredExtraResidents.length > 0 && (
+                                    <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-xs">
                             <button
                                 type="button"
                                 onClick={() => setShowBackgroundResidents((v) => !v)}
@@ -1164,7 +1358,290 @@ export function DemoConsole({
                                     ))}
                                 </div>
                             )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Role 3: Public / Guest */}
+                        {publicAccounts.length > 0 && (
+                            <div>
+                                <div className="mb-3 flex items-center gap-2">
+                                    <h2 className="text-base font-bold text-foreground">
+                                        Public / Guest
+                                    </h2>
+                                    <span className="rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                                        {publicAccounts.length}
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                    {publicAccounts.map((acc) => (
+                                        <AccountCard
+                                            key={acc.key}
+                                            account={acc}
+                                            isCurrent={false}
+                                            isBusy={busyAccountKey === acc.key}
+                                            copiedKey={copiedKey}
+                                            onCopy={copyText}
+                                            onSwitchAndOpen={() =>
+                                                handleAccountSwitchAndOpen(
+                                                    acc.key,
+                                                    acc.label,
+                                                    acc.email,
+                                                    acc.password,
+                                                    acc.role
+                                                )
+                                            }
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </section>
+                )}
+
+                {/* ============================================================ */}
+                {/* TAB 3: SAMPLE EMAILS                                         */}
+                {/* ============================================================ */}
+                {activeTab === "emails" && (
+                    <section aria-label="Sample System Emails" className="space-y-6">
+                        {/* Top Controls: Category Filter & Optional Gmail Test Sender */}
+                        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-xs">
+                            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                <div>
+                                    <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
+                                        <Mail className="size-5 text-primary" />
+                                        All System Email Templates ({sampleEmails.length || 24})
+                                    </h2>
+                                    <p className="mt-0.5 text-sm text-muted-foreground">
+                                        Live HTML previews rendered directly from the production email templates sent to Gmail.
+                                    </p>
+                                </div>
+
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                    <input
+                                        type="email"
+                                        value={testRecipientEmail}
+                                        onChange={(e) => setTestRecipientEmail(e.target.value)}
+                                        placeholder="Optional: your.email@gmail.com"
+                                        aria-label="Test recipient Gmail address"
+                                        maxLength={80}
+                                        className="min-h-[44px] w-full rounded-xl border border-border/60 bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none sm:w-64"
+                                    />
+                                    <span
+                                        className={`inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${
+                                            smtpConfigured
+                                                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                                                : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                        }`}
+                                    >
+                                        {smtpConfigured ? "SMTP Ready" : "Preview Only (SMTP not set)"}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => void handleDownloadAllEmailPngs()}
+                                        disabled={downloadingAllEmails || filteredSampleEmails.length === 0}
+                                        className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl border border-border/60 bg-background px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted/60 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {downloadingAllEmails ? (
+                                            <Loader2 className="size-3.5 animate-spin" />
+                                        ) : (
+                                            <Download className="size-3.5" />
+                                        )}
+                                        Download All ZIP ({filteredSampleEmails.length})
+                                    </button>
+                                </div>
+                            </div>
+
+                            {emailCategories.length > 1 && (
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    {emailCategories.map((cat) => {
+                                        const active = selectedEmailCategory === cat;
+                                        return (
+                                            <button
+                                                key={cat}
+                                                type="button"
+                                                onClick={() => setSelectedEmailCategory(cat)}
+                                                className={`min-h-[38px] rounded-full border px-3.5 py-1.5 text-xs font-semibold transition ${
+                                                    active
+                                                        ? "border-primary bg-primary text-primary-foreground"
+                                                        : "border-border/60 bg-background text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                                }`}
+                                            >
+                                                {cat}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
+
+                        {emailsLoading ? (
+                            <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-border/60 bg-card p-8">
+                                <div className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground">
+                                    <Loader2 className="size-4 animate-spin text-primary" />
+                                    Rendering all system email templates…
+                                </div>
+                            </div>
+                        ) : emailsError ? (
+                            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/5 p-8 text-center">
+                                <AlertCircle className="size-6 text-rose-600" />
+                                <p className="text-sm font-semibold text-foreground">{emailsError}</p>
+                                <button
+                                    type="button"
+                                    onClick={() => void loadSampleEmails()}
+                                    className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+                                >
+                                    <RefreshCw className="size-4" />
+                                    Try Again
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
+                                {/* Left: Email List */}
+                                <div className="max-h-[760px] space-y-2 overflow-y-auto rounded-2xl border border-border/60 bg-card p-3 shadow-xs">
+                                    {filteredSampleEmails.length === 0 ? (
+                                        <p className="p-6 text-center text-sm text-muted-foreground">
+                                            No email templates match your filter.
+                                        </p>
+                                    ) : (
+                                        filteredSampleEmails.map((item) => {
+                                            const isSelected = activeSampleEmail?.id === item.id;
+                                            return (
+                                                <button
+                                                    key={item.id}
+                                                    type="button"
+                                                    onClick={() => setSelectedEmailId(item.id)}
+                                                    className={`w-full rounded-xl border p-3.5 text-left transition ${
+                                                        isSelected
+                                                            ? "border-primary bg-primary/10"
+                                                            : "border-transparent bg-background hover:border-border/60 hover:bg-muted/40"
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">
+                                                            {item.category}
+                                                        </span>
+                                                        <span className="rounded-full border border-border/60 bg-muted/50 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                                            To: {item.recipientRole}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-1 text-sm font-bold text-foreground">
+                                                        {item.title}
+                                                    </p>
+                                                    <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                                                        {item.subject}
+                                                    </p>
+                                                </button>
+                                            );
+                                        })
+                                    )}
+                                </div>
+
+                                {/* Right: Email Preview */}
+                                {activeSampleEmail && (
+                                    <div className="flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-xs">
+                                        <div className="border-b border-border/60 bg-muted/20 p-5">
+                                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                                <div className="min-w-0">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <span className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                                                            {activeSampleEmail.category}
+                                                        </span>
+                                                        <span className="rounded-full border border-border/60 bg-background px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                                                            Recipient: {activeSampleEmail.recipientRole}
+                                                        </span>
+                                                    </div>
+                                                    <h3 className="mt-2 text-base font-bold text-foreground">
+                                                        {activeSampleEmail.subject}
+                                                    </h3>
+                                                    <p className="mt-1 text-xs text-muted-foreground">
+                                                        {activeSampleEmail.trigger}
+                                                    </p>
+                                                </div>
+
+                                                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setEmailViewMode((m) =>
+                                                                m === "html" ? "text" : "html"
+                                                            )
+                                                        }
+                                                        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-border/60 bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted/60"
+                                                    >
+                                                        <FileText className="size-3.5" />
+                                                        {emailViewMode === "html" ? "Plain Text" : "HTML View"}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            copyText(
+                                                                activeSampleEmail.subject,
+                                                                "email subject",
+                                                                `subj-${activeSampleEmail.id}`
+                                                            )
+                                                        }
+                                                        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-border/60 bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted/60"
+                                                    >
+                                                        {copiedKey === `subj-${activeSampleEmail.id}` ? (
+                                                            <Check className="size-3.5 text-emerald-600" />
+                                                        ) : (
+                                                            <Copy className="size-3.5" />
+                                                        )}
+                                                        Subject
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => void handleDownloadEmailPng(activeSampleEmail)}
+                                                        disabled={downloadingEmailId === activeSampleEmail.id}
+                                                        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-border/60 bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted/60 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        {downloadingEmailId === activeSampleEmail.id ? (
+                                                            <Loader2 className="size-3.5 animate-spin" />
+                                                        ) : (
+                                                            <Download className="size-3.5" />
+                                                        )}
+                                                        Download PNG
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => void handleSendSampleEmail(activeSampleEmail)}
+                                                        disabled={!smtpConfigured || sendingEmailId === activeSampleEmail.id}
+                                                        title={
+                                                            smtpConfigured
+                                                                ? "Send this sample email to the Gmail address above"
+                                                                : "Configure SMTP_USER and SMTP_PASS to send live test emails"
+                                                        }
+                                                        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        {sendingEmailId === activeSampleEmail.id ? (
+                                                            <Loader2 className="size-3.5 animate-spin" />
+                                                        ) : (
+                                                            <Send className="size-3.5" />
+                                                        )}
+                                                        Send to Gmail
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {emailViewMode === "html" ? (
+                                            <iframe
+                                                title={activeSampleEmail.title}
+                                                srcDoc={activeSampleEmail.htmlBody}
+                                                sandbox="allow-same-origin"
+                                                className="h-[640px] w-full bg-white"
+                                            />
+                                        ) : (
+                                            <pre className="h-[640px] overflow-auto whitespace-pre-wrap bg-background p-6 font-mono text-xs leading-relaxed text-foreground">
+                                                {activeSampleEmail.textBody || "(No plain-text fallback defined)"}
+                                            </pre>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </section>
                 )}
 

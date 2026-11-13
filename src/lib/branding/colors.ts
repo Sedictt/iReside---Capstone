@@ -108,8 +108,8 @@ export function getContrastRatio(hex1: string, hex2: string): number {
  */
 export function getContrastTextColor(bgHex: string): string {
   const lum = getLuminance(bgHex);
-  // If background is light (luminance > 0.38), use dark text; otherwise white
-  return lum > 0.38 ? "#09090b" : "#ffffff";
+  // Only switch to dark text on genuinely bright/pastel backgrounds; mid-tones use white text
+  return lum > 0.62 ? "#09090b" : "#ffffff";
 }
 
 /**
@@ -153,11 +153,13 @@ export function applyBrandCssVariables(primaryHex?: string | null, secondaryHex?
   const hsl = hexToHsl(validPrimary);
   const rgb = hexToRgb(validPrimary);
   const fgColor = getContrastTextColor(validPrimary);
+  const inverseFgColor = fgColor === "#ffffff" ? "#09090b" : "#ffffff";
   const root = document.documentElement;
 
   // Set direct valid color strings for Tailwind v4 and CSS standards
   root.style.setProperty("--primary", validPrimary);
   root.style.setProperty("--primary-foreground", fgColor);
+  root.style.setProperty("--primary-foreground-inverse", inverseFgColor);
   root.style.setProperty("--primary-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
   
   // Set Raw HEX & RGB CSS variables for inline styles & gradients

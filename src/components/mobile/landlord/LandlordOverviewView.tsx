@@ -654,7 +654,7 @@ export function LandlordOverviewView() {
                                 )}>
                                     <div className={cn(
                                         "flex size-7 items-center justify-center rounded-lg border shadow-2xs",
-                                        isRentPaymentsEmpty ? "bg-white/10 border-white/15" : "bg-black/15 border-white/15"
+                                        isRentPaymentsEmpty ? "bg-white/10 border-white/15" : "bg-primary-foreground/10 border-primary-foreground/20"
                                     )}>
                                         <CreditCard className="size-3.5 shrink-0" aria-hidden="true" />
                                     </div>
@@ -681,7 +681,7 @@ export function LandlordOverviewView() {
                                         <span>{totalUnits === 0 ? t("No properties added yet") : t("No active tenants yet")}</span>
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-black/15 text-primary-foreground border border-white/15">
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-primary-foreground/10 text-primary-foreground border border-primary-foreground/20">
                                         <CheckCircle2 className="size-3 shrink-0" aria-hidden="true" />
                                         <span>{t("All rent paid on time")}</span>
                                     </span>
@@ -717,7 +717,7 @@ export function LandlordOverviewView() {
                                             triggerHaptic('light');
                                             setOpenPaymentModal('Overdue');
                                         }}
-                                        className="group flex-1 min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold bg-primary-foreground hover:opacity-95 text-primary shadow-xs transition-all active:scale-[0.98] inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                                        className="group flex-1 min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold bg-primary-foreground hover:opacity-90 text-[var(--primary-foreground-inverse)] shadow-xs transition-all active:scale-[0.98] inline-flex items-center justify-center gap-1.5 cursor-pointer"
                                     >
                                         <span>{t("View Unpaid Rent")}</span>
                                         <ArrowRight className="size-3.5 transition-transform motion-reduce:transition-none group-hover:translate-x-0.5" aria-hidden="true" />
@@ -728,7 +728,7 @@ export function LandlordOverviewView() {
                                             triggerHaptic('light');
                                             setIsCollectPaymentModalOpen(true);
                                         }}
-                                        className="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold bg-black/15 hover:bg-black/25 text-primary-foreground border border-primary-foreground/20 transition-all active:scale-[0.98] inline-flex items-center gap-1.5 cursor-pointer"
+                                        className="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold bg-primary-foreground/10 hover:bg-primary-foreground/15 text-primary-foreground border border-primary-foreground/25 transition-all active:scale-[0.98] inline-flex items-center gap-1.5 cursor-pointer"
                                     >
                                         <Banknote className="size-3.5" aria-hidden="true" />
                                         <span>{t("Record Payment")}</span>
@@ -759,7 +759,7 @@ export function LandlordOverviewView() {
                                         triggerHaptic('light');
                                         setIsCollectPaymentModalOpen(true);
                                     }}
-                                    className="group min-h-[40px] px-4 py-2 rounded-xl text-xs font-bold bg-primary-foreground hover:opacity-95 text-primary shadow-xs transition-all active:scale-[0.98] inline-flex items-center gap-1.5 cursor-pointer"
+                                    className="group min-h-[40px] px-4 py-2 rounded-xl text-xs font-bold bg-primary-foreground hover:opacity-90 text-[var(--primary-foreground-inverse)] shadow-xs transition-all active:scale-[0.98] inline-flex items-center gap-1.5 cursor-pointer"
                                 >
                                     <span>{t("Record Payment")}</span>
                                     <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -1261,6 +1261,7 @@ export function LandlordOverviewView() {
 
                             <div className="p-4 flex-1 overflow-y-auto custom-scrollbar-premium">
                                 <TenantInviteManager
+                                    embedded
                                     availableUnits={filteredUnits}
                                     invites={filteredInvites}
                                     onRefresh={async () => {

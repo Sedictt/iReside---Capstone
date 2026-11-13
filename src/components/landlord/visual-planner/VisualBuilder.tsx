@@ -112,7 +112,7 @@ import { UnitHistoryModal } from "./components/UnitHistoryModal";
 import { FirstTimePresetModal, type LayoutPresetType } from "./components/FirstTimePresetModal";
 import { UnitMapExploreOrReturnModal } from "./components/UnitMapExploreOrReturnModal";
 import { generatePresetLayout } from "./utils/presets";
-import { DEFAULT_AVATAR_URL, getSystemAvatarUrl } from "@/lib/constants";
+import { DEFAULT_AVATAR_URL, getSafeAvatarBgColor, getSystemAvatarUrl } from "@/lib/constants";
 
 /** Complaint Modal Component */
 const ComplaintModal = ({
@@ -384,6 +384,7 @@ export default function VisualBuilder({
     const [isExploreOrReturnModalOpen, setIsExploreOrReturnModalOpen] = useState(false);
     const exploreModalTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const hasShownExploreModalRef = useRef(false);
+    const hasLoadedWithPlacedUnitsRef = useRef(false);
 
     const cancelExploreModalTimer = useCallback(() => {
         if (exploreModalTimeoutRef.current) {
@@ -395,31 +396,43 @@ export default function VisualBuilder({
     const scheduleExploreModalAfterDelay = useCallback((delayMs = 3000) => {
         cancelExploreModalTimer();
 
+        if (hasLoadedWithPlacedUnitsRef.current || hasShownExploreModalRef.current) {
+            return;
+        }
+        if (selectedProperty?.hasTenants) {
+            return;
+        }
+
         if (typeof window !== "undefined") {
             try {
-                if (window.localStorage.getItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY) === "true") {
+                if (
+                    window.localStorage.getItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY) === "true" ||
+                    window.localStorage.getItem("ireside.onboarding_completed") === "true" ||
+                    window.localStorage.getItem(`ireside.billing_rails_complete.${selectedPropertyId}`) === "true"
+                ) {
                     return;
                 }
                 window.sessionStorage.setItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`, "true");
                 window.dispatchEvent(new Event("unit-map-guidance-changed"));
             } catch {}
         }
-        if (hasShownExploreModalRef.current) return;
 
         exploreModalTimeoutRef.current = setTimeout(() => {
             setIsExploreOrReturnModalOpen(true);
             hasShownExploreModalRef.current = true;
             if (typeof window !== "undefined") {
                 try {
+                    window.localStorage.setItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY, "true");
                     window.sessionStorage.setItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`, "true");
                     window.dispatchEvent(new Event("unit-map-guidance-changed"));
                 } catch {}
             }
         }, delayMs);
-    }, [SCOPED_EXPLORE_MODAL_SHOWN_KEY, cancelExploreModalTimer, selectedPropertyId]);
+    }, [SCOPED_EXPLORE_MODAL_SHOWN_KEY, cancelExploreModalTimer, selectedProperty?.hasTenants, selectedPropertyId]);
 
     useEffect(() => {
         hasShownExploreModalRef.current = false;
+        hasLoadedWithPlacedUnitsRef.current = false;
         cancelExploreModalTimer();
         return () => {
             cancelExploreModalTimer();
@@ -807,6 +820,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         // Only prompt if units exist, but NONE have been placed yet, and property has no tenants
         const hasPlacedUnits = (data.placedCount ?? 0) > 0 || targetUnits.length > 0;
         const hasPropertyTenants = Boolean(selectedProperty?.hasTenants);
+        if (hasPlacedUnits) {
+            hasLoadedWithPlacedUnitsRef.current = true;
+        }
 
         if (
             !readOnly && 
@@ -821,7 +837,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             if (typeof window !== "undefined") {
                 try {
                     const dismissed = window.localStorage.getItem(SCOPED_PRESET_PROMPT_KEY);
-                    if (dismissed !== "true") {
+                    const exploreAlreadyShown = window.localStorage.getItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY) === "true";
+                    const onboardingCompleted = window.localStorage.getItem("ireside.onboarding_completed") === "true";
+                    if (dismissed !== "true" && !exploreAlreadyShown && !onboardingCompleted) {
                         window.sessionStorage.setItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`, "true");
                         window.dispatchEvent(new Event("unit-map-guidance-changed"));
                         setIsFirstTimePresetModalOpen(true);
@@ -832,6 +850,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             if (typeof window !== "undefined") {
                 try {
                     window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
+                    window.localStorage.setItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY, "true");
                 } catch {}
             }
         }
@@ -2353,6 +2372,17 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     baths: u.baths ?? 1,
                     rent_amount: u.rentAmount ?? 0,
                     sqft: u.areaSqm ? Math.round(u.areaSqm / 0.092903) : null,
+                    tenant_name: u.tenant,
+                    tenant_avatar_url: u.tenantAvatarUrl,
+                    tenant_avatar_bg_color: u.tenantAvatarBgColor,
+                    lease_start: u.leaseStart,
+                    lease_end: u.leaseEnd,
+                    lease_term_type: u.leaseTermType,
+                    maintenance_status: u.maintenanceStatus,
+                    maintenance_title: u.maintenanceTitle,
+                    maintenance_description: u.maintenanceDescription,
+                    maintenance_created_at: u.maintenanceDate,
+                    application_count: u.applicationCount,
                     position: null,
                 });
             }
@@ -2993,13 +3023,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         setUnits(prev => [
             ...prev,
             {
-                id: dbUnit.id,
-                dbId: dbUnit.id,
-                name: dbUnit.name,
-                type: unitTypeFromBeds(dbUnit.beds),
-                status: (dbUnit.status as Unit["status"]) ?? "vacant",
-                x, y, w, h,
-                floor: activeFloorNum,
+                ...dbUnitToCanvasUnit({
+                    ...dbUnit,
+                    floor: activeFloorNum,
+                    position: { unit_id: dbUnit.id, floor_key: activeFloor, x, y, w, h },
+                }),
+                w,
+                h,
             },
         ]);
         setDbUnits(prev => prev.map(u => u.id === dbUnit.id ? { ...u, floor: activeFloorNum, position: { unit_id: u.id, floor_key: activeFloor, x, y, w, h } } : u));
@@ -3160,16 +3190,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     setUnits(prev => [
                         ...prev,
                         {
-                            id: dbUnit.id,
-                            dbId: dbUnit.id,
-                            name: dbUnit.name,
-                            type: parsed.unitType ?? "Studio",
-                            status: (dbUnit.status as Unit["status"]) ?? "vacant",
-                            x: clampedX,
-                            y: clampedY,
+                            ...dbUnitToCanvasUnit({
+                                ...dbUnit,
+                                floor: activeFloorNum,
+                                position: { unit_id: dbUnit.id, floor_key: activeFloor, x: clampedX, y: clampedY, w: blockWidth, h: blockHeight },
+                            }),
+                            type: parsed.unitType ?? unitTypeFromBeds(dbUnit.beds),
                             w: blockWidth,
                             h: blockHeight,
-                            floor: activeFloorNum,
                         },
                     ]);
                     setDbUnits(prev => prev.map(u => u.id === dbUnit.id ? { ...u, floor: activeFloorNum, position: { unit_id: u.id, floor_key: activeFloor, x: clampedX, y: clampedY, w: blockWidth, h: blockHeight } } : u));
@@ -3472,23 +3500,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             const w = overrideW ?? dims.w;
             const h = overrideH ?? dims.h;
             return {
-                id: dbu.id,
-                dbId: dbu.id,
-                name: dbu.name,
-                type: unitTypeFromBeds(dbu.beds),
-                status: (dbu.status as Unit["status"]) ?? "vacant",
-                tenant: dbu.tenant_name,
-                tenantAvatarUrl: dbu.tenant_avatar_url,
-                tenantAvatarBgColor: dbu.tenant_avatar_bg_color,
-                bedrooms: dbu.beds,
-                baths: dbu.baths,
-                areaSqm: dbu.sqft ? Math.round(dbu.sqft * 0.092903) : undefined,
-                rentAmount: dbu.rent_amount,
-                x,
-                y,
+                ...dbUnitToCanvasUnit({
+                    ...dbu,
+                    floor: dbu.floor ?? activeFloorNum,
+                    position: { unit_id: dbu.id, floor_key: activeFloor, x, y, w, h },
+                }),
                 w,
                 h,
-                floor: dbu.floor ?? activeFloorNum,
             };
         };
 
@@ -3999,7 +4017,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 unit: selectedUnit.name,
                 tenant: selectedUnit.tenant || tr("Resident"),
                 tenantAvatar: selectedUnit.tenantAvatarUrl || null,
-                tenantAvatarBgColor: selectedUnit.tenantAvatarBgColor || "bg-primary",
+                tenantAvatarBgColor: getSafeAvatarBgColor(selectedUnit.tenantAvatarBgColor),
                 priority: "High",
                 status: (selectedUnit.maintenanceStatus === "completed" ? "Resolved" : selectedUnit.maintenanceStatus === "in_progress" ? "In Progress" : selectedUnit.maintenanceStatus === "assigned" ? "Assigned" : "Pending") as any,
                 reportedAt: selectedUnit.maintenanceDate || new Date().toISOString(),
@@ -5985,10 +6003,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     <AnimatePresence>
                         {selectedItem && !readOnly && !isMobileUI && !isHUDHidden && (
                             <motion.div
-                                initial={{ opacity: 0, y: -20, x: "-50%" }}
-                                animate={{ opacity: 1, y: 0, x: "-50%" }}
-                                exit={{ opacity: 0, y: -20, x: "-50%" }}
-                                className={`absolute ${isMobileUI ? "top-3 max-w-[calc(100%-1.5rem)] overflow-x-auto" : "top-6 max-w-[calc(100%-2rem)]"} left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 rounded-2xl backdrop-blur-2xl border p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${isDark ? 'bg-zinc-900/95 border-white/10' : 'bg-white/95 border-zinc-200/80'}`}
+                                initial={{ opacity: 0, y: -12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -12 }}
+                                className={`absolute top-24 left-6 max-w-[calc(100%-3rem)] z-50 flex items-center gap-1.5 rounded-2xl backdrop-blur-2xl border p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${isDark ? 'bg-zinc-900/95 border-white/10' : 'bg-white/95 border-zinc-200/80'}`}
                             >
                                 {selectedItem.kind === "corridor" ? (
                                     <>
@@ -7340,7 +7358,7 @@ const UnitDetailsPanel = ({
                                 <div className="flex items-center gap-3 pr-7">
                                     <div className="relative shrink-0">
                                         <div className="relative size-14 rounded-[20px] border-2 border-primary/20 p-1 transition-transform group-hover:scale-105">
-                                            <div className="h-full w-full overflow-hidden rounded-[16px] bg-zinc-100 dark:bg-zinc-800 relative" style={unit.tenantAvatarBgColor ? { backgroundColor: unit.tenantAvatarBgColor } : undefined}>
+                                            <div className="h-full w-full overflow-hidden rounded-[16px] relative" style={{ backgroundColor: getSafeAvatarBgColor(unit.tenantAvatarBgColor) }}>
                                                 {unit.tenantAvatarUrl ? (
                                                     <Image
                                                         src={unit.tenantAvatarUrl}

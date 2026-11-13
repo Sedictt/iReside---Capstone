@@ -51,7 +51,7 @@ export function UnitMapExploreOrReturnModal({
             {/* Modal Dialog */}
             <div
                 className={cn(
-                    "relative z-[151] w-full max-w-[500px] pointer-events-auto",
+                    "relative z-[151] w-full max-w-[540px] pointer-events-auto",
                     "rounded-[2rem] border shadow-2xl p-6 sm:p-8 space-y-6 animate-in zoom-in-95 fade-in duration-300",
                     isDark
                         ? "border-zinc-800 bg-zinc-900/98 text-white shadow-black/60"
@@ -106,13 +106,13 @@ export function UnitMapExploreOrReturnModal({
                             type="button"
                             onClick={onContinueExploring}
                             className={cn(
-                                "flex-1 inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer active:scale-[0.98]",
+                                "flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap h-11 sm:h-12 px-3.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer active:scale-[0.98]",
                                 isDark
                                     ? "bg-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/60"
                                     : "bg-muted/70 hover:bg-muted text-zinc-700 hover:text-zinc-950 border border-border/70"
                             )}
                         >
-                            <Compass className="size-4" />
+                            <Compass className="size-4 shrink-0" />
                             <span>{t("Continue Exploring Map")}</span>
                         </button>
 
@@ -120,7 +120,7 @@ export function UnitMapExploreOrReturnModal({
                             type="button"
                             onClick={onReturnToDashboard}
                             className={cn(
-                                "flex-1 group inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-4 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer active:scale-[0.98]",
+                                "flex-1 group inline-flex items-center justify-center gap-2 whitespace-nowrap h-11 sm:h-12 px-3.5 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer active:scale-[0.98]",
                                 onProceedToBilling
                                     ? isDark
                                         ? "bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 border border-zinc-700/60"
@@ -129,7 +129,7 @@ export function UnitMapExploreOrReturnModal({
                             )}
                         >
                             <span>{t("Return to Dashboard")}</span>
-                            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                            <ArrowRight className="size-4 shrink-0 transition-transform group-hover:translate-x-1" />
                         </button>
                     </div>
                 </div>

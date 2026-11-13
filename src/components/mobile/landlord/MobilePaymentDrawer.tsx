@@ -202,7 +202,7 @@ export function MobilePaymentDrawer({
                                     placeholder={t('Search by tenant name or unit number...')}
                                     aria-label={t('Search by tenant name or unit number...')}
                                     maxLength={60}
-                                    className="w-full rounded-xl bg-white dark:bg-neutral-950/90 border-2 border-slate-200/90 dark:border-white/15 py-2.5 pl-10 pr-9 text-xs font-medium text-foreground shadow-xs placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                    className="w-full rounded-xl bg-white dark:bg-input border-2 border-slate-200/90 dark:border-white/15 py-2.5 pl-10 pr-9 text-xs font-medium text-foreground shadow-xs placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                 />
                                 {searchQuery && (
                                     <button

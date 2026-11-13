@@ -418,7 +418,7 @@ export function ApplicationIdentityStep({
                                             <optgroup 
                                                 key={propName} 
                                                 label={`— ${propName} (${groupUnits.length}) —`} 
-                                                className="bg-muted/80 dark:bg-zinc-950 font-black text-xs text-muted-foreground py-2"
+                                                className="bg-muted/80 dark:bg-surface-2 font-black text-xs text-muted-foreground py-2"
                                             >
                                                 {groupUnits.map((u) => {
                                                     const isOccupied = isUnitOccupied(u);
@@ -432,7 +432,7 @@ export function ApplicationIdentityStep({
                                                             style={isUnavailable ? { textDecoration: "line-through" } : undefined}
                                                             className={cn(
                                                                 "bg-card py-3 text-sm font-semibold text-foreground dark:bg-zinc-900 dark:text-zinc-100",
-                                                                isUnavailable && "line-through text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-zinc-950 font-normal"
+                                                                isUnavailable && "line-through text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-surface-0 font-normal"
                                                             )}
                                                         >
                                                             {translatedUnitOptionLabel(u, false, t)}
@@ -454,7 +454,7 @@ export function ApplicationIdentityStep({
                                                     style={isUnavailable ? { textDecoration: "line-through" } : undefined}
                                                     className={cn(
                                                         "bg-card py-3 text-sm font-semibold text-foreground dark:bg-zinc-900 dark:text-zinc-100",
-                                                        isUnavailable && "line-through text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-zinc-950 font-normal"
+                                                        isUnavailable && "line-through text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-surface-0 font-normal"
                                                     )}
                                                 >
                                                     {translatedUnitOptionLabel(u, true, t)}

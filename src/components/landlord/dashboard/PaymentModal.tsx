@@ -199,7 +199,7 @@ export function PaymentModal({
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder={t("Search by tenant name or unit number...")}
                                     aria-label={t("Search by tenant name or unit number...")}
-                                    className="w-full rounded-xl border-2 border-slate-200/90 dark:border-white/15 bg-white dark:bg-neutral-950/90 py-3 pl-11 pr-10 text-sm font-medium text-foreground shadow-xs placeholder:text-slate-400 dark:placeholder:text-neutral-500 transition-all hover:border-slate-300 dark:hover:border-white/25 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15"
+                                    className="w-full rounded-xl border-2 border-slate-200/90 dark:border-white/15 bg-white dark:bg-input py-3 pl-11 pr-10 text-sm font-medium text-foreground shadow-xs placeholder:text-slate-400 dark:placeholder:text-neutral-500 transition-all hover:border-slate-300 dark:hover:border-white/25 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15"
                                 />
                                 {searchQuery && (
                                     <button

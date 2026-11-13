@@ -4,6 +4,9 @@
 
 export type DemoAccountKey =
     | "landlord"
+    | "melanie"
+    | "shannea"
+    | "arnold"
     | "starter"
     | "maria"
     | "joshua"
@@ -78,7 +81,34 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
         email: "john.gonzales@ireside.ph",
         password: DEMO_PASSWORD,
         role: "landlord",
-        state: "Owner of Fernando Gonzales Dormitory (24 units)",
+        state: "Client Landlord 1 · Fernando Gonzales Dormitory (Brgy. Marulas, 12 units)",
+        group: "landlord",
+    },
+    {
+        key: "melanie",
+        label: "Melanie Tolentino",
+        email: "melanie.tolentino@ireside.ph",
+        password: DEMO_PASSWORD,
+        role: "landlord",
+        state: "Client Landlord 2 · Tolentino Apartments (Brgy. Malinta, 2 tenants)",
+        group: "landlord",
+    },
+    {
+        key: "shannea",
+        label: "Shannea Joelle F. Joven",
+        email: "shannea.joven@ireside.ph",
+        password: DEMO_PASSWORD,
+        role: "landlord",
+        state: "Client Landlord 3 · Joven Boarding House (Brgy. Canumay, 2 tenants)",
+        group: "landlord",
+    },
+    {
+        key: "arnold",
+        label: "Arnold F. Ferrer",
+        email: "arnold.ferrer@ireside.ph",
+        password: DEMO_PASSWORD,
+        role: "landlord",
+        state: "Client Landlord 4 · Ferrer Apartment (Brgy. Maysan, 2 tenants)",
         group: "landlord",
     },
     {
@@ -192,6 +222,12 @@ export const EXTRA_RESIDENTS: ExtraResident[] = [
     { key: "bea", label: "Bea Concepcion", email: "bea.concepcion@ireside.ph", room: "306", state: "Settled tenant, good standing" },
     { key: "arvin", label: "Arvin Salvador", email: "arvin.salvador@ireside.ph", room: "307", state: "Settled tenant, good standing" },
     { key: "nicole", label: "Nicole Ramos", email: "nicole.ramos@ireside.ph", room: "308", state: "Settled tenant, good standing" },
+    { key: "nixon", label: "Nixon Sent Jr.", email: "nixon.sent@ireside.ph", room: "Tolentino 101", state: "Assigned to Melanie Tolentino (Brgy. Malinta)" },
+    { key: "gian", label: "Gian Carlo Quintano", email: "gian.quintano@ireside.ph", room: "Tolentino 102", state: "Assigned to Melanie Tolentino (Brgy. Malinta)" },
+    { key: "franchesca", label: "Franchesca Faith De Guzman", email: "franchesca.deguzman@ireside.ph", room: "Joven 101", state: "Assigned to Shannea Joelle F. Joven (Brgy. Canumay)" },
+    { key: "jake", label: "Jake Manreal", email: "jake.manreal@ireside.ph", room: "Joven 102", state: "Assigned to Shannea Joelle F. Joven (Brgy. Canumay)" },
+    { key: "estella", label: "Estella Marie P. Dacara", email: "estella.dacara@ireside.ph", room: "Ferrer 101", state: "Assigned to Arnold F. Ferrer (Brgy. Maysan)" },
+    { key: "adrian", label: "Adrian Molina", email: "adrian.molina@ireside.ph", room: "Ferrer 102", state: "Assigned to Arnold F. Ferrer (Brgy. Maysan)" },
 ];
 
 export const DEMO_SCENARIOS: DemoScenario[] = [
@@ -377,6 +413,17 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
         path: "/apply/fgd-apply-online-2026",
         prepareAction: "seed-competing-applicants",
         tip: "No account required; walks through the 4-step public intake wizard.",
+    },
+    {
+        id: "application-status-tracker",
+        category: "Applications",
+        title: "Public Application Status Tracker",
+        description: "Applicant checks live application milestones (submitted, under review, payment pending, approved) using a signed status link.",
+        useWhen: "Panelist asks how applicants track their application progress without creating an account.",
+        as: "public",
+        path: "/apply/status",
+        prepareAction: "prepare-application-tracker",
+        tip: "Generates a live 30-day status token for Kevin (Payment Pending on Room 303) and opens /apply/status.",
     },
 
     // --- Maintenance & Utilities --------------------------------------------

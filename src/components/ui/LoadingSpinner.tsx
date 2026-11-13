@@ -101,7 +101,7 @@ export function PageLoader({ message }: { message?: string }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-[#050505]/90 backdrop-blur-2xl overflow-hidden"
+            className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-[#16171b]/90 backdrop-blur-2xl overflow-hidden"
         >
             {/* Elegant Background Texture/Atmosphere */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">

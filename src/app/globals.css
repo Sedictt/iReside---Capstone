@@ -24,7 +24,8 @@
   --secondary: #e8ebf2;
   --secondary-foreground: #0f172a;
   --primary: #c4b0ff;
-  --primary-foreground: #1e1b4b;
+  --primary-foreground: #ffffff;
+  --primary-foreground-inverse: #09090b;
   --primary-rgb: 196, 176, 255;
 }
 
@@ -59,10 +60,10 @@
   --color-primary-200: #c4b0ff;
   /* Signature Lavender */
   --color-background-light: #f5f5f5;
-  --color-background-dark: #0a0a0a;
-  /* Neutral Black */
-  --color-surface-dark: #171717;
-  /* Neutral Dark Grey */
+  --color-background-dark: #1a1b20;
+  /* Elevated Charcoal */
+  --color-surface-dark: #24262d;
+  /* Elevated Card Slate */
   --color-status-vacant: #10B981;
   /* Green for Vacant (Available) */
   --color-status-occupied: #3b82f6;
@@ -75,28 +76,29 @@
 
 .dark {
   color-scheme: dark;
-  --background: #0e0f12;
-  --foreground: rgba(255, 255, 255, 0.87);
-  --surface-0: #0e0f12;
-  --surface-1: #1a1b1f;
-  --surface-2: #222429;
-  --surface-3: #2a2c32;
-  --surface-4: #35373f;
-  --text-high: rgba(255, 255, 255, 0.87);
-  --text-medium: rgba(255, 255, 255, 0.6);
-  --text-disabled: rgba(255, 255, 255, 0.38);
+  --background: #1a1b20;
+  --foreground: rgba(244, 245, 248, 0.90);
+  --surface-0: #16171b;
+  --surface-1: #24262d;
+  --surface-2: #2d3039;
+  --surface-3: #363944;
+  --surface-4: #444857;
+  --text-high: rgba(244, 245, 248, 0.90);
+  --text-medium: rgba(218, 222, 232, 0.65);
+  --text-disabled: rgba(218, 222, 232, 0.40);
   --divider: rgba(255, 255, 255, 0.10);
   --primary: #c4b0ff;
   --primary-rgb: 196, 176, 255;
-  --card: #1a1b1f;
+  --card: #24262d;
   --card-foreground: var(--text-high);
-  --input: #222429;
+  --input: #2d3039;
   --border: rgba(255, 255, 255, 0.09);
-  --muted: #222429;
+  --muted: #2d3039;
   --muted-foreground: var(--text-medium);
-  --secondary: #222429;
+  --secondary: #2d3039;
   --secondary-foreground: var(--text-high);
-  --primary-foreground: #1e1b4b;
+  --primary-foreground: #ffffff;
+  --primary-foreground-inverse: #09090b;
 }
 
 /* ==========================================================================
@@ -600,7 +602,7 @@ input[type="number"] {
 }
 
 .dark [data-sonner-toast] {
-  --toast-bg: rgba(22, 22, 24, 0.94);
+  --toast-bg: rgba(36, 38, 45, 0.96);
   border-color: rgba(255, 255, 255, 0.1) !important;
   box-shadow:
     0 10px 20px -3px rgba(0, 0, 0, 0.35),
@@ -889,9 +891,9 @@ input[type="number"] {
 .dark .neumorphic-panel {
   background-color: var(--card);
   box-shadow:
-    0 4px 20px -2px rgba(0, 0, 0, 0.35),
-    0 2px 6px -1px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+    0 4px 20px -2px rgba(0, 0, 0, 0.30),
+    0 2px 6px -1px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .neumorphic-extruded {

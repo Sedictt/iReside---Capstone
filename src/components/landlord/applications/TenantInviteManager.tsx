@@ -2,7 +2,30 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Building2, Calendar, CircleHelp, Copy, DoorClosed, DoorOpen, History, Link2, MapPin, QrCode, RefreshCw, ShieldCheck, Globe, Handshake, XCircle, AlertTriangle, Check } from "lucide-react";
+import {
+    Building2,
+    Calendar,
+    Check,
+    CheckCircle2,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    ChevronUp,
+    Clock,
+    Copy,
+    DoorClosed,
+    Globe,
+    Handshake,
+    History,
+    Link2,
+    MapPin,
+    Plus,
+    QrCode,
+    RefreshCw,
+    Users,
+    X,
+    XCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useAppToast } from "@/hooks/useAppToast";
@@ -11,6 +34,12 @@ import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { moneyRule, parseNumericInput } from "@/lib/validation/rules";
 import { inviteExpiryRule } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { useLanguageContext } from "@/context/LanguageContext";
+import {
+    calculatePaymentPreview,
+    type InvitePaymentTerms,
+    type PaymentPreview,
+} from "@/lib/tenant-invite-payment-terms";
+import { tr } from "@/hooks/useLanguage";
 
 type InviteMode = "property" | "unit";
 type InviteApplicationType = "online" | "face_to_face";
@@ -29,13 +58,6 @@ type UnitOption = {
     property_contract_template?: Record<string, unknown> | null;
     status?: string;
 };
-
-import {
-    calculatePaymentPreview,
-    type InvitePaymentTerms,
-    type PaymentPreview,
-} from "@/lib/tenant-invite-payment-terms";
-import { tr } from "@/hooks/useLanguage";
 
 export type InviteListItem = {
     id: string;
@@ -66,51 +88,146 @@ const REQUIREMENT_OPTIONS: Array<{ key: InviteRequirementKey; label: string }> =
 const VALID_ID_TOOLTIP =
     "Accepted valid IDs: Passport, Driver's License, UMID, PhilSys/National ID, PRC ID, Postal ID, Voter's ID, Senior Citizen ID.";
 
+const EXPIRY_PRESETS = [
+    { label: "1 Day", days: 1 },
+    { label: "7 Days", days: 7 },
+    { label: "30 Days", days: 30 },
+];
+
+const USE_LIMIT_PRESETS = [
+    { label: "1 Person", value: 1 },
+    { label: "3 People", value: 3 },
+    { label: "5 People", value: 5 },
+    { label: "10 People", value: 10 },
+];
+
+const HISTORY_PAGE_SIZE = 4;
+
+function computeExpiryIsoLocal(days: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    const tz = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tz).toISOString().slice(0, 16);
+}
+
+function formatReadableDate(isoString: string | null | undefined): string {
+    if (!isoString) return "No expiration";
+    const parsed = new Date(isoString);
+    if (Number.isNaN(parsed.getTime())) return "No expiration";
+    return parsed.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    });
+}
+
+function getInviteStatusMeta(status: string): {
+    label: string;
+    badgeClass: string;
+    icon: typeof CheckCircle2;
+} {
+    switch (status) {
+        case "active":
+            return {
+                label: "Active",
+                badgeClass: "bg-emerald-700 text-white dark:bg-emerald-800",
+                icon: CheckCircle2,
+            };
+        case "consumed":
+            return {
+                label: "Used Up",
+                badgeClass: "bg-muted text-foreground border border-border",
+                icon: Users,
+            };
+        case "expired":
+            return {
+                label: "Expired",
+                badgeClass: "bg-amber-600 text-white dark:bg-amber-800",
+                icon: Clock,
+            };
+        case "revoked":
+            return {
+                label: "Turned Off",
+                badgeClass: "bg-rose-700 text-white dark:bg-rose-800",
+                icon: XCircle,
+            };
+        default:
+            return {
+                label: status,
+                badgeClass: "bg-muted text-muted-foreground",
+                icon: Clock,
+            };
+    }
+}
+
 export function TenantInviteManager({
     availableUnits,
     invites,
     onRefresh,
+    embedded = false,
 }: {
     availableUnits: UnitOption[];
     invites: InviteListItem[];
     onRefresh: () => void;
+    embedded?: boolean;
 }) {
     const { t } = useLanguageContext();
     const tOpt = (message?: string) => (message ? t(message) : message);
+    const toast = useAppToast();
+
+    // Top-level navigation tabs: Create vs Past Links
+    const [activeTab, setActiveTab] = useState<"create" | "history">("create");
+
+    // Step 1: Property & Room
+    const [propertyId, setPropertyId] = useState("");
     const [mode, setMode] = useState<InviteMode>("property");
+    const [unitId, setUnitId] = useState("");
+    const [unitQuery, setUnitQuery] = useState("");
+    const [isUnitMenuOpen, setIsUnitMenuOpen] = useState(false);
+    const [isFilteringUnits, setIsFilteringUnits] = useState(false);
+    const [highlightedUnitIndex, setHighlightedUnitIndex] = useState<number>(-1);
+    const [previewUnitId, setPreviewUnitId] = useState("");
+    const unitComboboxRef = useRef<HTMLDivElement>(null);
+
+    // Step 2: Application Method
     const [applicationType, setApplicationType] = useState<InviteApplicationType>("face_to_face");
     const [requiredRequirements, setRequiredRequirements] = useState<InviteRequirementKey[]>([
         "valid_id",
         "proof_of_income",
     ]);
-    const [isAdvanced, setIsAdvanced] = useState(false);
-    const [propertyId, setPropertyId] = useState("");
-    const [unitId, setUnitId] = useState("");
-    const [previewUnitId, setPreviewUnitId] = useState("");
-    const [expiresAt, setExpiresAt] = useState(() => {
-        const d = new Date();
-        d.setDate(d.getDate() + 7);
-        const tz = d.getTimezoneOffset() * 60000;
-        return new Date(d.getTime() - tz).toISOString().slice(0, 16);
-    });
+
+    // Step 3: Link Limits & Expiration
+    const [maxUses, setMaxUses] = useState<number>(1);
+    const [isCustomUses, setIsCustomUses] = useState<boolean>(false);
+    const [customUsesInput, setCustomUsesInput] = useState<string>("1");
+    const [activePreset, setActivePreset] = useState<number | null>(7);
+    const [isCustomExpiry, setIsCustomExpiry] = useState<boolean>(false);
+    const [expiresAt, setExpiresAt] = useState(() => computeExpiryIsoLocal(7));
+
+    // Collapsible Move-In Payment Terms
+    const [showPaymentEditor, setShowPaymentEditor] = useState<boolean>(false);
+    const [advanceMonths, setAdvanceMonths] = useState<number>(1);
+    const [securityDepositMonths, setSecurityDepositMonths] = useState<number>(1);
+    const [customAdvance, setCustomAdvance] = useState<string>("");
+    const [customDeposit, setCustomDeposit] = useState<string>("");
+
+    // Submission & Result state
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [freshInvite, setFreshInvite] = useState<InviteListItem | null>(null);
-    const [showHistory, setShowHistory] = useState(false);
-
-    const toast = useAppToast();
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [copiedUrl, setCopiedUrl] = useState(false);
-    const [revokingId, setRevokingId] = useState<string | null>(null);
-    const [showHelpTooltip, setShowHelpTooltip] = useState(false);
-    const [showValidIdTooltip, setShowValidIdTooltip] = useState(false);
-    const [activePreset, setActivePreset] = useState<number | null>(7);
 
-    const qrCodeRef = useRef<HTMLDivElement>(null);
+    // History filters, pagination, revoke & QR preview
+    const [historyFilter, setHistoryFilter] = useState<"all" | "active" | "inactive">("all");
+    const [historyPage, setHistoryPage] = useState<number>(1);
+    const [revokingId, setRevokingId] = useState<string | null>(null);
+
+    const resultRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (freshInvite && typeof qrCodeRef.current?.scrollIntoView === "function") {
-            qrCodeRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        if (freshInvite && typeof resultRef.current?.scrollIntoView === "function") {
+            resultRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
         }
     }, [freshInvite]);
 
@@ -131,11 +248,6 @@ export function TenantInviteManager({
         }
     }, [properties, propertyId]);
 
-    const [advanceMonths, setAdvanceMonths] = useState<number>(1);
-    const [securityDepositMonths, setSecurityDepositMonths] = useState<number>(1);
-    const [customAdvance, setCustomAdvance] = useState<string>("");
-    const [customDeposit, setCustomDeposit] = useState<string>("");
-
     const propertyUnits = useMemo(
         () =>
             availableUnits
@@ -150,8 +262,46 @@ export function TenantInviteManager({
         }
     }, [propertyUnits, previewUnitId]);
 
+    const selectedProperty = useMemo(
+        () => properties.find((p) => p.id === propertyId) ?? null,
+        [properties, propertyId]
+    );
+
+    const selectedUnit = useMemo(
+        () => propertyUnits.find((u) => u.id === unitId) ?? null,
+        [propertyUnits, unitId]
+    );
+
+    const filteredPropertyUnits = useMemo(() => {
+        if (!isFilteringUnits) return propertyUnits;
+        const q = unitQuery.trim().toLowerCase();
+        if (!q) return propertyUnits;
+        return propertyUnits.filter((unit) => {
+            const nameMatch = unit.name.toLowerCase().includes(q);
+            const rentMatch = String(unit.rent_amount ?? "").includes(q);
+            return nameMatch || rentMatch;
+        });
+    }, [propertyUnits, unitQuery, isFilteringUnits]);
+
+    useEffect(() => {
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (unitComboboxRef.current && !unitComboboxRef.current.contains(event.target as Node)) {
+                setIsUnitMenuOpen(false);
+                setHighlightedUnitIndex(-1);
+            }
+        };
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => document.removeEventListener("mousedown", handleOutsideClick);
+    }, []);
+
+    const effectiveMaxUses = useMemo(() => {
+        if (!isCustomUses) return maxUses;
+        const parsed = Number.parseInt(customUsesInput, 10);
+        if (!Number.isFinite(parsed) || parsed < 1) return 0;
+        return Math.min(100, parsed);
+    }, [isCustomUses, maxUses, customUsesInput]);
+
     const currentPaymentTerms = useMemo<InvitePaymentTerms>(() => {
-        // Invalid custom amounts are blocked by inline validation; never coerce them to 0.
         const parseCustom = (raw: string) => {
             const value = parseNumericInput(raw);
             return value !== null && Number.isFinite(value) ? value : null;
@@ -188,7 +338,28 @@ export function TenantInviteManager({
     }, [mode, previewUnitId, propertyUnits, unitId, currentPaymentTerms]);
 
     const showPaymentPreview =
-        Boolean(propertyId) && (mode === "unit" ? Boolean(unitId) : Boolean(previewUnitId));
+        Boolean(propertyId) && (mode === "unit" ? Boolean(unitId) : Boolean(previewUnitId || propertyUnits.length > 0));
+
+    const filteredInvites = useMemo(() => {
+        if (historyFilter === "active") {
+            return invites.filter((item) => item.status === "active");
+        }
+        if (historyFilter === "inactive") {
+            return invites.filter((item) => item.status !== "active");
+        }
+        return invites;
+    }, [invites, historyFilter]);
+
+    const totalHistoryPages = Math.max(1, Math.ceil(filteredInvites.length / HISTORY_PAGE_SIZE));
+    const safeHistoryPage = Math.min(historyPage, totalHistoryPages);
+    const paginatedInvites = useMemo(() => {
+        const start = (safeHistoryPage - 1) * HISTORY_PAGE_SIZE;
+        return filteredInvites.slice(start, start + HISTORY_PAGE_SIZE);
+    }, [filteredInvites, safeHistoryPage]);
+
+    useEffect(() => {
+        setHistoryPage(1);
+    }, [historyFilter]);
 
     const createInvite = async () => {
         if (!propertyId) {
@@ -196,11 +367,15 @@ export function TenantInviteManager({
             return;
         }
         if (mode === "unit" && !unitId) {
-            toast.error(t("Please select a specific vacant unit."));
+            toast.error(t("Please choose which vacant room this link is for."));
             return;
         }
         if (applicationType === "online" && requiredRequirements.length === 0) {
-            toast.error(t("Please select at least one required document."));
+            toast.error(t("Please select at least one document for online applicants."));
+            return;
+        }
+        if (effectiveMaxUses < 1 || effectiveMaxUses > 100) {
+            toast.error(t("Please enter a valid number of uses between 1 and 100."));
             return;
         }
         if (submitting) return;
@@ -230,8 +405,8 @@ export function TenantInviteManager({
                     propertyId,
                     unitId: mode === "unit" ? unitId : null,
                     previewUnitId: mode === "property" ? previewUnitId : null,
+                    maxUses: effectiveMaxUses,
                     paymentTerms: currentPaymentTerms,
-                    // datetime-local has no zone; send an absolute instant so the server does not reinterpret it.
                     expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
                 }),
             });
@@ -253,7 +428,7 @@ export function TenantInviteManager({
                 throw new Error(payload.error || "Failed to create invite.");
             }
             setFreshInvite(payload.invite);
-            toast.success(t("Private invite link and QR code generated successfully!"));
+            toast.success(t("Invite link and QR code are ready to share!"));
             onRefresh();
         } catch (createError) {
             const errorMsg = t(createError instanceof Error ? createError.message : "Failed to create invite.");
@@ -272,12 +447,12 @@ export function TenantInviteManager({
                 body: JSON.stringify({ status: "revoked" }),
             });
             if (!response.ok) {
-                throw new Error("Failed to revoke invite.");
+                throw new Error("Failed to turn off invite link.");
             }
-            toast.success(t("Invite link successfully revoked."));
+            toast.success(t("Invite link has been turned off."));
             onRefresh();
         } catch (revokeError) {
-            const errorMsg = t(revokeError instanceof Error ? revokeError.message : "Failed to revoke invite.");
+            const errorMsg = t(revokeError instanceof Error ? revokeError.message : "Failed to turn off invite link.");
             setError(tr(errorMsg));
             toast.error(tr(errorMsg));
         }
@@ -293,99 +468,91 @@ export function TenantInviteManager({
                 setCopiedUrl(true);
                 setTimeout(() => setCopiedUrl(false), 1500);
             }
-            toast.success(t("Invite link copied to clipboard!"));
-        } catch (err) {
+            toast.success(t("Link copied! You can paste and send it now."));
+        } catch {
             toast.error(t("Failed to copy link."));
         }
     };
 
-    const scopeControls: Array<{
-        key: InviteMode;
-        label: string;
-        description: string;
-        icon: typeof Building2;
-        onClick: () => void;
-    }> = [
-        {
-            key: "property",
-            label: "Property Wide",
-            description: "Any vacant unit",
-            icon: Building2,
-            onClick: () => {
-                setMode("property");
-                setUnitId("");
-                setPreviewUnitId("");
-            },
-        },
-        {
-            key: "unit",
-            label: "Specific Unit",
-            description: "Targeted single unit",
-            icon: DoorClosed,
-            onClick: () => {
-                setMode("unit");
-                setUnitId("");
-                setPreviewUnitId("");
-            },
-        },
-    ];
-
-    const applicationTypeControls: Array<{
-        key: InviteApplicationType;
-        label: string;
-        description: string;
-        icon: typeof Handshake;
-    }> = [
-        { 
-            key: "face_to_face", 
-            label: "In-Person", 
-            description: "Manual verification",
-            icon: Handshake 
-        },
-        { 
-            key: "online", 
-            label: "Online App", 
-            description: "Digital submissions",
-            icon: Globe 
-        },
-    ];
+    const paymentSummaryText = useMemo(() => {
+        const adv =
+            advanceMonths === 0
+                ? t("No advance")
+                : advanceMonths === -1
+                    ? `PHP ${currentPaymentPreview.advanceAmount.toLocaleString("en-US", { maximumFractionDigits: 0 })} ${t("advance")}`
+                    : `${advanceMonths} ${t("mo advance")}`;
+        const dep =
+            securityDepositMonths === 0
+                ? t("No deposit")
+                : securityDepositMonths === -1
+                    ? `PHP ${currentPaymentPreview.securityDepositAmount.toLocaleString("en-US", { maximumFractionDigits: 0 })} ${t("deposit")}`
+                    : `${securityDepositMonths} ${t("mo deposit")}`;
+        return `${adv} · ${dep}`;
+    }, [advanceMonths, securityDepositMonths, currentPaymentPreview, t]);
 
     return (
-        <section className="mb-8 sm:mb-10 relative sm:overflow-hidden sm:rounded-[2.5rem] sm:border sm:border-border sm:bg-card/60 sm:p-6 sm:shadow-sm sm:backdrop-blur-3xl xl:p-8">
-            <div className="absolute inset-x-0 -top-40 -z-10 h-72 rounded-[100%] bg-primary/5 blur-3xl pointer-events-none hidden sm:block" />
-
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                <div className="max-w-2xl pr-20 sm:pr-0">
-                    <div className="mb-2 sm:mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 sm:px-3 sm:py-1">
-                        <Link2 className="size-3 sm:size-3.5 text-primary" />
-                        <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t("Private Share Links")}</span>
+        <section className={cn(!embedded && "mb-8 rounded-2xl border border-border bg-card p-5 sm:p-7")}>
+            {/* Header & Primary Navigation */}
+            <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
+                {!embedded ? (
+                    <div>
+                        <h2 className="text-xl font-bold text-foreground sm:text-2xl text-balance">
+                            {t("Invite a Tenant")}
+                        </h2>
+                        <p className="mt-1 text-sm text-muted-foreground text-pretty">
+                            {t("Create a private link or QR code so a future tenant can apply.")}
+                        </p>
                     </div>
-                    <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-4xl text-balance">
-                        {t("Private Links & QR Codes")}
-                    </h2>
-                    <p className="mt-2 sm:mt-3 text-sm sm:text-base leading-relaxed text-muted-foreground hidden sm:block">
-                        {t("Generate exclusive invite links or scannable QR codes. Allow future tenants to apply for your properties without opening public registration.")}
+                ) : (
+                    <p className="text-sm font-medium text-muted-foreground">
+                        {t("Choose who can use the link, then tap Create Invite Link.")}
                     </p>
-                </div>
-                <div className="absolute top-4 right-4 flex items-center gap-2 sm:static sm:flex-row sm:w-auto">
-                    <button
-                        type="button"
-                        onClick={() => setShowHistory(!showHistory)}
-                        className={`inline-flex size-10 sm:h-12 sm:w-auto items-center justify-center sm:gap-2 rounded-[14px] sm:rounded-2xl border sm:px-5 text-xs font-black uppercase tracking-[0.2em] transition-all hover:bg-muted active:scale-95 ${
-                            showHistory 
-                                ? "border-primary bg-primary/5 text-primary" 
-                                : "border-border bg-background text-foreground"
-                        }`}
-                        title={t("Toggle History")}
+                )}
+
+                <div className="flex flex-wrap items-center gap-2">
+                    <div
+                        role="tablist"
+                        aria-label={t("Invite sections")}
+                        className="grid flex-1 grid-cols-2 gap-1 rounded-xl border border-border bg-muted p-1 sm:flex-none"
                     >
-                        <History className="size-4" />
-                        <span className="hidden sm:inline">{showHistory ? t("Hide") : t("History ({count})", { count: invites.length })}</span>
-                    </button>
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={activeTab === "create"}
+                            onClick={() => setActiveTab("create")}
+                            className={cn(
+                                "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors",
+                                activeTab === "create"
+                                    ? "bg-background text-foreground shadow-xs"
+                                    : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            <Plus className="size-4 shrink-0" />
+                            <span>{t("Create Link")}</span>
+                        </button>
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={activeTab === "history"}
+                            onClick={() => setActiveTab("history")}
+                            className={cn(
+                                "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors",
+                                activeTab === "history"
+                                    ? "bg-background text-foreground shadow-xs"
+                                    : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            <History className="size-4 shrink-0" />
+                            <span>{t("Past Links ({count})", { count: invites.length })}</span>
+                        </button>
+                    </div>
+
                     <button
                         type="button"
                         onClick={onRefresh}
-                        className="inline-flex size-10 sm:h-12 sm:w-auto items-center justify-center sm:gap-2 rounded-[14px] sm:rounded-2xl border border-border bg-background sm:px-5 text-xs font-black uppercase tracking-[0.2em] text-foreground transition-all hover:bg-muted active:scale-95"
+                        aria-label={t("Refresh invites")}
                         title={t("Refresh")}
+                        className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-xl border border-border bg-background px-3.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted active:scale-95"
                     >
                         <RefreshCw className="size-4" />
                         <span className="hidden sm:inline">{t("Refresh")}</span>
@@ -394,801 +561,1137 @@ export function TenantInviteManager({
             </div>
 
             {error && (
-                <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm font-black text-red-500">
+                <div className="mt-5 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm font-semibold text-rose-700 dark:text-rose-300">
                     {error}
                 </div>
             )}
 
-            <div className={cn("mt-6 sm:mt-8 grid gap-4 sm:gap-6 xl:grid-cols-[1fr_400px]", showHistory && "hidden md:grid")}>
-                <div className="flex flex-col sm:rounded-[1.75rem] sm:border sm:border-border sm:bg-background/50 sm:p-6 sm:shadow-sm xl:p-8">
-                    <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-4 sm:pb-5">
-                        <div>
-                            <h3 className="text-lg sm:text-xl font-black text-foreground">{t("Generator Settings")}</h3>
-                            <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted-foreground hidden sm:block">
-                                {isAdvanced ? t("Configure custom scope, screening mode, and document checklist.") : t("Quickly create an invite link with sensible default settings.")}
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="inline-flex rounded-xl border border-border bg-muted/40 p-1">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setIsAdvanced(false);
-                                        setMode("property");
-                                        setUnitId("");
-                                    }}
-                                    className={cn(
-                                        "rounded-lg px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-colors",
-                                        !isAdvanced
-                                            ? "bg-background text-foreground shadow-xs"
-                                            : "text-muted-foreground hover:text-foreground"
-                                    )}
-                                >
-                                    {t("Simple")}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAdvanced(true)}
-                                    className={cn(
-                                        "rounded-lg px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-colors",
-                                        isAdvanced
-                                            ? "bg-background text-foreground shadow-xs"
-                                            : "text-muted-foreground hover:text-foreground"
-                                    )}
-                                >
-                                    {t("Advanced")}
-                                </button>
-                            </div>
-                            <div className="relative">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowHelpTooltip(!showHelpTooltip)}
-                                    onBlur={() => setTimeout(() => setShowHelpTooltip(false), 200)}
-                                    aria-label={t("Toggle help information")}
-                                    title={t("Toggle help information")}
-                                    className="relative inline-flex items-center justify-center rounded-xl border border-border bg-card p-2.5 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-                                >
-                                    <CircleHelp className="size-5" />
-                                </button>
-                                {showHelpTooltip && (
-                                    <div className="absolute right-0 top-12 z-30 w-72 rounded-2xl border border-border bg-background p-4 text-left text-xs font-black leading-relaxed text-foreground shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
-                                        <p className="font-black uppercase tracking-wider text-primary">{t("Configuration Guide")}</p>
-                                        <p className="mt-3 text-muted-foreground">{t("Scope: Choose if this link allows applicants to pick any vacant unit in the property, or if it's locked to a specific unit.")}</p>
-                                        <p className="mt-2 text-muted-foreground">{t("Application Mode: Online mode requires tenants to upload documents immediately. In-person allows you to verify physical documents later.")}</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {isAdvanced && (
-                        <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 animate-in fade-in duration-200">
-                            <div className="space-y-3">
-                                <p id="scope-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">{t("1. Select Scope")}</p>
-                                <div role="radiogroup" aria-labelledby="scope-group-label" className="grid grid-cols-2 gap-2 sm:gap-3">
-                                    {scopeControls.map((control) => {
-                                        const Icon = control.icon;
-                                        const active = mode === control.key;
-                                        return (
-                                            <button
-                                                key={control.key}
-                                                type="button"
-                                                onClick={control.onClick}
-                                                role="radio"
-                                                aria-checked={active}
-                                            className={cn(
-                                                "flex flex-col items-center justify-center gap-1.5 sm:gap-3 rounded-xl sm:rounded-2xl border p-2.5 sm:p-3.5 transition-all text-center group w-full",
-                                                active
-                                                    ? "border-primary bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
-                                                    : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                "flex size-8 sm:size-10 shrink-0 items-center justify-center rounded-lg sm:rounded-xl transition-colors",
-                                                active ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-muted/80"
-                                            )}>
-                                                <Icon className="size-4 sm:size-5" />
-                                            </div>
-                                            <div className="space-y-0.5 sm:space-y-1">
-                                                <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider">{t(control.label)}</p>
-                                                <p className="text-[9px] sm:text-[10px] leading-snug opacity-70 font-medium">
-                                                    {t(control.description)}
-                                                </p>
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <p id="mode-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">{t("2. Application Mode")}</p>
-                            <div role="radiogroup" aria-labelledby="mode-group-label" className="grid grid-cols-2 gap-2 sm:gap-3">
-                                {applicationTypeControls.map((control) => {
-                                    const Icon = control.icon;
-                                    const active = applicationType === control.key;
-                                    return (
-                                        <button
-                                            key={control.key}
-                                            type="button"
-                                            onClick={() => setApplicationType(control.key)}
-                                            role="radio"
-                                            aria-checked={active}
-                                            className={cn(
-                                                "flex flex-col items-center justify-center gap-1.5 sm:gap-3 rounded-xl sm:rounded-2xl border p-2.5 sm:p-3.5 transition-all text-center group w-full",
-                                                active
-                                                    ? "border-primary bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
-                                                    : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                "flex size-8 sm:size-10 shrink-0 items-center justify-center rounded-lg sm:rounded-xl transition-colors",
-                                                active ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-muted/80"
-                                            )}>
-                                                <Icon className="size-4 sm:size-5" />
-                                            </div>
-                                            <div className="space-y-0.5 sm:space-y-1">
-                                                <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider">{t(control.label)}</p>
-                                                <p className="text-[9px] sm:text-[10px] leading-snug opacity-70 font-medium">
-                                                    {t(control.description)}
-                                                </p>
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                    )}
-
-                    {isAdvanced && applicationType === "online" && (
-                        <div className="mb-8 rounded-[1.75rem] border border-primary/20 bg-primary/5 p-4 sm:p-5 animate-in fade-in zoom-in duration-300">
-                            <p id="docs-group-label" className="text-xs font-black uppercase tracking-wider text-primary">{t("3. Required Documents")}</p>
-                            <p className="mt-1 text-xs text-muted-foreground font-medium">{t("Tenant must upload these to complete their application.")}</p>
-                            <div role="group" aria-labelledby="docs-group-label" className="mt-3 grid gap-2 sm:grid-cols-2">
-                                {REQUIREMENT_OPTIONS.map((option) => {
-                                    const checked = requiredRequirements.includes(option.key);
-                                    return (
-                                        <button
-                                            key={option.key}
-                                            type="button"
-                                            onClick={() => {
-                                                setRequiredRequirements((prev) => {
-                                                    const exists = prev.includes(option.key);
-                                                    if (exists) {
-                                                        const next = prev.filter((value) => value !== option.key);
-                                                        return next;
-                                                    }
-                                                    return [...prev, option.key];
-                                                });
-                                            }}
-                                            role="checkbox"
-                                            aria-checked={checked}
-                                            className={`rounded-xl border px-3 py-2 text-left text-xs font-black uppercase tracking-wider transition-colors ${
-                                                checked
-                                                    ? "border-primary/40 bg-primary/10 text-primary"
-                                                    : "border-border bg-background text-muted-foreground hover:bg-muted"
-                                            }`}
-                                        >
-                                            <span className="inline-flex items-center gap-1.5 w-full justify-between">
-                                                <span>{t(option.label)}</span>
-                                                {option.key === "valid_id" && (
-                                                    <span className="relative inline-flex items-center ml-1.5" onClick={(e) => e.stopPropagation()}>
-                                                        <Tooltip content={t(VALID_ID_TOOLTIP)} side="top" sideOffset={8}>
-                                                            <span
-                                                                role="button"
-                                                                tabIndex={0}
-                                                                aria-label={t("Valid ID Information")}
-                                                                className="focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-primary rounded-full inline-flex"
-                                                            >
-                                                                <CircleHelp
-                                                                    className="size-4 rounded-full border border-amber-400/40 bg-amber-400/15 p-0.5 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.35)] animate-pulse"
-                                                                />
-                                                            </span>
-                                                        </Tooltip>
-                                                    </span>
-                                                )}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {isAdvanced && showPaymentPreview && (
-                        <div className="mb-6 rounded-[1.75rem] border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-4 sm:p-5 space-y-4 animate-in fade-in zoom-in duration-300">
-                            <div>
-                                <p className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                                    {t("Move-in Payment Terms")}
-                                </p>
-                                <p className="mt-0.5 text-xs text-muted-foreground font-medium">
-                                    {t("Configure upfront advance rent and security deposit required from the tenant.")}
-                                </p>
-                            </div>
-
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                {/* Advance Rent */}
-                                <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3.5 space-y-2.5">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-xs font-black uppercase tracking-wider text-amber-900/80 dark:text-amber-200">{t("Advance Rent")}</p>
-                                        <p className="text-sm font-black text-amber-900 dark:text-amber-50">
-                                            PHP {currentPaymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </p>
-                                    </div>
-                                    <div className="grid grid-cols-4 gap-1">
-                                        {[
-                                            { value: 0, label: "None" },
-                                            { value: 1, label: "1 Mo" },
-                                            { value: 2, label: "2 Mo" },
-                                            { value: -1, label: "Custom" },
-                                        ].map((opt) => (
-                                            <button
-                                                key={opt.value}
-                                                type="button"
-                                                onClick={() => setAdvanceMonths(opt.value)}
-                                                className={cn(
-                                                    "rounded-lg px-2 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all",
-                                                    advanceMonths === opt.value
-                                                        ? "bg-amber-700 text-white shadow-sm dark:bg-amber-500 dark:text-black"
-                                                        : "border border-amber-500/20 bg-background/60 text-muted-foreground hover:bg-background hover:text-foreground"
-                                                )}
-                                            >
-                                                {t(opt.label)}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    {advanceMonths === -1 && (
-                                        <div className="relative pt-1">
-                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pt-1 text-[11px] font-black text-muted-foreground">
-                                                PHP
-                                            </span>
-                                            <input
-                                                type="number"
-                                                min="0" max="99999999.99"
-                                                step="0.01"
-                                                {...inviteForm.fieldProps("customAdvance")}
-                                                aria-label={t("Custom advance amount")}
-                                                value={customAdvance}
-                                                onChange={(e) => setCustomAdvance(e.target.value)}
-                                                placeholder={t("Custom amount")}
-                                                className={cn(
-                                                    "h-8 w-full rounded-lg border border-border bg-background pl-11 pr-2.5 text-xs font-black text-foreground outline-none focus:border-primary",
-                                                    inviteForm.errorFor("customAdvance") && fieldErrorClass
-                                                )}
-                                            />
-                                            <FieldError id={inviteForm.errorId("customAdvance")} message={tOpt(inviteForm.errorFor("customAdvance"))} />
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Security Deposit */}
-                                <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3.5 space-y-2.5">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-xs font-black uppercase tracking-wider text-amber-900/80 dark:text-amber-200">{t("Security Deposit")}</p>
-                                        <p className="text-sm font-black text-amber-900 dark:text-amber-50">
-                                            PHP {currentPaymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </p>
-                                    </div>
-                                    <div className="grid grid-cols-4 gap-1">
-                                        {[
-                                            { value: 0, label: "None" },
-                                            { value: 1, label: "1 Mo" },
-                                            { value: 2, label: "2 Mo" },
-                                            { value: -1, label: "Custom" },
-                                        ].map((opt) => (
-                                            <button
-                                                key={opt.value}
-                                                type="button"
-                                                onClick={() => setSecurityDepositMonths(opt.value)}
-                                                className={cn(
-                                                    "rounded-lg px-2 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all",
-                                                    securityDepositMonths === opt.value
-                                                        ? "bg-amber-700 text-white shadow-sm dark:bg-amber-500 dark:text-black"
-                                                        : "border border-amber-500/20 bg-background/60 text-muted-foreground hover:bg-background hover:text-foreground"
-                                                )}
-                                            >
-                                                {t(opt.label)}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    {securityDepositMonths === -1 && (
-                                        <div className="relative pt-1">
-                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pt-1 text-[11px] font-black text-muted-foreground">
-                                                PHP
-                                            </span>
-                                            <input
-                                                type="number"
-                                                min="0" max="99999999.99"
-                                                step="0.01"
-                                                {...inviteForm.fieldProps("customDeposit")}
-                                                aria-label={t("Custom security deposit")}
-                                                value={customDeposit}
-                                                onChange={(e) => setCustomDeposit(e.target.value)}
-                                                placeholder={t("Custom amount")}
-                                                className={cn(
-                                                    "h-8 w-full rounded-lg border border-border bg-background pl-11 pr-2.5 text-xs font-black text-foreground outline-none focus:border-primary",
-                                                    inviteForm.errorFor("customDeposit") && fieldErrorClass
-                                                )}
-                                            />
-                                            <FieldError id={inviteForm.errorId("customDeposit")} message={tOpt(inviteForm.errorFor("customDeposit"))} />
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Total Move-in Preview Box */}
-                            <div className="rounded-xl border border-amber-500/20 bg-background/60 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <div>
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                                        {t("Total Estimated Move-in")}
-                                    </span>
-                                    <p className="text-base font-black text-foreground">
-                                        PHP {currentPaymentPreview.totalMoveInAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </p>
-                                </div>
-                                <span className="text-[11px] font-medium text-muted-foreground sm:text-right">
-                                    {mode === "unit" ? (
-                                        <>{t("Calculated for unit:")} <span className="font-bold text-foreground">{propertyUnits.find(u => u.id === unitId)?.name || t("Selected Unit")}</span></>
-                                    ) : (
-                                        <>{t("Preview based on:")} <span className="font-bold text-foreground">{propertyUnits.find(u => u.id === previewUnitId)?.name || t("vacant unit")}</span> {t("(scales per unit)")}</>
-                                    )}
-                                </span>
-                            </div>
-
-                            <p className="text-[11px] font-medium text-amber-950/80 dark:text-amber-200/80 leading-relaxed">
-                                {t(currentPaymentPreview.disclaimer)}
-                            </p>
-                        </div>
-                    )}
-
+            {/* TAB 1: CREATE INVITE LINK */}
+            {activeTab === "create" && (
+                <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-start">
+                    {/* Left Column: 3 Simple Steps */}
                     <div className="space-y-6">
-                        {isAdvanced && (
-                            <div className="flex items-center gap-3">
-                                <div className="h-px flex-1 bg-border/50" />
-                                <span className="text-xs font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-                                    {applicationType === "online" ? t("4. Details & Expiration") : t("3. Details & Expiration")}
+                        {/* Step 1: Property & Room */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2.5">
+                                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                                    1
                                 </span>
-                                <div className="h-px flex-1 bg-border/50" />
+                                <h3 className="text-base font-bold text-foreground">
+                                    {t("Which property and room?")}
+                                </h3>
                             </div>
-                        )}
 
-                        <div className="grid gap-6 md:grid-cols-2">
-                            <div className="group space-y-2">
-                                <label htmlFor="select-property" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
-                                    {t("Select Property")}
-                                </label>
-                            <div className="relative">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                    <MapPin className="size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                </div>
-                                <select
-                                    id="select-property"
-                                    value={propertyId}
-                                    onChange={(event) => {
-                                        setPropertyId(event.target.value);
-                                        setUnitId("");
-                                        setPreviewUnitId("");
-                                    }}
-                                    className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-black text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background"
-                                >
-                                    <option value="" disabled>{t("Choose a property...")}</option>
-                                    {properties.map((property) => (
-                                        <option key={property.id} value={property.id}>
-                                            {property.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground">
-                                    <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </div>
-                            </div>
-                        </div>
-
-                            {isAdvanced && mode === "unit" && (
-                                <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <label htmlFor="select-unit" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
-                                        {t("Select Vacant Unit")}
+                            <div className="space-y-4 pl-0 sm:pl-9">
+                                <div className="space-y-1.5">
+                                    <label htmlFor="select-property" className="block text-sm font-semibold text-foreground">
+                                        {t("Property")}
                                     </label>
-                                <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                        <DoorOpen className="size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                    </div>
-                                    <select
-                                        id="select-unit"
-                                        value={unitId}
-                                        onChange={(event) => setUnitId(event.target.value)}
-                                        className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-black text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background disabled:opacity-50"
-                                        disabled={!propertyId}
-                                    >
-                                        <option value="" disabled>
-                                            {!propertyId ? t("Select a property first") : t("Choose a unit...")}
-                                        </option>
-                                        {propertyUnits.map((unit) => (
-                                            <option key={unit.id} value={unit.id}>
-                                                {unit.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground">
-                                        <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    <div className="relative">
+                                        <MapPin className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                        <select
+                                            id="select-property"
+                                            value={propertyId}
+                                            onChange={(event) => {
+                                                setPropertyId(event.target.value);
+                                                setUnitId("");
+                                                setUnitQuery("");
+                                                setIsUnitMenuOpen(false);
+                                                setPreviewUnitId("");
+                                            }}
+                                            className="h-12 w-full appearance-none rounded-xl border border-border bg-background pl-10 pr-10 text-base font-medium text-foreground outline-none transition-colors hover:border-primary/60 focus:border-primary focus:ring-2 focus:ring-primary/30"
+                                        >
+                                            <option value="" disabled>{t("Choose a property...")}</option>
+                                            {properties.map((property) => (
+                                                <option key={property.id} value={property.id}>
+                                                    {property.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                                     </div>
                                 </div>
-                            </div>
-                        )}
 
-                            {isAdvanced && mode === "property" && (
-                                <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <label htmlFor="preview-unit" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
-                                        {t("Rent Preview Unit")}
-                                    </label>
-                                <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                        <DoorOpen className="size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                    </div>
-                                    <select
-                                        id="preview-unit"
-                                        value={previewUnitId}
-                                        onChange={(event) => setPreviewUnitId(event.target.value)}
-                                        className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-black text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background disabled:opacity-50"
-                                        disabled={!propertyId}
-                                    >
-                                        <option value="">
-                                            {!propertyId ? t("Select a property first") : t("Use first vacant unit")}
-                                        </option>
-                                        {propertyUnits.map((unit) => (
-                                            <option key={unit.id} value={unit.id}>
-                                                {unit.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground">
-                                        <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                            <div className="group space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <label htmlFor="expires-at" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
-                                        {t("Link Expiration")}
-                                    </label>
-                                </div>
-                            <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:border-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 dark:focus-within:ring-offset-background">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                    <Calendar className="size-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
-                                </div>
-                                <input
-                                    {...inviteForm.fieldProps("expiresAt")}
-                                    id="expires-at"
-                                                type="datetime-local"
-                                                min={new Date().toISOString().slice(0, 16)}
-                                                max="2099-12-31T23:59"
-                                    value={expiresAt}
-                                    onChange={(event) => {
-                                        setExpiresAt(event.target.value);
-                                        setActivePreset(null);
-                                    }}
-                                    required
-                                    className="h-12 w-full appearance-none bg-transparent pl-10 pr-4 text-sm font-black text-foreground outline-none transition-colors 
-                                    [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0"
-                                />
-                            </div>
-                            <FieldError id={inviteForm.errorId("expiresAt")} message={tOpt(inviteForm.errorFor("expiresAt"))} />
-                            <div className="flex flex-wrap items-center gap-2 pt-1">
-                                {[
-                                    { label: "+1 Day", days: 1 },
-                                    { label: "+7 Days", days: 7 },
-                                    { label: "+30 Days", days: 30 },
-                                ].map((preset) => {
-                                    const isActive = activePreset === preset.days;
-                                    return (
+                                <div className="space-y-2">
+                                    <span id="scope-group-label" className="block text-sm font-semibold text-foreground">
+                                        {t("Which rooms can they pick?")}
+                                    </span>
+                                    <div role="radiogroup" aria-labelledby="scope-group-label" className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                                         <button
-                                            key={preset.days}
                                             type="button"
+                                            role="radio"
+                                            aria-checked={mode === "property"}
                                             onClick={() => {
-                                                const d = new Date();
-                                                d.setDate(d.getDate() + preset.days);
-                                                const tz = d.getTimezoneOffset() * 60000;
-                                                setExpiresAt(new Date(d.getTime() - tz).toISOString().slice(0, 16));
-                                                setActivePreset(preset.days);
+                                                setMode("property");
+                                                setUnitId("");
+                                                setUnitQuery("");
+                                                setIsUnitMenuOpen(false);
+                                                setPreviewUnitId("");
                                             }}
                                             className={cn(
-                                                "rounded-lg border px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-colors active:scale-95",
-                                                isActive
-                                                    ? "border-primary bg-primary/10 text-primary shadow-[0_0_12px_rgba(var(--primary-rgb),0.15)]"
-                                                    : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-foreground"
+                                                "flex min-h-[56px] items-center gap-3 rounded-xl border p-3.5 text-left transition-colors",
+                                                mode === "property"
+                                                    ? "border-primary bg-primary/10 text-foreground"
+                                                    : "border-border bg-background text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                                             )}
                                         >
-                                            {t(preset.label)}
+                                            <Building2 className={cn("size-5 shrink-0", mode === "property" ? "text-primary" : "text-muted-foreground")} />
+                                            <div>
+                                                <p className="text-sm font-bold text-foreground">{t("Any Vacant Room")}</p>
+                                                <p className="text-xs text-muted-foreground">{t("Tenant picks from open rooms")}</p>
+                                            </div>
                                         </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                        </div>
-                    </div>
 
-                    <div className="mt-6 sm:mt-8 flex justify-end">
-                        <button
-                            type="button"
-                            onClick={createInvite}
-                            disabled={submitting}
-                            className="inline-flex h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-black text-primary-foreground shadow-[0_8px_16px_-6px_rgba(var(--primary-rgb),0.4)] transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
-                        >
-                            <Link2 className="size-5" />
-                            {submitting ? t("Generating...") : t("Generate Invite")}
-                        </button>
-                    </div>
-                </div>
-
-                <div 
-                    ref={qrCodeRef}
-                    className={cn(
-                        "relative flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-primary/20 bg-primary/5 p-6 text-center xl:p-8 transition-all duration-300",
-                        freshInvite ? "hidden md:flex" : "hidden xl:flex"
-                    )}
-                >
-                    {freshInvite ? (
-                        <div className="flex w-full flex-col items-center animate-in fade-in zoom-in duration-500">
-                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
-                                <ShieldCheck className="size-4 text-primary" />
-                                <span className="text-xs font-black uppercase tracking-wider text-primary">{t("Generated Invite")}</span>
-                            </div>
-                            <div className="relative mb-6 rounded-3xl border-2 border-border bg-white p-3 shadow-xl">
-                                <Image src={freshInvite.qrUrl} alt={t("Invite QR code")} width={176} height={176} className="rounded-xl" />
-                            </div>
-                            <div className="mb-6 w-full rounded-2xl border border-border bg-background p-4 text-left">
-                                <p className="mb-2 text-xs font-black uppercase tracking-wider text-muted-foreground">{t("Share URL")}</p>
-                                <p className="text-sm font-medium text-foreground break-all">{freshInvite.shareUrl}</p>
-                            </div>
-                            {freshInvite.paymentPreview && (
-                                <div className="mb-6 w-full rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-4 text-left space-y-1">
-                                    <p className="mb-2 text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">{t("Move-in Payment Terms")}</p>
-                                    <div className="flex items-center justify-between text-xs font-semibold text-amber-900 dark:text-amber-50">
-                                        <span>{t("Advance Rent:")}</span>
-                                        <span>PHP {freshInvite.paymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        <button
+                                            type="button"
+                                            role="radio"
+                                            aria-checked={mode === "unit"}
+                                            onClick={() => {
+                                                setMode("unit");
+                                                setUnitId("");
+                                                setUnitQuery("");
+                                                setIsUnitMenuOpen(false);
+                                                setPreviewUnitId("");
+                                            }}
+                                            className={cn(
+                                                "flex min-h-[56px] items-center gap-3 rounded-xl border p-3.5 text-left transition-colors",
+                                                mode === "unit"
+                                                    ? "border-primary bg-primary/10 text-foreground"
+                                                    : "border-border bg-background text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                            )}
+                                        >
+                                            <DoorClosed className={cn("size-5 shrink-0", mode === "unit" ? "text-primary" : "text-muted-foreground")} />
+                                            <div>
+                                                <p className="text-sm font-bold text-foreground">{t("One Specific Room")}</p>
+                                                <p className="text-xs text-muted-foreground">{t("Lock link to one room only")}</p>
+                                            </div>
+                                        </button>
                                     </div>
-                                    <div className="flex items-center justify-between text-xs font-semibold text-amber-900 dark:text-amber-50">
-                                        <span>{t("Security Deposit:")}</span>
-                                        <span>PHP {freshInvite.paymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                    </div>
-                                    <div className="pt-2 mt-2 border-t border-amber-500/20 flex items-center justify-between text-xs font-black text-amber-950 dark:text-amber-100">
-                                        <span>{t("Total Move-in:")}</span>
-                                        <span>PHP {(freshInvite.paymentPreview.totalMoveInAmount ?? (freshInvite.paymentPreview.advanceAmount + freshInvite.paymentPreview.securityDepositAmount)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                    </div>
-                                    <p className="mt-2 text-[11px] font-medium text-amber-950/80 dark:text-amber-200/80 leading-relaxed">{t(freshInvite.paymentPreview.disclaimer)}</p>
                                 </div>
-                            )}
-                            <button
-                                type="button"
-                                onClick={() => void copyLink(freshInvite.shareUrl)}
-                                className={cn(
-                                    "inline-flex w-full h-12 items-center justify-center gap-2 rounded-xl px-6 text-xs font-black uppercase tracking-wider transition-all active:scale-95",
-                                    copiedUrl
-                                        ? "bg-emerald-600 text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:bg-emerald-700"
-                                        : "bg-foreground text-background hover:scale-[1.02]"
-                                )}
-                            >
-                                {copiedUrl ? (
-                                    <>
-                                        <Check className="size-4" />
-                                        {t("Copied!")}
-                                    </>
-                                ) : (
-                                    <>
-                                        <Copy className="size-4" />
-                                        {t("Copy Link")}
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center opacity-60">
-                            <div className="mb-4 flex size-20 items-center justify-center rounded-3xl border border-dashed border-border bg-background">
-                                <QrCode className="size-8 text-muted-foreground" />
-                            </div>
-                            <p className="text-sm font-medium leading-relaxed text-muted-foreground">
-                                {t("Configure settings and generate")} <br /> {t("to preview QR code and link here.")}
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </div>
 
-            {showHistory && (
-                <div className="mt-4 md:mt-8 animate-in slide-in-from-top-4 fade-in duration-300">
-                    <div className="mb-4 flex items-center justify-between border-b border-border/50 pb-4">
-                        <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                            <History className="size-4" />
-                            {t("Recent Invites History")}
-                        </h3>
-                    </div>
-                    <div className="grid gap-4">
-                        {invites.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-border bg-background/40 py-12 text-center text-sm font-medium text-muted-foreground">
-                                <Link2 className="mb-3 size-8 opacity-20" />
-                                {t("No tenant invite links have been created yet.")}
-                            </div>
-                        ) : (
-                            invites.map((invite) => (
-                                <div key={invite.id} className="group relative flex flex-col gap-4 overflow-hidden rounded-[1.5rem] border border-border bg-background/60 p-5 transition-colors hover:bg-card lg:flex-row lg:items-center lg:justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-muted group-hover:bg-primary/10 transition-colors">
-                                            <QrCode className="size-5 text-muted-foreground group-hover:text-primary" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
-                                                    {invite.mode === "unit" ? t("Unit Invite") : t("Property Invite")}
-                                                </span>
-                                                <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
-                                                    {invite.applicationType === "online" ? t("Online") : t("Face to face")}
-                                                </span>
-                                                <span className={`rounded-md px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${invite.status === "active" ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}>
-                                                    {t(invite.status)}
-                                                </span>
-                                            </div>
-                                            <p className="text-base font-black text-foreground">
-                                                {invite.propertyName}
-                                                {invite.unitName ? <span className="font-normal text-muted-foreground"> • {invite.unitName}</span> : ""}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="w-full lg:w-auto">
-                                        {revokingId === invite.id ? (
-                                            <div className="grid grid-cols-2 gap-2 w-full lg:flex lg:w-auto lg:items-center animate-in fade-in zoom-in-95 duration-200">
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        void revokeInvite(invite.id);
-                                                        setRevokingId(null);
-                                                    }}
-                                                    className="inline-flex h-10 w-full lg:w-auto items-center justify-center gap-1.5 rounded-xl bg-red-600 px-3 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-red-700 active:scale-95 shadow-[0_4px_12px_rgba(220,38,38,0.3)]"
-                                                >
-                                                    <AlertTriangle className="size-4 animate-pulse" />
-                                                    {t("Confirm")}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setRevokingId(null);
-                                                    }}
-                                                    className="inline-flex h-10 w-full lg:w-auto items-center justify-center rounded-xl border border-border bg-card px-3 text-xs font-black uppercase tracking-wider text-muted-foreground hover:bg-muted active:scale-95"
-                                                >
-                                                    {t("Cancel")}
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className={cn(
-                                                "grid gap-2 w-full lg:flex lg:w-auto lg:items-center",
-                                                invite.status === "active" ? "grid-cols-3" : "grid-cols-2"
-                                            )}>
-                                                <a
-                                                    href={invite.qrUrl}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="inline-flex h-10 w-full lg:w-auto items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-2 text-[10px] sm:text-xs font-black uppercase tracking-wider text-foreground transition-colors hover:bg-muted"
-                                                >
-                                                    <QrCode className="size-4" />
-                                                    {t("View QR")}
-                                                </a>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void copyLink(invite.shareUrl, invite.id)}
-                                                    className={cn(
-                                                        "inline-flex h-10 w-full lg:w-auto items-center justify-center gap-1.5 rounded-xl border px-2 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all active:scale-95",
-                                                        copiedId === invite.id
-                                                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 animate-pulse"
-                                                            : "border-border bg-card text-foreground hover:bg-muted"
-                                                    )}
-                                                >
-                                                    {copiedId === invite.id ? (
-                                                        <>
-                                                            <Check className="size-4" />
-                                                            {t("Copied!")}
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Copy className="size-4" />
-                                                            {t("Copy Link")}
-                                                        </>
-                                                    )}
-                                                </button>
-                                                {invite.status === "active" && (
+                                {mode === "unit" && (
+                                    <div ref={unitComboboxRef} className="relative space-y-1.5">
+                                        <label htmlFor="select-unit" className="block text-sm font-semibold text-foreground">
+                                            {t("Choose Vacant Room")}
+                                        </label>
+                                        <div className="relative">
+                                            <DoorClosed className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                            <input
+                                                id="select-unit"
+                                                type="text"
+                                                role="combobox"
+                                                aria-expanded={isUnitMenuOpen}
+                                                aria-controls="unit-suggestions-list"
+                                                aria-autocomplete="list"
+                                                aria-activedescendant={
+                                                    highlightedUnitIndex >= 0 && filteredPropertyUnits[highlightedUnitIndex]
+                                                        ? `unit-option-${filteredPropertyUnits[highlightedUnitIndex].id}`
+                                                        : undefined
+                                                }
+                                                maxLength={60}
+                                                disabled={!propertyId}
+                                                value={unitQuery}
+                                                placeholder={!propertyId ? t("Select a property first") : t("Type a room number or tap to choose...")}
+                                                onFocus={() => {
+                                                    if (propertyId) {
+                                                        setIsFilteringUnits(false);
+                                                        setIsUnitMenuOpen(true);
+                                                    }
+                                                }}
+                                                onChange={(event) => {
+                                                    const nextValue = event.target.value;
+                                                    setUnitQuery(nextValue);
+                                                    setIsFilteringUnits(true);
+                                                    setIsUnitMenuOpen(true);
+                                                    setHighlightedUnitIndex(0);
+                                                    const exactMatch = propertyUnits.find(
+                                                        (u) => u.name.toLowerCase() === nextValue.trim().toLowerCase()
+                                                    );
+                                                    setUnitId(exactMatch ? exactMatch.id : "");
+                                                }}
+                                                onKeyDown={(event) => {
+                                                    if (!isUnitMenuOpen && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+                                                        setIsUnitMenuOpen(true);
+                                                        setHighlightedUnitIndex(0);
+                                                        return;
+                                                    }
+                                                    if (!isUnitMenuOpen) return;
+                                                    if (event.key === "ArrowDown") {
+                                                        event.preventDefault();
+                                                        setHighlightedUnitIndex((prev) =>
+                                                            filteredPropertyUnits.length === 0
+                                                                ? -1
+                                                                : (prev + 1) % filteredPropertyUnits.length
+                                                        );
+                                                    } else if (event.key === "ArrowUp") {
+                                                        event.preventDefault();
+                                                        setHighlightedUnitIndex((prev) =>
+                                                            filteredPropertyUnits.length === 0
+                                                                ? -1
+                                                                : prev <= 0
+                                                                    ? filteredPropertyUnits.length - 1
+                                                                    : prev - 1
+                                                        );
+                                                    } else if (event.key === "Enter" && highlightedUnitIndex >= 0) {
+                                                        const chosen = filteredPropertyUnits[highlightedUnitIndex];
+                                                        if (chosen) {
+                                                            event.preventDefault();
+                                                            setUnitId(chosen.id);
+                                                            setUnitQuery(chosen.name);
+                                                            setIsUnitMenuOpen(false);
+                                                            setHighlightedUnitIndex(-1);
+                                                        }
+                                                    } else if (event.key === "Escape") {
+                                                        setIsUnitMenuOpen(false);
+                                                        setHighlightedUnitIndex(-1);
+                                                    }
+                                                }}
+                                                className="h-12 w-full rounded-xl border border-border bg-background pl-10 pr-20 text-base font-medium text-foreground outline-none transition-colors hover:border-primary/60 focus:border-primary focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+                                            />
+                                            <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+                                                {(unitQuery || unitId) && (
                                                     <button
                                                         type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setRevokingId(invite.id);
-                                                            // Automatically reset back to "Revoke" state if not clicked after 4 seconds
-                                                            setTimeout(() => {
-                                                                setRevokingId((current) => current === invite.id ? null : current);
-                                                            }, 4000);
+                                                        aria-label={t("Clear room selection")}
+                                                        onClick={() => {
+                                                            setUnitId("");
+                                                            setUnitQuery("");
+                                                            setIsFilteringUnits(false);
+                                                            setIsUnitMenuOpen(true);
+                                                            setHighlightedUnitIndex(-1);
                                                         }}
-                                                        className="inline-flex h-10 w-full lg:w-auto items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/5 px-2 text-[10px] sm:text-xs font-black uppercase tracking-wider text-red-600 transition-colors hover:bg-red-500/10 active:scale-95"
+                                                        className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
                                                     >
-                                                        <XCircle className="size-4" />
-                                                        {t("Revoke")}
+                                                        <X className="size-4" />
                                                     </button>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    aria-label={t("Show vacant rooms")}
+                                                    disabled={!propertyId}
+                                                    onClick={() => {
+                                                        setIsFilteringUnits(false);
+                                                        setIsUnitMenuOpen((prev) => !prev);
+                                                    }}
+                                                    className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+                                                >
+                                                    <ChevronDown className={cn("size-4 transition-transform", isUnitMenuOpen && "rotate-180")} />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {isUnitMenuOpen && propertyId && (
+                                            <div
+                                                id="unit-suggestions-list"
+                                                role="listbox"
+                                                aria-label={t("Vacant room suggestions")}
+                                                className="absolute left-0 right-0 top-full z-30 mt-1.5 max-h-60 overflow-y-auto rounded-xl border border-border bg-card p-1.5 shadow-lg"
+                                            >
+                                                {propertyUnits.length === 0 ? (
+                                                    <p className="px-3 py-4 text-center text-sm text-muted-foreground">
+                                                        {t("No vacant rooms available in this property.")}
+                                                    </p>
+                                                ) : filteredPropertyUnits.length === 0 ? (
+                                                    <div className="px-3 py-4 text-center space-y-2">
+                                                        <p className="text-sm text-muted-foreground">
+                                                            {t("No vacant rooms match \"{query}\".", { query: unitQuery.trim() })}
+                                                        </p>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setUnitQuery("");
+                                                                setUnitId("");
+                                                                setHighlightedUnitIndex(-1);
+                                                            }}
+                                                            className="inline-flex min-h-[36px] items-center rounded-lg border border-border bg-background px-3 text-xs font-semibold text-foreground hover:bg-muted"
+                                                        >
+                                                            {t("Show all rooms")}
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    filteredPropertyUnits.map((unit, idx) => {
+                                                        const isSelected = unit.id === unitId;
+                                                        const isHighlighted = idx === highlightedUnitIndex;
+                                                        return (
+                                                            <button
+                                                                key={unit.id}
+                                                                id={`unit-option-${unit.id}`}
+                                                                type="button"
+                                                                role="option"
+                                                                aria-selected={isSelected}
+                                                                onMouseDown={(e) => e.preventDefault()}
+                                                                onClick={() => {
+                                                                    setUnitId(unit.id);
+                                                                    setUnitQuery(unit.name);
+                                                                    setIsFilteringUnits(false);
+                                                                    setIsUnitMenuOpen(false);
+                                                                    setHighlightedUnitIndex(-1);
+                                                                }}
+                                                                className={cn(
+                                                                    "flex min-h-[48px] w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left transition-colors",
+                                                                    isSelected
+                                                                        ? "bg-primary/10 text-foreground"
+                                                                        : isHighlighted
+                                                                            ? "bg-muted text-foreground"
+                                                                            : "text-foreground hover:bg-muted/70"
+                                                                )}
+                                                            >
+                                                                <span className="flex items-center gap-2 font-semibold text-sm">
+                                                                    {isSelected && <Check className="size-4 text-primary shrink-0" />}
+                                                                    <span>{unit.name}</span>
+                                                                </span>
+                                                                <span className="text-xs font-semibold tabular-nums text-muted-foreground">
+                                                                    PHP {Number(unit.rent_amount ?? 0).toLocaleString("en-US")}/mo
+                                                                </span>
+                                                            </button>
+                                                        );
+                                                    })
                                                 )}
                                             </div>
                                         )}
                                     </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <hr className="border-border" />
+
+                        {/* Step 2: Application Method */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2.5">
+                                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                                    2
+                                </span>
+                                <h3 className="text-base font-bold text-foreground">
+                                    {t("How will the tenant apply?")}
+                                </h3>
+                            </div>
+
+                            <div className="space-y-3 pl-0 sm:pl-9">
+                                <div role="radiogroup" aria-label={t("Application method")} className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                                    <button
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={applicationType === "face_to_face"}
+                                        onClick={() => setApplicationType("face_to_face")}
+                                        className={cn(
+                                            "flex min-h-[56px] items-center gap-3 rounded-xl border p-3.5 text-left transition-colors",
+                                            applicationType === "face_to_face"
+                                                ? "border-primary bg-primary/10 text-foreground"
+                                                : "border-border bg-background text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                        )}
+                                    >
+                                        <Handshake className={cn("size-5 shrink-0", applicationType === "face_to_face" ? "text-primary" : "text-muted-foreground")} />
+                                        <div>
+                                            <p className="text-sm font-bold text-foreground">{t("In Person")}</p>
+                                            <p className="text-xs text-muted-foreground">{t("Check their IDs when you meet")}</p>
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={applicationType === "online"}
+                                        onClick={() => setApplicationType("online")}
+                                        className={cn(
+                                            "flex min-h-[56px] items-center gap-3 rounded-xl border p-3.5 text-left transition-colors",
+                                            applicationType === "online"
+                                                ? "border-primary bg-primary/10 text-foreground"
+                                                : "border-border bg-background text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                        )}
+                                    >
+                                        <Globe className={cn("size-5 shrink-0", applicationType === "online" ? "text-primary" : "text-muted-foreground")} />
+                                        <div>
+                                            <p className="text-sm font-bold text-foreground">{t("Online Application")}</p>
+                                            <p className="text-xs text-muted-foreground">{t("Tenant uploads documents online")}</p>
+                                        </div>
+                                    </button>
                                 </div>
-                            ))
+
+                                {applicationType === "online" && (
+                                    <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2.5">
+                                        <p id="docs-group-label" className="text-sm font-semibold text-foreground">
+                                            {t("Documents the tenant must upload:")}
+                                        </p>
+                                        <div role="group" aria-labelledby="docs-group-label" className="grid gap-2 sm:grid-cols-2">
+                                            {REQUIREMENT_OPTIONS.map((option) => {
+                                                const checked = requiredRequirements.includes(option.key);
+                                                return (
+                                                    <button
+                                                        key={option.key}
+                                                        type="button"
+                                                        role="checkbox"
+                                                        aria-checked={checked}
+                                                        onClick={() => {
+                                                            setRequiredRequirements((prev) =>
+                                                                prev.includes(option.key)
+                                                                    ? prev.filter((value) => value !== option.key)
+                                                                    : [...prev, option.key]
+                                                            );
+                                                        }}
+                                                        className={cn(
+                                                            "flex min-h-[44px] items-center justify-between rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors",
+                                                            checked
+                                                                ? "border-primary bg-primary/10 text-foreground"
+                                                                : "border-border bg-background text-muted-foreground hover:text-foreground"
+                                                        )}
+                                                    >
+                                                        <span className="inline-flex items-center gap-2">
+                                                            <span
+                                                                className={cn(
+                                                                    "flex size-5 items-center justify-center rounded border",
+                                                                    checked
+                                                                        ? "border-primary bg-primary text-primary-foreground"
+                                                                        : "border-muted-foreground/40 bg-background"
+                                                                )}
+                                                            >
+                                                                {checked && <Check className="size-3.5" />}
+                                                            </span>
+                                                            <span>{t(option.label)}</span>
+                                                        </span>
+                                                        {option.key === "valid_id" && (
+                                                            <span onClick={(e) => e.stopPropagation()}>
+                                                                <Tooltip content={t(VALID_ID_TOOLTIP)} side="top" sideOffset={8}>
+                                                                    <span className="text-xs font-medium text-muted-foreground underline">
+                                                                        {t("List")}
+                                                                    </span>
+                                                                </Tooltip>
+                                                            </span>
+                                                        )}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <hr className="border-border" />
+
+                        {/* Step 3: Limits & Payment */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2.5">
+                                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                                    3
+                                </span>
+                                <h3 className="text-base font-bold text-foreground">
+                                    {t("Link limits & move-in payment")}
+                                </h3>
+                            </div>
+
+                            <div className="space-y-5 pl-0 sm:pl-9">
+                                {/* Usage Limit */}
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-semibold text-foreground">
+                                        {t("How many people can use this link?")}
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {USE_LIMIT_PRESETS.map((preset) => {
+                                            const active = !isCustomUses && maxUses === preset.value;
+                                            return (
+                                                <button
+                                                    key={preset.value}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setIsCustomUses(false);
+                                                        setMaxUses(preset.value);
+                                                        setCustomUsesInput(String(preset.value));
+                                                    }}
+                                                    className={cn(
+                                                        "min-h-[44px] rounded-xl border px-3.5 text-sm font-semibold transition-colors",
+                                                        active
+                                                            ? "border-primary bg-primary text-primary-foreground"
+                                                            : "border-border bg-background text-foreground hover:bg-muted"
+                                                    )}
+                                                >
+                                                    {t(preset.label)}
+                                                </button>
+                                            );
+                                        })}
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsCustomUses(true)}
+                                            className={cn(
+                                                "min-h-[44px] rounded-xl border px-3.5 text-sm font-semibold transition-colors",
+                                                isCustomUses
+                                                    ? "border-primary bg-primary text-primary-foreground"
+                                                    : "border-border bg-background text-foreground hover:bg-muted"
+                                            )}
+                                        >
+                                            {t("Custom")}
+                                        </button>
+                                    </div>
+                                    {isCustomUses && (
+                                        <div className="mt-2 flex items-center gap-3">
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                maxLength={3}
+                                                aria-label={t("Custom number of uses")}
+                                                value={customUsesInput}
+                                                onChange={(e) => {
+                                                    const digitsOnly = e.target.value.replace(/[^0-9]/g, "");
+                                                    setCustomUsesInput(digitsOnly);
+                                                }}
+                                                placeholder="1 - 100"
+                                                className="h-12 w-32 rounded-xl border border-border bg-background px-3.5 text-base font-semibold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
+                                            />
+                                            <span className="text-sm text-muted-foreground">
+                                                {t("people (maximum 100)")}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Expiration */}
+                                <div className="space-y-2">
+                                    <label htmlFor="expires-at" className="block text-sm font-semibold text-foreground">
+                                        {t("How long should this link work?")}
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {EXPIRY_PRESETS.map((preset) => {
+                                            const active = !isCustomExpiry && activePreset === preset.days;
+                                            return (
+                                                <button
+                                                    key={preset.days}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setIsCustomExpiry(false);
+                                                        setActivePreset(preset.days);
+                                                        setExpiresAt(computeExpiryIsoLocal(preset.days));
+                                                    }}
+                                                    className={cn(
+                                                        "min-h-[44px] rounded-xl border px-3.5 text-sm font-semibold transition-colors",
+                                                        active
+                                                            ? "border-primary bg-primary text-primary-foreground"
+                                                            : "border-border bg-background text-foreground hover:bg-muted"
+                                                    )}
+                                                >
+                                                    {t(preset.label)}
+                                                </button>
+                                            );
+                                        })}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsCustomExpiry(true);
+                                                setActivePreset(null);
+                                            }}
+                                            className={cn(
+                                                "min-h-[44px] rounded-xl border px-3.5 text-sm font-semibold transition-colors",
+                                                isCustomExpiry
+                                                    ? "border-primary bg-primary text-primary-foreground"
+                                                    : "border-border bg-background text-foreground hover:bg-muted"
+                                            )}
+                                        >
+                                            {t("Pick a Date")}
+                                        </button>
+                                    </div>
+                                    {isCustomExpiry && (
+                                        <div className="mt-2 space-y-1.5">
+                                            <div className="relative max-w-xs">
+                                                <Calendar className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                                <input
+                                                    {...inviteForm.fieldProps("expiresAt")}
+                                                    id="expires-at"
+                                                    type="datetime-local"
+                                                    min={new Date().toISOString().slice(0, 16)}
+                                                    max="2099-12-31T23:59"
+                                                    value={expiresAt}
+                                                    onChange={(event) => {
+                                                        setExpiresAt(event.target.value);
+                                                        setActivePreset(null);
+                                                    }}
+                                                    className={cn(
+                                                        "h-12 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm font-semibold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/30",
+                                                        inviteForm.errorFor("expiresAt") && fieldErrorClass
+                                                    )}
+                                                />
+                                            </div>
+                                            <FieldError id={inviteForm.errorId("expiresAt")} message={tOpt(inviteForm.errorFor("expiresAt"))} />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Move-in Payment Terms (Collapsible) */}
+                                {showPaymentPreview && (
+                                    <div className="rounded-xl border border-border bg-muted/40 p-4">
+                                        <div className="flex flex-wrap items-center justify-between gap-3">
+                                            <div>
+                                                <p className="text-sm font-bold text-foreground">{t("Move-in Payment")}</p>
+                                                <p className="text-sm text-muted-foreground">{paymentSummaryText}</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPaymentEditor((prev) => !prev)}
+                                                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 text-sm font-semibold text-foreground hover:bg-muted"
+                                            >
+                                                <span>{showPaymentEditor ? t("Hide") : t("Adjust")}</span>
+                                                {showPaymentEditor ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                                            </button>
+                                        </div>
+
+                                        {showPaymentEditor && (
+                                            <div className="mt-4 grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+                                                {/* Advance Rent */}
+                                                <div className="space-y-2.5">
+                                                    <div className="flex items-center justify-between text-sm">
+                                                        <label htmlFor="advance-amount-input" className="font-semibold text-foreground">
+                                                            {t("Advance Rent")}
+                                                        </label>
+                                                        {advanceMonths === -1 && (
+                                                            <span className="text-xs font-medium text-muted-foreground">{t("Custom amount")}</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="relative">
+                                                        <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
+                                                            PHP
+                                                        </span>
+                                                        <input
+                                                            id="advance-amount-input"
+                                                            type="text"
+                                                            inputMode="decimal"
+                                                            maxLength={10}
+                                                            {...inviteForm.fieldProps("customAdvance")}
+                                                            aria-label={t("Advance rent amount")}
+                                                            value={
+                                                                advanceMonths === -1
+                                                                    ? customAdvance
+                                                                    : String(currentPaymentPreview.advanceAmount)
+                                                            }
+                                                            onChange={(e) => {
+                                                                const sanitized = e.target.value.replace(/[^0-9.]/g, "");
+                                                                setAdvanceMonths(-1);
+                                                                setCustomAdvance(sanitized);
+                                                            }}
+                                                            placeholder="0.00"
+                                                            className={cn(
+                                                                "h-11 w-full rounded-xl border border-border bg-background pl-12 pr-3 text-right text-base font-bold tabular-nums text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/30",
+                                                                inviteForm.errorFor("customAdvance") && fieldErrorClass
+                                                            )}
+                                                        />
+                                                    </div>
+                                                    <FieldError id={inviteForm.errorId("customAdvance")} message={tOpt(inviteForm.errorFor("customAdvance"))} />
+                                                    <div className="grid grid-cols-3 gap-1.5">
+                                                        {[
+                                                            { value: 0, label: "None" },
+                                                            { value: 1, label: "1 Mo" },
+                                                            { value: 2, label: "2 Mo" },
+                                                        ].map((opt) => (
+                                                            <button
+                                                                key={opt.value}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setAdvanceMonths(opt.value);
+                                                                    setCustomAdvance("");
+                                                                }}
+                                                                className={cn(
+                                                                    "min-h-[40px] rounded-lg border px-2 text-xs font-semibold transition-colors",
+                                                                    advanceMonths === opt.value
+                                                                        ? "border-primary bg-primary text-primary-foreground"
+                                                                        : "border-border bg-background text-foreground hover:bg-muted"
+                                                                )}
+                                                            >
+                                                                {t(opt.label)}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {/* Security Deposit */}
+                                                <div className="space-y-2.5">
+                                                    <div className="flex items-center justify-between text-sm">
+                                                        <label htmlFor="deposit-amount-input" className="font-semibold text-foreground">
+                                                            {t("Security Deposit")}
+                                                        </label>
+                                                        {securityDepositMonths === -1 && (
+                                                            <span className="text-xs font-medium text-muted-foreground">{t("Custom amount")}</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="relative">
+                                                        <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
+                                                            PHP
+                                                        </span>
+                                                        <input
+                                                            id="deposit-amount-input"
+                                                            type="text"
+                                                            inputMode="decimal"
+                                                            maxLength={10}
+                                                            {...inviteForm.fieldProps("customDeposit")}
+                                                            aria-label={t("Security deposit amount")}
+                                                            value={
+                                                                securityDepositMonths === -1
+                                                                    ? customDeposit
+                                                                    : String(currentPaymentPreview.securityDepositAmount)
+                                                            }
+                                                            onChange={(e) => {
+                                                                const sanitized = e.target.value.replace(/[^0-9.]/g, "");
+                                                                setSecurityDepositMonths(-1);
+                                                                setCustomDeposit(sanitized);
+                                                            }}
+                                                            placeholder="0.00"
+                                                            className={cn(
+                                                                "h-11 w-full rounded-xl border border-border bg-background pl-12 pr-3 text-right text-base font-bold tabular-nums text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/30",
+                                                                inviteForm.errorFor("customDeposit") && fieldErrorClass
+                                                            )}
+                                                        />
+                                                    </div>
+                                                    <FieldError id={inviteForm.errorId("customDeposit")} message={tOpt(inviteForm.errorFor("customDeposit"))} />
+                                                    <div className="grid grid-cols-3 gap-1.5">
+                                                        {[
+                                                            { value: 0, label: "None" },
+                                                            { value: 1, label: "1 Mo" },
+                                                            { value: 2, label: "2 Mo" },
+                                                        ].map((opt) => (
+                                                            <button
+                                                                key={opt.value}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSecurityDepositMonths(opt.value);
+                                                                    setCustomDeposit("");
+                                                                }}
+                                                                className={cn(
+                                                                    "min-h-[40px] rounded-lg border px-2 text-xs font-semibold transition-colors",
+                                                                    securityDepositMonths === opt.value
+                                                                        ? "border-primary bg-primary text-primary-foreground"
+                                                                        : "border-border bg-background text-foreground hover:bg-muted"
+                                                                )}
+                                                            >
+                                                                {t(opt.label)}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div className="sm:col-span-2 flex items-center justify-between rounded-xl border border-border bg-background px-4 py-3 text-sm">
+                                                    <span className="font-semibold text-muted-foreground">{t("Estimated Move-in Total")}</span>
+                                                    <span className="text-base font-bold tabular-nums text-foreground">
+                                                        PHP {currentPaymentPreview.totalMoveInAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Mobile Primary Button */}
+                        <div className="lg:hidden pt-2">
+                            <button
+                                type="button"
+                                onClick={createInvite}
+                                disabled={submitting}
+                                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-base font-bold text-primary-foreground transition-colors hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                            >
+                                <Link2 className="size-5" />
+                                {submitting ? t("Creating Link...") : t("Create Invite Link")}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Live Summary OR Generated Result */}
+                    <div ref={resultRef} className="lg:sticky lg:top-4">
+                        {freshInvite ? (
+                            <div className="rounded-2xl border-2 border-primary/40 bg-background p-5 space-y-5">
+                                <div className="flex items-center justify-between">
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white">
+                                        <CheckCircle2 className="size-3.5" />
+                                        {t("Link Ready to Share")}
+                                    </span>
+                                    <span className="text-xs font-semibold text-muted-foreground">
+                                        {freshInvite.useCount} / {freshInvite.maxUses} {t("used")}
+                                    </span>
+                                </div>
+
+                                <div className="flex flex-col items-center rounded-xl border border-border bg-muted/30 p-4">
+                                    <div className="rounded-2xl border border-border bg-white p-2.5">
+                                        <Image src={freshInvite.qrUrl} alt={t("Invite QR code")} width={156} height={156} className="rounded-lg" />
+                                    </div>
+                                    <p className="mt-2.5 text-xs font-medium text-muted-foreground">
+                                        {t("Let the tenant scan this QR code, or copy the link below.")}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => void copyLink(freshInvite.shareUrl)}
+                                        className={cn(
+                                            "inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-base font-bold transition-colors active:scale-95",
+                                            copiedUrl
+                                                ? "bg-emerald-700 text-white hover:bg-emerald-800"
+                                                : "bg-primary text-primary-foreground hover:bg-primary/90"
+                                        )}
+                                    >
+                                        {copiedUrl ? (
+                                            <>
+                                                <Check className="size-5" />
+                                                {t("Copied!")}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy className="size-5" />
+                                                {t("Copy Link")}
+                                            </>
+                                        )}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setFreshInvite(null)}
+                                        className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted"
+                                    >
+                                        {t("Create Another Link")}
+                                    </button>
+                                </div>
+
+                                <div className="rounded-xl border border-border bg-muted/40 p-3.5 space-y-2 text-xs">
+                                    <div>
+                                        <p className="font-semibold text-muted-foreground">{t("Share URL")}</p>
+                                        <p className="mt-0.5 break-all font-mono text-foreground">{freshInvite.shareUrl}</p>
+                                    </div>
+                                    <div className="flex items-center justify-between border-t border-border pt-2">
+                                        <span className="text-muted-foreground">{t("Expires on")}</span>
+                                        <span className="font-semibold text-foreground">{formatReadableDate(freshInvite.expiresAt)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="hidden lg:block rounded-2xl border border-border bg-muted/30 p-6 space-y-5">
+                                <div>
+                                    <h4 className="text-base font-bold text-foreground">{t("Link Summary")}</h4>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        {t("Check your choices, then click the button below.")}
+                                    </p>
+                                </div>
+
+                                <dl className="space-y-3 border-y border-border py-4 text-sm">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <dt className="text-muted-foreground">{t("Property")}</dt>
+                                        <dd className="text-right font-semibold text-foreground">
+                                            {selectedProperty?.name || t("Not selected")}
+                                        </dd>
+                                    </div>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <dt className="text-muted-foreground">{t("Room")}</dt>
+                                        <dd className="text-right font-semibold text-foreground">
+                                            {mode === "unit"
+                                                ? selectedUnit?.name || t("Pick a room")
+                                                : t("Any vacant room")}
+                                        </dd>
+                                    </div>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <dt className="text-muted-foreground">{t("Apply Method")}</dt>
+                                        <dd className="text-right font-semibold text-foreground">
+                                            {applicationType === "online" ? t("Online Application") : t("In Person")}
+                                        </dd>
+                                    </div>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <dt className="text-muted-foreground">{t("Use Limit")}</dt>
+                                        <dd className="text-right font-semibold text-foreground">
+                                            {effectiveMaxUses === 1
+                                                ? t("1 person")
+                                                : t("{count} people", { count: effectiveMaxUses })}
+                                        </dd>
+                                    </div>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <dt className="text-muted-foreground">{t("Expires")}</dt>
+                                        <dd className="text-right font-semibold text-foreground">
+                                            {formatReadableDate(expiresAt ? new Date(expiresAt).toISOString() : null)}
+                                        </dd>
+                                    </div>
+                                    {showPaymentPreview && (
+                                        <div className="flex items-start justify-between gap-3">
+                                            <dt className="text-muted-foreground">{t("Move-in Total")}</dt>
+                                            <dd className="text-right font-bold tabular-nums text-foreground">
+                                                PHP {currentPaymentPreview.totalMoveInAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </dd>
+                                        </div>
+                                    )}
+                                </dl>
+
+                                <button
+                                    type="button"
+                                    onClick={createInvite}
+                                    disabled={submitting}
+                                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-base font-bold text-primary-foreground transition-colors hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                                >
+                                    <Link2 className="size-5" />
+                                    {submitting ? t("Creating Link...") : t("Create Invite Link")}
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
             )}
 
-            {/* Mobile generated invite modal */}
+            {/* TAB 2: PAST LINKS (PAGINATED) */}
+            {activeTab === "history" && (
+                <div className="mt-6 space-y-5">
+                    {/* Wrapped Filter Chips */}
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                            {[
+                                { key: "all" as const, label: "All Links" },
+                                { key: "active" as const, label: "Active Only" },
+                                { key: "inactive" as const, label: "Used or Expired" },
+                            ].map((chip) => (
+                                <button
+                                    key={chip.key}
+                                    type="button"
+                                    onClick={() => setHistoryFilter(chip.key)}
+                                    className={cn(
+                                        "min-h-[40px] rounded-full border px-4 text-sm font-semibold transition-colors",
+                                        historyFilter === chip.key
+                                            ? "border-primary bg-primary text-primary-foreground"
+                                            : "border-border bg-background text-foreground hover:bg-muted"
+                                    )}
+                                >
+                                    {t(chip.label)}
+                                </button>
+                            ))}
+                        </div>
+                        {filteredInvites.length > 0 && (
+                            <p className="text-sm font-medium text-muted-foreground">
+                                {t("Showing {start}–{end} of {total}", {
+                                    start: (safeHistoryPage - 1) * HISTORY_PAGE_SIZE + 1,
+                                    end: Math.min(safeHistoryPage * HISTORY_PAGE_SIZE, filteredInvites.length),
+                                    total: filteredInvites.length,
+                                })}
+                            </p>
+                        )}
+                    </div>
+
+                    {invites.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-12 text-center">
+                            <Link2 className="mb-3 size-8 text-muted-foreground" />
+                            <p className="text-base font-bold text-foreground">{t("No invite links yet")}</p>
+                            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                                {t("Create your first invite link to share with a future tenant.")}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab("create")}
+                                className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground hover:bg-primary/90"
+                            >
+                                <Plus className="size-4" />
+                                {t("Create First Link")}
+                            </button>
+                        </div>
+                    ) : filteredInvites.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-10 text-center">
+                            <p className="text-base font-bold text-foreground">{t("No links match this filter")}</p>
+                            <button
+                                type="button"
+                                onClick={() => setHistoryFilter("all")}
+                                className="mt-3 inline-flex min-h-[44px] items-center rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted"
+                            >
+                                {t("Show All Links")}
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="grid gap-3.5">
+                            {paginatedInvites.map((invite) => {
+                                const statusMeta = getInviteStatusMeta(invite.status);
+                                const StatusIcon = statusMeta.icon;
+                                const remainingUses = Math.max(0, invite.maxUses - invite.useCount);
+
+                                return (
+                                    <div
+                                        key={invite.id}
+                                        className="rounded-2xl border border-border bg-background p-4 sm:p-5 space-y-3.5"
+                                    >
+                                        {/* Band 1: Identity & State */}
+                                        <div className="flex flex-wrap items-start justify-between gap-2">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
+                                                    <QrCode className="size-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-base font-bold text-foreground">
+                                                        {invite.propertyName}
+                                                        {invite.unitName ? ` — ${invite.unitName}` : ""}
+                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {invite.mode === "unit" ? t("Specific Room") : t("Any Vacant Room")} ·{" "}
+                                                        {invite.applicationType === "online" ? t("Online") : t("In Person")}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold", statusMeta.badgeClass)}>
+                                                <StatusIcon className="size-3.5" />
+                                                {t(statusMeta.label)}
+                                            </span>
+                                        </div>
+
+                                        {/* Band 2: Plain Summary */}
+                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                                            <span>
+                                                <strong className="font-semibold text-foreground">
+                                                    {invite.useCount} / {invite.maxUses}
+                                                </strong>{" "}
+                                                {t("used")} ({remainingUses} {t("left")})
+                                            </span>
+                                            <span>·</span>
+                                            <span>
+                                                {t("Expires")}:{" "}
+                                                <strong className="font-semibold text-foreground">
+                                                    {formatReadableDate(invite.expiresAt)}
+                                                </strong>
+                                            </span>
+                                        </div>
+
+                                        {/* Band 3: Action Footer */}
+                                        <div className="border-t border-border pt-3">
+                                            {revokingId === invite.id ? (
+                                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                                    <p className="text-sm font-semibold text-rose-700 dark:text-rose-400">
+                                                        {t("Turn off this link so no one else can use it?")}
+                                                    </p>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                void revokeInvite(invite.id);
+                                                                setRevokingId(null);
+                                                            }}
+                                                            className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-rose-700 px-4 text-sm font-bold text-white hover:bg-rose-800"
+                                                        >
+                                                            {t("Yes, Turn Off")}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setRevokingId(null)}
+                                                            className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted"
+                                                        >
+                                                            {t("Keep Active")}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => void copyLink(invite.shareUrl, invite.id)}
+                                                        className={cn(
+                                                            "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors",
+                                                            copiedId === invite.id
+                                                                ? "border-emerald-700 bg-emerald-700 text-white"
+                                                                : "border-border bg-background text-foreground hover:bg-muted"
+                                                        )}
+                                                    >
+                                                        {copiedId === invite.id ? (
+                                                            <>
+                                                                <Check className="size-4" />
+                                                                {t("Copied!")}
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Copy className="size-4" />
+                                                                {t("Copy Link")}
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                    <a
+                                                        href={invite.qrUrl}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted"
+                                                    >
+                                                        <QrCode className="size-4" />
+                                                        {t("View QR")}
+                                                    </a>
+                                                    {invite.status === "active" && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setRevokingId(invite.id)}
+                                                            className="col-span-2 sm:col-span-1 sm:ml-auto inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-background px-4 text-sm font-semibold text-rose-700 hover:bg-rose-500/10 dark:text-rose-400"
+                                                        >
+                                                            <XCircle className="size-4" />
+                                                            {t("Turn Off")}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Pagination Controls */}
+                    {totalHistoryPages > 1 && (
+                        <div className="flex items-center justify-between border-t border-border pt-4">
+                            <button
+                                type="button"
+                                onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+                                disabled={safeHistoryPage <= 1}
+                                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
+                            >
+                                <ChevronLeft className="size-4" />
+                                {t("Prev")}
+                            </button>
+                            <span className="text-sm font-semibold text-muted-foreground">
+                                {t("Page {current} of {total}", { current: safeHistoryPage, total: totalHistoryPages })}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => setHistoryPage((p) => Math.min(totalHistoryPages, p + 1))}
+                                disabled={safeHistoryPage >= totalHistoryPages}
+                                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
+                            >
+                                {t("Next")}
+                                <ChevronRight className="size-4" />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Mobile Generated Invite Sheet */}
             {freshInvite && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm md:hidden animate-in fade-in duration-300">
-                    <div className="relative w-full max-w-sm rounded-[2rem] border border-white/10 bg-background/95 p-6 shadow-2xl backdrop-blur-2xl animate-in zoom-in-95 slide-in-from-bottom-10 duration-300">
-                        {/* Header */}
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center sm:p-4 lg:hidden">
+                    <div className="w-full max-w-md overscroll-contain rounded-t-3xl border border-border bg-card p-6 shadow-xl sm:rounded-2xl">
                         <div className="mb-4 flex items-center justify-between">
-                            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
-                                <ShieldCheck className="size-4 text-primary animate-pulse" />
-                                <span className="text-[10px] font-black uppercase tracking-wider text-primary">{t("Generated Invite")}</span>
-                            </div>
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white">
+                                <CheckCircle2 className="size-3.5" />
+                                {t("Link Ready to Share")}
+                            </span>
                             <button
                                 type="button"
                                 onClick={() => setFreshInvite(null)}
                                 aria-label={t("Close")}
-                                className="flex size-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground active:scale-90 transition-all font-black text-lg"
+                                className="flex size-10 items-center justify-center rounded-full border border-border bg-background text-lg font-bold text-foreground hover:bg-muted"
                             >
                                 ×
                             </button>
                         </div>
 
-                        {/* QR Code */}
-                        <div className="flex flex-col items-center">
-                            <div className="relative mb-4 rounded-3xl border border-border bg-white p-3 shadow-xl">
-                                <Image src={freshInvite.qrUrl} alt={t("Invite QR code")} width={160} height={160} className="rounded-xl" />
+                        <div className="flex flex-col items-center rounded-xl border border-border bg-muted/30 p-4">
+                            <div className="rounded-2xl border border-border bg-white p-2.5">
+                                <Image src={freshInvite.qrUrl} alt={t("Invite QR code")} width={156} height={156} className="rounded-lg" />
                             </div>
-                            <p className="text-xs font-semibold text-muted-foreground mb-4">{t("Scan QR code or copy the link below")}</p>
+                            <p className="mt-2.5 text-center text-xs font-medium text-muted-foreground">
+                                {t("Scan QR code or copy the link below.")}
+                            </p>
                         </div>
 
-                        {/* Share URL */}
-                        <div className="mb-4 w-full rounded-2xl border border-border bg-card/50 p-3 text-left">
-                            <p className="mb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Share URL")}</p>
-                            <p className="text-xs font-medium text-foreground break-all">{freshInvite.shareUrl}</p>
+                        <div className="mt-4 rounded-xl border border-border bg-background p-3 text-xs">
+                            <p className="font-semibold text-muted-foreground">{t("Share URL")}</p>
+                            <p className="mt-0.5 break-all font-mono text-foreground">{freshInvite.shareUrl}</p>
                         </div>
 
-                        {/* Payment Preview */}
-                        {freshInvite.paymentPreview && (
-                            <div className="mb-5 w-full rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-3.5 text-left text-xs">
-                                <p className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">{t("Move-in Payment Terms")}</p>
-                                <div className="space-y-1 font-semibold text-amber-900 dark:text-amber-100">
-                                    <div className="flex justify-between">
-                                        <span>{t("Advance Rent:")}</span>
-                                        <span>PHP {freshInvite.paymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span>{t("Security Deposit:")}</span>
-                                        <span>PHP {freshInvite.paymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                    </div>
-                                    <div className="pt-1.5 mt-1.5 border-t border-amber-500/20 flex justify-between font-black text-amber-950 dark:text-white">
-                                        <span>{t("Total Move-in:")}</span>
-                                        <span>PHP {(freshInvite.paymentPreview.totalMoveInAmount ?? (freshInvite.paymentPreview.advanceAmount + freshInvite.paymentPreview.securityDepositAmount)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Action buttons */}
-                        <div className="flex gap-2">
+                        <div className="mt-4 flex gap-2.5">
                             <button
                                 type="button"
                                 onClick={() => void copyLink(freshInvite.shareUrl, "fresh")}
                                 className={cn(
-                                    "flex-1 inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-xs font-black uppercase tracking-wider transition-all active:scale-95",
+                                    "flex-1 inline-flex h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition-colors",
                                     copiedId === "fresh"
-                                        ? "bg-emerald-600 text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:bg-emerald-700"
+                                        ? "bg-emerald-700 text-white"
                                         : "bg-primary text-primary-foreground hover:bg-primary/90"
                                 )}
                             >
@@ -1207,7 +1710,7 @@ export function TenantInviteManager({
                             <button
                                 type="button"
                                 onClick={() => setFreshInvite(null)}
-                                className="inline-flex h-11 items-center justify-center rounded-xl border border-border bg-card px-4 text-xs font-black uppercase tracking-wider text-foreground hover:bg-muted active:scale-95"
+                                className="inline-flex h-12 items-center justify-center rounded-xl border border-border bg-background px-5 text-sm font-semibold text-foreground hover:bg-muted"
                             >
                                 {t("Done")}
                             </button>

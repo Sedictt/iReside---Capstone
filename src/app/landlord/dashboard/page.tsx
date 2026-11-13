@@ -1184,6 +1184,7 @@ export default function LandlordDashboard() {
 
                         <div className="p-8 max-h-[calc(90vh-120px)] overflow-y-auto custom-scrollbar-premium">
                             <TenantInviteManager
+                                embedded
                                 availableUnits={filteredUnits}
                                 invites={filteredInvites}
                                 onRefresh={async () => {

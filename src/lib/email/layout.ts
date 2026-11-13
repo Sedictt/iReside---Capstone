@@ -281,10 +281,16 @@ export function button(
   const safeHref = esc(href);
   const padding = opts.small ? "10px 18px" : "14px 28px";
   const fontSize = opts.small ? 13 : 15;
-  return `<table role="presentation" border="0" cellpadding="0" cellspacing="0" class="ir-btn-wrap" align="${opts.center ? "center" : "left"}" style="margin:0 ${opts.center ? "auto" : "0"} ${opts.marginBottom ?? 24}px;">
+  return `<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 ${opts.marginBottom ?? 24}px;">
   <tr>
-    <td align="center" bgcolor="${tone.bg}" style="border-radius:10px;background-color:${tone.bg};border:1px solid ${tone.border};">
-      <a href="${safeHref}" target="_blank" rel="noopener noreferrer" class="ir-btn" style="display:inline-block;padding:${padding};font-size:${fontSize}px;line-height:1.2;font-weight:700;color:${tone.color};text-decoration:none;border-radius:10px;font-family:${EMAIL_FONT};mso-padding-alt:0;">${esc(label)}</a>
+    <td align="${opts.center ? "center" : "left"}">
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="ir-btn-wrap" style="margin:0${opts.center ? " auto" : ""};">
+        <tr>
+          <td align="center" bgcolor="${tone.bg}" style="border-radius:10px;background-color:${tone.bg};border:1px solid ${tone.border};">
+            <a href="${safeHref}" target="_blank" rel="noopener noreferrer" class="ir-btn" style="display:inline-block;padding:${padding};font-size:${fontSize}px;line-height:1.2;font-weight:700;color:${tone.color};text-decoration:none;border-radius:10px;font-family:${EMAIL_FONT};mso-padding-alt:0;">${esc(label)}</a>
+          </td>
+        </tr>
+      </table>
     </td>
   </tr>
 </table>`;

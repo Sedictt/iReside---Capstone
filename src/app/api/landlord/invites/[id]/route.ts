@@ -3,6 +3,7 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseJsonBody } from "@/lib/validation/server";
 import { inviteUpdateSchema, isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { invalidateInvitesCache } from "@/lib/tenant-invite-cache";
 
 export async function PATCH(
     request: Request,
@@ -47,6 +48,8 @@ export async function PATCH(
         event_type: "revoked",
         metadata: {},
     });
+
+    invalidateInvitesCache(userId);
 
     return NextResponse.json({ success: true });
 }

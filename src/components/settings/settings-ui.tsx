@@ -483,7 +483,7 @@ export function SettingsSectionLayout<Id extends string>({
     const active = sections.find((s) => s.id === activeId) ?? sections[0];
 
     return (
-        <div id="settings-page-top" className="scroll-mt-24 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-10 xl:gap-14">
+        <div id="settings-page-top" className="scroll-mt-24 lg:grid lg:grid-cols-[19.5rem_minmax(0,1fr)] lg:gap-10 xl:gap-14">
             {/* Always-visible topic list (large screens only) */}
             <nav aria-label={t("All settings")} className="hidden lg:block">
                 <div className="sticky top-6 space-y-6">
@@ -512,7 +512,7 @@ export function SettingsSectionLayout<Id extends string>({
                                                     onClick={() => onOpen(item.id)}
                                                     aria-current={isActive ? "page" : undefined}
                                                     className={cn(
-                                                        "flex w-full min-h-12 items-center gap-3 rounded-2xl border-2 px-3 py-2 text-left text-base transition-colors cursor-pointer",
+                                                        "flex w-full min-h-12 items-center gap-2.5 rounded-2xl border-2 px-3 py-2 text-left text-[15px] transition-colors cursor-pointer",
                                                         "focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50",
                                                         isActive
                                                             ? "border-foreground/70 bg-primary/25 font-bold text-foreground"
@@ -520,7 +520,7 @@ export function SettingsSectionLayout<Id extends string>({
                                                     )}
                                                 >
                                                     <Icon className="size-5 shrink-0" aria-hidden />
-                                                    <span className="flex-1">{item.title}</span>
+                                                    <span className="flex-1 min-w-0 truncate">{item.title}</span>
                                                     {isActive && <Check className="size-5 shrink-0" aria-hidden />}
                                                 </button>
                                             </li>

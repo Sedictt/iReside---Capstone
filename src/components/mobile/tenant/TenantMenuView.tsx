@@ -21,6 +21,7 @@ import {
     Download,
     HelpCircle,
     Home,
+    Map,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -68,6 +69,12 @@ export function TenantMenuView() {
                     href: '/mobile/tenant/home',
                     icon: LayoutDashboard,
                     description: t('Rent status, upcoming payments & property notice feed'),
+                },
+                {
+                    label: t('Unit Map'),
+                    href: '/mobile/tenant/unit-map',
+                    icon: Map,
+                    description: t('Explore building floors & view your unit location'),
                 },
                 {
                     label: t('Payments & Bills'),

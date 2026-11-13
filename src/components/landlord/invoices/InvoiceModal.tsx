@@ -542,7 +542,7 @@ export function InvoiceModal({
                                       : plain.tone === "danger"
                                         ? "bg-white text-rose-800 dark:bg-rose-950 dark:text-rose-200"
                                         : plain.tone === "neutral"
-                                          ? "bg-white text-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
+                                          ? "bg-white text-zinc-800 dark:bg-card dark:text-zinc-200"
                                           : "bg-white text-sky-800 dark:bg-sky-950 dark:text-sky-200";
 
                             const heroTheme =

@@ -118,13 +118,36 @@ export function MapSetupWizard({
         }
     });
 
+    const hasTourBeenDismissedOrCompleted = useCallback(() => {
+        if (typeof window === "undefined") return true;
+        try {
+            if (
+                window.localStorage.getItem(`ireside.map_wizard_tour_dismissed.${propertyId}`) === "true" ||
+                window.sessionStorage.getItem(`ireside.map_wizard_tour_dismissed.${propertyId}`) === "true" ||
+                window.localStorage.getItem("ireside.onboarding_completed") === "true" ||
+                window.localStorage.getItem(`ireside_map_setup_complete_${propertyId}`) === "true" ||
+                window.localStorage.getItem(`ireside.unit_map_explore_modal_shown.${propertyId}`) === "true"
+            ) {
+                return true;
+            }
+            return false;
+        } catch {
+            return false;
+        }
+    }, [propertyId]);
+
     // --- Guided Tour Spotlight State ---
     const [isTourOpen, setIsTourOpen] = useState(() => {
         if (typeof window === "undefined") return false;
         try {
-            // Do NOT auto-open tour if greeting is still active or not yet dismissed
+            // Do NOT auto-open tour if greeting is still active or not yet dismissed, or if tour/setup was already completed
             const isGreetingDismissed = window.sessionStorage.getItem(`ireside.unit_map_intro_dismissed.${propertyId}`) === "true";
-            const isTourDismissed = window.sessionStorage.getItem(`ireside.map_wizard_tour_dismissed.${propertyId}`) === "true";
+            const isTourDismissed =
+                window.localStorage.getItem(`ireside.map_wizard_tour_dismissed.${propertyId}`) === "true" ||
+                window.sessionStorage.getItem(`ireside.map_wizard_tour_dismissed.${propertyId}`) === "true" ||
+                window.localStorage.getItem("ireside.onboarding_completed") === "true" ||
+                window.localStorage.getItem(`ireside_map_setup_complete_${propertyId}`) === "true" ||
+                window.localStorage.getItem(`ireside.unit_map_explore_modal_shown.${propertyId}`) === "true";
             return isGreetingDismissed && !isTourDismissed;
         } catch {
             return false;
@@ -148,14 +171,9 @@ export function MapSetupWizard({
 
         const handleGreetingDismissed = () => {
             setIsGreetingVisible(false);
-            if (typeof window !== "undefined") {
-                try {
-                    const isTourDismissed = window.sessionStorage.getItem(`ireside.map_wizard_tour_dismissed.${propertyId}`) === "true";
-                    if (!isTourDismissed) {
-                        setIsTourOpen(true);
-                        setTourStepIndex(0);
-                    }
-                } catch {}
+            if (!hasTourBeenDismissedOrCompleted()) {
+                setIsTourOpen(true);
+                setTourStepIndex(0);
             }
         };
 
@@ -175,7 +193,7 @@ export function MapSetupWizard({
             window.removeEventListener("ireside-unit-map-greeting-dismissed", handleGreetingDismissed);
             clearTimeout(timer);
         };
-    }, [propertyId]);
+    }, [propertyId, hasTourBeenDismissedOrCompleted]);
 
     const handleTourNext = () => setTourStepIndex((prev) => Math.min(prev + 1, 3));
     const handleTourPrev = () => setTourStepIndex((prev) => Math.max(prev - 1, 0));
@@ -183,6 +201,7 @@ export function MapSetupWizard({
         setIsTourOpen(false);
         if (typeof window !== "undefined") {
             try {
+                window.localStorage.setItem(`ireside.map_wizard_tour_dismissed.${propertyId}`, "true");
                 window.sessionStorage.setItem(`ireside.map_wizard_tour_dismissed.${propertyId}`, "true");
             } catch {}
         }

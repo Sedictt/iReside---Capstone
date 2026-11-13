@@ -116,7 +116,7 @@ export default function MyApplicationsPage() {
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="group relative bg-[#0d0d0d]/60 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl border-l-4 border-l-red-500/50 overflow-hidden"
+                    className="group relative bg-card border border-border rounded-[2.5rem] p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl border-l-4 border-l-red-500/50 overflow-hidden"
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent pointer-events-none" />
                     <div className="relative z-10 flex items-center gap-5">

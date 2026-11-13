@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { 
     Building2,
-    Sparkles,
+    CalendarCheck,
     BookOpen, 
     CreditCard, 
     Wrench, 
@@ -18,7 +18,8 @@ import {
     ArrowUpRight,
     Megaphone,
     Calendar,
-    Phone
+    Phone,
+    Map
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
@@ -210,21 +211,18 @@ export function TenantHomeView() {
                             </span>
                         </Link>
 
-                        <button
-                            type="button"
-                            onClick={() => {
-                                triggerHaptic('light');
-                                setIsAmenityDrawerOpen(true);
-                            }}
+                        <Link
+                            href="/mobile/tenant/unit-map"
+                            onClick={() => triggerHaptic('light')}
                             className="flex flex-col items-center text-center gap-2 active:scale-[0.97] transition-all"
                         >
                             <div className="m-tile m-tile-teal size-14">
-                                <Sparkles className="size-[22px]" />
+                                <Map className="size-[22px]" />
                             </div>
                             <span className="text-xs font-semibold text-foreground leading-tight">
-                                {t('Amenities')}
+                                {t('Unit Map')}
                             </span>
-                        </button>
+                        </Link>
 
                         <Link
                             href="/mobile/tenant/messages"
@@ -284,7 +282,7 @@ export function TenantHomeView() {
                         className="m-card w-full p-3.5 flex items-center gap-3.5 active:scale-[0.98] transition-all text-left"
                     >
                         <div className="m-tile m-tile-brand size-11">
-                            <Sparkles className="size-5" />
+                            <CalendarCheck className="size-5" />
                         </div>
                         <div className="min-w-0 flex-1">
                             <h4 className="text-[15px] font-bold text-foreground">

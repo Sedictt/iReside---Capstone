@@ -204,9 +204,9 @@ export default function TechnicalCommissioningPage() {
   ];
 
   return (
-    <div className="h-screen max-h-screen overflow-y-auto sm:overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans flex flex-col justify-between transition-colors duration-200">
+    <div className="h-screen max-h-screen overflow-y-auto sm:overflow-hidden bg-zinc-50 dark:bg-background text-zinc-900 dark:text-zinc-100 font-sans flex flex-col justify-between transition-colors duration-200">
       {/* Top Navbar */}
-      <nav className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-8 shadow-xs">
+      <nav className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between bg-white dark:bg-surface-0 border-b border-zinc-200 dark:border-border px-4 sm:px-8 shadow-xs">
         <div className="flex items-center gap-4 sm:gap-6">
           <Link
             href="/"

@@ -419,7 +419,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded, initia
                     initial={{ opacity: 0, scale: 0.96, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.96, y: 15 }}
-                    className="relative w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-[#0f1117]/95 backdrop-blur-2xl shadow-[0_25px_70px_rgba(0,0,0,0.18)] dark:shadow-[0_25px_70px_rgba(0,0,0,0.7)] z-10 my-auto"
+                    className="relative w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-card shadow-[0_25px_70px_rgba(0,0,0,0.18)] dark:shadow-[0_25px_70px_rgba(0,0,0,0.5)] z-10 my-auto"
                 >
                     {/* Top Action Bar */}
                     <div className="flex items-center justify-between px-6 sm:px-8 pt-6 pb-2">
