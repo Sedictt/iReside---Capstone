@@ -8,11 +8,19 @@ import type { MiniChatController } from "./useMiniChat";
 import { WINDOW_GAP_PX } from "./utils";
 
 /**
- * CSS custom property published on <html> while chat windows are docked.
+ * CSS custom property published on <html> while expanded chat windows are docked.
  * Other floating UI (e.g. the Quick Tools FAB) reads it to stay clear of the dock:
  *   right: max(7rem, calc(var(--mini-chat-dock-extent, 0px) + 1rem))
  */
 export const MINI_CHAT_DOCK_EXTENT_VAR = "--mini-chat-dock-extent";
+
+/**
+ * CSS custom property published on <html> when all docked chat windows are minimized,
+ * holding the minimized bar height in px so floating UI can sit cleanly above them.
+ */
+export const MINI_CHAT_DOCK_BOTTOM_OFFSET_VAR = "--mini-chat-dock-bottom-offset";
+
+const MINIMIZED_DOCK_MAX_HEIGHT_PX = 96;
 
 interface MiniChatTrayProps {
     controller: MiniChatController;
@@ -39,6 +47,8 @@ export function MiniChatTray({ controller, rightOffset, children, className }: M
         retryMessage,
         discardMessage,
         uploadFile,
+        stageFiles,
+        unstageFile,
         reloadMessages,
         clearError,
         setSharedFilesChatId,
@@ -52,12 +62,23 @@ export function MiniChatTray({ controller, rightOffset, children, className }: M
         if (!node) return;
 
         const publish = () => {
-            const width = node.getBoundingClientRect().width;
-            if (width <= 0 || node.childElementCount === 0) {
+            const rect = node.getBoundingClientRect();
+            if (rect.width <= 0 || rect.height <= 0 || node.childElementCount === 0) {
                 root.style.removeProperty(MINI_CHAT_DOCK_EXTENT_VAR);
+                root.style.removeProperty(MINI_CHAT_DOCK_BOTTOM_OFFSET_VAR);
                 return;
             }
-            root.style.setProperty(MINI_CHAT_DOCK_EXTENT_VAR, `${Math.round(rightOffset + width)}px`);
+
+            // When all docked windows are minimized, keep the FAB at its normal right edge
+            // and lift it above the minimized header bars instead of pushing it sideways.
+            if (rect.height <= MINIMIZED_DOCK_MAX_HEIGHT_PX) {
+                root.style.removeProperty(MINI_CHAT_DOCK_EXTENT_VAR);
+                root.style.setProperty(MINI_CHAT_DOCK_BOTTOM_OFFSET_VAR, `${Math.round(rect.height)}px`);
+                return;
+            }
+
+            root.style.removeProperty(MINI_CHAT_DOCK_BOTTOM_OFFSET_VAR);
+            root.style.setProperty(MINI_CHAT_DOCK_EXTENT_VAR, `${Math.round(rightOffset + rect.width)}px`);
         };
 
         publish();
@@ -66,6 +87,7 @@ export function MiniChatTray({ controller, rightOffset, children, className }: M
         return () => {
             observer.disconnect();
             root.style.removeProperty(MINI_CHAT_DOCK_EXTENT_VAR);
+            root.style.removeProperty(MINI_CHAT_DOCK_BOTTOM_OFFSET_VAR);
         };
     }, [rightOffset, openChats.length]);
 
@@ -100,6 +122,8 @@ export function MiniChatTray({ controller, rightOffset, children, className }: M
                         onRetry={(id, messageId) => void retryMessage(id, messageId)}
                         onDiscard={discardMessage}
                         onAttach={(id, file) => void uploadFile(id, file)}
+                        onStageFiles={stageFiles}
+                        onUnstageFile={unstageFile}
                         onReload={(id) => void reloadMessages(id)}
                         onDismissError={clearError}
                         onOpenSharedFiles={setSharedFilesChatId}

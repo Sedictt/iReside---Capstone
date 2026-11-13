@@ -750,4 +750,65 @@ describe("MobileUtilitiesView", () => {
 			expect(screen.getByText(/1 saved action\(s\) waiting to sync/i)).toBeInTheDocument();
 		});
 	});
+
+	it("supports sequential 1-by-1 walkthrough mode and queues readings seamlessly if connection drops mid-walkthrough", async () => {
+		const postedPayloads: unknown[] = [];
+		const baseFetch = global.fetch as ReturnType<typeof vi.fn>;
+		let failUtilityPostWithNetworkError = false;
+
+		global.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+			const url = String(input);
+			if (url.includes("/api/landlord/utility-readings") && init?.method === "POST") {
+				if (failUtilityPostWithNetworkError) {
+					throw new TypeError("Failed to fetch");
+				}
+				postedPayloads.push(JSON.parse(String(init.body || "{}")));
+				return new Response(JSON.stringify({ ok: true }), { status: 200 });
+			}
+			return baseFetch(input, init);
+		}) as typeof fetch;
+
+		render(<MobileUtilitiesView />);
+
+		// Wait for walkthrough CTA to render
+		const walkthroughBtn = await screen.findByRole("button", {
+			name: /Read Rooms 1-by-1/i,
+		});
+		fireEvent.click(walkthroughBtn);
+
+		// Should open Room 101 in walkthrough mode with Save & Next Room
+		const dialog = await screen.findByRole("dialog");
+		expect(within(dialog).getByText("Room 101")).toBeInTheDocument();
+		expect(within(dialog).getByText(/1 of 5/i)).toBeInTheDocument();
+		expect(
+			within(dialog).getByRole("button", { name: /Save & Next Room/i }),
+		).toBeInTheDocument();
+
+		// Simulate connection drop even while navigator.onLine still reports true
+		failUtilityPostWithNetworkError = true;
+
+		fireEvent.change(within(dialog).getByLabelText(/Type this month's water reading/i), {
+			target: { value: "31" },
+		});
+		fireEvent.click(within(dialog).getByRole("button", { name: /Save & Next Room/i }));
+
+		// Queued offline without disrupting walkthrough -> advances directly to Room 102
+		await waitFor(() => {
+			expect(mutationQueue.getQueue()).toHaveLength(1);
+			expect(within(screen.getByRole("dialog")).getByText("Room 102")).toBeInTheDocument();
+			expect(within(screen.getByRole("dialog")).getByText(/2 of 5/i)).toBeInTheDocument();
+		});
+
+		// Connection returns -> tapping Sync Now flushes queued reading
+		failUtilityPostWithNetworkError = false;
+		fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: /Close/i }));
+
+		const syncBtn = await screen.findByRole("button", { name: /Sync Now/i });
+		fireEvent.click(syncBtn);
+
+		await waitFor(() => {
+			expect(mutationQueue.getQueue()).toHaveLength(0);
+			expect(postedPayloads).toHaveLength(1);
+		});
+	});
 });

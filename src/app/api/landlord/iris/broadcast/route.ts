@@ -9,7 +9,19 @@ import {
   type TemplateContext,
 } from "@/lib/services/iris";
 import { findDirectConversation } from "@/lib/messages/engine";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import type { NotificationType } from "@/types/database";
+
+function getWriteClient(authSupabase: any) {
+  if (process.env.VITEST) {
+    return authSupabase;
+  }
+  try {
+    return createServiceRoleSupabaseClient();
+  } catch {
+    return authSupabase;
+  }
+}
 
 export const dynamic = "force-dynamic";
 
@@ -99,11 +111,17 @@ async function getOrCreateDirectConversation(
   }
 
   const newId = crypto.randomUUID();
-  await supabase.from("conversations").insert({ id: newId });
-  await supabase.from("conversation_participants").insert([
+  const { error: convError } = await supabase.from("conversations").insert({ id: newId });
+  if (convError) {
+    throw new Error(`Failed to create conversation: ${convError.message}`);
+  }
+  const { error: partError } = await supabase.from("conversation_participants").insert([
     { conversation_id: newId, user_id: landlordId },
     { conversation_id: newId, user_id: tenantId },
   ]);
+  if (partError) {
+    throw new Error(`Failed to add conversation participants: ${partError.message}`);
+  }
   return newId;
 }
 
@@ -194,11 +212,14 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         count: 0,
+        sentCount: 0,
         recipients: [],
         channelsDelivered: [],
         message: "No matching recipients to send to",
       });
     }
+
+    const writeSupabase = getWriteClient(auth.supabase);
 
     const channelsDelivered: string[] = [];
     if (channels.inAppNotification) channelsDelivered.push("in_app_notification");
@@ -250,7 +271,7 @@ export async function POST(request: Request) {
         };
       });
 
-      const { error: notifError } = await auth.supabase
+      const { error: notifError } = await writeSupabase
         .from("notifications")
         .insert(notificationInserts);
 
@@ -264,61 +285,83 @@ export async function POST(request: Request) {
     }
 
     // Channel 2: Direct Chat Message (1-on-1 DM system message)
+    let dmSentCount = 0;
+    let dmFailedCount = 0;
+    let lastDmError: string | null = null;
+
     if (channels.directMessage) {
       const conversationCache = new Map<string, string>();
 
       for (const lease of targetLeases) {
-        let conversationId = conversationCache.get(lease.tenantId);
-        if (!conversationId) {
-          conversationId = await getOrCreateDirectConversation(
-            auth.supabase,
-            auth.userId,
-            lease.tenantId
-          );
-          conversationCache.set(lease.tenantId, conversationId);
+        try {
+          let conversationId = conversationCache.get(lease.tenantId);
+          if (!conversationId) {
+            conversationId = await getOrCreateDirectConversation(
+              writeSupabase,
+              auth.userId,
+              lease.tenantId
+            );
+            conversationCache.set(lease.tenantId, conversationId);
+          }
+
+          const templateContext: TemplateContext = {
+            tenant_name: lease.tenantName,
+            unit: lease.unitName,
+            property_name: lease.propertyName,
+            amount: formatPhpCurrency(
+              lease.outstandingBalance > 0 ? lease.outstandingBalance : lease.monthlyRent
+            ),
+            due_date: lease.dueDate || "the due date",
+            days_overdue: String(lease.daysOverdue || 0),
+            lease_end_date: lease.endDate || "the end of your lease",
+            maintenance_date: maintenanceDate || "the scheduled date",
+            custom_message: customMessage || "",
+          };
+
+          const messageContent = renderTemplate(templateKey, templateContext);
+
+          // Insert message
+          const { error: msgError } = await writeSupabase.from("messages").insert({
+            conversation_id: conversationId,
+            sender_id: auth.userId,
+            type: "system",
+            content: messageContent,
+            metadata: {
+              systemType: "reminder_sent",
+              templateKey,
+              leaseId: lease.id,
+              propertyId: lease.propertyId,
+              unitId: lease.unitId,
+              timestamp: new Date().toISOString(),
+            },
+          });
+
+          if (msgError) {
+            console.error("Direct message insert error:", msgError);
+            dmFailedCount += 1;
+            lastDmError = msgError.message;
+            continue;
+          }
+
+          dmSentCount += 1;
+
+          // Update conversation timestamp to bump inbox position
+          await writeSupabase
+            .from("conversations")
+            .update({ updated_at: new Date().toISOString() })
+            .eq("id", conversationId);
+        } catch (dmErr) {
+          console.error("Direct message delivery error:", dmErr);
+          dmFailedCount += 1;
+          lastDmError = dmErr instanceof Error ? dmErr.message : "Failed to send direct message";
         }
+      }
 
-        const templateContext: TemplateContext = {
-          tenant_name: lease.tenantName,
-          unit: lease.unitName,
-          property_name: lease.propertyName,
-          amount: formatPhpCurrency(
-            lease.outstandingBalance > 0 ? lease.outstandingBalance : lease.monthlyRent
-          ),
-          due_date: lease.dueDate || "the due date",
-          days_overdue: String(lease.daysOverdue || 0),
-          lease_end_date: lease.endDate || "the end of your lease",
-          maintenance_date: maintenanceDate || "the scheduled date",
-          custom_message: customMessage || "",
-        };
-
-        const messageContent = renderTemplate(templateKey, templateContext);
-
-        // Insert message
-        const { error: msgError } = await auth.supabase.from("messages").insert({
-          conversation_id: conversationId,
-          sender_id: auth.userId,
-          type: "system",
-          content: messageContent,
-          metadata: {
-            systemType: "reminder_sent",
-            templateKey,
-            leaseId: lease.id,
-            propertyId: lease.propertyId,
-            unitId: lease.unitId,
-            timestamp: new Date().toISOString(),
-          },
-        });
-
-        if (msgError) {
-          console.error("Direct message insert error:", msgError);
-        }
-
-        // Update conversation timestamp to bump inbox position
-        await auth.supabase
-          .from("conversations")
-          .update({ updated_at: new Date().toISOString() })
-          .eq("id", conversationId);
+      if (dmSentCount === 0 && dmFailedCount > 0) {
+        return NextResponse.json(
+          { error: `Failed to send direct messages: ${lastDmError || "Unknown error"}` },
+          { status: 500 }
+        );
       }
     }
 
@@ -334,6 +377,9 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       count: targetLeases.length,
+      sentCount: targetLeases.length,
+      directMessagesSent: dmSentCount,
+      directMessagesFailed: dmFailedCount,
       recipients: recipientsSummary,
       channelsDelivered,
     });

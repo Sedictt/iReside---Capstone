@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { logUserActivity } from "@/lib/audit/audit-logger";
 import { MaintenanceService } from "@/lib/services/maintenance";
 import {
     MaintenanceNotFoundError,
@@ -51,6 +52,23 @@ export async function PATCH(request: Request) {
         const maintenanceService = new MaintenanceService(supabase);
         const updatedRequest = await maintenanceService.updateLandlordMaintenance(userId, parsed.data);
 
+        void logUserActivity({
+            userId,
+            userRole: "landlord",
+            action: "MAINTENANCE_UPDATED",
+            category: "maintenance",
+            title: "Repair ticket updated",
+            description: parsed.data.status
+                ? `You changed a repair ticket status to ${parsed.data.status}.`
+                : "You updated a repair ticket.",
+            targetId: parsed.data.requestId,
+            targetType: "maintenance_request",
+            metadata: {
+                status: parsed.data.status ?? "updated",
+            },
+            userAgent: request.headers.get("user-agent"),
+        });
+
         return NextResponse.json({ request: updatedRequest });
     } catch (error) {
         if (error instanceof MaintenanceValidationError) {
@@ -93,6 +111,22 @@ export async function POST(request: Request) {
         const newRequest = await maintenanceService.createLandlordMaintenance(userId, {
             ...postData,
             propertyId: postData.propertyId ?? undefined,
+        });
+
+        void logUserActivity({
+            userId,
+            userRole: "landlord",
+            action: "MAINTENANCE_CREATED",
+            category: "maintenance",
+            title: "Repair ticket created",
+            description: `You logged a repair ticket: ${postData.title}.`,
+            targetId: newRequest?.id ?? null,
+            targetType: "maintenance_request",
+            metadata: {
+                title: postData.title,
+                unitId: postData.unitId,
+            },
+            userAgent: request.headers.get("user-agent"),
         });
 
         return NextResponse.json({ request: newRequest }, { status: 201 });

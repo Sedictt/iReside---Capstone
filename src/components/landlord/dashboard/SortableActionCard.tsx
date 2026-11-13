@@ -42,6 +42,10 @@ const ACTION_THEME: Record<
         iconColor: "text-violet-500 dark:text-violet-400",
         iconBg: "bg-violet-500/10 dark:bg-violet-500/15 border-violet-500/20",
     },
+    "activity-history": {
+        iconColor: "text-primary",
+        iconBg: "bg-primary/10 dark:bg-primary/15 border-primary/20",
+    },
     "unit-visualizer": {
         iconColor: "text-amber-500 dark:text-amber-400",
         iconBg: "bg-amber-500/10 dark:bg-amber-500/15 border-amber-500/20",
@@ -57,6 +61,10 @@ const ACTION_THEME: Record<
     "financial-metrics": {
         iconColor: "text-teal-500 dark:text-teal-400",
         iconBg: "bg-teal-500/10 dark:bg-teal-500/15 border-teal-500/20",
+    },
+    "calendar": {
+        iconColor: "text-sky-500 dark:text-sky-400",
+        iconBg: "bg-sky-500/10 dark:bg-sky-500/15 border-sky-500/20",
     },
     "settings": {
         iconColor: "text-slate-500 dark:text-slate-400",

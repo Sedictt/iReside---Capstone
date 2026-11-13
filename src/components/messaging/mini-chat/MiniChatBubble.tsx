@@ -16,6 +16,7 @@ interface MiniChatBubbleProps {
     isLastInGroup: boolean;
     onRetry?: (messageId: string) => void;
     onDiscard?: (messageId: string) => void;
+    onPreviewImage?: (url: string, name?: string | null) => void;
 }
 
 function StatusIcon({ status }: { status: MiniChatOutboundStatus | undefined }) {
@@ -34,7 +35,15 @@ function StatusIcon({ status }: { status: MiniChatOutboundStatus | undefined }) 
     }
 }
 
-export function MiniChatBubble({ message, contact, isFirstInGroup, isLastInGroup, onRetry, onDiscard }: MiniChatBubbleProps) {
+export function MiniChatBubble({
+    message,
+    contact,
+    isFirstInGroup,
+    isLastInGroup,
+    onRetry,
+    onDiscard,
+    onPreviewImage,
+}: MiniChatBubbleProps) {
     const { t } = useLanguageContext();
     const isOwn = message.isOwn;
     const hasImage = isImageMessage(message);
@@ -53,7 +62,7 @@ export function MiniChatBubble({ message, contact, isFirstInGroup, isLastInGroup
             )}
             data-message-id={message.id}
         >
-            <div className={cn("flex max-w-[88%] items-end gap-2", isOwn ? "justify-end" : "justify-start")}>
+            <div className={cn("flex max-w-[84%] items-end gap-1.5", isOwn ? "justify-end" : "justify-start")}>
                 {!isOwn && (
                     <div className="w-6 shrink-0">
                         {isLastInGroup && (
@@ -70,19 +79,19 @@ export function MiniChatBubble({ message, contact, isFirstInGroup, isLastInGroup
                 <div
                     title={fullTimestamp}
                     className={cn(
-                        "relative text-sm leading-relaxed transition-opacity",
+                        "relative text-[13px] leading-[1.35] transition-opacity",
                         isSending && "opacity-70",
                         hasImage
-                            ? "overflow-hidden rounded-2xl border border-border/80 bg-muted p-0.5 shadow-xs"
+                            ? "overflow-hidden rounded-2xl border border-border/70 bg-muted p-0.5 shadow-xs"
                             : hasFile
                                 ? ""
                                 : cn(
-                                    "break-words px-3.5 py-2 [overflow-wrap:anywhere]",
+                                    "break-words px-3 py-1.5 [overflow-wrap:anywhere]",
                                     isOwn
-                                        ? "bg-primary text-primary-foreground shadow-sm shadow-primary/15"
-                                        : "border border-zinc-200/90 bg-zinc-100/95 text-foreground shadow-xs dark:border-zinc-700/80 dark:bg-zinc-800/90",
+                                        ? "bg-primary text-primary-foreground shadow-xs"
+                                        : "border border-zinc-200/80 bg-zinc-100/95 text-foreground dark:border-zinc-700/70 dark:bg-zinc-800/90",
                                     // Group-aware corner radii so consecutive bubbles read as one thread.
-                                    "rounded-2xl",
+                                    "rounded-[18px]",
                                     isOwn
                                         ? cn(!isFirstInGroup && "rounded-tr-md", !isLastInGroup && "rounded-br-md", isLastInGroup && "rounded-br-sm")
                                         : cn(!isFirstInGroup && "rounded-tl-md", !isLastInGroup && "rounded-bl-md", isLastInGroup && "rounded-bl-sm")
@@ -91,30 +100,48 @@ export function MiniChatBubble({ message, contact, isFirstInGroup, isLastInGroup
                     )}
                 >
                     {hasImage && message.fileUrl && (
-                        <a
-                            href={message.fileUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="relative block overflow-hidden rounded-[14px] bg-black/5 dark:bg-white/5"
-                            aria-label={t("Open image in a new tab")}
-                        >
-                            <Image
-                                src={message.fileUrl}
-                                alt={message.fileName ?? t("Shared image")}
-                                width={320}
-                                height={240}
-                                unoptimized={message.fileUrl.startsWith("blob:")}
-                                className="h-auto max-h-[200px] w-auto max-w-full object-cover"
-                            />
-                            {isSending && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
-                                    <div className="flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white">
-                                        <div className="size-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                        {t("Sending")}
+                        onPreviewImage ? (
+                            <button
+                                type="button"
+                                onClick={() => onPreviewImage(message.fileUrl!, message.fileName)}
+                                className="relative block overflow-hidden rounded-[14px] bg-black/5 text-left transition-transform hover:brightness-95 dark:bg-white/5"
+                                aria-label={t("Preview image")}
+                            >
+                                <Image
+                                    src={message.fileUrl}
+                                    alt={message.fileName ?? t("Shared image")}
+                                    width={180}
+                                    height={160}
+                                    unoptimized={message.fileUrl.startsWith("blob:")}
+                                    className="h-auto max-h-[160px] w-auto max-w-[180px] object-cover"
+                                />
+                                {isSending && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
+                                        <div className="flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white">
+                                            <div className="size-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                            {t("Sending")}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </a>
+                                )}
+                            </button>
+                        ) : (
+                            <a
+                                href={message.fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="relative block overflow-hidden rounded-[14px] bg-black/5 dark:bg-white/5"
+                                aria-label={t("Open image in a new tab")}
+                            >
+                                <Image
+                                    src={message.fileUrl}
+                                    alt={message.fileName ?? t("Shared image")}
+                                    width={180}
+                                    height={160}
+                                    unoptimized={message.fileUrl.startsWith("blob:")}
+                                    className="h-auto max-h-[160px] w-auto max-w-[180px] object-cover"
+                                />
+                            </a>
+                        )
                     )}
 
                     {hasFile && message.fileUrl && (
@@ -123,17 +150,17 @@ export function MiniChatBubble({ message, contact, isFirstInGroup, isLastInGroup
                             target="_blank"
                             rel="noreferrer"
                             className={cn(
-                                "flex max-w-full items-center gap-2.5 rounded-2xl border px-3 py-2.5 transition-colors",
+                                "flex max-w-full items-center gap-2 rounded-2xl border px-2.5 py-2 transition-colors",
                                 isOwn
                                     ? "border-primary/40 bg-primary/15 text-foreground hover:bg-primary/25"
                                     : "border-border bg-card text-foreground hover:bg-muted"
                             )}
                         >
-                            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                                <FileText className="size-4" />
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                                <FileText className="size-3.5" />
                             </span>
                             <span className="min-w-0">
-                                <span className="block truncate text-xs font-semibold">{message.fileName || message.content || t("Attachment")}</span>
+                                <span className="block truncate text-[12px] font-semibold">{message.fileName || message.content || t("Attachment")}</span>
                                 <span className="block text-[10px] text-muted-foreground">{t("Open attachment")}</span>
                             </span>
                         </a>
@@ -146,41 +173,41 @@ export function MiniChatBubble({ message, contact, isFirstInGroup, isLastInGroup
                                 <span>{message.redactedContent || "••••••••"}</span>
                             </p>
                         ) : (
-                            <ChatMessageMarkdown content={message.content} isUser={isOwn} className="text-sm" />
+                            <ChatMessageMarkdown content={message.content} isUser={isOwn} className="text-[13px] leading-[1.35] [&_p]:my-0" />
                         )
                     )}
                 </div>
             </div>
 
             {showMeta && (
-                <div className={cn("mt-1 flex items-center gap-1 px-1 text-[10px] text-muted-foreground", isOwn ? "flex-row-reverse" : "ml-8")}>
-                        {isFailed ? (
-                            <span className="flex items-center gap-1.5 text-red-500">
-                                <StatusIcon status="failed" />
-                                <span className="font-semibold">{t("Not sent")}</span>
-                                <button
-                                    type="button"
-                                    onClick={() => onRetry?.(message.id)}
-                                    className="inline-flex items-center gap-0.5 rounded px-1 font-semibold text-foreground hover:bg-muted"
-                                >
-                                    <RotateCcw className="size-3" aria-hidden="true" /> {t("Retry")}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => onDiscard?.(message.id)}
-                                    className="inline-flex items-center gap-0.5 rounded px-1 font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
-                                >
-                                    <Trash2 className="size-3" aria-hidden="true" /> {t("Delete")}
-                                </button>
-                            </span>
-                        ) : (
-                            <>
-                                {isOwn && <StatusIcon status={message.status} />}
-                                <time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time>
-                            </>
-                        )}
-                    </div>
-                )}
+                <div className={cn("mt-0.5 flex items-center gap-1 px-1 text-[10px] text-muted-foreground", isOwn ? "flex-row-reverse" : "ml-7")}>
+                    {isFailed ? (
+                        <span className="flex items-center gap-1.5 text-red-500">
+                            <StatusIcon status="failed" />
+                            <span className="font-semibold">{t("Not sent")}</span>
+                            <button
+                                type="button"
+                                onClick={() => onRetry?.(message.id)}
+                                className="inline-flex items-center gap-0.5 rounded px-1 font-semibold text-foreground hover:bg-muted"
+                            >
+                                <RotateCcw className="size-3" aria-hidden="true" /> {t("Retry")}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onDiscard?.(message.id)}
+                                className="inline-flex items-center gap-0.5 rounded px-1 font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+                            >
+                                <Trash2 className="size-3" aria-hidden="true" /> {t("Delete")}
+                            </button>
+                        </span>
+                    ) : (
+                        <>
+                            {isOwn && <StatusIcon status={message.status} />}
+                            <time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time>
+                        </>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

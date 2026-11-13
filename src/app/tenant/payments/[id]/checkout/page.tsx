@@ -819,47 +819,41 @@ function CheckoutPageContent() {
     }
 
     return (
-        <div className="mx-auto max-w-6xl pb-20">
-            {/* Ambient Background Glows */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-                <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full" />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full" />
-            </div>
-
-            <div className="relative z-10 grid gap-8 lg:grid-cols-[1fr_380px] items-start">
-                <div className="space-y-6">
+        <div className="mx-auto max-w-6xl pb-8">
+            <div className="relative z-10 grid gap-6 lg:grid-cols-[1fr_360px] items-start">
+                <div className="space-y-4">
                     {/* Compact Header */}
-                    <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
+                    <header className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3.5">
                             <button 
                                 onClick={() => back()} 
-                                aria-label={t("Back")} className="group flex size-10 items-center justify-center rounded-full text-foreground transition-all hover:bg-muted hover:scale-105 active:scale-95 neumorphic-inset-card"
+                                aria-label={t("Back")} className="group flex size-11 items-center justify-center rounded-full border border-zinc-200 dark:border-zinc-800 bg-card text-foreground shadow-xs transition-all hover:bg-muted hover:scale-105 active:scale-95"
                             >
                                 <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
                             </button>
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t("Checkout Hub")}</p>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">{t("Checkout Hub")}</p>
                                     <span className="size-1 rounded-full bg-border" />
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{invoice.property?.name}</p>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{invoice.property?.name}</p>
                                 </div>
-                                <h1 className="text-2xl font-black tracking-tight text-foreground">{invoice.invoiceNumber}</h1>
+                                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">{invoice.invoiceNumber}</h1>
                             </div>
                         </div>
                     </header>
 
                     {/* Step 1: Payment Method */}
-                    <section className="rounded-[2rem] p-1 backdrop-blur-xl neumorphic-inset">
+                    <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-muted/70 p-1.5 shadow-xs">
                         <div
                             role="radiogroup"
                             aria-label={t("Payment method")}
-                            className={cn("grid gap-1", availableMethods.length === 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2")}
+                            className={cn("grid gap-1.5", availableMethods.length === 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2")}
                         >
                             {availableMethods.map((option) => {
                                 const meta = {
-                                    gcash: { icon: QrCode, title: "GCash Wallet", caption: "Digital Settlement", tone: "border-primary/30 bg-primary/10 text-primary" },
-                                    bank_transfer: { icon: Landmark, title: "Bank Transfer", caption: "InstaPay / PESONet", tone: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" },
-                                    cash: { icon: Wallet, title: "Cash / In-Person", caption: "Face-to-Face", tone: "border-amber-500/30 bg-amber-500/10 text-amber-500" },
+                                    gcash: { icon: QrCode, title: "GCash Wallet", caption: "Digital Settlement", tone: "border-primary/40 bg-primary/10 text-primary" },
+                                    bank_transfer: { icon: Landmark, title: "Bank Transfer", caption: "InstaPay / PESONet", tone: "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" },
+                                    cash: { icon: Wallet, title: "Cash / In-Person", caption: "Face-to-Face", tone: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400" },
                                 }[option];
                                 const Icon = meta.icon;
                                 const selected = method === option;
@@ -874,22 +868,23 @@ function CheckoutPageContent() {
                                         onClick={() => setMethod(option)}
                                         disabled={locked}
                                         className={cn(
-                                            "relative flex items-center gap-3 rounded-[1.7rem] px-5 py-4 transition-all duration-300",
-                                            selected ? "bg-background shadow-md ring-1 ring-border/50" : "text-muted-foreground hover:bg-white/5",
+                                            "relative flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 border-2",
+                                            selected
+                                                ? "border-primary bg-card text-foreground shadow-sm"
+                                                : "border-transparent text-foreground/75 hover:bg-card/80 hover:text-foreground",
                                             locked && "opacity-50 cursor-not-allowed"
                                         )}
                                     >
                                         <div className={cn(
                                             "flex size-10 shrink-0 items-center justify-center rounded-xl border transition-all",
-                                            selected ? meta.tone : "border-border/50 bg-muted/50"
+                                            selected ? meta.tone : "border-zinc-200 dark:border-zinc-700 bg-muted text-muted-foreground"
                                         )}>
                                             <Icon className="size-5" />
                                         </div>
-                                        <div className="text-left">
+                                        <div className="text-left min-w-0">
                                             <p className="text-sm font-black tracking-tight">{t(meta.title)}</p>
-                                            <p className="text-[9px] font-black uppercase tracking-widest opacity-60">{t(meta.caption)}</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t(meta.caption)}</p>
                                         </div>
-                                        {selected && <motion.div layoutId="active-pill" className="absolute inset-0 rounded-[1.7rem] border-2 border-primary/20 pointer-events-none" />}
                                     </button>
                                 );
                             })}
@@ -904,66 +899,78 @@ function CheckoutPageContent() {
                     )}
 
                     {/* Step 2: Payment Details */}
-                    <div className="min-h-[400px]">
+                    <div>
                         <AnimatePresence mode="wait">
                             {isProofMethod(method) ? (
                                 <motion.div 
                                     key={method}
-                                    initial={{ opacity: 0, y: 10 }}
+                                    initial={{ opacity: 0, y: 8 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="space-y-6"
+                                    exit={{ opacity: 0, y: -8 }}
                                 >
-                                    <div className="grid gap-6 md:grid-cols-[1fr_280px]">
-                                        <div className="space-y-6 rounded-[2rem] p-8 backdrop-blur-3xl neumorphic-panel">
-                                            <div className="space-y-5">
-                                                <Field label="Reference number">
-                                                    <input maxLength={60}
-                                                        {...paymentForm.fieldProps("referenceNumber")}
-                                                        value={referenceNumber}
-                                                        onChange={(event) => setReferenceNumber(event.target.value)}
-                                                        className={cn("w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10", paymentForm.errorFor("referenceNumber") && fieldErrorClass)}
-                                                        placeholder={t(method === "bank_transfer" ? "Bank reference or trace no." : "13-digit GCash Ref #")}
+                                    <div className="grid gap-5 md:grid-cols-[1fr_270px] items-start">
+                                        <div className="space-y-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-card p-5 shadow-sm">
+                                            <Field label="Reference number">
+                                                <input maxLength={60}
+                                                    {...paymentForm.fieldProps("referenceNumber")}
+                                                    value={referenceNumber}
+                                                    onChange={(event) => setReferenceNumber(event.target.value)}
+                                                    className={cn("w-full rounded-xl border-2 border-zinc-300 dark:border-zinc-700 bg-background px-4 py-3 text-sm font-bold text-foreground outline-none transition-all placeholder:text-muted-foreground/80 focus:border-primary focus:ring-4 focus:ring-primary/15", paymentForm.errorFor("referenceNumber") && fieldErrorClass)}
+                                                    placeholder={t(method === "bank_transfer" ? "Bank reference or trace no." : "13-digit GCash Ref #")}
+                                                />
+                                                <FieldError id={paymentForm.errorId("referenceNumber")} message={paymentForm.errorFor("referenceNumber")} />
+                                            </Field>
+                                            
+                                            <Field label="Transaction Receipt">
+                                                <label className={cn(
+                                                    "group relative flex items-center gap-4 rounded-xl border-2 border-dashed px-4 py-4 transition-all cursor-pointer",
+                                                    receipt
+                                                        ? "border-emerald-500/60 bg-emerald-500/5 hover:bg-emerald-500/10"
+                                                        : "border-zinc-300 dark:border-zinc-700 bg-muted/40 hover:bg-muted/70 hover:border-primary"
+                                                )}>
+                                                    <div className={cn(
+                                                        "flex size-11 shrink-0 items-center justify-center rounded-full transition-all",
+                                                        receipt ? "bg-emerald-600 text-white" : "bg-card border border-zinc-200 dark:border-zinc-700 text-foreground group-hover:text-primary"
+                                                    )}>
+                                                        {receipt ? <CheckCircle2 className="size-5" /> : <Upload className="size-5" />}
+                                                    </div>
+                                                    <div className="min-w-0 text-left space-y-0.5">
+                                                        <p className={cn("text-sm font-bold text-foreground", receipt && "truncate")}>
+                                                            {receipt ? receipt.name : t(method === "bank_transfer" ? "Upload Screenshot or Deposit Slip" : "Upload Screenshot")}
+                                                        </p>
+                                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                                            {t("JPG, PNG or WebP up to 8MB")}
+                                                        </p>
+                                                    </div>
+                                                    <input
+                                                        {...paymentForm.fieldProps("receipt")}
+                                                        type="file"
+                                                        accept={MEDIA_ACCEPT_STRINGS.image}
+                                                        className="sr-only"
+                                                        onChange={(event) => {
+                                                            // Images only: the landlord reviews the proof as an image and the server rejects other types.
+                                                            const validFile = handleMediaSelection(event, {
+                                                                preset: "image",
+                                                                maxSizeBytes: PROOF_LIMITS.paymentProofMaxBytes,
+                                                                notify: (message, description) => toast.error(tr(message), { description }),
+                                                            });
+                                                            setReceipt(validFile);
+                                                            paymentForm.touch("receipt");
+                                                        }}
                                                     />
-                                                    <FieldError id={paymentForm.errorId("referenceNumber")} message={paymentForm.errorFor("referenceNumber")} />
-                                                </Field>
-                                                
-                                                <Field label="Transaction Receipt">
-                                                    <label className="group relative flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/50 bg-background/30 px-5 py-8 text-center transition-all hover:bg-background/50 hover:border-primary/40 cursor-pointer">
-                                                        <div className={cn(
-                                                            "flex size-12 items-center justify-center rounded-full transition-all",
-                                                            receipt ? "bg-emerald-500/10 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-muted text-muted-foreground group-hover:text-primary"
-                                                        )}>
-                                                            {receipt ? <CheckCircle2 className="size-6" /> : <Upload className="size-6" />}
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <p className={cn("text-sm font-black text-foreground", receipt && "truncate max-w-[240px]")}>
-                                                                {receipt ? receipt.name : t(method === "bank_transfer" ? "Upload Screenshot or Deposit Slip" : "Upload Screenshot")}
-                                                            </p>
-                                                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                                {t("JPG, PNG or WebP up to 8MB")}
-                                                            </p>
-                                                        </div>
-                                                        <input
-                                                            {...paymentForm.fieldProps("receipt")}
-                                                            type="file"
-                                                            accept={MEDIA_ACCEPT_STRINGS.image}
-                                                            className="sr-only"
-                                                            onChange={(event) => {
-                                                                // Images only: the landlord reviews the proof as an image and the server rejects other types.
-                                                                const validFile = handleMediaSelection(event, {
-                                                                    preset: "image",
-                                                                    maxSizeBytes: PROOF_LIMITS.paymentProofMaxBytes,
-                                                                    notify: (message, description) => toast.error(tr(message), { description }),
-                                                                });
-                                                                setReceipt(validFile);
-                                                                paymentForm.touch("receipt");
-                                                            }}
-                                                        />
-                                                    </label>
-                                                    <FieldError id={paymentForm.errorId("receipt")} message={paymentForm.errorFor("receipt")} />
-                                                </Field>
-                                            </div>
+                                                </label>
+                                                <FieldError id={paymentForm.errorId("receipt")} message={paymentForm.errorFor("receipt")} />
+                                            </Field>
+
+                                            <Field label="Optional Note">
+                                                <textarea maxLength={250} 
+                                                    rows={2} 
+                                                    value={note} 
+                                                    onChange={(event) => setNote(event.target.value)} 
+                                                    className="w-full rounded-xl border-2 border-zinc-300 dark:border-zinc-700 bg-background px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/80 focus:border-primary focus:ring-4 focus:ring-primary/15" 
+                                                    placeholder={t("Add a comment for the landlord...")} 
+                                                />
+                                            </Field>
                                         </div>
 
                                         {method === "bank_transfer" && bankDestination ? (
@@ -978,26 +985,26 @@ function CheckoutPageContent() {
                                                 }}
                                             />
                                         ) : (
-                                        <div className="rounded-[2rem] p-6 backdrop-blur-3xl text-center flex flex-col justify-center neumorphic-panel">
-                                            <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t("Destination QR")}</p>
-                                            <div className="group relative mx-auto mb-6 aspect-square w-full max-w-[200px] overflow-hidden rounded-3xl border border-border/50 bg-white p-3 shadow-md transition-all hover:scale-[1.02]">
+                                        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-card p-5 text-center flex flex-col justify-center shadow-sm">
+                                            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-primary">{t("Destination QR")}</p>
+                                            <div className="group relative mx-auto mb-4 aspect-square w-full max-w-[168px] overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white p-2.5 shadow-xs transition-all hover:scale-[1.02]">
                                                 {gcashDestination?.qr_image_url ? (
                                                     <Image 
                                                         src={gcashDestination.qr_image_url} 
                                                         alt={t("Destination QR")} 
                                                         width={300} 
                                                         height={300} 
-                                                        className="h-full w-full object-cover rounded-2xl"
+                                                        className="h-full w-full object-cover rounded-xl"
                                                     />
                                                 ) : (
-                                                    <div className="flex h-full items-center justify-center rounded-2xl bg-zinc-50 border border-dashed border-zinc-200">
-                                                        <QrCode className="size-12 text-zinc-300" />
+                                                    <div className="flex h-full items-center justify-center rounded-xl bg-zinc-50 border border-dashed border-zinc-300">
+                                                        <QrCode className="size-10 text-zinc-400" />
                                                     </div>
                                                 )}
                                             </div>
                                             <div className="space-y-1">
                                                 <p className="text-sm font-black text-foreground truncate">{gcashDestination?.account_name || t("Landlord Wallet")}</p>
-                                                <p className="text-[11px] font-black tracking-[0.1em] text-primary">{gcashDestination?.account_number || "---"}</p>
+                                                <p className="font-mono text-sm font-black tracking-wider text-primary">{gcashDestination?.account_number || "---"}</p>
                                                 {gcashDestination?.account_number && (
                                                     <CopyValueButton className="mx-auto mt-2" value={gcashDestination.account_number} label={t("Copy GCash number")} />
                                                 )}
@@ -1005,72 +1012,56 @@ function CheckoutPageContent() {
                                         </div>
                                         )}
                                     </div>
-
-                                    {/* Optional Note moved inside for better density */}
-                                    <div className="mt-6">
-                                        <Field label="Optional Note">
-                                            <textarea maxLength={250} 
-                                                rows={2} 
-                                                value={note} 
-                                                onChange={(event) => setNote(event.target.value)} 
-                                                className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
-                                                placeholder={t("Add a comment for the landlord...")} 
-                                            />
-                                        </Field>
-                                    </div>
                                 </motion.div>
                             ) : (
                                 <motion.div 
                                     key="cash"
-                                    initial={{ opacity: 0, y: 10 }}
+                                    initial={{ opacity: 0, y: 8 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="h-full"
+                                    exit={{ opacity: 0, y: -8 }}
+                                    className="space-y-4"
                                 >
-                                    <div className="grid gap-6 md:grid-cols-[1fr_280px] h-full">
-                                        <div className="md:col-span-2 rounded-[2rem] border border-amber-500/20 bg-amber-500/5 p-8 shadow-xl backdrop-blur-3xl h-full flex flex-col justify-center">
-                                            <div className="flex items-center gap-3 text-lg font-black text-foreground">
-                                                <HandCoins className="size-6 text-amber-500" />
-                                                {t("In-Person Settlement")}
+                                    <div className="rounded-2xl border-2 border-amber-500/40 bg-card p-5 shadow-sm space-y-4">
+                                        <div className="flex items-center gap-3 text-base font-black text-foreground">
+                                            <div className="flex size-10 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                                                <HandCoins className="size-5" />
                                             </div>
-                                            <p className="mt-4 text-sm leading-relaxed text-muted-foreground font-medium max-w-2xl">
-                                                {t("Coordinate with your landlord or building manager to settle this invoice via cash. Once paid, trigger the intent below so they can officially confirm the receipt.")}
-                                            </p>
-                                            
-                                            {inPersonTriggered ? (
-                                                <div className="mt-8 flex items-center gap-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-5 text-emerald-600 dark:text-emerald-400 self-start">
-                                                    <CheckCircle2 className="size-5 shrink-0" />
-                                                    <div className="text-sm">
-                                                        <p className="font-black">{t("Intent Successfully Triggered")}</p>
-                                                        <p className="opacity-80">{t("Waiting for landlord to confirm your cash payment.")}</p>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="mt-8">
-                                                    <button
-                                                        onClick={triggerInPersonIntent}
-                                                        disabled={submitting}
-                                                        className="inline-flex items-center justify-center gap-3 rounded-full bg-amber-500 px-8 py-4 text-sm font-black text-white transition-all hover:bg-amber-600 hover:scale-[1.02] active:scale-95 shadow-lg shadow-amber-500/20 disabled:opacity-60"
-                                                    >
-                                                        {submitting ? <Loader2 className="size-5 animate-spin" /> : <Wallet className="size-5" />}
-                                                        {t("Notify Landlord of Payment")}
-                                                    </button>
-                                                </div>
-                                            )}
+                                            {t("In-Person Settlement")}
                                         </div>
-                                    </div>
+                                        <p className="text-sm leading-relaxed text-foreground/80 font-medium max-w-2xl">
+                                            {t("Coordinate with your landlord or building manager to settle this invoice via cash. Once paid, trigger the intent below so they can officially confirm the receipt.")}
+                                        </p>
 
-                                    {/* Optional Note moved inside for better density */}
-                                    <div className="mt-6 rounded-[2rem] p-8 backdrop-blur-md neumorphic-panel">
                                         <Field label="Optional Note">
                                             <textarea maxLength={250} 
                                                 rows={2} 
                                                 value={note} 
                                                 onChange={(event) => setNote(event.target.value)} 
-                                                className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
+                                                className="w-full rounded-xl border-2 border-zinc-300 dark:border-zinc-700 bg-background px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/80 focus:border-primary focus:ring-4 focus:ring-primary/15" 
                                                 placeholder={t("Add a comment for the landlord...")} 
                                             />
                                         </Field>
+                                        
+                                        {inPersonTriggered ? (
+                                            <div className="flex items-center gap-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4 text-emerald-700 dark:text-emerald-300">
+                                                <CheckCircle2 className="size-5 shrink-0" />
+                                                <div className="text-sm">
+                                                    <p className="font-black">{t("Intent Successfully Triggered")}</p>
+                                                    <p className="opacity-90">{t("Waiting for landlord to confirm your cash payment.")}</p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <button
+                                                    onClick={triggerInPersonIntent}
+                                                    disabled={submitting}
+                                                    className="inline-flex items-center justify-center gap-2.5 rounded-full bg-amber-600 px-6 py-3.5 text-sm font-black text-white transition-all hover:bg-amber-700 active:scale-95 shadow-sm disabled:opacity-60"
+                                                >
+                                                    {submitting ? <Loader2 className="size-5 animate-spin" /> : <Wallet className="size-5" />}
+                                                    {t("Notify Landlord of Payment")}
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </motion.div>
                             )}
@@ -1080,14 +1071,14 @@ function CheckoutPageContent() {
                 </div>
 
                 {/* Right Column: Sticky Summary & Breakdown */}
-                <aside className="lg:sticky lg:top-24 space-y-6">
-                    <section className="rounded-[2.5rem] p-8 backdrop-blur-2xl neumorphic-panel">
-                        <div className="flex items-center gap-3 mb-6">
+                <aside className="lg:sticky lg:top-20 space-y-4">
+                    <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-card p-5 shadow-sm">
+                        <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-zinc-200/80 dark:border-zinc-800">
                             <Receipt className="size-5 text-primary" />
-                            <h2 className="text-lg font-black text-foreground tracking-tight">{t("Invoice Summary")}</h2>
+                            <h2 className="text-base font-black text-foreground tracking-tight">{t("Invoice Summary")}</h2>
                         </div>
 
-                        <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="space-y-2.5 max-h-[260px] overflow-y-auto pr-1.5 custom-scrollbar">
                             {invoice.lineItems.map((item) => {
                                 const metadata = (invoice.metadata as any) || {};
                                 const paidIds = metadata.paid_item_ids || [];
@@ -1097,27 +1088,27 @@ function CheckoutPageContent() {
                                 
                                 if (isAlreadyPaid || isUnderReview) {
                                     return (
-                                        <div key={item.id} className="flex items-center gap-3 py-1 opacity-40 grayscale-[0.8]">
+                                        <div key={item.id} className="flex items-center gap-3 py-1 opacity-50">
                                             <div className={cn(
-                                                "size-5 rounded-md border flex items-center justify-center",
-                                                isAlreadyPaid ? "border-emerald-500/30 bg-emerald-500/10" : "border-amber-500/30 bg-amber-500/10"
+                                                "size-5 rounded-md border flex items-center justify-center shrink-0",
+                                                isAlreadyPaid ? "border-emerald-500/40 bg-emerald-500/10" : "border-amber-500/40 bg-amber-500/10"
                                             )}>
                                                 {isAlreadyPaid ? (
-                                                    <CheckCircle2 className="size-3.5 text-emerald-500" />
+                                                    <CheckCircle2 className="size-3.5 text-emerald-600" />
                                                 ) : (
-                                                    <Loader2 className="size-3.5 text-amber-500 animate-spin" />
+                                                    <Loader2 className="size-3.5 text-amber-600 animate-spin" />
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-black text-foreground truncate">{item.label}</p>
+                                                <p className="text-sm font-bold text-foreground truncate">{item.label}</p>
                                                 <p className={cn(
-                                                    "text-[9px] font-black uppercase tracking-widest",
-                                                    isAlreadyPaid ? "text-emerald-500" : "text-amber-500"
+                                                    "text-[10px] font-bold uppercase tracking-wider",
+                                                    isAlreadyPaid ? "text-emerald-600" : "text-amber-600"
                                                 )}>
                                                     {isAlreadyPaid ? t("Already Paid") : t("Under Review")}
                                                 </p>
                                             </div>
-                                            <span className="text-xs font-black text-foreground line-through opacity-50">{formatPhpCurrency(item.amount)}</span>
+                                            <span className="text-sm font-bold tabular-nums text-foreground line-through opacity-60">{formatPhpCurrency(item.amount)}</span>
                                         </div>
                                     );
                                 }
@@ -1136,22 +1127,23 @@ function CheckoutPageContent() {
                                         }}
                                         className={cn(
                                             "flex items-center gap-3 py-1 group transition-opacity",
-                                            !isSelected && "opacity-60 grayscale-[0.5]"
+                                            !isMandatory && "cursor-pointer",
+                                            !isSelected && "opacity-60"
                                         )}
                                     >
                                         {!isMandatory && (
                                             <div className={cn(
-                                                "size-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
-                                                isSelected ? "neumorphic-primary text-white" : "neumorphic-inset-card"
+                                                "size-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0",
+                                                isSelected ? "border-primary bg-primary text-white" : "border-zinc-300 dark:border-zinc-700 bg-background"
                                             )}>
                                                 {isSelected && <CheckCircle2 className="size-3.5" />}
                                             </div>
                                         )}
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-black text-foreground truncate">{item.label}</p>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{t(item.category.charAt(0).toUpperCase() + item.category.slice(1).replace(/_/g, " "))}</p>
+                                            <p className="text-sm font-bold text-foreground truncate">{item.label}</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t(item.category.charAt(0).toUpperCase() + item.category.slice(1).replace(/_/g, " "))}</p>
                                         </div>
-                                        <span className="text-xs font-black text-foreground whitespace-nowrap">{formatPhpCurrency(item.amount)}</span>
+                                        <span className="text-sm font-black tabular-nums text-foreground whitespace-nowrap">{formatPhpCurrency(item.amount)}</span>
                                     </div>
                                 );
                             })}
@@ -1167,27 +1159,27 @@ function CheckoutPageContent() {
 
                                 if (isAlreadyPaid || isUnderReview) {
                                     return (
-                                        <div key={reading.id} className="flex items-center gap-3 py-1 opacity-40 grayscale-[0.8]">
+                                        <div key={reading.id} className="flex items-center gap-3 py-1 opacity-50">
                                             <div className={cn(
-                                                "size-5 rounded-md border flex items-center justify-center",
-                                                isAlreadyPaid ? "border-emerald-500/30 bg-emerald-500/10" : "border-amber-500/30 bg-amber-500/10"
+                                                "size-5 rounded-md border flex items-center justify-center shrink-0",
+                                                isAlreadyPaid ? "border-emerald-500/40 bg-emerald-500/10" : "border-amber-500/40 bg-amber-500/10"
                                             )}>
                                                 {isAlreadyPaid ? (
-                                                    <CheckCircle2 className="size-3.5 text-emerald-500" />
+                                                    <CheckCircle2 className="size-3.5 text-emerald-600" />
                                                 ) : (
-                                                    <Loader2 className="size-3.5 text-amber-500 animate-spin" />
+                                                    <Loader2 className="size-3.5 text-amber-600 animate-spin" />
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-black capitalize text-foreground truncate">{t(reading.utility_type === "electricity" ? "Electricity Consumption" : reading.utility_type === "water" ? "Water Consumption" : "{type} Consumption", { type: reading.utility_type })}</p>
+                                                <p className="text-sm font-bold capitalize text-foreground truncate">{t(reading.utility_type === "electricity" ? "Electricity Consumption" : reading.utility_type === "water" ? "Water Consumption" : "{type} Consumption", { type: reading.utility_type })}</p>
                                                 <p className={cn(
-                                                    "text-[9px] font-black uppercase tracking-widest",
-                                                    isAlreadyPaid ? "text-emerald-500" : "text-amber-500"
+                                                    "text-[10px] font-bold uppercase tracking-wider",
+                                                    isAlreadyPaid ? "text-emerald-600" : "text-amber-600"
                                                 )}>
                                                     {isAlreadyPaid ? t("Already Paid") : t("Under Review")}
                                                 </p>
                                             </div>
-                                            <span className="text-xs font-black text-foreground line-through opacity-50">
+                                            <span className="text-sm font-bold tabular-nums text-foreground line-through opacity-60">
                                                 {reading.billing_mode === "included_in_rent" ? t("Bundled") : formatPhpCurrency(reading.computed_charge)}
                                             </span>
                                         </div>
@@ -1208,24 +1200,25 @@ function CheckoutPageContent() {
                                         }}
                                         className={cn(
                                             "flex items-center gap-3 py-1 group transition-opacity",
-                                            !isSelected && "opacity-60 grayscale-[0.5]"
+                                            !isMandatory && "cursor-pointer",
+                                            !isSelected && "opacity-60"
                                         )}
                                     >
                                         {!isMandatory && (
                                             <div className={cn(
-                                                "size-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
-                                                isSelected ? "neumorphic-primary text-white" : "neumorphic-inset-card"
+                                                "size-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0",
+                                                isSelected ? "border-primary bg-primary text-white" : "border-zinc-300 dark:border-zinc-700 bg-background"
                                             )}>
                                                 {isSelected && <CheckCircle2 className="size-3.5" />}
                                             </div>
                                         )}
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-black capitalize text-foreground truncate">{t(reading.utility_type === "electricity" ? "Electricity Consumption" : reading.utility_type === "water" ? "Water Consumption" : "{type} Consumption", { type: reading.utility_type })}</p>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{t("Usage: {count} Units", { count: reading.usage })}</p>
+                                            <p className="text-sm font-bold capitalize text-foreground truncate">{t(reading.utility_type === "electricity" ? "Electricity Consumption" : reading.utility_type === "water" ? "Water Consumption" : "{type} Consumption", { type: reading.utility_type })}</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("Usage: {count} Units", { count: reading.usage })}</p>
                                         </div>
                                         <span className={cn(
-                                            "text-xs font-black whitespace-nowrap",
-                                            reading.billing_mode === "included_in_rent" ? "text-primary/60" : "text-foreground"
+                                            "text-sm font-black tabular-nums whitespace-nowrap",
+                                            reading.billing_mode === "included_in_rent" ? "text-primary/80" : "text-foreground"
                                         )}>
                                             {reading.billing_mode === "included_in_rent" ? t("Bundled") : formatPhpCurrency(reading.computed_charge)}
                                         </span>
@@ -1234,43 +1227,41 @@ function CheckoutPageContent() {
                             })}
                         </div>
 
-                        <div className="mt-8 space-y-6 pt-6 border-t border-dashed border-border/50">
-                            <div className="flex items-end justify-between">
-                                <div className="space-y-1">
+                        <div className="mt-4 space-y-4 pt-4 border-t border-dashed border-zinc-300 dark:border-zinc-700">
+                            <div className="flex items-end justify-between gap-2">
+                                <div className="space-y-0.5">
                                     {invoice.paidAmount > 0 && (
-                                        <div className="flex flex-col mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest line-through decoration-muted-foreground/50">
-                                                    {t("Original Total: {amount}", { amount: formatPhpCurrency(invoice.totalAmount) })}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="size-1 rounded-full bg-emerald-500" />
-                                                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">
+                                        <div className="flex flex-col mb-1.5">
+                                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider line-through decoration-muted-foreground/50">
+                                                {t("Original Total: {amount}", { amount: formatPhpCurrency(invoice.totalAmount) })}
+                                            </span>
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="size-1.5 rounded-full bg-emerald-500" />
+                                                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                                                     {t("Paid to Date: {amount}", { amount: formatPhpCurrency(invoice.paidAmount) })}
                                                 </span>
                                             </div>
                                         </div>
                                     )}
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                                    <p className="text-[11px] font-bold uppercase tracking-wider text-primary">
                                         {amountDue < (invoice.paidAmount > 0 ? invoice.balanceRemaining : invoice.totalAmount) ? t("Selection Total") : (invoice.paidAmount > 0 ? t("Remaining Balance") : t("Total Amount Due"))}
                                     </p>
                                     <p className={cn(
-                                        "text-3xl font-black tracking-tighter",
-                                        amountDue < invoice.totalAmount ? "text-amber-500" : "text-foreground"
+                                        "text-2xl sm:text-3xl font-black tracking-tight tabular-nums",
+                                        amountDue < invoice.totalAmount ? "text-amber-600 dark:text-amber-400" : "text-foreground"
                                     )}>
                                         {formatPhpCurrency(amountDue)}
                                     </p>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Due Date")}</p>
+                                <div className="text-right shrink-0">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("Due Date")}</p>
                                     <p className="text-xs font-black text-foreground">{formatDateLong(invoice.dueDate)}</p>
                                 </div>
                             </div>
                             
                             {amountDue === 0 && (
-                                <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider">
-                                    <Info className="size-3.5" /> {t("Select at least one item to pay")}
+                                <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold">
+                                    <Info className="size-4 shrink-0" /> {t("Select at least one item to pay")}
                                 </div>
                             )}
 
@@ -1279,10 +1270,10 @@ function CheckoutPageContent() {
                                     onClick={submitPayment}
                                     disabled={submitting || amountDue === 0}
                                     className={cn(
-                                        "group flex w-full items-center justify-center gap-3 rounded-full py-5 text-sm font-black transition-all shadow-xl",
+                                        "group flex w-full items-center justify-center gap-2.5 rounded-full py-3.5 text-sm font-black transition-all shadow-md",
                                         submitting || amountDue === 0
-                                            ? "cursor-not-allowed border border-border/50 bg-background/50 text-muted-foreground shadow-none" 
-                                            : "bg-gradient-to-r from-primary to-blue-600 text-white hover:scale-[1.02] hover:shadow-primary/25 active:scale-95"
+                                            ? "cursor-not-allowed border border-zinc-200 dark:border-zinc-700 bg-muted text-muted-foreground shadow-none" 
+                                            : "bg-gradient-to-r from-primary to-blue-600 text-white hover:opacity-95 active:scale-[0.99]"
                                     )}
                                 >
                                     {submitting ? <Loader2 className="size-5 animate-spin" /> : <ShieldCheck className="size-5 transition-transform group-hover:scale-110" />}
@@ -1290,17 +1281,17 @@ function CheckoutPageContent() {
                                 </button>
                             )}
 
-                            <p className="text-[9px] text-center text-muted-foreground font-medium uppercase tracking-widest leading-relaxed">
-                                {t("Secure processing provided by iReside.")} <br/>{t("All payments are subject to landlord review.")}
+                            <p className="text-[10px] text-center text-muted-foreground font-semibold uppercase tracking-wider leading-relaxed">
+                                {t("Secure processing provided by iReside.")} {t("All payments are subject to landlord review.")}
                             </p>
                         </div>
                     </section>
 
                     {/* Support Link */}
-                    <div className="rounded-[2rem] p-6 text-center neumorphic-inset">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">{t("Having Trouble?")}</p>
-                        <Link href="/tenant/messages" className="text-xs font-black text-primary hover:underline flex items-center justify-center gap-1.5">
-                            <HelpCircle className="size-3.5" />
+                    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-card px-5 py-3.5 shadow-xs flex items-center justify-between gap-3">
+                        <p className="text-xs font-bold text-muted-foreground">{t("Having Trouble?")}</p>
+                        <Link href="/tenant/messages" className="text-xs font-black text-primary hover:underline flex items-center gap-1.5">
+                            <HelpCircle className="size-4" />
                             {t("Contact Property Manager")}
                         </Link>
                     </div>
@@ -1312,7 +1303,7 @@ function CheckoutPageContent() {
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
     const { t } = useLanguageContext();
-    return <label className="block space-y-2.5"><span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t(label)}</span>{children}</label>;
+    return <label className="block space-y-2"><span className="block text-xs font-bold uppercase tracking-wider text-foreground/85">{t(label)}</span>{children}</label>;
 }
 
 export default function CheckoutPage() {

@@ -701,6 +701,12 @@ export default function AnalyticsPage() {
         if (savedVisibility === "false") {
             setIsIrisVisible(false);
         }
+        if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("export") === "true" || params.get("action") === "export") {
+                setIsExportModalOpen(true);
+            }
+        }
     }, []);
 
     useEffect(() => {

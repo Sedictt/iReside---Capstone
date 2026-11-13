@@ -15,6 +15,7 @@ import {
 	Droplets,
 	Gauge,
 	History,
+	ListChecks,
 	Plus,
 	Receipt,
 	RefreshCw,
@@ -139,6 +140,29 @@ function subscribeMutationQueue(callback: () => void): () => void {
 	return unsubscribe;
 }
 
+function isNetworkOrOfflineError(err: unknown, status?: number): boolean {
+	if (typeof navigator !== "undefined" && !navigator.onLine) {
+		return true;
+	}
+	if (status === 502 || status === 503 || status === 504) {
+		return true;
+	}
+	if (err instanceof TypeError) {
+		return true;
+	}
+	if (err instanceof Error) {
+		if (err.name === "AbortError") return true;
+		if (
+			/failed to fetch|network|offline|load failed|aborted|timeout/i.test(
+				err.message,
+			)
+		) {
+			return true;
+		}
+	}
+	return false;
+}
+
 export function MobileUtilitiesView() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
@@ -224,11 +248,15 @@ export function MobileUtilitiesView() {
 
 	// Save & modal/sheet state
 	const [saving, setSaving] = useState(false);
+	const [syncingQueue, setSyncingQueue] = useState(false);
 	const [isConfirmSendOpen, setIsConfirmSendOpen] = useState(false);
 	const [sheetDraftUnitId, setSheetDraftUnitId] = useState<string | null>(null);
 	const [sheetInitialFocus, setSheetInitialFocus] = useState<
 		"water" | "electricity" | undefined
 	>(undefined);
+	const [isWalkthroughMode, setIsWalkthroughMode] = useState(false);
+	const [walkthroughUnitIds, setWalkthroughUnitIds] = useState<string[]>([]);
+	const isSyncingRef = useRef(false);
 
 	// Payment proofs tab state
 	const [invoices, setInvoices] = useState<InvoiceListItem[]>(
@@ -750,10 +778,21 @@ export function MobileUtilitiesView() {
 		return filteredDrafts.slice(start, start + ROOMS_PER_PAGE);
 	}, [filteredDrafts, clampedPage]);
 
+	const activeSheetDrafts = useMemo(() => {
+		if (isWalkthroughMode && walkthroughUnitIds.length > 0) {
+			const byId = new Map(currentMonthDrafts.map((d) => [d.unitId, d]));
+			const list = walkthroughUnitIds
+				.map((id) => byId.get(id))
+				.filter((d): d is ReadingDraft => Boolean(d));
+			if (list.length > 0) return list;
+		}
+		return filteredDrafts;
+	}, [isWalkthroughMode, walkthroughUnitIds, currentMonthDrafts, filteredDrafts]);
+
 	const sheetDraftIndex = useMemo(() => {
 		if (!sheetDraftUnitId) return -1;
-		return filteredDrafts.findIndex((d) => d.unitId === sheetDraftUnitId);
-	}, [filteredDrafts, sheetDraftUnitId]);
+		return activeSheetDrafts.findIndex((d) => d.unitId === sheetDraftUnitId);
+	}, [activeSheetDrafts, sheetDraftUnitId]);
 
 	const sheetDraft = useMemo(() => {
 		if (!sheetDraftUnitId) return null;
@@ -764,10 +803,10 @@ export function MobileUtilitiesView() {
 
 	const hasPrevSheetRoom = sheetDraftIndex > 0;
 	const hasNextSheetRoom =
-		sheetDraftIndex >= 0 && sheetDraftIndex < filteredDrafts.length - 1;
+		sheetDraftIndex >= 0 && sheetDraftIndex < activeSheetDrafts.length - 1;
 	const roomPositionLabel =
-		sheetDraftIndex >= 0 && filteredDrafts.length > 0
-			? `${sheetDraftIndex + 1} ${t("of")} ${filteredDrafts.length}`
+		sheetDraftIndex >= 0 && activeSheetDrafts.length > 0
+			? `${sheetDraftIndex + 1} ${t("of")} ${activeSheetDrafts.length}`
 			: undefined;
 
 	// Occupied rooms ready to bill (newly entered, edited, or saved-but-unbilled readings)
@@ -965,20 +1004,30 @@ export function MobileUtilitiesView() {
 				month: selectedMonth,
 			};
 
+			const enqueueOffline = () => {
+				mutationQueue.enqueue(
+					"SAVE_SUBMETER_READINGS",
+					"/api/landlord/utility-readings",
+					"POST",
+					payload,
+					`${postInvoices ? "Send" : "Save"} ${requests.length} utility readings for ${formatMonthLabel(selectedMonth)}`,
+				);
+				toast.success(t("Saved offline on your phone"), {
+					description: t("Readings will sync automatically once internet returns."),
+				});
+				triggerHaptic("success");
+				setIsConfirmSendOpen(false);
+			};
+
+			const controller =
+				typeof AbortController !== "undefined" ? new AbortController() : null;
+			const timeoutId = controller
+				? setTimeout(() => controller.abort(), 10000)
+				: null;
+
 			try {
 				if (typeof navigator !== "undefined" && !navigator.onLine) {
-					mutationQueue.enqueue(
-						"SAVE_SUBMETER_READINGS",
-						"/api/landlord/utility-readings",
-						"POST",
-						payload,
-						`${postInvoices ? "Send" : "Save"} ${requests.length} utility readings for ${formatMonthLabel(selectedMonth)}`,
-					);
-					toast.success("Saved offline on your phone", {
-						description: "Readings will sync automatically once internet returns.",
-					});
-					triggerHaptic("success");
-					setIsConfirmSendOpen(false);
+					enqueueOffline();
 					return true;
 				}
 
@@ -986,9 +1035,14 @@ export function MobileUtilitiesView() {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify(payload),
+					...(controller ? { signal: controller.signal } : {}),
 				});
 
 				if (!res.ok) {
+					if (isNetworkOrOfflineError(null, res.status)) {
+						enqueueOffline();
+						return true;
+					}
 					const errJson = await res.json().catch(() => ({}));
 					throw new Error(errJson.error || "Could not save readings");
 				}
@@ -1009,16 +1063,8 @@ export function MobileUtilitiesView() {
 				await loadData();
 				return true;
 			} catch (err) {
-				if (typeof navigator !== "undefined" && !navigator.onLine) {
-					mutationQueue.enqueue(
-						"SAVE_SUBMETER_READINGS",
-						"/api/landlord/utility-readings",
-						"POST",
-						payload,
-						`Save ${requests.length} utility readings for ${formatMonthLabel(selectedMonth)}`,
-					);
-					toast.success("Saved offline on your phone");
-					setIsConfirmSendOpen(false);
+				if (isNetworkOrOfflineError(err)) {
+					enqueueOffline();
 					return true;
 				}
 
@@ -1028,6 +1074,7 @@ export function MobileUtilitiesView() {
 				);
 				return false;
 			} finally {
+				if (timeoutId) clearTimeout(timeoutId);
 				setSaving(false);
 			}
 		},
@@ -1054,8 +1101,95 @@ export function MobileUtilitiesView() {
 	};
 
 	const handleSaveSingleRoomSheet = async (draft: ReadingDraft): Promise<boolean> => {
+		const hasAnyValue =
+			draft.water.current.trim() !== "" ||
+			draft.electricity.current.trim() !== "";
+		if (!hasAnyValue) {
+			return true;
+		}
+		const hasChanges =
+			!draft.water.exists ||
+			Boolean(draft.water.dirty) ||
+			!draft.electricity.exists ||
+			Boolean(draft.electricity.dirty);
+		if (!hasChanges) {
+			return true;
+		}
 		return executeReadingsSubmit([draft], false);
 	};
+
+	const handleStartWalkthrough = () => {
+		const baseList =
+			filteredDrafts.length > 0 ? filteredDrafts : propertyScopedDrafts;
+		if (baseList.length === 0) return;
+
+		const unread = baseList.filter((d) => !isDraftReady(d));
+		const ordered = unread.length > 0 ? unread : baseList;
+		const first = ordered[0];
+		if (!first) return;
+
+		triggerHaptic("light");
+		setWalkthroughUnitIds(ordered.map((d) => d.unitId));
+		setIsWalkthroughMode(true);
+		setSheetInitialFocus("electricity");
+		setSheetDraftUnitId(first.unitId);
+	};
+
+	const handleSaveAndNextRoom = async (draft: ReadingDraft): Promise<boolean> => {
+		const ok = await handleSaveSingleRoomSheet(draft);
+		if (!ok) return false;
+
+		if (sheetDraftIndex >= 0 && sheetDraftIndex < activeSheetDrafts.length - 1) {
+			triggerHaptic("light");
+			setSheetDraftUnitId(activeSheetDrafts[sheetDraftIndex + 1].unitId);
+		} else {
+			setSheetDraftUnitId(null);
+			setSheetInitialFocus(undefined);
+			setIsWalkthroughMode(false);
+		}
+		return true;
+	};
+
+	const syncPendingQueue = useCallback(async () => {
+		if (isSyncingRef.current) return;
+		if (typeof navigator !== "undefined" && !navigator.onLine) return;
+		if (mutationQueue.getQueue().length === 0) return;
+
+		isSyncingRef.current = true;
+		setSyncingQueue(true);
+		try {
+			const { successful } = await mutationQueue.processQueue();
+			if (successful > 0) {
+				await loadData();
+				toast.success(t("All saved readings synced!"), {
+					description: `${successful} ${t("saved batch(es) uploaded.")}`,
+				});
+				triggerHaptic("success");
+			}
+		} finally {
+			isSyncingRef.current = false;
+			setSyncingQueue(false);
+		}
+	}, [loadData, t]);
+
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		let timer: ReturnType<typeof setTimeout> | null = null;
+		const scheduleSync = () => {
+			if (timer) clearTimeout(timer);
+			timer = setTimeout(() => {
+				void syncPendingQueue();
+			}, 1200);
+		};
+		if (navigator.onLine && mutationQueue.getQueue().length > 0) {
+			scheduleSync();
+		}
+		window.addEventListener("online", scheduleSync);
+		return () => {
+			if (timer) clearTimeout(timer);
+			window.removeEventListener("online", scheduleSync);
+		};
+	}, [syncPendingQueue]);
 
 	// Guard for tenant accounts
 	if (!authLoading && !isLandlordOrAdmin) {
@@ -1145,24 +1279,40 @@ export function MobileUtilitiesView() {
 				<div className="px-4 pt-2.5 pb-6 space-y-3">
 					{/* Offline / Cached / Queue Banner */}
 					{(!isOnline || usingCachedData || pendingQueueCount > 0) && (
-						<div className="rounded-2xl border border-amber-300/70 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-950/30 px-3.5 py-2.5 flex items-start gap-2.5">
-							<WifiOff className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-							<div className="text-xs space-y-0.5">
-								<p className="font-bold text-amber-950 dark:text-amber-100">
-									{!isOnline
-										? t("Working Offline")
-										: usingCachedData
-											? t("Showing Saved Copy")
-											: t("Pending Sync")}
-								</p>
-								<p className="text-amber-800 dark:text-amber-200/90">
-									{!isOnline
-										? t("Readings are saved on your phone and will sync once internet returns.")
-										: pendingQueueCount > 0
-											? `${pendingQueueCount} ${t("saved action(s) waiting to sync.")}`
-											: t("Showing your latest saved readings.")}
-								</p>
+						<div className="rounded-2xl border border-amber-300/70 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-950/30 px-3.5 py-2.5 flex items-center justify-between gap-2.5">
+							<div className="flex items-start gap-2.5 min-w-0">
+								<WifiOff className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+								<div className="text-xs space-y-0.5 min-w-0">
+									<p className="font-bold text-amber-950 dark:text-amber-100">
+										{!isOnline
+											? t("Working Offline")
+											: usingCachedData
+												? t("Showing Saved Copy")
+												: t("Pending Sync")}
+									</p>
+									<p className="text-amber-800 dark:text-amber-200/90">
+										{!isOnline
+											? t("Readings are saved on your phone and will sync once internet returns.")
+											: pendingQueueCount > 0
+												? `${pendingQueueCount} ${t("saved action(s) waiting to sync.")}`
+												: t("Showing your latest saved readings.")}
+									</p>
+								</div>
 							</div>
+							{isOnline && pendingQueueCount > 0 && (
+								<button
+									type="button"
+									disabled={syncingQueue}
+									onClick={() => {
+										triggerHaptic("light");
+										void syncPendingQueue();
+									}}
+									className="min-h-[40px] shrink-0 rounded-xl bg-amber-600 px-3 text-xs font-bold text-white hover:bg-amber-700 transition-colors cursor-pointer disabled:opacity-60 inline-flex items-center gap-1.5"
+								>
+									<RefreshCw className={cn("h-3.5 w-3.5", syncingQueue && "animate-spin")} />
+									<span>{syncingQueue ? t("Syncing...") : t("Sync Now")}</span>
+								</button>
+							)}
 						</div>
 					)}
 
@@ -1355,6 +1505,27 @@ export function MobileUtilitiesView() {
 										</div>
 									</div>
 								)}
+
+								{selectorProperties.length > 0 && propertyScopedDrafts.length > 0 && (
+									<button
+										type="button"
+										onClick={handleStartWalkthrough}
+										className="w-full min-h-[48px] rounded-xl bg-primary px-3.5 py-2.5 flex items-center justify-between gap-2 text-primary-foreground shadow-xs hover:bg-primary/90 transition-all active:scale-[0.99] cursor-pointer"
+									>
+										<span className="flex items-center gap-2 text-sm font-bold">
+											<ListChecks className="h-4 w-4 shrink-0" />
+											<span>{t("Read Rooms 1-by-1")}</span>
+										</span>
+										<span className="flex items-center gap-1.5 shrink-0">
+											<span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-bold tabular-nums">
+												{filterCounts.needs_reading > 0
+													? `${filterCounts.needs_reading} ${t("left")}`
+													: `${propertyScopedDrafts.length} ${t("rooms")}`}
+											</span>
+											<ChevronRight className="h-4 w-4" />
+										</span>
+									</button>
+								)}
 							</div>
 
 							{selectorProperties.length === 0 ? (
@@ -1395,10 +1566,10 @@ export function MobileUtilitiesView() {
 										</div>
 									)}
 
-									{/* Search & Wrapping Filter Pill Chips */}
-									<div className="space-y-2">
+									{/* Search & Unified Segmented Filter Bar */}
+									<div className="m-card border border-border/60 p-2 space-y-2">
 										<div className="relative">
-											<Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+											<Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 											<input
 												type="text"
 												value={searchQuery}
@@ -1407,7 +1578,7 @@ export function MobileUtilitiesView() {
 												placeholder={t("Search room or tenant name...")}
 												aria-label={t("Search room or tenant name")}
 												style={{ outline: "none" }}
-												className="h-11 w-full rounded-xl border border-border/70 bg-card pl-10 pr-10 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus:ring-2 focus:ring-primary/30 shadow-xs"
+												className="h-11 w-full rounded-xl bg-muted/40 pl-9 pr-9 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus:ring-2 focus:ring-primary/30"
 											/>
 											{searchQuery && (
 												<button
@@ -1422,7 +1593,7 @@ export function MobileUtilitiesView() {
 										</div>
 
 										<div
-											className="flex flex-wrap items-center gap-1.5"
+											className="grid grid-cols-4 gap-1 rounded-xl bg-muted/40 p-1"
 											role="tablist"
 											aria-label={t("Filter rooms")}
 										>
@@ -1462,19 +1633,17 @@ export function MobileUtilitiesView() {
 															setFilterStatus(tab.key);
 														}}
 														className={cn(
-															"inline-flex min-h-[44px] items-center gap-1 rounded-full border px-2.5 text-[11px] font-bold transition-all active:scale-[0.98] cursor-pointer",
+															"flex min-h-[40px] items-center justify-center gap-1 rounded-lg px-1 text-[11px] font-bold transition-all active:scale-[0.98] cursor-pointer",
 															active
-																? "border-primary bg-primary text-primary-foreground shadow-xs"
-																: "border-border/70 bg-card text-muted-foreground hover:text-foreground",
+																? "bg-primary text-primary-foreground shadow-xs"
+																: "text-muted-foreground hover:text-foreground",
 														)}
 													>
-														<span>{tab.label}</span>
+														<span className="truncate">{tab.label}</span>
 														<span
 															className={cn(
-																"inline-flex min-w-[16px] h-4 items-center justify-center rounded-full px-1 text-[10px] font-extrabold tabular-nums",
-																active
-																	? "bg-white/20 text-primary-foreground"
-																	: "bg-muted text-foreground/80",
+																"text-[10px] font-extrabold tabular-nums",
+																active ? "text-primary-foreground/90" : "text-muted-foreground",
 															)}
 														>
 															{tab.count}
@@ -2018,22 +2187,30 @@ export function MobileUtilitiesView() {
 				roomPositionLabel={roomPositionLabel}
 				hasPrevRoom={hasPrevSheetRoom}
 				hasNextRoom={hasNextSheetRoom}
+				isWalkthroughMode={isWalkthroughMode}
+				walkthroughIndex={sheetDraftIndex >= 0 ? sheetDraftIndex : 0}
+				walkthroughTotal={activeSheetDrafts.length}
+				isOnline={isOnline}
+				pendingQueueCount={pendingQueueCount}
 				onClose={() => {
 					setSheetDraftUnitId(null);
 					setSheetInitialFocus(undefined);
+					setIsWalkthroughMode(false);
+					setWalkthroughUnitIds([]);
 				}}
 				onChangeMeter={handleChangeMeter}
 				onSaveRoom={handleSaveSingleRoomSheet}
+				onSaveAndNext={handleSaveAndNextRoom}
 				onPrevRoom={() => {
 					if (sheetDraftIndex > 0) {
 						triggerHaptic("light");
-						setSheetDraftUnitId(filteredDrafts[sheetDraftIndex - 1].unitId);
+						setSheetDraftUnitId(activeSheetDrafts[sheetDraftIndex - 1].unitId);
 					}
 				}}
 				onNextRoom={() => {
-					if (sheetDraftIndex >= 0 && sheetDraftIndex < filteredDrafts.length - 1) {
+					if (sheetDraftIndex >= 0 && sheetDraftIndex < activeSheetDrafts.length - 1) {
 						triggerHaptic("light");
-						setSheetDraftUnitId(filteredDrafts[sheetDraftIndex + 1].unitId);
+						setSheetDraftUnitId(activeSheetDrafts[sheetDraftIndex + 1].unitId);
 					}
 				}}
 			/>

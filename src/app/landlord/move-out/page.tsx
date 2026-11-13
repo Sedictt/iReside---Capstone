@@ -46,6 +46,7 @@ export default function MoveOutRequestsPage() {
  key={reloadKey}
  initialFilter={initialStatus as any}
  preview={isPreview}
+ selectedId={searchParams.get("id")}
  onSelect={(req) => setSelectedRequest(req)} 
  />
  </motion.div>

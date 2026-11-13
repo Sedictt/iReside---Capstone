@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 import { POST as quickSettleRoute } from "@/app/api/landlord/iris/payments/quick-settle/route";
 import { POST as quickUpdateTicketRoute } from "@/app/api/landlord/iris/maintenance/quick-update/route";
@@ -903,7 +903,7 @@ describe("Milestone 4: Adversarial Stress & Empirical Verification Test Suite", 
       );
 
       // Verify Pinned Assistant Tile exists
-      const assistantTile = screen.getByRole("button", { name: /iRis Operations Assistant/i });
+      const assistantTile = screen.getByRole("button", { name: /iRis Assistant/i });
       expect(assistantTile).toBeInTheDocument();
 
       // Check active styling class
@@ -914,80 +914,48 @@ describe("Milestone 4: Adversarial Stress & Empirical Verification Test Suite", 
       expect(handleSelect).toHaveBeenCalledWith("iris-assistant");
     });
 
-    it("IrisAssistantWorkspace renders resiliently with zero leases and zero tickets", () => {
-      const emptyContext: LandlordOperationsContext = {
-        properties: [],
-        activeLeases: [],
-        openTickets: [],
-        expiringLeases: [],
-        overdueLeases: [],
-        totalReceivables: 0,
-        occupancyRate: 0,
-      };
+    it("IrisAssistantWorkspace runs multi-step menu & rule-based flows entirely in chat with zero modals", () => {
+      vi.useFakeTimers();
+      try {
+        render(
+          React.createElement(IrisAssistantWorkspace, {
+            initialContext: sampleContext,
+          })
+        );
 
-      render(
-        React.createElement(IrisAssistantWorkspace, {
-          initialContext: emptyContext,
-        })
-      );
+        // Welcome menu & buttons
+        expect(screen.getByText(/Pick an option below or type what you need/i)).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /Check Unpaid Rent/i })).toBeInTheDocument();
 
-      // Verify zero state rendering
-      expect(screen.getByText("₱0.00")).toBeInTheDocument();
-      expect(screen.getByText("0%")).toBeInTheDocument();
-      expect(screen.getByText(/Total Unpaid Balance/i)).toBeInTheDocument();
-    });
+        // Typing "hey, i want some help with creating invoice" starts the in-chat invoice flow
+        const input = screen.getByRole("textbox", { name: /Message iRis Assistant/i });
+        fireEvent.change(input, { target: { value: "hey, i want some help with creating invoice" } });
+        fireEvent.click(screen.getByRole("button", { name: /Send message/i }));
+        expect(screen.getByLabelText(/iRis is typing/i)).toBeInTheDocument();
+        act(() => {
+          vi.advanceTimersByTime(900);
+        });
+        expect(screen.getByText(/Sure! Who is this invoice for\?/i)).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /Everyone/i })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /Specific Tenant/i })).toBeInTheDocument();
 
-    it("IrisAssistantWorkspace allows smooth tab switching across all 5 operational views", () => {
-      render(
-        React.createElement(IrisAssistantWorkspace, {
-          initialContext: sampleContext,
-        })
-      );
+        // Tapping Specific Tenant asks which tenant, without opening any modal
+        fireEvent.click(screen.getByRole("button", { name: /Specific Tenant/i }));
+        act(() => {
+          vi.advanceTimersByTime(900);
+        });
+        expect(screen.getByText(/Which tenant or unit is this invoice for\?/i)).toBeInTheDocument();
 
-      // Switch to Record Payment
-      const payNavBtn = screen.getByRole("button", { name: /Record Payment/i });
-      fireEvent.click(payNavBtn);
-      expect(screen.getByRole("heading", { name: /Record Payment Settlement/i })).toBeInTheDocument();
-
-      // Switch to Maintenance Triage
-      const triageNavBtn = screen.getByRole("button", { name: /Maintenance Triage/i });
-      fireEvent.click(triageNavBtn);
-      expect(screen.getByRole("heading", { name: /Maintenance & Repairs/i })).toBeInTheDocument();
-
-      // Switch to Lease Expiry Check
-      const renewalsNavBtn = screen.getByRole("button", { name: /Lease Expiry Check/i });
-      fireEvent.click(renewalsNavBtn);
-      expect(screen.getByRole("heading", { name: /Lease Expiry & Renewal Offers/i })).toBeInTheDocument();
-
-      // Switch to Resident Directory via Resident Lookup button
-      const directoryNavBtn = screen.getByRole("button", { name: /Resident Lookup/i });
-      fireEvent.click(directoryNavBtn);
-      expect(screen.getByRole("heading", { name: /Resident Directory/i })).toBeInTheDocument();
-
-      // Return to Dashboard
-      const dashNavBtn = screen.getByRole("button", { name: "Dashboard" });
-      fireEvent.click(dashNavBtn);
-      expect(screen.getByText(/Total Unpaid Balance/i)).toBeInTheDocument();
-    });
-
-    it("IrisAssistantWorkspace cross-tool action from directory switches to settlement view", () => {
-      render(
-        React.createElement(IrisAssistantWorkspace, {
-          initialContext: sampleContext,
-        })
-      );
-
-      // Go to Directory
-      const directoryNavBtn = screen.getByRole("button", { name: /Resident Lookup/i });
-      fireEvent.click(directoryNavBtn);
-
-      // In directory, Juan Dela Cruz has outstanding balance of 20,000 -> click "Record Payment"
-      const juanPayBtn = screen.getAllByRole("button", { name: /Record Payment/i })[0];
-      fireEvent.click(juanPayBtn);
-
-      // Should automatically transition to settlement view preselected with Juan's lease
-      expect(screen.getByRole("heading", { name: /Record Payment Settlement/i })).toBeInTheDocument();
-      expect(screen.getByText("₱20,000.00")).toBeInTheDocument();
+        // Typing "Cancel" exits the flow back to the main menu
+        fireEvent.change(input, { target: { value: "cancel" } });
+        fireEvent.click(screen.getByRole("button", { name: /Send message/i }));
+        act(() => {
+          vi.advanceTimersByTime(900);
+        });
+        expect(screen.getByText(/Cancelled\. What else can I help you with\?/i)).toBeInTheDocument();
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it("IrisContextualDrawer renders safely and handles tabs and close actions", async () => {

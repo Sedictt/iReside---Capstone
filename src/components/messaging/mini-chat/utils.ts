@@ -8,6 +8,7 @@ export const MESSAGE_PAGE_SIZE = 80;
 export const MESSAGE_CACHE_TTL_MS = 5 * 60 * 1000;
 export const DRAFT_MAX_LENGTH = 500;
 export const ATTACHMENT_MAX_BYTES = 25 * 1024 * 1024;
+export const MAX_STAGED_ATTACHMENTS = 8;
 /** Consecutive messages from the same sender within this window are visually grouped. */
 export const GROUP_WINDOW_MS = 3 * 60 * 1000;
 export const WINDOW_WIDTH_PX = 328;
@@ -16,6 +17,7 @@ export const WINDOW_GAP_PX = 12;
 export const DEFAULT_CHAT_STATE: MiniChatState = Object.freeze({
     messages: [],
     draft: "",
+    stagedAttachments: [],
     isLoading: false,
     isSending: false,
     isUploading: false,
@@ -120,6 +122,7 @@ export const mapConversationToContact = (
         unread: conversation.unreadCount > 0,
         isArchived: conversation.isArchived,
         isBlocked: conversation.isBlocked,
+        hasMessages: Boolean(conversation.lastMessage),
     };
 };
 

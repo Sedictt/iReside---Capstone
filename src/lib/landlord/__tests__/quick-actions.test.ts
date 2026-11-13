@@ -10,10 +10,10 @@ import {
 } from "../quick-actions";
 
 describe("quick-actions pure utility functions", () => {
-    it("returns default initial configuration with all 10 actions visible in custom mode", () => {
+    it("returns default initial configuration with all actions visible in custom mode", () => {
         const config = getInitialQuickActionsConfig();
         expect(config.order).toEqual(DEFAULT_QUICK_ACTIONS_ORDER);
-        expect(config.order.length).toBe(10);
+        expect(config.order.length).toBe(DEFAULT_QUICK_ACTIONS.length);
         expect(config.hidden).toEqual([]);
         expect(config.sortMode).toBe("custom");
         expect(config.usageCounts).toEqual({});

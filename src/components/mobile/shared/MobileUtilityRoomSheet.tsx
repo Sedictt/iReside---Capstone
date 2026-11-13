@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight, Droplets, Loader2, Save, X, Zap } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Droplets, Loader2, Save, SkipForward, WifiOff, X, Zap } from 'lucide-react';
 import { useLanguageContext } from '@/context/LanguageContext';
 import { cn } from '@/lib/utils';
 import { FieldError, fieldErrorClass } from '@/components/ui/field-error';
@@ -24,9 +24,15 @@ interface MobileUtilityRoomSheetProps {
 	roomPositionLabel?: string;
 	hasPrevRoom?: boolean;
 	hasNextRoom?: boolean;
+	isWalkthroughMode?: boolean;
+	walkthroughIndex?: number;
+	walkthroughTotal?: number;
+	isOnline?: boolean;
+	pendingQueueCount?: number;
 	onClose: () => void;
 	onChangeMeter: (unitId: string, utilityType: 'water' | 'electricity', value: string) => void;
 	onSaveRoom: (draft: ReadingDraft) => Promise<boolean>;
+	onSaveAndNext?: (draft: ReadingDraft) => Promise<boolean>;
 	onPrevRoom?: () => void;
 	onNextRoom?: () => void;
 }
@@ -44,9 +50,15 @@ export function MobileUtilityRoomSheet({
 	roomPositionLabel,
 	hasPrevRoom = false,
 	hasNextRoom = false,
+	isWalkthroughMode = false,
+	walkthroughIndex = 0,
+	walkthroughTotal = 0,
+	isOnline = true,
+	pendingQueueCount = 0,
 	onClose,
 	onChangeMeter,
 	onSaveRoom,
+	onSaveAndNext,
 	onPrevRoom,
 	onNextRoom,
 }: MobileUtilityRoomSheetProps) {
@@ -100,6 +112,10 @@ export function MobileUtilityRoomSheet({
 			document.getElementById('sheet-meter-electricity')?.focus();
 			return;
 		}
+		if (isWalkthroughMode && hasNextRoom && onSaveAndNext) {
+			await onSaveAndNext(draft);
+			return;
+		}
 		const ok = await onSaveRoom(draft);
 		if (ok) onClose();
 	};
@@ -147,6 +163,26 @@ export function MobileUtilityRoomSheet({
 							{formatRoomDisplayName(draft.unitName)}
 						</h2>
 						<p className="text-xs text-muted-foreground truncate">{draft.propertyName}</p>
+						{(!isOnline || pendingQueueCount > 0 || isWalkthroughMode) && (
+							<div className="pt-1 flex flex-wrap items-center gap-1.5">
+								{!isOnline ? (
+									<span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-bold text-amber-800 dark:text-amber-200">
+										<WifiOff className="size-3 shrink-0" />
+										{t('Offline · Saving on phone')}
+									</span>
+								) : pendingQueueCount > 0 ? (
+									<span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-bold text-amber-800 dark:text-amber-200">
+										<WifiOff className="size-3 shrink-0" />
+										{`${pendingQueueCount} ${t('waiting to sync')}`}
+									</span>
+								) : (
+									<span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+										<CheckCircle2 className="size-3 shrink-0" />
+										{t('1-by-1 Walkthrough · Auto-saved')}
+									</span>
+								)}
+							</div>
+						)}
 					</div>
 					<button
 						type="button"
@@ -158,6 +194,17 @@ export function MobileUtilityRoomSheet({
 						<X className="size-5" />
 					</button>
 				</div>
+
+				{isWalkthroughMode && walkthroughTotal > 0 && (
+					<div className="h-1.5 w-full bg-muted shrink-0 overflow-hidden" aria-hidden="true">
+						<div
+							className="h-full bg-primary transition-all duration-200"
+							style={{
+								width: `${Math.min(100, Math.round(((walkthroughIndex + 1) / walkthroughTotal) * 100))}%`,
+							}}
+						/>
+					</div>
+				)}
 
 				{/* Inputs */}
 				<div className="flex-1 overflow-y-auto overscroll-y-contain p-5 space-y-4">
@@ -361,6 +408,10 @@ export function MobileUtilityRoomSheet({
 								type="button"
 								disabled={saving}
 								onClick={() => {
+									if (isWalkthroughMode) {
+										onPrevRoom();
+										return;
+									}
 									setTouchedWater(true);
 									setTouchedElec(true);
 									if (waterErr) {
@@ -379,41 +430,73 @@ export function MobileUtilityRoomSheet({
 								<ChevronLeft className="size-5" />
 							</button>
 						)}
-						<button
-							type="submit"
-							disabled={saving}
-							className={cn(
-								'min-h-[48px] px-4 rounded-xl text-sm font-bold transition-all active:scale-98 inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50',
-								hasNextRoom && onNextRoom
-									? 'flex-1 border border-border bg-background hover:bg-muted text-foreground'
-									: 'flex-1 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm',
-							)}
-						>
-							{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-							<span>{t('Save Readings')}</span>
-						</button>
-						{hasNextRoom && onNextRoom && (
-							<button
-								type="button"
-								disabled={saving}
-								onClick={() => {
-									setTouchedWater(true);
-									setTouchedElec(true);
-									if (waterErr) {
-										document.getElementById('sheet-meter-water')?.focus();
-										return;
-									}
-									if (elecErr) {
-										document.getElementById('sheet-meter-electricity')?.focus();
-										return;
-									}
-									onNextRoom();
-								}}
-								className="flex-1 min-h-[48px] px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all active:scale-98 shadow-sm inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-							>
-								<span>{t('Next Room')}</span>
-								<ChevronRight className="size-4" />
-							</button>
+						{isWalkthroughMode ? (
+							<>
+								{hasNextRoom && onNextRoom && (
+									<button
+										type="button"
+										disabled={saving}
+										onClick={onNextRoom}
+										className="min-h-[48px] px-3.5 rounded-xl border border-border bg-background hover:bg-muted text-foreground text-sm font-bold transition-all active:scale-98 inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+									>
+										<SkipForward className="size-4" />
+										<span>{t('Skip')}</span>
+									</button>
+								)}
+								<button
+									type="submit"
+									disabled={saving}
+									className="flex-1 min-h-[48px] px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all active:scale-98 shadow-sm inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+								>
+									{saving ? (
+										<Loader2 className="size-4 animate-spin" />
+									) : hasNextRoom ? (
+										<ChevronRight className="size-4" />
+									) : (
+										<CheckCircle2 className="size-4" />
+									)}
+									<span>{hasNextRoom ? t('Save & Next Room') : t('Save & Finish')}</span>
+								</button>
+							</>
+						) : (
+							<>
+								<button
+									type="submit"
+									disabled={saving}
+									className={cn(
+										'min-h-[48px] px-4 rounded-xl text-sm font-bold transition-all active:scale-98 inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50',
+										hasNextRoom && onNextRoom
+											? 'flex-1 border border-border bg-background hover:bg-muted text-foreground'
+											: 'flex-1 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm',
+									)}
+								>
+									{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+									<span>{t('Save Readings')}</span>
+								</button>
+								{hasNextRoom && onNextRoom && (
+									<button
+										type="button"
+										disabled={saving}
+										onClick={() => {
+											setTouchedWater(true);
+											setTouchedElec(true);
+											if (waterErr) {
+												document.getElementById('sheet-meter-water')?.focus();
+												return;
+											}
+											if (elecErr) {
+												document.getElementById('sheet-meter-electricity')?.focus();
+												return;
+											}
+											onNextRoom();
+										}}
+										className="flex-1 min-h-[48px] px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all active:scale-98 shadow-sm inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+									>
+										<span>{t('Next Room')}</span>
+										<ChevronRight className="size-4" />
+									</button>
+								)}
+							</>
 						)}
 					</div>
 				</div>

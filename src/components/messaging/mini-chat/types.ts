@@ -20,6 +20,7 @@ export interface MiniChatContact {
     unread: boolean;
     isArchived: boolean;
     isBlocked: boolean;
+    hasMessages?: boolean;
 }
 
 export type OpenMiniChat = MiniChatContact & {
@@ -54,9 +55,17 @@ export type MiniChatMessage = {
     invoiceId?: string;
 };
 
+export type StagedAttachment = {
+    id: string;
+    file: File;
+    previewUrl: string | null;
+    isImage: boolean;
+};
+
 export type MiniChatState = {
     messages: MiniChatMessage[];
     draft: string;
+    stagedAttachments?: StagedAttachment[];
     isLoading: boolean;
     isSending: boolean;
     isUploading: boolean;

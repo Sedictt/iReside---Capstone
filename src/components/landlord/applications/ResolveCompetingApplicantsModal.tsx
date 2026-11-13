@@ -209,26 +209,26 @@ export function ResolveCompetingApplicantsModal({
             onClick={onClose}
         >
             <div
-                className="w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl bg-card border border-border/60 shadow-xl max-h-[90vh] flex flex-col overflow-hidden"
+                className="w-full sm:max-w-xl rounded-t-3xl sm:rounded-3xl bg-card border border-border/60 shadow-xl max-h-[90vh] flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom,0px)]"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="px-6 sm:px-8 pt-5 sm:pt-7 pb-4 border-b border-border/60 shrink-0 space-y-4">
-                    <div className="mx-auto h-1.5 w-12 rounded-full bg-muted sm:hidden" />
+                <div className="px-5 sm:px-7 pt-3 sm:pt-6 pb-3.5 border-b border-border/60 shrink-0 space-y-3">
+                    <div className="mx-auto h-1.5 w-12 rounded-full bg-muted-foreground/25 sm:hidden" aria-hidden="true" />
 
                     {/* Header */}
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-3.5">
-                            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20">
-                                <Users className="size-6" />
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
+                            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 mt-0.5">
+                                <Users className="size-5" />
                             </div>
-                            <div>
-                                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
-                                    {propertyName} • {takenUnitName}
-                                </span>
-                                <h2 className="text-xl font-black tracking-tight text-foreground mt-0.5">
+                            <div className="min-w-0">
+                                <p className="text-xs font-bold text-primary truncate">
+                                    {propertyName} · {takenUnitName}
+                                </p>
+                                <h2 className="text-lg sm:text-xl font-black tracking-tight text-foreground leading-snug mt-0.5">
                                     {competingApplicants.length === 1
-                                        ? t("Offer Another Room to This Applicant")
-                                        : t("Other Applicants Waiting for {unit}", { unit: takenUnitName })}
+                                        ? t("Offer Another Room")
+                                        : t("Other Applicants for {unit}", { unit: takenUnitName })}
                                 </h2>
                             </div>
                         </div>
@@ -236,7 +236,7 @@ export function ResolveCompetingApplicantsModal({
                             type="button"
                             onClick={onClose}
                             aria-label={t("Close")}
-                            className="flex size-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors shrink-0"
+                            className="flex size-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors shrink-0 cursor-pointer"
                         >
                             <X className="size-5" />
                         </button>
@@ -245,19 +245,20 @@ export function ResolveCompetingApplicantsModal({
 
                 <ScrollableWithHint
                     className="overscroll-contain"
-                    contentClassName="px-6 sm:px-8 py-5 space-y-5"
+                    contentClassName="px-5 sm:px-7 py-4 space-y-4"
                     fadeColor="card"
                     resetKey={`${takenUnitId}-${competingApplicants.length}`}
-                    hintText={t("More options below • Scroll down")}
+                    hintText={t("More options below · Scroll down")}
                 >
                 <p className="text-sm leading-relaxed text-muted-foreground">
                     {winnerName
                         ? t(
-                              "{unit} is now assigned to {winner}. You can offer another vacant room to the waiting applicant(s) so they can choose to accept it or cancel their application, or send a polite notice.",
+                              "{unit} is now assigned to {winner}. Offer another vacant room below, or send a polite decline.",
                               { unit: takenUnitName, winner: winnerName }
                           )
                         : t(
-                              "Offer this applicant another vacant room so they can choose whether to switch without re-uploading their IDs or cancel their application, or send a polite decline notice."
+                              "{unit} is no longer available. Offer another vacant room below, or send a polite decline.",
+                              { unit: takenUnitName }
                           )}
                 </p>
 
@@ -274,21 +275,21 @@ export function ResolveCompetingApplicantsModal({
                         return (
                             <div
                                 key={applicant.id}
-                                className="rounded-2xl border border-border/70 bg-muted/20 p-5 space-y-4"
+                                className="rounded-2xl border border-border/70 bg-muted/20 p-4 sm:p-5 space-y-4"
                             >
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <div>
-                                        <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                        <div className="flex flex-wrap items-center gap-2">
                                             <span className="text-base font-bold text-foreground">
                                                 {applicant.name}
                                             </span>
-                                            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
+                                            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary whitespace-nowrap">
                                                 {applicant.source === "invite_link"
                                                     ? t("Online Invite")
                                                     : t("Walk-in")}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                        <p className="text-xs text-muted-foreground mt-0.5 truncate">
                                             {applicant.email || t("No email provided")}
                                         </p>
                                     </div>
@@ -338,12 +339,12 @@ export function ResolveCompetingApplicantsModal({
                                 {!resolved && (
                                     <div className="space-y-4 pt-1">
                                         {candidateUnits.length > 0 ? (
-                                            <div className="space-y-2">
+                                            <div className="space-y-1.5">
                                                 <label
                                                     htmlFor={`target-unit-${applicant.id}`}
-                                                    className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                                                    className="block text-sm font-bold text-foreground"
                                                 >
-                                                    {t("Select Vacant Room to Offer")}
+                                                    {t("Which vacant room do you want to offer?")}
                                                 </label>
                                                 <select
                                                     id={`target-unit-${applicant.id}`}
@@ -354,11 +355,11 @@ export function ResolveCompetingApplicantsModal({
                                                             [applicant.id]: e.target.value,
                                                         }))
                                                     }
-                                                    className="w-full h-12 rounded-xl border border-border bg-background px-4 text-sm font-bold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                                    className="w-full h-12 rounded-xl border border-border bg-background px-3.5 text-base sm:text-sm font-bold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                                 >
                                                     {candidateUnits.map((unit) => (
                                                         <option key={unit.id} value={unit.id}>
-                                                            {unit.name} — ₱{unit.rent_amount.toLocaleString()}/mo (Vacant)
+                                                            {unit.name} — ₱{unit.rent_amount.toLocaleString()}/mo
                                                         </option>
                                                     ))}
                                                 </select>
@@ -367,7 +368,7 @@ export function ResolveCompetingApplicantsModal({
                                             <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs font-medium text-amber-800 dark:text-amber-300 flex items-center gap-2">
                                                 <Building2 className="size-4 shrink-0" />
                                                 <span>
-                                                    {t("No other vacant rooms are currently available in this property.")}
+                                                    {t("No other vacant rooms are available in this property.")}
                                                 </span>
                                             </div>
                                         )}
@@ -375,9 +376,9 @@ export function ResolveCompetingApplicantsModal({
                                         <div className="space-y-1.5">
                                             <label
                                                 htmlFor={`note-${applicant.id}`}
-                                                className="block text-xs font-bold text-muted-foreground"
+                                                className="block text-sm font-bold text-foreground"
                                             >
-                                                {t("Optional Note to Applicant (We pre-wrote a friendly message for you)")}
+                                                {t("Personal note (optional)")}
                                             </label>
                                             <textarea
                                                 id={`note-${applicant.id}`}
@@ -391,9 +392,9 @@ export function ResolveCompetingApplicantsModal({
                                                     }))
                                                 }
                                                 placeholder={t(
-                                                    "Leave blank to send our standard polite recommendation or decline message..."
+                                                    "We already wrote a polite message if you leave this blank."
                                                 )}
-                                                className="w-full rounded-xl border border-border bg-background p-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                                className="w-full rounded-xl border border-border bg-background p-3 text-base sm:text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                             />
                                             <div className="flex justify-end">
                                                 <span className="text-xs text-muted-foreground tabular-nums">
@@ -409,13 +410,13 @@ export function ResolveCompetingApplicantsModal({
                                             </div>
                                         )}
 
-                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
                                             {candidateUnits.length > 0 && (
                                                 <button
                                                     type="button"
                                                     disabled={isBusy}
                                                     onClick={() => handleReassign(applicant)}
-                                                    className="flex-1 flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 transition-all cursor-pointer"
+                                                    className="w-full sm:flex-1 flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-50"
                                                 >
                                                     <ArrowRightLeft className="size-4 shrink-0" />
                                                     {isBusy
@@ -430,7 +431,7 @@ export function ResolveCompetingApplicantsModal({
                                                 type="button"
                                                 disabled={isBusy}
                                                 onClick={() => handlePoliteDecline(applicant)}
-                                                className="flex h-12 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-bold text-foreground hover:bg-red-500/10 hover:text-red-600 hover:border-red-500/30 transition-colors"
+                                                className="w-full sm:w-auto flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-sm font-bold text-foreground hover:bg-red-500/10 hover:text-red-600 hover:border-red-500/30 transition-colors cursor-pointer disabled:opacity-50"
                                             >
                                                 <XCircle className="size-4 shrink-0" />
                                                 {isBusy ? t("Sending...") : t("Politely Decline")}
@@ -445,11 +446,11 @@ export function ResolveCompetingApplicantsModal({
                 </ScrollableWithHint>
 
                 {/* Footer */}
-                <div className="flex items-center justify-end px-6 sm:px-8 py-4 border-t border-border/60 shrink-0 bg-card">
+                <div className="flex items-center justify-end px-5 sm:px-7 py-3.5 border-t border-border/60 shrink-0 bg-card">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex h-12 items-center justify-center rounded-xl bg-muted px-6 text-sm font-bold text-foreground hover:bg-muted/80 transition-colors"
+                        className="w-full sm:w-auto flex min-h-[48px] items-center justify-center rounded-xl bg-muted px-6 text-sm font-bold text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                     >
                         {allHandled ? t("Done") : t("Decide Later")}
                     </button>

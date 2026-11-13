@@ -25,8 +25,10 @@ import {
     CalendarClock,
     Palette,
     Banknote,
-    AlertTriangle
+    AlertTriangle,
+    History
 } from "lucide-react";
+import { openLandlordHistoryDrawer } from "@/components/landlord/history/QuickHistoryDrawer";
 import { formatNotificationFullTime, formatNotificationTime, getNotificationVisual } from "@/lib/notification-display";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -224,6 +226,16 @@ const FEATURE_INDEX: SearchResult[] = [
         icon: CreditCard,
         badge: "Page",
         keywords: ["invoices", "payments", "rent", "billing", "receipts", "collections", "ledger"]
+    },
+    {
+        id: "page-activity-history",
+        type: "page",
+        title: "Payment & Actions History",
+        subtitle: "Quick audit of rent payments and your recent actions",
+        href: "/landlord/activity",
+        icon: History,
+        badge: "Page",
+        keywords: ["history", "audit", "audit log", "actions", "activity", "payment history", "trail"]
     },
     {
         id: "page-analytics",
@@ -701,6 +713,17 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                         </div>
                     )}
                 </div>
+
+                {/* Quick Access: Payment & Actions History */}
+                <button
+                    type="button"
+                    onClick={() => openLandlordHistoryDrawer("payments")}
+                    className="group relative flex size-11 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 cursor-pointer"
+                    title={t("Payment & Actions History")}
+                    aria-label={t("Payment & Actions History")}
+                >
+                    <History className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />
+                </button>
 
                 {/* Notifications */}
                 <div className="relative" ref={notificationsRef}>

@@ -77,7 +77,15 @@ export async function GET(request: Request) {
       );
     }
 
-    return NextResponse.json(renewals || []);
+    const normalized = (renewals || []).map((row: Record<string, unknown>) => ({
+      ...row,
+      tenant:
+        row.tenant ??
+        (row.current_lease as { tenant?: unknown } | null)?.tenant ??
+        null,
+    }));
+
+    return NextResponse.json(normalized);
   } catch (error) {
     console.error("[landlord-renewals] Unexpected error:", error);
     return NextResponse.json(

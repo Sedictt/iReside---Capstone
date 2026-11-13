@@ -41,7 +41,7 @@ export default function ActiveLeasesTab({ searchQuery, sortBy, onClearSearch, vi
   key: `landlord_leases_active_${selectedPropertyId || "all"}`,
   fetcher: async (signal) => {
    const params = new URLSearchParams();
-   params.set("status", "active");
+   params.set("status", "active,pending_landlord_signature,pending_tenant_signature");
    if (selectedPropertyId && selectedPropertyId !== "all") {
     params.set("propertyId", selectedPropertyId);
    }

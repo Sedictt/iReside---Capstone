@@ -650,6 +650,7 @@ const seen = new Set<string>();
             hasPaymentHistory: conversation.hasPaymentHistory,
             isArchived: conversation.isArchived,
             isBlocked: conversation.isBlocked,
+            hasMessages: Boolean(conversation.lastMessage),
         };
     };
 

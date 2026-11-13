@@ -26,6 +26,7 @@ import {
     LogOut,
     ChevronRight,
     AlertTriangle,
+    History,
 } from 'lucide-react'
 import { BrandLogo } from '@/components/ui/BrandLogo'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -86,6 +87,13 @@ export function LandlordMenuView() {
                     icon: BarChart2,
                     description: 'Revenue trends, occupancy rates & financial performance metrics',
                 },
+                {
+                    label: 'Activity & History',
+                    href: '/landlord/activity',
+                    icon: History,
+                    description: 'Payment history & audit log of your recent actions',
+                    isExternal: true,
+                },
                 { 
                     label: 'Messaging', 
                     href: '/mobile/landlord/messages', 
@@ -121,7 +129,7 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Unit Map', 
-                    href: '/landlord/unit-map', 
+                    href: '/mobile/landlord/unit-map', 
                     icon: Map, 
                     description: 'Interactive 2D architectural blueprint & visual unit layout planner',
                     isExternal: true

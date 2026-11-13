@@ -2,6 +2,7 @@
 
 import { Sidebar } from "@/components/landlord/Sidebar";
 import { InPersonPaymentModal } from "@/components/landlord/InPersonPaymentModal";
+import { QuickHistoryDrawer } from "@/components/landlord/history/QuickHistoryDrawer";
 import { ContactsSidebar } from "@/components/landlord/dashboard/ContactsSidebar";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -220,6 +221,7 @@ export default function LandlordLayout({
                             
                             {showContactsSidebar && <ContactsSidebar />}
                             <InPersonPaymentModal />
+                            <QuickHistoryDrawer />
                         </div>
                         <ProfileCard />
                         <GlobalDetailModal />

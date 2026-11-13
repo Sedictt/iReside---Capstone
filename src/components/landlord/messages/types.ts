@@ -17,6 +17,7 @@ export type ContactItem = {
     isArchived: boolean;
     isBlocked: boolean;
     isOnline?: boolean;
+    hasMessages?: boolean;
 };
 
 export type OutboundStatus = "sending" | "sent" | "delivered" | "seen" | "failed";

@@ -1,10 +1,10 @@
 /**
- * Scenario catalogue for the private defense console (/demo-console).
- * Mirrors docs/DEFENSE_DEMO_NAVIGATION_GUIDE.md; keep the two in sync.
+ * Curated situational cases and demo accounts for the Defense Console (/demo-console).
  */
 
 export type DemoAccountKey =
     | "landlord"
+    | "starter"
     | "maria"
     | "joshua"
     | "katrina"
@@ -15,120 +15,472 @@ export type DemoAccountKey =
     | "daniel"
     | "public";
 
+export type DemoCategory =
+    | "In-Chat Cards"
+    | "Payments & GCash"
+    | "Leases & E-Sign"
+    | "Applications"
+    | "Maintenance & Utilities"
+    | "Onboarding & AI"
+    | "Tenant Portal & Mobile";
+
 export interface DemoAccount {
     key: DemoAccountKey;
     label: string;
     email: string | null;
+    password: string | null;
     role: "landlord" | "tenant" | "public";
     room?: string;
+    state: string;
+    group: "landlord" | "key_tenant";
+}
+
+export interface ExtraResident {
+    key: string;
+    label: string;
+    email: string;
+    room: string;
     state: string;
 }
 
 export interface DemoScenario {
     id: string;
-    group: string;
+    category: DemoCategory;
     title: string;
+    description: string;
+    /** Clear situational trigger shown prominently on the card ("Use this when..."). */
+    useWhen: string;
     as: DemoAccountKey;
     path: string;
-    /** What to click once the page is open. */
-    steps?: string;
-    /** One line to say to the panel. */
-    say?: string;
+    /** Optional POST /api/demo-console/actions key to seed/reset state before switching. */
+    prepareAction?: string;
+    /** Optional quick tip shown on the card. */
+    tip?: string;
 }
 
 export const DEMO_PASSWORD = "Defense2026!";
+export const STARTER_LANDLORD_PASSWORD = "LandlordDemo2026!";
+
+export const DEMO_CATEGORIES: DemoCategory[] = [
+    "In-Chat Cards",
+    "Payments & GCash",
+    "Leases & E-Sign",
+    "Applications",
+    "Maintenance & Utilities",
+    "Onboarding & AI",
+    "Tenant Portal & Mobile",
+];
 
 export const DEMO_ACCOUNTS: DemoAccount[] = [
-    { key: "landlord", label: "John Peter Gonzales", email: "john.gonzales@ireside.ph", role: "landlord", state: "Owner of Fernando Gonzales Dormitory" },
-    { key: "maria", label: "Maria Angelica Santos", email: "maria.santos@ireside.ph", role: "tenant", room: "101", state: "Model tenant, everything paid" },
-    { key: "joshua", label: "Joshua Miguel Dela Cruz", email: "joshua.delacruz@ireside.ph", role: "tenant", room: "102", state: "GCash proof under review, plumber on site" },
-    { key: "katrina", label: "Katrina Mae Villanueva", email: "katrina.villanueva@ireside.ph", role: "tenant", room: "201", state: "Lease waiting for her e-signature" },
-    { key: "ronald", label: "Ronald Bautista", email: "ronald.bautista@ireside.ph", role: "tenant", room: "202", state: "Move-out pending, October overdue" },
-    { key: "christine", label: "Christine Joy Reyes", email: "christine.reyes@ireside.ph", role: "tenant", room: "203", state: "Fixed term ending, renewal pending" },
-    { key: "mark", label: "Mark Anthony Lim", email: "mark.lim@ireside.ph", role: "tenant", room: "301", state: "New tenant, urgent electrical ticket" },
-    { key: "angelo", label: "Angelo Fernandez", email: "angelo.fernandez@ireside.ph", role: "tenant", room: "302", state: "Pays cash, wants to transfer to 303" },
-    { key: "daniel", label: "Daniel Ocampo", email: "daniel.ocampo@ireside.ph", role: "tenant", room: "303 (former)", state: "Archived, moved out Aug 31" },
-    { key: "public", label: "No login (public page)", email: null, role: "public", state: "Signs you out first" },
+    {
+        key: "landlord",
+        label: "John Peter Gonzales",
+        email: "john.gonzales@ireside.ph",
+        password: DEMO_PASSWORD,
+        role: "landlord",
+        state: "Owner of Fernando Gonzales Dormitory (24 units)",
+        group: "landlord",
+    },
+    {
+        key: "starter",
+        label: "Practice Landlord 1",
+        email: "practice.landlord1@ireside.ph",
+        password: STARTER_LANDLORD_PASSWORD,
+        role: "landlord",
+        state: "Clean starter account for 5-stage onboarding",
+        group: "landlord",
+    },
+    {
+        key: "public",
+        label: "Public Guest (Signed Out)",
+        email: null,
+        password: null,
+        role: "public",
+        state: "Signs out current session for public application & portal links",
+        group: "landlord",
+    },
+    {
+        key: "maria",
+        label: "Maria Angelica Santos",
+        email: "maria.santos@ireside.ph",
+        password: DEMO_PASSWORD,
+        role: "tenant",
+        room: "101",
+        state: "Model tenant, all bills paid",
+        group: "key_tenant",
+    },
+    {
+        key: "joshua",
+        label: "Joshua Miguel Dela Cruz",
+        email: "joshua.delacruz@ireside.ph",
+        password: DEMO_PASSWORD,
+        role: "tenant",
+        room: "102",
+        state: "GCash proof under review, plumber on site",
+        group: "key_tenant",
+    },
+    {
+        key: "katrina",
+        label: "Katrina Mae Villanueva",
+        email: "katrina.villanueva@ireside.ph",
+        password: DEMO_PASSWORD,
+        role: "tenant",
+        room: "201",
+        state: "Lease waiting for her e-signature",
+        group: "key_tenant",
+    },
+    {
+        key: "ronald",
+        label: "Ronald Bautista",
+        email: "ronald.bautista@ireside.ph",
+        password: DEMO_PASSWORD,
+        role: "tenant",
+        room: "202",
+        state: "October overdue, move-out pending, self-repair",
+        group: "key_tenant",
+    },
+    {
+        key: "christine",
+        label: "Christine Joy Reyes",
+        email: "christine.reyes@ireside.ph",
+        password: DEMO_PASSWORD,
+        role: "tenant",
+        room: "203",
+        state: "Fixed term ending, renewal & Study Hall booking pending",
+        group: "key_tenant",
+    },
+    {
+        key: "mark",
+        label: "Mark Anthony Lim",
+        email: "mark.lim@ireside.ph",
+        password: DEMO_PASSWORD,
+        role: "tenant",
+        room: "301",
+        state: "New tenant, first-time tour, urgent electrical ticket",
+        group: "key_tenant",
+    },
+    {
+        key: "angelo",
+        label: "Angelo Fernandez",
+        email: "angelo.fernandez@ireside.ph",
+        password: DEMO_PASSWORD,
+        role: "tenant",
+        room: "302",
+        state: "Pays cash at office, transfer request to Room 303",
+        group: "key_tenant",
+    },
+    {
+        key: "daniel",
+        label: "Daniel Ocampo",
+        email: "daniel.ocampo@ireside.ph",
+        password: DEMO_PASSWORD,
+        role: "tenant",
+        room: "303 (former)",
+        state: "Archived resident, moved out Aug 31 with refund breakdown",
+        group: "key_tenant",
+    },
+];
+
+export const EXTRA_RESIDENTS: ExtraResident[] = [
+    { key: "jericho", label: "Jericho Navarro", email: "jericho.navarro@ireside.ph", room: "105", state: "Settled tenant, good standing" },
+    { key: "lea", label: "Lea Marie Castillo", email: "lea.castillo@ireside.ph", room: "106", state: "Settled tenant, good standing" },
+    { key: "ramon", label: "Ramon Aquino Jr.", email: "ramon.aquino@ireside.ph", room: "108", state: "Settled tenant, good standing" },
+    { key: "hazel", label: "Hazel Ann Domingo", email: "hazel.domingo@ireside.ph", room: "205", state: "Settled tenant, good standing" },
+    { key: "kristoffer", label: "Kristoffer Santiago", email: "kristoffer.santiago@ireside.ph", room: "207", state: "Settled tenant, good standing" },
+    { key: "theresa", label: "Ma. Theresa Gutierrez", email: "theresa.gutierrez@ireside.ph", room: "208", state: "Settled tenant, good standing" },
+    { key: "vincent", label: "Vincent Tan", email: "vincent.tan@ireside.ph", room: "305", state: "Settled tenant, good standing" },
+    { key: "bea", label: "Bea Concepcion", email: "bea.concepcion@ireside.ph", room: "306", state: "Settled tenant, good standing" },
+    { key: "arvin", label: "Arvin Salvador", email: "arvin.salvador@ireside.ph", room: "307", state: "Settled tenant, good standing" },
+    { key: "nicole", label: "Nicole Ramos", email: "nicole.ramos@ireside.ph", room: "308", state: "Settled tenant, good standing" },
 ];
 
 export const DEMO_SCENARIOS: DemoScenario[] = [
-    // --- Intake -------------------------------------------------------------
-    { id: "apply-online", group: "Tenant intake", title: "Prospect applies online (QR / invite link)", as: "public", path: "/apply/fgd-apply-online-2026", steps: "Walk through Personal → Employment → Documents → Review.", say: "Applicants never need an account; the link can be property-wide or locked to one room." },
-    { id: "invite-manager", group: "Tenant intake", title: "Invite links & QR codes", as: "landlord", path: "/landlord/applications", steps: "Click Invite Manager (top right).", say: "Online, walk-in and existing-resident links; copy, show QR, revoke." },
-    { id: "walkin", group: "Tenant intake", title: "Walk-in intake form", as: "landlord", path: "/landlord/applications", steps: "Click Walk-in Intake.", say: "Same pipeline, landlord types it for the applicant at the office." },
-    { id: "review-app", group: "Tenant intake", title: "Review / approve an application (Jerome, Room 103)", as: "landlord", path: "/landlord/applications", steps: "Pending tab → Jerome Pascual → Quick Approve → signing mode → record payments.", say: "Approval creates the account, the lease, move-in invoices and the signing link in one go. Reset afterwards." },
-    { id: "app-reviewing", group: "Tenant intake", title: "Application under verification (Patricia)", as: "landlord", path: "/landlord/applications", steps: "Reviewing tab → Patricia Anne Cruz.", say: "Income verified, waiting for a valid ID." },
-    { id: "prospect-portal", group: "Tenant intake", title: "Prospect pays advance + deposit (Kevin's portal)", as: "public", path: "/apply/payments/fgd-pay-kevin-portal-2026", say: "Approved applicant sees the GCash details, uploads proof; landlord confirms or bypasses for cash." },
-    { id: "payment-pending", group: "Tenant intake", title: "Landlord side of Kevin's move-in payment", as: "landlord", path: "/landlord/applications", steps: "Payment Pending tab → Kevin Torres.", say: "Confirm the proof, or Confirm Bypass if cash was received." },
+    // --- In-Chat Interactive Cards (All 5 types) ----------------------------
+    {
+        id: "chat-payment-submitted",
+        category: "In-Chat Cards",
+        title: "In-Chat: Payment Proof Submitted",
+        description: "Shows Joshua's GCash payment proof card inside landlord chat with direct approve/reject controls.",
+        useWhen: "Panelist asks to see the in-chat interactive payment proof card and landlord approval in real time.",
+        as: "landlord",
+        path: "/landlord/messages",
+        prepareAction: "seed-chat-payment-submitted",
+        tip: "Open Joshua Dela Cruz's thread to view the interactive GCash proof card.",
+    },
+    {
+        id: "chat-reminder-card",
+        category: "In-Chat Cards",
+        title: "In-Chat: Rent Reminder with Pay Now",
+        description: "Shows an interactive rent due reminder card inside Ronald's chat with a 1-tap Pay Now button.",
+        useWhen: "Panelist asks how tenants get notified of unpaid rent inside chat and pay directly.",
+        as: "ronald",
+        path: "/tenant/messages",
+        prepareAction: "seed-chat-reminder-card",
+        tip: "Open the landlord thread to test the embedded Pay Now action.",
+    },
+    {
+        id: "chat-cash-intent",
+        category: "In-Chat Cards",
+        title: "In-Chat: Cash Payment Intent",
+        description: "Shows Angelo's 72-hour cash payment intent card so the landlord can record office collection.",
+        useWhen: "Panelist asks how walk-in or cash-paying tenants are tracked without online payment.",
+        as: "landlord",
+        path: "/landlord/messages",
+        prepareAction: "seed-chat-cash-intent",
+        tip: "Open Angelo Fernandez's thread to see the pending cash intent card.",
+    },
+    {
+        id: "chat-invoice-receipt",
+        category: "In-Chat Cards",
+        title: "In-Chat: Official Receipt Card",
+        description: "Displays an official itemized payment receipt card delivered directly inside Maria's chat.",
+        useWhen: "Panelist asks where tenants receive proof of payment or official itemized receipts.",
+        as: "maria",
+        path: "/tenant/messages",
+        prepareAction: "seed-chat-invoice-receipt",
+        tip: "Open the landlord thread to inspect or download the receipt summary.",
+    },
+    {
+        id: "chat-payment-rejected",
+        category: "In-Chat Cards",
+        title: "In-Chat: Payment Rejected / Issue Resolver",
+        description: "Demonstrates a rejected proof card in Joshua's chat with landlord note and quick re-upload resolution.",
+        useWhen: "Panelist asks what happens if a tenant uploads a fake, blurry, or wrong GCash receipt.",
+        as: "joshua",
+        path: "/tenant/messages",
+        prepareAction: "seed-chat-payment-rejected",
+        tip: "Open the landlord thread to see the rejection reason and re-submit action.",
+    },
 
-    // --- Lease signing ------------------------------------------------------
-    { id: "sign-tenant", group: "Digital lease signing", title: "Tenant e-signs the lease (Katrina)", as: "katrina", path: "/tenant/lease", steps: "Orange banner → Review & Sign → Sign Document → Finalize.", say: "Signed JWT link, 30-day expiry, every step audited with IP and device. Do this once per reset." },
-    { id: "sign-landlord", group: "Digital lease signing", title: "Landlord countersigns → lease active", as: "landlord", path: "/landlord/leases", steps: "After Katrina signs: open her lease (pending landlord signature) → sign.", say: "Lease becomes active; tenant gets a notification." },
-    { id: "audit-trail", group: "Digital lease signing", title: "Signing audit trail (Mark, remote signing)", as: "landlord", path: "/landlord/leases", steps: "Mark Anthony Lim → Audit Trail.", say: "Link generated → opened on Android with IP → tenant signed → landlord signed → activated." },
-    { id: "lease-view", group: "Digital lease signing", title: "Tenant views / downloads the contract", as: "maria", path: "/tenant/lease", steps: "Download PDF / View Lease; tabs Agreement, Residence, Governance.", say: "Generated from the property's contract template plus custom clauses." },
-    { id: "lease-term", group: "Digital lease signing", title: "Open-ended vs fixed term", as: "landlord", path: "/landlord/leases", steps: "Open any active lease → switch term.", say: "Month-to-month by default because that is how the client operates; fixed terms are opt-in." },
+    // --- Payments & GCash ---------------------------------------------------
+    {
+        id: "gcash-verify",
+        category: "Payments & GCash",
+        title: "GCash Payment Verification",
+        description: "Landlord inspects Joshua's uploaded GCash screenshot and issues an official receipt.",
+        useWhen: "Panelist asks how landlords verify GCash payments without paying third-party gateway fees.",
+        as: "landlord",
+        path: "/landlord/invoices",
+        prepareAction: "quick-reset-joshua-bill",
+        tip: "Go to Needs Verification → Joshua Dela Cruz → Confirm & Issue Receipt.",
+    },
+    {
+        id: "tenant-pay-gcash",
+        category: "Payments & GCash",
+        title: "Tenant Pays Monthly Bill via GCash",
+        description: "Tenant views itemized rent, kWh electricity, and m³ water charges and uploads GCash proof.",
+        useWhen: "Panelist wants to see the full tenant billing breakdown and GCash proof submission flow.",
+        as: "joshua",
+        path: "/tenant/payments",
+        prepareAction: "quick-reset-joshua-bill",
+        tip: "Click Pay Now on November 2026 to walk through the GCash upload flow.",
+    },
+    {
+        id: "cash-collection",
+        category: "Payments & GCash",
+        title: "Cash Payment Collection at Office",
+        description: "Landlord records an in-person cash payment for Angelo (Room 302) and issues a digital receipt.",
+        useWhen: "Panelist asks how senior or non-GCash tenants pay in cash and still get a digital receipt.",
+        as: "landlord",
+        path: "/landlord/dashboard?action=collect-payment",
+        prepareAction: "seed-cash-collection",
+        tip: "Opens Record Payment modal automatically with Angelo Fernandez pre-selected.",
+    },
+    {
+        id: "overdue-expenses-ledger",
+        category: "Payments & GCash",
+        title: "Overdue Tracking, Expenses & CSV Ledger",
+        description: "Shows Ronald's overdue October bill with ₱200 late fee, property expenses, and CSV export.",
+        useWhen: "Panelist asks about late payment penalties, property expense tracking, or accounting exports.",
+        as: "landlord",
+        path: "/landlord/invoices?status=late",
+        prepareAction: "seed-overdue-ledger",
+        tip: "Switch between Invoices (Overdue), Expenses, and Unified Ledger tabs.",
+    },
 
-    // --- Billing ------------------------------------------------------------
-    { id: "utility-billing", group: "Rent & utilities", title: "Meter readings → monthly bills", as: "landlord", path: "/landlord/utility-billing", steps: "Meter Readings tab, Oct 2026 → Save Readings → Send Monthly Bills.", say: "₱13.50/kWh and ₱35/m³ sub-metered per room; a cron does this on the 1st." },
-    { id: "invoice-tenant", group: "Rent & utilities", title: "Itemised invoice + receipt (tenant view)", as: "maria", path: "/tenant/payments", steps: "Payment History → October 2026.", say: "Base rent, water and electricity with readings, GCash reference, receipt number." },
-    { id: "pay-gcash", group: "Rent & utilities", title: "Tenant pays via GCash (Ronald, overdue)", as: "ronald", path: "/tenant/payments", steps: "Current bill → Pay Now → GCash → reference + screenshot.", say: "No gateway fees; the proof goes to the landlord for verification." },
-    { id: "verify-gcash", group: "Rent & utilities", title: "Landlord verifies a GCash payment (Joshua)", as: "landlord", path: "/landlord/invoices", steps: "Invoices tab → Needs Verification → Joshua → Uploaded Receipt → Confirm & Issue Receipt.", say: "Receipt issued automatically, tenant notified." },
-    { id: "pay-cash-tenant", group: "Rent & utilities", title: "Tenant chooses to pay cash (Angelo)", as: "angelo", path: "/tenant/payments", say: "In-person intent with a 72-hour expiry so the board stays honest." },
-    { id: "collect-cash", group: "Rent & utilities", title: "Landlord collects cash & issues receipt", as: "landlord", path: "/landlord/dashboard", steps: "Record Payment → Angelo Fernandez → amount → Collect Payment.", say: "Cash at the caretaker's office, receipted in the app." },
-    { id: "reminder", group: "Rent & utilities", title: "Overdue invoice, late fee, reminders (Ronald)", as: "landlord", path: "/landlord/invoices", steps: "Invoices tab → Overdue chip → Ronald's October.", say: "₱200 late fee after the 5th; reminder already sent Oct 8." },
-    { id: "issue-invoice", group: "Rent & utilities", title: "Issue a one-off invoice", as: "landlord", path: "/landlord/invoices", steps: "Issue Invoice.", say: "Example: key replacement." },
-    { id: "expenses", group: "Rent & utilities", title: "Expenses & unified ledger (CSV export)", as: "landlord", path: "/landlord/invoices", steps: "Expenses tab → Record Expense; Unified Ledger → Export Ledger (CSV).", say: "12 expense entries: permit, CCTV drive, repaint, common-area power." },
-    { id: "payout", group: "Rent & utilities", title: "Landlord GCash payout account", as: "landlord", path: "/landlord/settings?section=payments" },
+    // --- Leases & E-Sign ----------------------------------------------------
+    {
+        id: "tenant-esign-lease",
+        category: "Leases & E-Sign",
+        title: "Digital Lease E-Sign (Tenant)",
+        description: "Katrina reviews her dormitory lease with custom clauses and signs with a 30-day JWT link.",
+        useWhen: "Panelist asks to see how tenants digitally review and sign their lease contract.",
+        as: "katrina",
+        path: "/tenant/lease",
+        prepareAction: "quick-reset-katrina",
+        tip: "Click Review & Sign on the banner → draw signature → Finalize.",
+    },
+    {
+        id: "landlord-countersign-audit",
+        category: "Leases & E-Sign",
+        title: "Landlord Countersign & Signing Audit Trail",
+        description: "Landlord countersigns Katrina's lease to activate it, or inspects Mark's IP/device audit log.",
+        useWhen: "Panelist asks how the landlord countersigns a lease or verifies legal e-sign audit logs.",
+        as: "landlord",
+        path: "/landlord/leases?id=ea37b3e5-e81c-4d19-b01e-747e4155cca8",
+        prepareAction: "seed-katrina-countersign",
+        tip: "Opens Katrina's pending-countersign lease directly. To view an active IP/device audit log, go to Active Leases and search Mark Lim.",
+    },
+    {
+        id: "lease-renewal-transfer",
+        category: "Leases & E-Sign",
+        title: "Lease Renewal Request (+5% Policy)",
+        description: "Review Christine's fixed-term lease renewal request with the +5% policy adjustment.",
+        useWhen: "Panelist asks how expiring fixed-term leases and rent renewal adjustments are handled.",
+        as: "landlord",
+        path: "/landlord/tenants?tab=renewals",
+        prepareAction: "seed-renewal-and-transfer",
+        tip: "Opens Lease Renewals tab directly to review and approve Christine's renewal request.",
+    },
+    {
+        id: "move-out-inspection",
+        category: "Leases & E-Sign",
+        title: "Move-Out Inspection & Deposit Refund",
+        description: "Approve Ronald's move-out, record room deductions, and compute his security deposit refund.",
+        useWhen: "Panelist asks how move-out checklists, damage deductions, and deposit refunds are computed.",
+        as: "landlord",
+        path: "/landlord/move-out",
+        prepareAction: "seed-move-out-pending",
+        tip: "Open Ronald Bautista under Pending → Approve → Start Inspection.",
+    },
 
-    // --- Maintenance --------------------------------------------------------
-    { id: "ticket-new", group: "Maintenance", title: "Tenant files a repair with photos (Mark)", as: "mark", path: "/tenant/maintenance", steps: "New Request, or open the sparking-outlet ticket.", say: "Category, priority, photo evidence, status updates." },
-    { id: "ticket-triage", group: "Maintenance", title: "Landlord triage & assignment (Smart Triage)", as: "landlord", path: "/landlord/maintenance", steps: "Top card: Mark's outlet (iRis: urgent, fire hazard) → assign landlord / third party / self-repair.", say: "AI triage is advisory; Ronald's self-repair request is awaiting a decision." },
-    { id: "ticket-progress", group: "Maintenance", title: "Ticket in progress with contractor (Joshua)", as: "joshua", path: "/tenant/maintenance", say: "Tenant reports 'personnel arrived / repairing / done' from their side." },
+    // --- Applications -------------------------------------------------------
+    {
+        id: "competing-applicants",
+        category: "Applications",
+        title: "Competing Applicants Review & Approval",
+        description: "Compare multiple applicants for Room 103, verify IDs, and approve in one step.",
+        useWhen: "Panelist asks what happens when two applicants apply for the exact same vacant unit.",
+        as: "landlord",
+        path: "/landlord/applications",
+        prepareAction: "seed-competing-applicants",
+        tip: "Open Pending tab → select Jerome Pascual → Quick Approve.",
+    },
+    {
+        id: "prospect-payment-portal",
+        category: "Applications",
+        title: "Prospect Move-In Payment Portal",
+        description: "Approved applicant Kevin sees advance + deposit breakdown and uploads GCash proof without logging in.",
+        useWhen: "Panelist asks how approved applicants pay their move-in deposit before getting an account.",
+        as: "public",
+        path: "/apply/payments/fgd-pay-kevin-portal-2026",
+        prepareAction: "seed-competing-applicants",
+        tip: "Shows the public token-gated portal before account activation.",
+    },
+    {
+        id: "online-qr-application",
+        category: "Applications",
+        title: "Online QR Application Form (Public)",
+        description: "Prospect scans a lobby QR code and submits personal, employment, and ID documents.",
+        useWhen: "Panelist asks how walk-in or online prospects apply without downloading or logging in first.",
+        as: "public",
+        path: "/apply/fgd-apply-online-2026",
+        prepareAction: "seed-competing-applicants",
+        tip: "No account required; walks through the 4-step public intake wizard.",
+    },
 
-    // --- Lifecycle ----------------------------------------------------------
-    { id: "renewal", group: "Tenant lifecycle", title: "Lease renewal review (Christine)", as: "landlord", path: "/landlord/tenants", steps: "Lease Renewals tab → Christine → Review Renewal Terms → Approve & Generate Lease.", say: "Fixed term ends Nov 30; +5% per property policy; 90-day window." },
-    { id: "renewal-tenant", group: "Tenant lifecycle", title: "Tenant requests renewal", as: "christine", path: "/tenant/lease" },
-    { id: "moveout", group: "Tenant lifecycle", title: "Move-out approval, inspection, deposit refund (Ronald)", as: "landlord", path: "/landlord/move-out", steps: "Pending → Ronald → Approve Move-Out → Start Inspection → Complete Move-Out. Completed tab: Daniel (refund ₱5,050).", say: "Deductions itemised; refund computed." },
-    { id: "moveout-tenant", group: "Tenant lifecycle", title: "Tenant files move-out / checklist", as: "ronald", path: "/tenant/lease", steps: "Request Move-Out card." },
-    { id: "transfer", group: "Tenant lifecycle", title: "Unit transfer request (Angelo 302 → 303)", as: "angelo", path: "/tenant/lease", steps: "Unit Transfer portal → Initiate Transfer Request." },
-    { id: "tenants", group: "Tenant lifecycle", title: "Tenant directory & profiles", as: "landlord", path: "/landlord/tenants", steps: "Directory → open a card; Add Tenant for manual entry (Room 104 Bernard)." },
-    { id: "archive", group: "Tenant lifecycle", title: "Former tenant (Daniel, archived)", as: "daniel", path: "/tenant/dashboard", say: "Moved out Aug 31; deposit returned with an itemised breakdown." },
+    // --- Maintenance & Utilities --------------------------------------------
+    {
+        id: "urgent-maintenance-triage",
+        category: "Maintenance & Utilities",
+        title: "Urgent Maintenance + iRis AI Triage",
+        description: "Mark's sparking wall outlet ticket flagged as Urgent Fire Hazard with AI triage suggestions.",
+        useWhen: "Panelist asks how emergency repairs are prioritized or how AI assists with maintenance triage.",
+        as: "landlord",
+        path: "/landlord/maintenance",
+        prepareAction: "seed-urgent-maintenance",
+        tip: "Open the top urgent ticket to assign a landlord, contractor, or self-repair.",
+    },
+    {
+        id: "self-repair-ticket",
+        category: "Maintenance & Utilities",
+        title: "Tenant Self-Repair Request Flow",
+        description: "Ronald's self-repair request awaiting landlord approval and cost/deduction decision.",
+        useWhen: "Panelist asks how tenants can request to fix minor issues themselves with landlord approval.",
+        as: "landlord",
+        path: "/landlord/maintenance",
+        prepareAction: "seed-self-repair-ticket",
+        tip: "Review Ronald Bautista's self-repair ticket and approve/decline.",
+    },
+    {
+        id: "utility-submeter-billing",
+        category: "Maintenance & Utilities",
+        title: "Utility Submeter Billing (kWh & m³)",
+        description: "Enter monthly room electric and water meter readings and batch-generate itemized bills.",
+        useWhen: "Panelist asks how electricity/water submeter readings are computed and billed per room.",
+        as: "landlord",
+        path: "/landlord/utility-billing",
+        prepareAction: "seed-utility-cycle-ready",
+        tip: "Save Readings → Send Monthly Bills (₱13.50/kWh & ₱35/m³).",
+    },
 
-    // --- Property -----------------------------------------------------------
-    { id: "unit-map", group: "Property & rooms", title: "Interactive unit map / floor plan", as: "landlord", path: "/landlord/unit-map", steps: "Floors Ground / Second / Third → click Room 101.", say: "Green = vacant, 304 under maintenance; tenant, lease and tickets per room." },
-    { id: "properties", group: "Property & rooms", title: "Property, amenities, rules, contract template", as: "landlord", path: "/landlord/properties" },
-    { id: "environment", group: "Property & rooms", title: "Dormitory rules: curfew, visitors, quiet hours", as: "landlord", path: "/landlord/properties", steps: "Open the property → Environment.", say: "Curfew 11 PM, visitors until 9 PM, quiet 10 PM–6 AM, 2 occupants; injected into the lease." },
-    { id: "amenities", group: "Property & rooms", title: "Amenity bookings (Study Hall, laundry)", as: "christine", path: "/tenant/lease", steps: "Amenities section → her pending Study Hall booking." },
-    { id: "flyer", group: "Property & rooms", title: "Printable lobby flyer with QR codes", as: "landlord", path: "/landlord/flyer" },
+    // --- Onboarding & AI ----------------------------------------------------
+    {
+        id: "iris-ai-broadcast",
+        category: "Onboarding & AI",
+        title: "iRis AI Assistant & Financial Analytics",
+        description: "Ask iRis natural-language questions about unpaid rent, occupancy, and export PDF/CSV reports.",
+        useWhen: "Panelist asks what AI capabilities or financial analytics reports the system provides.",
+        as: "landlord",
+        path: "/landlord/analytics?export=true",
+        prepareAction: "seed-analytics-iris",
+        tip: "Opens Financial Analytics with the Export Report modal ready for 1-click download.",
+    },
+    {
+        id: "landlord-5stage-onboarding",
+        category: "Onboarding & AI",
+        title: "5-Stage Landlord Onboarding Wizard",
+        description: "Walks a fresh landlord through Property Setup, Unit Map, Utility Rails, Tenants, and Tour.",
+        useWhen: "Panelist asks what a brand-new landlord sees on their very first login.",
+        as: "starter",
+        path: "/setup",
+        prepareAction: "prepare-starter-onboarding",
+        tip: "Resets Practice Landlord 1 so you can demo /setup from scratch.",
+    },
+    {
+        id: "unit-map-3floor",
+        category: "Onboarding & AI",
+        title: "Interactive 3-Floor Unit Map",
+        description: "Visual floor plan showing occupied, vacant, and maintenance rooms across 3 floors.",
+        useWhen: "Panelist asks how landlords visually manage rooms, occupancy, and floor layouts.",
+        as: "landlord",
+        path: "/landlord/unit-map",
+        prepareAction: "seed-unit-map",
+        tip: "Switch floors and click Room 101 or Room 304 for live unit details.",
+    },
 
-    // --- Communication ------------------------------------------------------
-    { id: "messages", group: "Communication", title: "Landlord ↔ tenant messaging", as: "landlord", path: "/landlord/messages", say: "Threads with Joshua (payment + plumber), Katrina (signing), Mark (unread)." },
-    { id: "community", group: "Communication", title: "Community board: announcement, poll, album", as: "landlord", path: "/landlord/community", say: "Pinned water interruption, Christmas party poll (5 votes), fiesta album; Approvals tab = moderation." },
-    { id: "community-tenant", group: "Communication", title: "Community board (tenant view)", as: "maria", path: "/tenant/community" },
-    { id: "notifications", group: "Communication", title: "Notifications / alerts", as: "landlord", path: "/landlord/dashboard", steps: "Bell icon / Alerts (10 waiting)." },
-    { id: "iris-landlord", group: "Communication", title: "iRis AI assistant (landlord)", as: "landlord", path: "/landlord/analytics", steps: "iRis panel; history already has 'Who hasn't paid for October yet?'.", say: "Reads only the landlord's own data; app works without it." },
-    { id: "iris-tenant", group: "Communication", title: "iRis AI assistant (tenant)", as: "maria", path: "/tenant/messages" },
-
-    // --- Analytics ----------------------------------------------------------
-    { id: "dashboard", group: "Dashboard & analytics", title: "Landlord dashboard (today's overview)", as: "landlord", path: "/landlord/dashboard" },
-    { id: "analytics", group: "Dashboard & analytics", title: "Analytics & export report", as: "landlord", path: "/landlord/analytics", steps: "Export Report (CSV/PDF)." },
-    { id: "calendar", group: "Dashboard & analytics", title: "Operations calendar", as: "landlord", path: "/landlord/calendar" },
-    { id: "documents", group: "Dashboard & analytics", title: "Document archive (permit, leases)", as: "landlord", path: "/landlord/documents" },
-    { id: "tenant-dashboard", group: "Dashboard & analytics", title: "Tenant dashboard (new tenant, Mark)", as: "mark", path: "/tenant/dashboard" },
-
-    // --- Settings & security ------------------------------------------------
-    { id: "settings-landlord", group: "Settings & security", title: "Landlord settings hub (elderly-friendly)", as: "landlord", path: "/landlord/settings" },
-    { id: "security", group: "Settings & security", title: "2-step sign-in, recovery key, devices", as: "landlord", path: "/landlord/settings?section=security", say: "Keep 2FA off on demo accounts." },
-    { id: "activity", group: "Settings & security", title: "Activity / audit history", as: "landlord", path: "/landlord/settings?section=activity" },
-    { id: "branding", group: "Settings & security", title: "White-label branding", as: "landlord", path: "/landlord/settings?section=branding" },
-    { id: "settings-tenant", group: "Settings & security", title: "Tenant settings", as: "maria", path: "/tenant/settings" },
-    { id: "privacy", group: "Settings & security", title: "Privacy policy (Data Privacy Act)", as: "public", path: "/privacy" },
-
-    // --- Platform -----------------------------------------------------------
-    { id: "login", group: "Platform", title: "Login page (EN / FIL, theme)", as: "public", path: "/login" },
-    { id: "forgot", group: "Platform", title: "Forgot password (e-mail OTP)", as: "public", path: "/forgot-password" },
-    { id: "mobile-tenant", group: "Platform", title: "Mobile app shell (tenant)", as: "maria", path: "/mobile/tenant/home", say: "Resize to phone width; Android APK at /download." },
-    { id: "mobile-landlord", group: "Platform", title: "Mobile app shell (landlord)", as: "landlord", path: "/mobile/landlord/overview" },
-    { id: "download", group: "Platform", title: "Android APK download page", as: "public", path: "/download" },
-    { id: "docs", group: "Platform", title: "User manual / documentation", as: "public", path: "/docs" },
+    // --- Tenant Portal & Mobile ---------------------------------------------
+    {
+        id: "first-time-tenant-tour",
+        category: "Tenant Portal & Mobile",
+        title: "First-Time Tenant Guided Tour",
+        description: "Resets Mark Lim (Room 301) so his first-login walkthrough tour launches automatically.",
+        useWhen: "Panelist asks how first-time or non-techy tenants learn to navigate the portal.",
+        as: "mark",
+        path: "/tenant/dashboard",
+        prepareAction: "reset-tenant-tour",
+        tip: "Wait 1–2 seconds on the dashboard for the welcome tour modal to appear.",
+    },
+    {
+        id: "community-amenity-booking",
+        category: "Tenant Portal & Mobile",
+        title: "Community Board, Polls & Amenity Booking",
+        description: "Pinned notices, dormitory polls, photo albums, and Study Hall amenity reservations.",
+        useWhen: "Panelist asks about tenant engagement, announcements, polls, or shared amenity booking.",
+        as: "landlord",
+        path: "/landlord/community?tab=approvals",
+        prepareAction: "seed-community-approvals",
+        tip: "Check Approvals tab for moderation; Christine (203) has a pending Study Hall booking.",
+    },
+    {
+        id: "mobile-app-shell",
+        category: "Tenant Portal & Mobile",
+        title: "Mobile App Shell (Tenant & Android APK)",
+        description: "Responsive mobile-first shell used inside the native Android APK wrapper.",
+        useWhen: "Panelist asks to see the mobile responsiveness or Android app experience.",
+        as: "maria",
+        path: "/mobile/tenant/home",
+        prepareAction: "seed-mobile-shell",
+        tip: "Resize browser to mobile width or open DevTools device toolbar.",
+    },
 ];

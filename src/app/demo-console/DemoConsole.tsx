@@ -1,1626 +1,1714 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
-import type { DemoAccount, DemoAccountKey, DemoScenario } from "./scenarios";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import {
-    Search,
-    X,
-    ExternalLink,
-    RotateCcw,
-    Copy,
-    Check,
-    Sparkles,
-    Star,
-    User,
-    Crown,
-    Building2,
-    Shield,
-    Sliders,
-    Zap,
-    PenTool,
-    Receipt,
-    Wallet,
-    Wrench,
-    Map as MapIcon,
-    MessageSquare,
-    BarChart3,
-    Smartphone,
-    UserPlus,
-    CheckCircle2,
-    FileText,
+    AlertCircle,
     AlertTriangle,
-    LogOut,
-    RefreshCw,
+    ArrowRight,
+    Bell,
     Bot,
-    Grid,
-    Info,
+    Building2,
+    Check,
+    CheckCircle2,
     ChevronDown,
     ChevronUp,
-    Terminal,
-    ArrowRight,
-    Clock,
-    Lock,
-    CheckSquare,
-    Banknote,
-    Coins,
-    BellRing,
-    FileSpreadsheet,
-    CalendarRange,
-    Archive,
-    Megaphone,
-    Bell,
-    LayoutDashboard,
-    Calendar,
-    Folder,
-    Home,
-    History,
-    Palette,
-    UserCog,
-    FileCheck2,
-    LogIn,
+    Compass,
+    Copy,
+    CreditCard,
+    ExternalLink,
     KeyRound,
-    Download,
-    BookOpen,
-    FileSignature,
-    ShieldCheck,
-    FileSearch,
-    CalendarCheck,
-    ClipboardCheck,
-    ArrowRightLeft,
-    ArrowUpRight,
-    FilePlus2,
-    Printer,
-    Coffee,
+    LayoutDashboard,
+    Loader2,
+    LogOut,
+    MessageSquare,
+    PenTool,
+    RefreshCw,
+    RotateCcw,
+    Search,
+    ShieldAlert,
+    Smartphone,
+    Trash2,
+    User,
+    UserPlus,
+    Users,
     Volume2,
+    Wrench,
+    X,
+    Zap,
     type LucideIcon,
 } from "lucide-react";
+import {
+    DEMO_CATEGORIES,
+    type DemoAccount,
+    type DemoAccountKey,
+    type DemoCategory,
+    type DemoScenario,
+    type ExtraResident,
+} from "./scenarios";
 
 interface Props {
     accounts: DemoAccount[];
+    extraResidents: ExtraResident[];
     password: string;
     scenarios: DemoScenario[];
     resetAvailable: boolean;
 }
 
-const DEMO_WINDOW_NAME = "ireside-demo";
+type PrimaryTab = "cases" | "accounts" | "reset";
 
-type Status =
-    | { kind: "idle" }
-    | { kind: "busy"; text: string }
-    | { kind: "ok"; text: string }
-    | { kind: "error"; text: string };
-
-interface ScenarioMeta {
-    icon: LucideIcon;
-    badge: string;
-    isTopPick?: boolean;
-    color: "emerald" | "violet" | "amber" | "rose" | "blue" | "teal" | "sky" | "orange";
+interface CurrentSession {
+    id?: string;
+    email: string;
+    fullName: string;
+    role: string;
 }
 
-// Icon and visual identity dictionary for each scenario ID
-const SCENARIO_META: Record<string, ScenarioMeta> = {
-    // Tenant intake
-    "apply-online": { icon: UserPlus, badge: "QR / Public Link", isTopPick: true, color: "emerald" },
-    "invite-manager": { icon: Printer, badge: "QR & Links Manager", isTopPick: true, color: "emerald" },
-    "walkin": { icon: FileText, badge: "Walk-in Form", color: "emerald" },
-    "review-app": { icon: CheckCircle2, badge: "Approve Applicant", isTopPick: true, color: "emerald" },
-    "app-reviewing": { icon: FileSearch, badge: "ID Verification", color: "blue" },
-    "prospect-portal": { icon: Wallet, badge: "Deposit Portal", color: "amber" },
-    "payment-pending": { icon: Receipt, badge: "Confirm Advance", color: "emerald" },
+interface ReadyTarget {
+    scenarioId: string;
+    path: string;
+    accountLabel: string;
+    message: string;
+}
 
-    // Lease signing
-    "sign-tenant": { icon: PenTool, badge: "Tenant E-Sign", isTopPick: true, color: "violet" },
-    "sign-landlord": { icon: FileSignature, badge: "Countersign Lease", isTopPick: true, color: "emerald" },
-    "audit-trail": { icon: ShieldCheck, badge: "Audit Trail & IP", color: "violet" },
-    "lease-view": { icon: FileText, badge: "Contract Viewer", color: "blue" },
-    "lease-term": { icon: CalendarRange, badge: "Term Types", color: "teal" },
+const DEMO_WINDOW_NAME = "ireside-demo";
 
-    // Rent & utilities
-    "utility-billing": { icon: Zap, badge: "Meter Readings", isTopPick: true, color: "amber" },
-    "invoice-tenant": { icon: Receipt, badge: "Itemized Invoice", color: "blue" },
-    "pay-gcash": { icon: Wallet, badge: "GCash Payment", isTopPick: true, color: "sky" },
-    "verify-gcash": { icon: CheckSquare, badge: "Verify Proof", isTopPick: true, color: "emerald" },
-    "pay-cash-tenant": { icon: Banknote, badge: "Cash Intent", color: "teal" },
-    "collect-cash": { icon: Coins, badge: "Collect Cash", color: "emerald" },
-    "reminder": { icon: BellRing, badge: "Overdue Notice", color: "rose" },
-    "issue-invoice": { icon: FilePlus2, badge: "One-Off Invoice", color: "blue" },
-    "expenses": { icon: FileSpreadsheet, badge: "Ledger & CSV", color: "emerald" },
-    "payout": { icon: ArrowUpRight, badge: "GCash Payout", color: "sky" },
-
-    // Maintenance
-    "ticket-new": { icon: AlertTriangle, badge: "Sparking Outlet", color: "rose" },
-    "ticket-triage": { icon: Sparkles, badge: "AI Smart Triage", isTopPick: true, color: "violet" },
-    "ticket-progress": { icon: Wrench, badge: "Plumber on Site", color: "amber" },
-
-    // Lifecycle
-    "renewal": { icon: RefreshCw, badge: "Renewal Terms", color: "blue" },
-    "renewal-tenant": { icon: CalendarCheck, badge: "Renewal Request", color: "violet" },
-    "moveout": { icon: LogOut, badge: "Inspection & Refund", isTopPick: true, color: "rose" },
-    "moveout-tenant": { icon: ClipboardCheck, badge: "Move-Out Request", color: "rose" },
-    "transfer": { icon: ArrowRightLeft, badge: "Unit Transfer", color: "teal" },
-    "tenants": { icon: User, badge: "Resident Roster", color: "emerald" },
-    "archive": { icon: Archive, badge: "Archived Resident", color: "teal" },
-
-    // Property
-    "unit-map": { icon: MapIcon, badge: "3-Floor Blueprint", isTopPick: true, color: "emerald" },
-    "properties": { icon: Building2, badge: "Property Specs", color: "emerald" },
-    "environment": { icon: Clock, badge: "Curfew & Rules", color: "amber" },
-    "amenities": { icon: Coffee, badge: "Study Hall Booking", color: "blue" },
-    "flyer": { icon: Printer, badge: "Printable QR Flyer", color: "emerald" },
-
-    // Communication
-    "messages": { icon: MessageSquare, badge: "Tenant Chat", color: "emerald" },
-    "community": { icon: Megaphone, badge: "Notice Board & Poll", color: "violet" },
-    "community-tenant": { icon: Megaphone, badge: "Community Feed", color: "blue" },
-    "notifications": { icon: Bell, badge: "Activity Alerts", color: "amber" },
-    "iris-landlord": { icon: Bot, badge: "iRis AI Finance", isTopPick: true, color: "violet" },
-    "iris-tenant": { icon: Bot, badge: "iRis AI Inquiries", color: "violet" },
-
-    // Dashboard & analytics
-    "dashboard": { icon: LayoutDashboard, badge: "Today's Overview", color: "emerald" },
-    "analytics": { icon: BarChart3, badge: "Reports & PDF", color: "blue" },
-    "calendar": { icon: Calendar, badge: "Ops Calendar", color: "amber" },
-    "documents": { icon: Folder, badge: "Permit Vault", color: "emerald" },
-    "tenant-dashboard": { icon: Home, badge: "First Login Tour", color: "violet" },
-
-    // Settings
-    "settings-landlord": { icon: Sliders, badge: "Elderly-Friendly Hub", color: "emerald" },
-    "security": { icon: Shield, badge: "2-Step & Devices", color: "rose" },
-    "activity": { icon: History, badge: "Audit History", color: "blue" },
-    "branding": { icon: Palette, badge: "White-Label Brand", color: "violet" },
-    "settings-tenant": { icon: UserCog, badge: "Tenant Settings", color: "blue" },
-    "privacy": { icon: FileCheck2, badge: "Data Privacy Act", color: "emerald" },
-
-    // Platform
-    "login": { icon: LogIn, badge: "Bilingual Sign-in", color: "emerald" },
-    "forgot": { icon: KeyRound, badge: "Email OTP Recovery", color: "amber" },
-    "mobile-tenant": { icon: Smartphone, badge: "Mobile Shell (Tenant)", color: "violet" },
-    "mobile-landlord": { icon: Smartphone, badge: "Mobile Shell (Owner)", color: "emerald" },
-    "download": { icon: Download, badge: "Android APK", color: "emerald" },
-    "docs": { icon: BookOpen, badge: "User Manual", color: "blue" },
-};
-
-// Soothing, eye-friendly pastel badge and icon colors for light theme
-const COLOR_MAP = {
-    emerald: {
-        bg: "#ecfdf5",
-        border: "#a7f3d0",
-        text: "#059669",
+const CATEGORY_META: Record<
+    DemoCategory,
+    { icon: LucideIcon; pillClass: string; badgeClass: string }
+> = {
+    "In-Chat Cards": {
+        icon: MessageSquare,
+        pillClass: "text-violet-700 dark:text-violet-300",
+        badgeClass: "bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/25",
     },
-    violet: {
-        bg: "#f5f3ff",
-        border: "#ddd6fe",
-        text: "#7c3aed",
+    "Payments & GCash": {
+        icon: CreditCard,
+        pillClass: "text-emerald-700 dark:text-emerald-300",
+        badgeClass: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25",
     },
-    amber: {
-        bg: "#fffbeb",
-        border: "#fde68a",
-        text: "#b45309",
+    "Leases & E-Sign": {
+        icon: PenTool,
+        pillClass: "text-sky-700 dark:text-sky-300",
+        badgeClass: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/25",
     },
-    rose: {
-        bg: "#fff1f2",
-        border: "#fecdd3",
-        text: "#e11d48",
+    Applications: {
+        icon: Users,
+        pillClass: "text-amber-700 dark:text-amber-300",
+        badgeClass: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25",
     },
-    blue: {
-        bg: "#eff6ff",
-        border: "#bfdbfe",
-        text: "#2563eb",
+    "Maintenance & Utilities": {
+        icon: Wrench,
+        pillClass: "text-rose-700 dark:text-rose-300",
+        badgeClass: "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/25",
     },
-    teal: {
-        bg: "#f0fdfa",
-        border: "#99f6e4",
-        text: "#0d9488",
+    "Onboarding & AI": {
+        icon: Bot,
+        pillClass: "text-indigo-700 dark:text-indigo-300",
+        badgeClass: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/25",
     },
-    sky: {
-        bg: "#f0f9ff",
-        border: "#bae6fd",
-        text: "#0284c7",
-    },
-    orange: {
-        bg: "#fff7ed",
-        border: "#fed7aa",
-        text: "#c2410c",
+    "Tenant Portal & Mobile": {
+        icon: Smartphone,
+        pillClass: "text-teal-700 dark:text-teal-300",
+        badgeClass: "bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/25",
     },
 };
 
-const CATEGORIES = [
-    { id: "all", label: "All Scenarios", icon: Grid },
-    { id: "top-picks", label: "⭐ Top Defense Picks", icon: Star },
-    { id: "Tenant intake", label: "Intake & QR", icon: UserPlus },
-    { id: "Digital lease signing", label: "Lease E-Sign", icon: PenTool },
-    { id: "Rent & utilities", label: "Rent & Utilities", icon: Coins },
-    { id: "Maintenance", label: "Maintenance", icon: Wrench },
-    { id: "Tenant lifecycle", label: "Lifecycle", icon: RefreshCw },
-    { id: "Property & rooms", label: "Property & Map", icon: Building2 },
-    { id: "Communication", label: "Chat & AI", icon: MessageSquare },
-    { id: "Dashboard & analytics", label: "Analytics", icon: BarChart3 },
-    { id: "Settings & security", label: "Settings", icon: Shield },
-    { id: "Platform", label: "Platform & Mobile", icon: Smartphone },
-];
+export function DemoConsole({
+    accounts,
+    extraResidents,
+    password,
+    scenarios,
+    resetAvailable,
+}: Props) {
+    const [activeTab, setActiveTab] = useState<PrimaryTab>("cases");
+    const [selectedCategory, setSelectedCategory] = useState<DemoCategory | "All">("All");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [currentSession, setCurrentSession] = useState<CurrentSession | null>(null);
+    const [sessionLoading, setSessionLoading] = useState(true);
 
-const KEYWORD_CHIPS = [
-    { label: "⭐ Defense Must-Shows", query: "top-pick" },
-    { label: "✍️ E-Sign Lease", query: "sign" },
-    { label: "💳 GCash Payment", query: "gcash" },
-    { label: "⚡ Meter Readings", query: "meter" },
-    { label: "🛠️ Smart Triage", query: "triage" },
-    { label: "🗺️ Unit Map", query: "unit-map" },
-    { label: "🤖 iRis AI", query: "iris" },
-    { label: "🚪 Move-Out", query: "move-out" },
-    { label: "📱 Mobile App", query: "mobile" },
-];
+    // Busy states
+    const [busyScenarioId, setBusyScenarioId] = useState<string | null>(null);
+    const [busyAccountKey, setBusyAccountKey] = useState<string | null>(null);
+    const [busyActionKey, setBusyActionKey] = useState<string | null>(null);
 
-export function DemoConsole({ accounts, password, scenarios, resetAvailable }: Props) {
-    const [status, setStatus] = useState<Status>({ kind: "idle" });
-    const [current, setCurrent] = useState<string | null>(null);
-    const [query, setQuery] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("all");
-    const [selectedRole, setSelectedRole] = useState<"all" | "landlord" | "tenant" | "public">("all");
-    const [showPresenterCues, setShowPresenterCues] = useState(false);
-    const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
-    const [resetLog, setResetLog] = useState<string | null>(null);
-    const [resetting, setResetting] = useState(false);
+    // Ready links per scenario after "Prepare & Switch"
+    const [readyTargets, setReadyTargets] = useState<Record<string, ReadyTarget>>({});
+
+    // Accounts tab collapsible background residents
+    const [showBackgroundResidents, setShowBackgroundResidents] = useState(false);
+
+    // Reset & Create tab states
+    const [quickResetResult, setQuickResetResult] = useState<{
+        title: string;
+        message: string;
+        copyValue?: string;
+        copyLabel?: string;
+    } | null>(null);
+    const [createdLandlord, setCreatedLandlord] = useState<{
+        email: string;
+        password: string;
+    } | null>(null);
+    const [deleteEmail, setDeleteEmail] = useState("");
+    const [deleteEmailError, setDeleteEmailError] = useState<string | null>(null);
+    const [deleteTouched, setDeleteTouched] = useState(false);
     const [resetModalOpen, setResetModalOpen] = useState(false);
-    const [showResetLog, setShowResetLog] = useState(false);
-    const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
-    const [lastLaunchedId, setLastLaunchedId] = useState<string | null>(null);
+    const [resettingDb, setResettingDb] = useState(false);
+    const [resetLog, setResetLog] = useState<string | null>(null);
+
+    // Copy & Toast feedback
+    const [copiedKey, setCopiedKey] = useState<string | null>(null);
+    const [toast, setToast] = useState<{
+        message: string;
+        type: "success" | "error" | "info";
+    } | null>(null);
 
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const deleteInputRef = useRef<HTMLInputElement>(null);
+    const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const accountByKey = useMemo(
-        () => Object.fromEntries(accounts.map((a) => [a.key, a])) as Record<DemoAccountKey, DemoAccount>,
-        [accounts],
+        () =>
+            Object.fromEntries(accounts.map((a) => [a.key, a])) as Record<
+                DemoAccountKey,
+                DemoAccount
+            >,
+        [accounts]
     );
 
-    // Show temporary toast notification
-    const showToast = useCallback((message: string, type: "success" | "info" | "error" = "success") => {
-        setToast({ message, type });
-        setTimeout(() => setToast(null), 3200);
+    const showToast = useCallback(
+        (message: string, type: "success" | "error" | "info" = "success") => {
+            setToast({ message, type });
+            if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+            if (type !== "error") {
+                toastTimerRef.current = setTimeout(() => setToast(null), 3500);
+            }
+        },
+        []
+    );
+
+    const copyText = useCallback(
+        (text: string, label: string, keyId?: string) => {
+            navigator.clipboard.writeText(text);
+            if (keyId) {
+                setCopiedKey(keyId);
+                setTimeout(() => setCopiedKey((prev) => (prev === keyId ? null : prev)), 1800);
+            }
+            showToast(`Copied ${label} to clipboard`, "success");
+        },
+        [showToast]
+    );
+
+    const refreshSession = useCallback(async () => {
+        try {
+            const res = await fetch("/api/demo-console/actions", { cache: "no-store" });
+            const data = await res.json();
+            if (data.ok) {
+                setCurrentSession(data.currentUser ?? null);
+            }
+        } catch {
+            // keep current state on network hiccup
+        } finally {
+            setSessionLoading(false);
+        }
     }, []);
 
-    // Fetch active Supabase user on mount and suppress cookie banner
     useEffect(() => {
-        let cancelled = false;
-        createClient()
-            .auth.getUser()
-            .then(({ data }) => {
-                if (!cancelled) setCurrent(data.user?.email ?? null);
-            })
-            .catch(() => {
-                if (!cancelled) setCurrent(null);
-            });
+        refreshSession();
         try {
-            localStorage.setItem("ireside-consent-v1", JSON.stringify({ essential: true, analytics: true, marketing: false }));
+            localStorage.setItem(
+                "ireside-consent-v1",
+                JSON.stringify({ essential: true, analytics: true, marketing: false })
+            );
         } catch {
             // ignore
         }
-        return () => {
-            cancelled = true;
-        };
-    }, []);
+    }, [refreshSession]);
 
-    // Keyboard shortcut: '/' to focus search, 'Esc' to clear search
+    // Keyboard shortcuts: '/' focuses search, 'Escape' clears search or closes modal
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "/" && document.activeElement !== searchInputRef.current) {
+        const onKeyDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement | null;
+            const isTyping =
+                target?.tagName === "INPUT" ||
+                target?.tagName === "TEXTAREA" ||
+                target?.isContentEditable;
+
+            if (e.key === "/" && !isTyping) {
                 e.preventDefault();
-                searchInputRef.current?.focus();
-            } else if (e.key === "Escape") {
-                if (query) {
-                    setQuery("");
+                if (activeTab === "reset") {
+                    setActiveTab("cases");
+                    setTimeout(() => searchInputRef.current?.focus(), 20);
                 } else {
+                    searchInputRef.current?.focus();
+                }
+            } else if (e.key === "Escape") {
+                if (resetModalOpen) {
                     setResetModalOpen(false);
+                } else if (searchQuery) {
+                    setSearchQuery("");
                 }
             }
         };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [query]);
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [activeTab, resetModalOpen, searchQuery]);
 
-    // Copy to clipboard helper
-    const copyText = useCallback((text: string, label: string) => {
-        navigator.clipboard.writeText(text);
-        showToast(`✓ Copied ${label} to clipboard!`);
-    }, [showToast]);
+    const callAction = useCallback(
+        async (action: string, payload: Record<string, unknown> = {}) => {
+            const res = await fetch("/api/demo-console/actions", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action, ...payload }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) {
+                throw new Error(data.error || `Action "${action}" failed`);
+            }
+            return data;
+        },
+        []
+    );
 
-    // Filter scenarios
-    const filteredScenarios = useMemo(() => {
-        const q = query.trim().toLowerCase();
-
-        return scenarios.filter((s) => {
-            const meta = SCENARIO_META[s.id];
-            const account = accountByKey[s.as];
-
-            // Category filter
-            if (selectedCategory === "top-picks" && !meta?.isTopPick) return false;
-            if (selectedCategory !== "all" && selectedCategory !== "top-picks" && s.group !== selectedCategory) return false;
-
-            // Role filter
-            if (selectedRole !== "all" && account.role !== selectedRole) return false;
-
-            // Search query filter
-            if (!q) return true;
-            if (q === "top-pick") return Boolean(meta?.isTopPick);
-
-            const searchPayload = `${s.group} ${s.title} ${meta?.badge ?? ""} ${s.steps ?? ""} ${s.say ?? ""} ${account.label} ${account.room ? `room ${account.room}` : ""} ${s.path}`.toLowerCase();
-            return searchPayload.includes(q);
-        });
-    }, [scenarios, query, selectedCategory, selectedRole, accountByKey]);
-
-    // Grouping for render
-    const groupedScenarios = useMemo(() => {
-        const map = new Map<string, DemoScenario[]>();
-        for (const s of filteredScenarios) {
-            if (!map.has(s.group)) map.set(s.group, []);
-            map.get(s.group)!.push(s);
+    const [launchMode, setLaunchMode] = useState<"redirect" | "new_tab">(() => {
+        if (typeof window !== "undefined") {
+            const saved = window.localStorage.getItem("ireside.demo_launch_mode");
+            if (saved === "new_tab" || saved === "redirect") return saved;
         }
-        return [...map.entries()];
-    }, [filteredScenarios]);
+        return "redirect";
+    });
 
-    // Toggle notes for a single card
-    const toggleCardNote = useCallback((id: string) => {
-        setExpandedNotes((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            return next;
-        });
-    }, []);
+    const handleToggleLaunchMode = (mode: "redirect" | "new_tab") => {
+        setLaunchMode(mode);
+        if (typeof window !== "undefined") {
+            window.localStorage.setItem("ireside.demo_launch_mode", mode);
+        }
+    };
 
-    /** Launch scenario: auth switch & window open */
-    const launch = async (scenario: DemoScenario, sameTab: boolean) => {
+    const openDemoRoute = useCallback(
+        (targetPath: string) => {
+            if (launchMode === "new_tab") {
+                const win = window.open(targetPath, DEMO_WINDOW_NAME);
+                if (win) {
+                    win.focus();
+                } else {
+                    window.location.assign(targetPath);
+                }
+            } else {
+                window.location.assign(targetPath);
+            }
+        },
+        [launchMode]
+    );
+
+    const getDashboardPath = (role?: string | null) => {
+        if (role === "landlord") return "/landlord/dashboard";
+        if (role === "tenant") return "/tenant/dashboard";
+        return "/";
+    };
+
+    // Switch account via server-side action (syncs role cookies & clears 2FA)
+    const switchToAccount = useCallback(
+        async (email: string | null, accountPassword: string | null) => {
+            const data = await callAction("switch-account", {
+                email,
+                password: accountPassword || password,
+            });
+            setCurrentSession(data.user ?? null);
+            return data.user as CurrentSession | null;
+        },
+        [callAction, password]
+    );
+
+    // Tab 1: Prepare & Switch handler (single round-trip when prepareAction is set)
+    const handlePrepareAndSwitch = async (scenario: DemoScenario) => {
         const account = accountByKey[scenario.as];
-        const supabase = createClient();
-        setLastLaunchedId(scenario.id);
+        setBusyScenarioId(scenario.id);
 
         try {
-            setStatus({
-                kind: "busy",
-                text: account.email ? `Authenticating as ${account.label}…` : "Switching to Public guest…",
-            });
+            let prepMessage = `Switched to ${account.label}`;
+            let resolvedPath = scenario.path;
+            if (scenario.prepareAction) {
+                const prepRes = await callAction(scenario.prepareAction, {
+                    ...(account.email
+                        ? {
+                              autoSwitchEmail: account.email,
+                              autoSwitchPassword: account.password || password,
+                          }
+                        : {}),
+                    as: scenario.as,
+                    targetRoute: scenario.path,
+                    view: scenario.as === "landlord" ? "landlord" : undefined,
+                });
+                if (prepRes.message) {
+                    prepMessage = prepRes.message;
+                }
+                if (typeof prepRes.recommendedRoute === "string" && prepRes.recommendedRoute.trim()) {
+                    resolvedPath = prepRes.recommendedRoute.trim();
+                }
+                if (prepRes.switchedUser) {
+                    setCurrentSession(prepRes.switchedUser);
+                } else if (!account.email) {
+                    await switchToAccount(null, null);
+                }
+            } else {
+                await switchToAccount(account.email, account.password);
+            }
 
-            if (current !== account.email) {
-                await supabase.auth.signOut({ scope: "local" });
-                if (account.email) {
-                    const { error } = await supabase.auth.signInWithPassword({ email: account.email, password });
-                    if (error) throw error;
+            // Clean client-side onboarding/tour localStorage flags if resetting tours
+            if (typeof window !== "undefined") {
+                if (
+                    scenario.id === "landlord-5stage-onboarding" ||
+                    scenario.prepareAction === "prepare-starter-onboarding"
+                ) {
+                    window.localStorage.removeItem("ireside.onboarding_completed");
+                    window.localStorage.removeItem("ireside.dashboard_tour_complete");
+                    window.localStorage.removeItem("ireside_setup_completed");
+                    window.localStorage.removeItem("ireside_setup_completed_at");
+                }
+                if (
+                    scenario.id === "first-time-tenant-tour" ||
+                    scenario.prepareAction === "reset-tenant-tour"
+                ) {
+                    window.localStorage.removeItem("ireside.tenant_tour_completed");
+                    window.localStorage.removeItem("tenant_tour_completed");
                 }
             }
 
-            setCurrent(account.email);
-            setStatus({
-                kind: "ok",
-                text: `Ready: ${account.email ? account.label : "Public"} → ${scenario.path}`,
-            });
+            setReadyTargets((prev) => ({
+                ...prev,
+                [scenario.id]: {
+                    scenarioId: scenario.id,
+                    path: resolvedPath,
+                    accountLabel: account.label,
+                    message: prepMessage,
+                },
+            }));
 
-            showToast(
-                `⚡ Launched "${scenario.title}" as ${account.label}${sameTab ? " in this tab" : " in demo window"}`,
-                "success",
-            );
-
-            if (sameTab) {
-                window.location.assign(scenario.path);
-            } else {
-                const win = window.open(scenario.path, DEMO_WINDOW_NAME);
-                win?.focus();
-            }
-        } catch (error) {
-            const msg = error instanceof Error ? error.message : "Authentication failed";
-            setStatus({ kind: "error", text: msg });
-            showToast(`✗ Failed to launch: ${msg}`, "error");
+            showToast(`Ready: ${scenario.title}`, "success");
+            openDemoRoute(resolvedPath);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Failed to prepare scenario";
+            showToast(msg, "error");
+        } finally {
+            setBusyScenarioId(null);
         }
     };
 
-    /** Direct quick switch to persona dashboard */
-    const switchAccount = async (account: DemoAccount) => {
-        const path = account.role === "landlord" ? "/landlord/dashboard" : account.role === "tenant" ? "/tenant/dashboard" : "/";
-        await launch({
-            id: `quick-account-${account.key}`,
-            group: "Accounts",
-            title: `Dashboard · ${account.label}`,
-            as: account.key,
-            path,
-        }, false);
-    };
-
-    /** Sign out current account completely */
-    const handleSignOut = async () => {
+    // Tab 2: Switch & Open Dashboard
+    const handleAccountSwitchAndOpen = async (
+        key: string,
+        label: string,
+        email: string | null,
+        accountPassword: string | null,
+        role: string
+    ) => {
+        setBusyAccountKey(key);
         try {
-            const supabase = createClient();
-            await supabase.auth.signOut({ scope: "local" });
-            setCurrent(null);
-            setStatus({ kind: "ok", text: "Signed out completely" });
-            showToast("Signed out", "info");
-        } catch {
-            showToast("Sign out failed", "error");
+            await switchToAccount(email, accountPassword);
+            const targetPath = role === "public" ? "/login" : getDashboardPath(role);
+            showToast(`Signed in as ${label}`, "success");
+            openDemoRoute(targetPath);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Failed to switch account";
+            showToast(msg, "error");
+        } finally {
+            setBusyAccountKey(null);
         }
     };
 
-    /** Run full database seed reset */
-    const runReset = async () => {
-        setResetModalOpen(false);
-        setResetting(true);
-        setShowResetLog(true);
-        setResetLog("Executing scripts/seed-defense-demo.mjs … Resetting database to defense baseline.");
+    const handleSignOut = async () => {
+        setBusyAccountKey("signout");
+        try {
+            await switchToAccount(null, null);
+            showToast("Signed out of demo session", "info");
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : "Sign out failed", "error");
+        } finally {
+            setBusyAccountKey(null);
+        }
+    };
 
+    // Tab 3: Guided Onboarding & Tour ON / OFF / Reset
+    const handleOnboardingControl = async (
+        actionName: "toggle-landlord-onboarding" | "toggle-tenant-tour",
+        mode: "on" | "off" | "reset",
+        title: string
+    ) => {
+        const key = `${actionName}:${mode}`;
+        setBusyActionKey(key);
+        try {
+            const data = await callAction(actionName, { mode });
+            if (typeof window !== "undefined") {
+                if (data.clearOnboardingLocalStorage) {
+                    window.localStorage.removeItem("ireside.onboarding_completed");
+                }
+                if (data.setOnboardingCompleted) {
+                    window.localStorage.setItem("ireside.onboarding_completed", "true");
+                }
+            }
+            setQuickResetResult({
+                title,
+                message: data.message || `${title} applied.`,
+            });
+            showToast(data.message || `${title} applied`, "success");
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : `${title} failed`, "error");
+        } finally {
+            setBusyActionKey(null);
+        }
+    };
+
+    // Tab 3: Quick Resets
+    const handleQuickReset = async (
+        actionKey: string,
+        title: string,
+        successFallback: string
+    ) => {
+        setBusyActionKey(actionKey);
+        try {
+            const data = await callAction(actionKey);
+            setQuickResetResult({
+                title,
+                message: data.message || successFallback,
+                copyValue: data.signingLink || data.email,
+                copyLabel: data.signingLink ? "Signing Link" : data.email ? "Email" : undefined,
+            });
+            showToast(`${title} complete`, "success");
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : `${title} failed`, "error");
+        } finally {
+            setBusyActionKey(null);
+        }
+    };
+
+    // Tab 3: Create Fresh Claimable Landlord
+    const handleCreateFreshLandlord = async () => {
+        setBusyActionKey("create-fresh-landlord");
+        try {
+            const data = await callAction("create-fresh-landlord");
+            setCreatedLandlord({
+                email: data.email,
+                password: data.password,
+            });
+            showToast(`Created ${data.email}`, "success");
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : "Failed to create landlord", "error");
+        } finally {
+            setBusyActionKey(null);
+        }
+    };
+
+    // Tab 3: Delete User validation ("Reward Early, Punish Late")
+    const validateDeleteEmail = (value: string): string | null => {
+        const trimmed = value.trim();
+        if (!trimmed) return "Enter an email address to delete.";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+            return "Enter a valid email address (e.g. marco.reyes@ireside.ph).";
+        }
+        return null;
+    };
+
+    const handleDeleteUserSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setDeleteTouched(true);
+        const err = validateDeleteEmail(deleteEmail);
+        setDeleteEmailError(err);
+        if (err) {
+            deleteInputRef.current?.focus();
+            return;
+        }
+
+        setBusyActionKey("delete-user");
+        try {
+            const data = await callAction("delete-user", { email: deleteEmail.trim() });
+            showToast(data.message || `Deleted ${deleteEmail.trim()}`, "success");
+            setDeleteEmail("");
+            setDeleteTouched(false);
+            setDeleteEmailError(null);
+        } catch (error) {
+            showToast(error instanceof Error ? error.message : "Delete failed", "error");
+        } finally {
+            setBusyActionKey(null);
+        }
+    };
+
+    // Tab 3: Full Database Reset
+    const handleFullDatabaseReset = async () => {
+        setResetModalOpen(false);
+        setResettingDb(true);
+        setResetLog("Running scripts/seed-defense-demo.mjs… Please wait ~10-20s.");
         try {
             const res = await fetch("/api/demo-console/reset", { method: "POST" });
             const body = await res.json();
-            const logMessage = `${body.ok ? "✓ Demo baseline restored successfully" : "✗ Database reset failed"} (${body.seconds ?? "?"}s)\n\n${body.output ?? body.error ?? ""}`;
-            setResetLog(logMessage);
-            setCurrent(null);
-            showToast(body.ok ? `✓ Reset complete in ${body.seconds}s` : "✗ Reset failed", body.ok ? "success" : "error");
-        } catch (error) {
-            const err = error instanceof Error ? error.message : "Reset failed";
-            setResetLog(`✗ Error: ${err}`);
-            showToast("✗ Reset failed", "error");
+            const summary = `${body.ok ? "Database reset succeeded" : "Database reset failed"} (${body.seconds ?? "?"}s)\n\n${body.output ?? body.error ?? ""}`;
+            setResetLog(summary);
+            if (!res.ok || !body.ok) {
+                throw new Error(body.error || "Database reset failed");
+            }
+            setCurrentSession(null);
+            setReadyTargets({});
+            showToast(`Full reset complete in ${body.seconds ?? "?"}s`, "success");
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : "Database reset failed", "error");
         } finally {
-            setResetting(false);
+            setResettingDb(false);
         }
     };
 
-    const currentAccount = useMemo(() => {
-        if (!current) return null;
-        return accounts.find((a) => a.email?.toLowerCase() === current.toLowerCase());
-    }, [accounts, current]);
+    // Filtered scenarios (Tab 1)
+    const filteredScenarios = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        return scenarios.filter((s) => {
+            if (selectedCategory !== "All" && s.category !== selectedCategory) {
+                return false;
+            }
+            if (!q) return true;
+            const acc = accountByKey[s.as];
+            const hay = `${s.title} ${s.description} ${s.useWhen} ${s.category} ${s.path} ${s.tip ?? ""} ${acc.label} ${acc.room ?? ""}`.toLowerCase();
+            return hay.includes(q);
+        });
+    }, [scenarios, selectedCategory, searchQuery, accountByKey]);
+
+    // Filtered accounts (Tab 2)
+    const filteredAccounts = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return accounts;
+        return accounts.filter((a) =>
+            `${a.label} ${a.email ?? ""} ${a.role} ${a.room ?? ""} ${a.state}`.toLowerCase().includes(q)
+        );
+    }, [accounts, searchQuery]);
+
+    const filteredExtraResidents = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return extraResidents;
+        return extraResidents.filter((r) =>
+            `${r.label} ${r.email} ${r.room} ${r.state}`.toLowerCase().includes(q)
+        );
+    }, [extraResidents, searchQuery]);
+
+    const landlordAccounts = filteredAccounts.filter((a) => a.group === "landlord");
+    const keyTenantAccounts = filteredAccounts.filter((a) => a.group === "key_tenant");
 
     return (
-        <div className="demo-console-root">
-            <style>{`
-                .demo-console-root {
-                    min-height: 100vh;
-                    background: #f8fafc;
-                    color: #0f172a;
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-                    padding-bottom: 80px;
-                }
-                .glass-header {
-                    position: sticky;
-                    top: 0;
-                    z-index: 40;
-                    background: rgba(255, 255, 255, 0.94);
-                    backdrop-filter: blur(12px);
-                    border-bottom: 1px solid #e2e8f0;
-                    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
-                }
-                .dc-card {
-                    background: #ffffff;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 14px;
-                    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-                    position: relative;
-                    overflow: hidden;
-                    display: flex;
-                    flex-direction: column;
-                    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-                }
-                .dc-card:hover {
-                    border-color: #059669;
-                    transform: translateY(-2px);
-                    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
-                }
-                .dc-card-top-pick {
-                    border-color: #fed7aa;
-                    background: #fffdfa;
-                }
-                .dc-card-top-pick:hover {
-                    border-color: #f97316;
-                    box-shadow: 0 8px 24px rgba(249, 115, 22, 0.09);
-                }
-                .persona-card {
-                    background: #ffffff;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 12px;
-                    padding: 8px 12px;
-                    cursor: pointer;
-                    transition: all 0.15s ease;
-                    text-align: left;
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
-                }
-                .persona-card:hover {
-                    background: #f8fafc;
-                    border-color: #94a3b8;
-                    transform: translateY(-1px);
-                    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
-                }
-                .persona-card.active {
-                    background: #f0fdf4;
-                    border-color: #16a34a;
-                    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.15);
-                }
-                .category-tab {
-                    padding: 7px 14px;
-                    border-radius: 999px;
-                    font-size: 13px;
-                    font-weight: 600;
-                    border: 1px solid #e2e8f0;
-                    background: #ffffff;
-                    color: #475569;
-                    cursor: pointer;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 7px;
-                    white-space: nowrap;
-                    transition: all 0.12s ease;
-                    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
-                }
-                .category-tab:hover {
-                    color: #0f172a;
-                    border-color: #cbd5e1;
-                    background: #f8fafc;
-                }
-                .category-tab.active {
-                    background: #0f766e;
-                    color: #ffffff;
-                    border-color: #0f766e;
-                    font-weight: 700;
-                    box-shadow: 0 2px 8px rgba(15, 118, 110, 0.25);
-                }
-                .primary-launch-btn {
-                    background: #059669;
-                    color: #ffffff;
-                    font-weight: 700;
-                    font-size: 13px;
-                    border: none;
-                    border-radius: 9px;
-                    padding: 9px 14px;
-                    cursor: pointer;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 7px;
-                    transition: all 0.15s ease;
-                    flex: 1;
-                    box-shadow: 0 1px 4px rgba(5, 150, 105, 0.2);
-                }
-                .primary-launch-btn:hover {
-                    background: #047857;
-                    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
-                    transform: translateY(-1px);
-                }
-                .primary-launch-btn:active {
-                    transform: translateY(0);
-                }
-                .secondary-btn {
-                    background: #ffffff;
-                    color: #334155;
-                    border: 1px solid #cbd5e1;
-                    border-radius: 9px;
-                    padding: 8px 11px;
-                    font-size: 12px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 5px;
-                    transition: all 0.12s ease;
-                }
-                .secondary-btn:hover {
-                    background: #f8fafc;
-                    color: #0f172a;
-                    border-color: #94a3b8;
-                }
-                .badge-role-landlord {
-                    background: #ecfdf5;
-                    color: #047857;
-                    border: 1px solid #a7f3d0;
-                }
-                .badge-role-tenant {
-                    background: #f5f3ff;
-                    color: #6d28d9;
-                    border: 1px solid #ddd6fe;
-                }
-                .badge-role-public {
-                    background: #f8fafc;
-                    color: #475569;
-                    border: 1px solid #cbd5e1;
-                }
-                .custom-scroll::-webkit-scrollbar {
-                    height: 6px;
-                    width: 6px;
-                }
-                .custom-scroll::-webkit-scrollbar-track {
-                    background: #f1f5f9;
-                }
-                .custom-scroll::-webkit-scrollbar-thumb {
-                    background: #cbd5e1;
-                    border-radius: 999px;
-                }
-                /* Suppress cookie consent overlay on private demo presenter console */
-                aside[aria-label="Privacy Preferences"],
-                div:has(> button:has-text("Accept all cookies")),
-                div:has(> * > button:has-text("Accept all cookies")) {
-                    display: none !important;
-                }
-            `}</style>
-
-            {/* Toast feedback pill */}
-            {toast && (
-                <div
-                    style={{
-                        position: "fixed",
-                        bottom: 24,
-                        right: 24,
-                        zIndex: 9999,
-                        background: toast.type === "error" ? "#991b1b" : toast.type === "info" ? "#1e293b" : "#065f46",
-                        color: "#fff",
-                        padding: "12px 20px",
-                        borderRadius: 12,
-                        boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
-                        fontSize: 14,
-                        fontWeight: 600,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        animation: "fadeIn 0.2s ease-out",
-                    }}
-                >
-                    {toast.type === "error" ? <AlertTriangle size={18} /> : <CheckCircle2 size={18} />}
-                    <span>{toast.message}</span>
-                </div>
-            )}
-
-            {/* Reset confirmation modal */}
-            {resetModalOpen && (
-                <div
-                    style={{
-                        position: "fixed",
-                        inset: 0,
-                        zIndex: 1000,
-                        background: "rgba(15, 23, 42, 0.55)",
-                        backdropFilter: "blur(4px)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: 20,
-                    }}
-                    onClick={() => setResetModalOpen(false)}
-                >
-                    <div
-                        style={{
-                            background: "#ffffff",
-                            border: "1px solid #fecdd3",
-                            borderRadius: 18,
-                            maxWidth: 520,
-                            width: "100%",
-                            padding: 28,
-                            boxShadow: "0 20px 50px rgba(0,0,0,0.15)",
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-                            <div
-                                style={{
-                                    width: 44,
-                                    height: 44,
-                                    borderRadius: 12,
-                                    background: "#ffe4e6",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    color: "#e11d48",
-                                }}
-                            >
-                                <RotateCcw size={22} />
-                            </div>
-                            <div>
-                                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#0f172a" }}>
-                                    Reset Demo Baseline?
-                                </h3>
-                                <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-                                    Restores all database records for the defense presentation
-                                </p>
+        <div className="min-h-screen bg-background text-foreground pb-20">
+            {/* Sticky Top Command Bar */}
+            <header className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur-md">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6">
+                    {/* Row 1: Title, Live Session Indicator, Soundboard */}
+                    <div className="flex flex-col gap-3 py-3.5 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
+                                    <Building2 className="size-5" />
+                                </div>
+                                <div>
+                                    <h1 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+                                        iReside Defense Console
+                                    </h1>
+                                    <p className="text-xs text-muted-foreground">
+                                        Fast situational prep &amp; account switching for live panel Q&amp;A
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        <p style={{ fontSize: 14, lineHeight: 1.5, color: "#334155", margin: "16px 0 24px" }}>
-                            This executes <code>scripts/seed-defense-demo.mjs</code>. It resets John Peter Gonzales dormitory,
-                            signs out all sessions, and restores all 9 tenant states (Katrina pending e-sign, Ronald overdue,
-                            Mark electrical ticket, etc.).
-                            <br />
-                            <strong style={{ color: "#e11d48", display: "block", marginTop: 8 }}>
-                                ⏱ Takes approximately 45–60 seconds to complete.
-                            </strong>
-                        </p>
-
-                        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-                            <button
-                                type="button"
-                                className="secondary-btn"
-                                style={{ padding: "10px 18px", fontSize: 14 }}
-                                onClick={() => setResetModalOpen(false)}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                style={{
-                                    background: "#e11d48",
-                                    color: "#fff",
-                                    border: "none",
-                                    borderRadius: 9,
-                                    padding: "10px 20px",
-                                    fontSize: 14,
-                                    fontWeight: 700,
-                                    cursor: "pointer",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: 8,
-                                }}
-                                onClick={runReset}
-                            >
-                                <RotateCcw size={16} /> Yes, Restore Baseline
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Main Sticky Header */}
-            <header className="glass-header">
-                {/* Top bar: Brand + Session Status + Quick Actions */}
-                <div style={{ maxWidth: 1400, margin: "0 auto", padding: "14px 24px", display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center", justifyContent: "space-between" }}>
-                    {/* Brand & Property */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <div
-                            style={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: 10,
-                                background: "#059669",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: "#fff",
-                                boxShadow: "0 2px 8px rgba(5, 150, 105, 0.25)",
-                            }}
-                        >
-                            <Building2 size={22} />
-                        </div>
-                        <div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.02em", color: "#0f172a" }}>
-                                    iReside
-                                </span>
+                        {/* Right Controls: Live Session + Open Dashboard + Soundboard */}
+                        <div className="flex flex-wrap items-center gap-2.5">
+                            <div className="flex min-h-[44px] items-center gap-2.5 rounded-xl border border-border/60 bg-card px-3.5 py-2 shadow-xs">
                                 <span
-                                    style={{
-                                        fontSize: 11,
-                                        fontWeight: 800,
-                                        letterSpacing: "0.06em",
-                                        textTransform: "uppercase",
-                                        background: "#ecfdf5",
-                                        color: "#047857",
-                                        padding: "2px 8px",
-                                        borderRadius: 6,
-                                        border: "1px solid #a7f3d0",
-                                    }}
-                                >
-                                    Defense Console
-                                </span>
+                                    className={`size-2.5 shrink-0 rounded-full ${
+                                        currentSession ? "bg-emerald-500" : "bg-zinc-400"
+                                    }`}
+                                    aria-hidden="true"
+                                />
+                                {sessionLoading ? (
+                                    <span className="text-xs text-muted-foreground">Checking session…</span>
+                                ) : currentSession ? (
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className="text-xs font-semibold text-foreground">
+                                            {currentSession.fullName}
+                                        </span>
+                                        <span
+                                            className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold capitalize ${
+                                                currentSession.role === "landlord"
+                                                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                                                    : "border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300"
+                                            }`}
+                                        >
+                                            {currentSession.role}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <span className="text-xs font-medium text-muted-foreground">
+                                        Signed out (Public)
+                                    </span>
+                                )}
                             </div>
-                            <div style={{ fontSize: 12, color: "#64748b" }}>
-                                Fernando Gonzales Dormitory · 12 Rooms · Valenzuela City
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Current user session & Global Controls */}
-                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
-                        {/* Demo Password Pill with Copy button */}
-                        <div
-                            style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 8,
-                                background: "#ffffff",
-                                border: "1px solid #e2e8f0",
-                                borderRadius: 9,
-                                padding: "6px 12px",
-                                fontSize: 13,
-                                boxShadow: "0 1px 2px rgba(15, 23, 42, 0.03)",
-                            }}
-                        >
-                            <Lock size={14} style={{ color: "#d97706" }} />
-                            <span style={{ color: "#64748b" }}>Password:</span>
-                            <code style={{ color: "#0f172a", fontWeight: 700, letterSpacing: "0.02em" }}>{password}</code>
-                            <button
-                                type="button"
-                                onClick={() => copyText(password, "demo password")}
-                                title="Copy password"
-                                style={{
-                                    background: "transparent",
-                                    border: "none",
-                                    color: "#059669",
-                                    cursor: "pointer",
-                                    padding: 2,
-                                    display: "flex",
-                                    alignItems: "center",
-                                }}
-                            >
-                                <Copy size={14} />
-                            </button>
-                        </div>
-
-                        {/* Active user status badge */}
-                        <div
-                            style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 8,
-                                background: current ? "#f0fdf4" : "#f8fafc",
-                                border: `1px solid ${current ? "#bbf7d0" : "#e2e8f0"}`,
-                                borderRadius: 9,
-                                padding: "6px 12px",
-                                fontSize: 13,
-                            }}
-                        >
-                            <span
-                                style={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: "50%",
-                                    background: current ? "#16a34a" : "#94a3b8",
-                                }}
-                            />
-                            <span style={{ color: "#64748b" }}>Active:</span>
-                            <span style={{ fontWeight: 700, color: current ? "#0f172a" : "#64748b" }}>
-                                {currentAccount ? currentAccount.label : current ?? "Guest / None"}
-                            </span>
-                            {currentAccount?.room && (
-                                <span style={{ fontSize: 11, background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe", padding: "1px 6px", borderRadius: 4 }}>
-                                    Rm {currentAccount.room}
-                                </span>
+                            {currentSession && (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => openDemoRoute(getDashboardPath(currentSession.role))}
+                                        className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-xs transition hover:bg-primary/90"
+                                    >
+                                        <LayoutDashboard className="size-4" />
+                                        Open Dashboard
+                                        <ExternalLink className="size-3.5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleSignOut}
+                                        disabled={busyAccountKey === "signout"}
+                                        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-border/60 bg-card px-3 py-2 text-xs font-semibold text-foreground shadow-xs transition hover:bg-muted/60 disabled:opacity-60"
+                                        title="Sign out of current session"
+                                    >
+                                        <LogOut className="size-4" />
+                                        <span className="hidden sm:inline">Sign Out</span>
+                                    </button>
+                                </>
                             )}
-                            {current && (
+
+                            <Link
+                                href="/demo-console/sounds"
+                                className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-border/60 bg-card px-3.5 py-2 text-xs font-semibold text-foreground shadow-xs transition hover:bg-muted/60"
+                            >
+                                <Volume2 className="size-4 text-primary" />
+                                Soundboard
+                            </Link>
+
+                            {/* Launch Mode Toggle (Redirect vs. New Tab) */}
+                            <div className="flex items-center gap-1 rounded-xl border border-border/60 bg-card p-1 text-xs">
+                                <span className="px-2 font-bold text-muted-foreground text-[11px] hidden lg:inline">
+                                    Click Action:
+                                </span>
                                 <button
                                     type="button"
-                                    onClick={handleSignOut}
-                                    title="Sign out"
-                                    style={{
-                                        background: "transparent",
-                                        border: "none",
-                                        color: "#e11d48",
-                                        cursor: "pointer",
-                                        fontSize: 11,
-                                        fontWeight: 700,
-                                        padding: "2px 4px",
-                                        marginLeft: 4,
-                                    }}
+                                    onClick={() => handleToggleLaunchMode("redirect")}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                                        launchMode === "redirect"
+                                            ? "bg-primary text-primary-foreground shadow-xs"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                                    title="Clicking Launch seeds data, switches account, and immediately redirects this window to the destination"
                                 >
-                                    Sign Out
+                                    Redirect (Fast)
                                 </button>
-                            )}
-                        </div>
-
-                        {/* Reset Demo Baseline button */}
-                        {resetAvailable && (
-                            <button
-                                type="button"
-                                onClick={() => setResetModalOpen(true)}
-                                disabled={resetting}
-                                style={{
-                                    background: "#fff1f2",
-                                    border: "1px solid #fecdd3",
-                                    color: "#e11d48",
-                                    borderRadius: 9,
-                                    padding: "8px 14px",
-                                    fontSize: 13,
-                                    fontWeight: 700,
-                                    cursor: resetting ? "wait" : "pointer",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: 7,
-                                    transition: "all 0.15s ease",
-                                }}
-                            >
-                                <RotateCcw size={14} className={resetting ? "animate-spin" : ""} />
-                                {resetting ? "Resetting (~1m)…" : "Reset Demo Data"}
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Sub-bar: Search Bar + Keyword Quick Chips + Global Notes Switch */}
-                <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 24px 14px", display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center", justifyContent: "space-between" }}>
-                    {/* Search Input */}
-                    <div style={{ position: "relative", flex: "1 1 360px", maxWidth: 540 }}>
-                        <Search
-                            size={18}
-                            style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }}
-                        />
-                        <input
-                            ref={searchInputRef}
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Search scenarios, panel questions, GCash, e-sign, triage (Press '/' to focus)..."
-                            style={{
-                                width: "100%",
-                                background: "#ffffff",
-                                border: "1px solid #cbd5e1",
-                                borderRadius: 10,
-                                padding: "10px 40px 10px 42px",
-                                color: "#0f172a",
-                                fontSize: 14,
-                                outline: "none",
-                                transition: "all 0.15s ease",
-                                boxShadow: "0 1px 2px rgba(15, 23, 42, 0.03)",
-                            }}
-                        />
-                        {query && (
-                            <button
-                                type="button"
-                                onClick={() => setQuery("")}
-                                style={{
-                                    position: "absolute",
-                                    right: 12,
-                                    top: "50%",
-                                    transform: "translateY(-50%)",
-                                    background: "transparent",
-                                    border: "none",
-                                    color: "#94a3b8",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                <X size={16} />
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Mode & Action Options */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        {/* Toggle Presenter Script / Notes */}
-                        <button
-                            type="button"
-                            onClick={() => setShowPresenterCues(!showPresenterCues)}
-                            style={{
-                                background: showPresenterCues ? "#ecfdf5" : "#ffffff",
-                                border: `1px solid ${showPresenterCues ? "#10b981" : "#cbd5e1"}`,
-                                color: showPresenterCues ? "#047857" : "#334155",
-                                padding: "8px 14px",
-                                borderRadius: 9,
-                                fontSize: 13,
-                                fontWeight: 700,
-                                cursor: "pointer",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 7,
-                                boxShadow: "0 1px 2px rgba(15, 23, 42, 0.03)",
-                            }}
-                        >
-                            <Volume2 size={16} />
-                            <span>{showPresenterCues ? "Presenter Notes: ON" : "Presenter Notes: OFF"}</span>
-                        </button>
-
-                        {/* Shift-click helper pill */}
-                        <div
-                            style={{
-                                fontSize: 12,
-                                color: "#64748b",
-                                background: "#ffffff",
-                                border: "1px solid #e2e8f0",
-                                padding: "7px 12px",
-                                borderRadius: 8,
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                            }}
-                        >
-                            <ExternalLink size={13} style={{ color: "#059669" }} />
-                            <span>Click opens Demo Window · Shift-click opens in this tab</span>
+                                <button
+                                    type="button"
+                                    onClick={() => handleToggleLaunchMode("new_tab")}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                                        launchMode === "new_tab"
+                                            ? "bg-primary text-primary-foreground shadow-xs"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                                    title="Clicking Launch seeds data, switches account, and opens destination in a new window/tab"
+                                >
+                                    New Tab
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Keyword quick filter pills */}
-                <div
-                    className="custom-scroll"
-                    style={{
-                        maxWidth: 1400,
-                        margin: "0 auto",
-                        padding: "0 24px 12px",
-                        display: "flex",
-                        gap: 8,
-                        overflowX: "auto",
-                        alignItems: "center",
-                    }}
-                >
-                    <span style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b", marginRight: 4 }}>
-                        Quick Jump:
-                    </span>
-                    {KEYWORD_CHIPS.map((chip) => {
-                        const isSelected = query.toLowerCase() === chip.query.toLowerCase();
-                        return (
+                    {/* Row 2: 3 Primary Tabs + Instant Search */}
+                    <div className="flex flex-col gap-3 border-t border-border/50 py-3 md:flex-row md:items-center md:justify-between">
+                        <nav className="flex flex-wrap gap-2" aria-label="Console sections">
                             <button
-                                key={chip.label}
                                 type="button"
-                                onClick={() => {
-                                    if (isSelected) {
-                                        setQuery("");
-                                    } else {
-                                        setQuery(chip.query);
-                                        if (chip.query === "top-pick") setSelectedCategory("top-picks");
+                                onClick={() => setActiveTab("cases")}
+                                className={`inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                                    activeTab === "cases"
+                                        ? "bg-foreground text-background shadow-xs"
+                                        : "border border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                }`}
+                            >
+                                <Compass className="size-4" />
+                                Situational Cases
+                                <span className="rounded-full bg-background/20 px-2 py-0.5 text-[11px] tabular-nums">
+                                    {scenarios.length}
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab("accounts")}
+                                className={`inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                                    activeTab === "accounts"
+                                        ? "bg-foreground text-background shadow-xs"
+                                        : "border border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                }`}
+                            >
+                                <Users className="size-4" />
+                                Accounts &amp; Credentials
+                                <span className="rounded-full bg-background/20 px-2 py-0.5 text-[11px] tabular-nums">
+                                    {accounts.length + extraResidents.length}
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab("reset")}
+                                className={`inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                                    activeTab === "reset"
+                                        ? "bg-foreground text-background shadow-xs"
+                                        : "border border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                }`}
+                            >
+                                <RotateCcw className="size-4" />
+                                Reset &amp; Create
+                            </button>
+                        </nav>
+
+                        {activeTab !== "reset" && (
+                            <div className="relative w-full md:w-80">
+                                <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                <input
+                                    ref={searchInputRef}
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    maxLength={60}
+                                    placeholder={
+                                        activeTab === "cases"
+                                            ? "Search cases, rooms, or routes (press /)"
+                                            : "Search name, email, or room (press /)"
                                     }
-                                }}
-                                style={{
-                                    padding: "5px 12px",
-                                    borderRadius: 999,
-                                    fontSize: 12,
-                                    fontWeight: isSelected ? 700 : 500,
-                                    background: isSelected ? "#ecfdf5" : "#ffffff",
-                                    border: `1px solid ${isSelected ? "#10b981" : "#e2e8f0"}`,
-                                    color: isSelected ? "#047857" : "#475569",
-                                    cursor: "pointer",
-                                    whiteSpace: "nowrap",
-                                    transition: "all 0.12s ease",
-                                }}
-                            >
-                                {chip.label}
-                            </button>
-                        );
-                    })}
+                                    className="min-h-[44px] w-full rounded-xl border border-border/60 bg-card pl-10 pr-11 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery("")}
+                                        aria-label="Clear search"
+                                        className="absolute right-0 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    >
+                                        <X className="size-4" />
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </header>
 
-            <main style={{ maxWidth: 1400, margin: "0 auto", padding: "20px 24px" }}>
-                {/* Reset Progress or Log Output Drawer */}
-                {resetLog && showResetLog && (
-                    <div
-                        style={{
-                            marginBottom: 24,
-                            background: "#ffffff",
-                            border: "1px solid #cbd5e1",
-                            borderRadius: 12,
-                            overflow: "hidden",
-                            boxShadow: "0 2px 8px rgba(15, 23, 42, 0.05)",
-                        }}
-                    >
-                        <div
-                            style={{
-                                padding: "10px 16px",
-                                background: "#f8fafc",
-                                borderBottom: "1px solid #e2e8f0",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                            }}
-                        >
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: "#059669" }}>
-                                <Terminal size={15} />
-                                <span>Reset Script Console Output</span>
+            {/* Main Content */}
+            <main className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
+                {/* ============================================================ */}
+                {/* TAB 1: SITUATIONAL CASES                                     */}
+                {/* ============================================================ */}
+                {activeTab === "cases" && (
+                    <section aria-label="Situational Cases">
+                        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h2 className="text-base font-bold text-foreground">
+                                    What does the panelist want to see?
+                                </h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Click <strong>Prepare &amp; Switch</strong> to seed fresh data, switch accounts, and get a direct link.
+                                </p>
                             </div>
-                            <div style={{ display: "flex", gap: 10 }}>
-                                <button
-                                    type="button"
-                                    onClick={() => copyText(resetLog, "reset log")}
-                                    style={{ background: "transparent", border: "none", color: "#64748b", cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}
-                                >
-                                    <Copy size={13} /> Copy
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowResetLog(false)}
-                                    style={{ background: "transparent", border: "none", color: "#64748b", cursor: "pointer", fontSize: 12 }}
-                                >
-                                    Hide
-                                </button>
-                            </div>
+                            <span className="text-xs font-medium text-muted-foreground tabular-nums">
+                                Showing {filteredScenarios.length} of {scenarios.length} cases
+                            </span>
                         </div>
-                        <pre style={{ margin: 0, padding: 14, fontSize: 12, lineHeight: 1.5, color: "#334155", maxHeight: 220, overflowY: "auto", fontFamily: "ui-monospace, monospace" }}>
-                            {resetLog}
-                        </pre>
-                    </div>
-                )}
 
-                {/* 1. PERSONA DOCK: Quick Account Switcher */}
-                <section style={{ marginBottom: 28 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <Crown size={16} style={{ color: "#059669" }} />
-                            <h2 style={{ margin: 0, fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b" }}>
-                                Demo Personas · 1-Click Sign-In
-                            </h2>
-                        </div>
-                        <span style={{ fontSize: 12, color: "#64748b" }}>
-                            Click any persona to log in and open their dashboard
-                        </span>
-                    </div>
-
-                    <div
-                        className="custom-scroll"
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-                            gap: 10,
-                        }}
-                    >
-                        {accounts.map((a) => {
-                            const isCurrent = current?.toLowerCase() === a.email?.toLowerCase();
-                            const isLandlord = a.role === "landlord";
-                            const isPublic = a.role === "public";
-
-                            return (
-                                <button
-                                    key={a.key}
-                                    type="button"
-                                    className={`persona-card ${isCurrent ? "active" : ""}`}
-                                    onClick={() => switchAccount(a)}
-                                    title={`${a.email ?? "Public"} — ${a.state}`}
-                                >
-                                    <div
-                                        style={{
-                                            width: 38,
-                                            height: 38,
-                                            borderRadius: 10,
-                                            background: isLandlord
-                                                ? "#059669"
-                                                : isPublic
-                                                    ? "#64748b"
-                                                    : "#6366f1",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            color: "#fff",
-                                            fontWeight: 800,
-                                            fontSize: 12,
-                                            flexShrink: 0,
-                                        }}
-                                    >
-                                        {isLandlord ? <Crown size={18} /> : isPublic ? <User size={18} /> : a.room ? a.room.split(" ")[0] : a.label.slice(0, 2).toUpperCase()}
-                                    </div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-                                            <span style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                                {isPublic ? "Public (Signed Out)" : a.label}
-                                            </span>
-                                            <span
-                                                style={{
-                                                    fontSize: 10,
-                                                    fontWeight: 800,
-                                                    padding: "1px 6px",
-                                                    borderRadius: 4,
-                                                    textTransform: "uppercase",
-                                                    background: isLandlord ? "#ecfdf5" : isPublic ? "#f1f5f9" : "#f5f3ff",
-                                                    color: isLandlord ? "#047857" : isPublic ? "#475569" : "#6d28d9",
-                                                    border: `1px solid ${isLandlord ? "#a7f3d0" : isPublic ? "#e2e8f0" : "#ddd6fe"}`,
-                                                    flexShrink: 0,
-                                                }}
-                                            >
-                                                {isLandlord ? "Landlord" : a.room ? (a.room.includes("former") ? "Rm 303 (Old)" : `Rm ${a.room}`) : "Public"}
-                                            </span>
-                                        </div>
-                                        <div style={{ fontSize: 11, color: isCurrent ? "#059669" : "#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2, fontWeight: isCurrent ? 700 : 400 }}>
-                                            {isCurrent ? "● Currently signed in" : a.state}
-                                        </div>
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </section>
-
-                {/* 2. CATEGORY TABS & ROLE FILTER */}
-                <section style={{ marginBottom: 24 }}>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                        {/* Categories Horizontal Bar */}
-                        <div
-                            className="custom-scroll"
-                            style={{
-                                display: "flex",
-                                gap: 8,
-                                overflowX: "auto",
-                                paddingBottom: 4,
-                                flex: "1 1 auto",
-                            }}
-                        >
-                            {CATEGORIES.map((cat) => {
-                                const Icon = cat.icon;
-                                const isActive = selectedCategory === cat.id;
-                                const count = cat.id === "all"
-                                    ? scenarios.length
-                                    : cat.id === "top-picks"
-                                        ? scenarios.filter((s) => SCENARIO_META[s.id]?.isTopPick).length
-                                        : scenarios.filter((s) => s.group === cat.id).length;
-
+                        {/* Category Filter Pills */}
+                        <div className="mb-6 flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedCategory("All")}
+                                className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition ${
+                                    selectedCategory === "All"
+                                        ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                                        : "border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                }`}
+                            >
+                                All
+                            </button>
+                            {DEMO_CATEGORIES.map((cat) => {
+                                const meta = CATEGORY_META[cat];
+                                const Icon = meta.icon;
+                                const isActive = selectedCategory === cat;
                                 return (
                                     <button
-                                        key={cat.id}
+                                        key={cat}
                                         type="button"
-                                        className={`category-tab ${isActive ? "active" : ""}`}
-                                        onClick={() => setSelectedCategory(cat.id)}
+                                        onClick={() => setSelectedCategory(cat)}
+                                        className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition ${
+                                            isActive
+                                                ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                                                : "border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                        }`}
                                     >
-                                        <Icon size={14} />
-                                        <span>{cat.label}</span>
-                                        <span
-                                            style={{
-                                                fontSize: 11,
-                                                padding: "1px 6px",
-                                                borderRadius: 999,
-                                                background: isActive ? "rgba(255, 255, 255, 0.25)" : "#f1f5f9",
-                                                color: isActive ? "#ffffff" : "#475569",
-                                            }}
-                                        >
-                                            {count}
-                                        </span>
+                                        <Icon className="size-3.5" />
+                                        {cat}
                                     </button>
                                 );
                             })}
                         </div>
 
-                        {/* Role Pills */}
-                        <div
-                            style={{
-                                display: "inline-flex",
-                                background: "#f1f5f9",
-                                border: "1px solid #e2e8f0",
-                                borderRadius: 999,
-                                padding: 3,
-                                flexShrink: 0,
-                            }}
-                        >
-                            {[
-                                { id: "all", label: "All Roles" },
-                                { id: "landlord", label: "Landlord" },
-                                { id: "tenant", label: "Tenants" },
-                                { id: "public", label: "Public" },
-                            ].map((role) => (
+                        {/* Cases Grid */}
+                        {filteredScenarios.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card p-10 text-center shadow-xs">
+                                <Search className="mb-3 size-8 text-muted-foreground" />
+                                <p className="text-base font-semibold text-foreground">
+                                    No matching cases for &ldquo;{searchQuery}&rdquo;
+                                </p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Try clearing your search or switching back to All categories.
+                                </p>
                                 <button
-                                    key={role.id}
                                     type="button"
-                                    onClick={() => setSelectedRole(role.id as any)}
-                                    style={{
-                                        background: selectedRole === role.id ? "#ffffff" : "transparent",
-                                        color: selectedRole === role.id ? "#0f172a" : "#64748b",
-                                        fontWeight: selectedRole === role.id ? 700 : 500,
-                                        fontSize: 12,
-                                        border: "none",
-                                        borderRadius: 999,
-                                        padding: "4px 12px",
-                                        cursor: "pointer",
-                                        transition: "all 0.1s ease",
-                                        boxShadow: selectedRole === role.id ? "0 1px 2px rgba(15, 23, 42, 0.08)" : "none",
+                                    onClick={() => {
+                                        setSearchQuery("");
+                                        setSelectedCategory("All");
                                     }}
+                                    className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-border/60 bg-background px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted/60"
                                 >
-                                    {role.label}
+                                    Clear All Filters
                                 </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Filter result status count */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 13, color: "#64748b", padding: "0 4px" }}>
-                        <span>
-                            Showing <strong style={{ color: "#0f172a" }}>{filteredScenarios.length}</strong> of {scenarios.length} scenarios
-                            {query && <span> matching “<span style={{ color: "#059669" }}>{query}</span>”</span>}
-                        </span>
-                        {status.kind !== "idle" && (
-                            <span style={{ color: status.kind === "error" ? "#e11d48" : status.kind === "busy" ? "#d97706" : "#059669", fontWeight: 600 }}>
-                                {status.text}
-                            </span>
-                        )}
-                    </div>
-                </section>
-
-                {/* 3. SCENARIOS GRID */}
-                {groupedScenarios.length === 0 ? (
-                    <div
-                        style={{
-                            textAlign: "center",
-                            padding: "60px 20px",
-                            background: "#ffffff",
-                            border: "1px dashed #cbd5e1",
-                            borderRadius: 16,
-                            color: "#64748b",
-                        }}
-                    >
-                        <Search size={36} style={{ margin: "0 auto 12px", opacity: 0.4 }} />
-                        <h3 style={{ color: "#0f172a", margin: "0 0 6px", fontSize: 18 }}>No matching scenarios found</h3>
-                        <p style={{ margin: 0, fontSize: 14 }}>
-                            No scenario matches your filters or search query “{query}”.
-                        </p>
-                        <button
-                            type="button"
-                            className="secondary-btn"
-                            style={{ marginTop: 16 }}
-                            onClick={() => {
-                                setQuery("");
-                                setSelectedCategory("all");
-                                setSelectedRole("all");
-                            }}
-                        >
-                            Reset All Filters
-                        </button>
-                    </div>
-                ) : (
-                    groupedScenarios.map(([group, items]) => (
-                        <section key={group} style={{ marginBottom: 36 }}>
-                            {/* Group Section Header */}
-                            <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "0 0 14px" }}>
-                                <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: "#0f172a", letterSpacing: "-0.01em" }}>
-                                    {group}
-                                </h2>
-                                <span
-                                    style={{
-                                        fontSize: 11,
-                                        fontWeight: 700,
-                                        background: "#e2e8f0",
-                                        color: "#475569",
-                                        padding: "2px 8px",
-                                        borderRadius: 999,
-                                    }}
-                                >
-                                    {items.length}
-                                </span>
                             </div>
-
-                            {/* Cards Grid */}
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "repeat(auto-fill, minmax(330px, 1fr))",
-                                    gap: 14,
-                                }}
-                            >
-                                {items.map((s) => {
-                                    const meta = SCENARIO_META[s.id] ?? {
-                                        icon: FileText,
-                                        badge: "Scenario",
-                                        color: "emerald" as const,
-                                    };
-                                    const Icon = meta.icon;
-                                    const account = accountByKey[s.as];
-                                    const colors = COLOR_MAP[meta.color] ?? COLOR_MAP.emerald;
-                                    const isTopPick = meta.isTopPick;
-                                    const isNotesOpen = showPresenterCues || expandedNotes.has(s.id);
-                                    const isJustLaunched = lastLaunchedId === s.id;
+                        ) : (
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                {filteredScenarios.map((scenario) => {
+                                    const account = accountByKey[scenario.as];
+                                    const catMeta = CATEGORY_META[scenario.category];
+                                    const CatIcon = catMeta.icon;
+                                    const isBusy = busyScenarioId === scenario.id;
+                                    const ready = readyTargets[scenario.id];
 
                                     return (
-                                        <div
-                                            key={s.id}
-                                            className={`dc-card ${isTopPick ? "dc-card-top-pick" : ""}`}
-                                            style={{
-                                                borderColor: isJustLaunched ? "#059669" : undefined,
-                                                boxShadow: isJustLaunched ? "0 0 0 2px rgba(5, 150, 105, 0.25)" : undefined,
-                                            }}
+                                        <article
+                                            key={scenario.id}
+                                            className="flex flex-col justify-between rounded-2xl border border-border/60 bg-card p-5 shadow-xs transition hover:border-primary/40"
                                         >
-                                            {/* Card Top: Visual Icon + Role Badge + Star Pill */}
-                                            <div style={{ padding: "16px 18px 12px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-                                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                                    {/* Accent Icon Badge */}
-                                                    <div
-                                                        style={{
-                                                            width: 40,
-                                                            height: 40,
-                                                            borderRadius: 10,
-                                                            background: colors.bg,
-                                                            border: `1px solid ${colors.border}`,
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                            color: colors.text,
-                                                            flexShrink: 0,
-                                                        }}
-                                                    >
-                                                        <Icon size={20} />
-                                                    </div>
-
-                                                    {/* Action Tag & Route */}
-                                                    <div>
-                                                        <span
-                                                            style={{
-                                                                fontSize: 11,
-                                                                fontWeight: 700,
-                                                                textTransform: "uppercase",
-                                                                letterSpacing: "0.06em",
-                                                                color: colors.text,
-                                                            }}
-                                                        >
-                                                            {meta.badge}
-                                                        </span>
-                                                        <div style={{ fontSize: 11, color: "#64748b", fontFamily: "ui-monospace, monospace" }}>
-                                                            {s.path}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Role & Room Pill */}
-                                                <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                                                    {isTopPick && (
-                                                        <span
-                                                            title="Must-show scenario during defense presentation"
-                                                            style={{
-                                                                fontSize: 10,
-                                                                fontWeight: 800,
-                                                                background: "#fffbeb",
-                                                                color: "#b45309",
-                                                                border: "1px solid #fde68a",
-                                                                borderRadius: 6,
-                                                                padding: "2px 6px",
-                                                                display: "inline-flex",
-                                                                alignItems: "center",
-                                                                gap: 3,
-                                                            }}
-                                                        >
-                                                            <Star size={10} fill="#b45309" /> TOP
-                                                        </span>
-                                                    )}
+                                            <div>
+                                                {/* Category Badge */}
+                                                <div className="mb-3 flex items-center justify-between gap-2">
                                                     <span
-                                                        className={
-                                                            account.role === "landlord"
-                                                                ? "badge-role-landlord"
-                                                                : account.role === "public"
-                                                                    ? "badge-role-public"
-                                                                    : "badge-role-tenant"
-                                                        }
-                                                        style={{
-                                                            fontSize: 11,
-                                                            fontWeight: 800,
-                                                            borderRadius: 999,
-                                                            padding: "3px 9px",
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: "0.04em",
-                                                            display: "inline-flex",
-                                                            alignItems: "center",
-                                                            gap: 4,
-                                                        }}
+                                                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${catMeta.badgeClass}`}
                                                     >
-                                                        {account.role === "landlord" ? (
-                                                            <Crown size={11} />
-                                                        ) : account.role === "public" ? (
-                                                            <User size={11} />
-                                                        ) : (
-                                                            <Home size={11} />
-                                                        )}
-                                                        {account.role === "public"
-                                                            ? "Public"
-                                                            : account.room
-                                                                ? `Rm ${account.room}`
-                                                                : "Owner"}
+                                                        <CatIcon className="size-3.5" />
+                                                        {scenario.category}
                                                     </span>
+                                                    {scenario.prepareAction && (
+                                                        <span className="rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                                            Auto-Seeds Data
+                                                        </span>
+                                                    )}
                                                 </div>
-                                            </div>
 
-                                            {/* Card Middle: Title & Persona Actor */}
-                                            <div style={{ padding: "0 18px 14px", flex: 1 }}>
-                                                <h3 style={{ margin: "0 0 8px", fontSize: 15, fontWeight: 800, color: "#0f172a", lineHeight: 1.35 }}>
-                                                    {s.title}
+                                                {/* Title & 1-sentence description */}
+                                                <h3 className="text-base font-bold leading-snug text-foreground">
+                                                    {scenario.title}
                                                 </h3>
+                                                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                                                    {scenario.description}
+                                                </p>
 
-                                                {/* Persona identity indicator */}
-                                                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#475569" }}>
-                                                    <User size={13} style={{ color: "#059669" }} />
-                                                    <span>Signs in as:</span>
-                                                    <strong style={{ color: "#0f172a" }}>
-                                                        {account.email ? account.label : "Public (Signed Out)"}
-                                                    </strong>
+                                                {/* Use this when... */}
+                                                <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-xs leading-relaxed">
+                                                    <span className="font-bold text-primary">Use this when: </span>
+                                                    <span className="text-foreground/90">{scenario.useWhen}</span>
+                                                </div>
+
+                                                {/* Who & Where */}
+                                                <div className="mt-4 rounded-xl border border-border/50 bg-muted/30 p-3 text-xs">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="font-semibold text-muted-foreground">
+                                                            Who &amp; Where
+                                                        </span>
+                                                        <span className="font-mono text-[11px] text-primary">
+                                                            {ready?.path || scenario.path}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-1 font-semibold text-foreground">
+                                                        {account.label}
+                                                        {account.room ? ` (Room ${account.room})` : ""}
+                                                        {account.role === "landlord" ? " — Landlord" : ""}
+                                                    </p>
+                                                    {scenario.tip && (
+                                                        <p className="mt-1 text-[11px] text-muted-foreground">
+                                                            Tip: {scenario.tip}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
 
-                                            {/* Expandable Presenter Notes (Cheat Sheet & Steps) */}
-                                            {isNotesOpen && (s.steps || s.say) && (
-                                                <div
-                                                    style={{
-                                                        margin: "0 14px 14px",
-                                                        padding: 12,
-                                                        background: "#f8fafc",
-                                                        border: "1px solid #e2e8f0",
-                                                        borderRadius: 10,
-                                                        fontSize: 12,
-                                                    }}
-                                                >
-                                                    {/* Steps to click on screen */}
-                                                    {s.steps && (
-                                                        <div style={{ marginBottom: s.say ? 10 : 0 }}>
-                                                            <div style={{ fontWeight: 700, color: "#334155", marginBottom: 4, display: "flex", alignItems: "center", gap: 5 }}>
-                                                                <ArrowRight size={13} style={{ color: "#059669" }} />
-                                                                <span>Click path on screen:</span>
-                                                            </div>
-                                                            <div style={{ color: "#475569", lineHeight: 1.45, paddingLeft: 18 }}>
-                                                                {s.steps}
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {/* What to say to defense panel */}
-                                                    {s.say && (
-                                                        <div
-                                                            style={{
-                                                                background: "#f0fdf4",
-                                                                borderLeft: "3px solid #16a34a",
-                                                                padding: "8px 10px",
-                                                                borderRadius: "0 8px 8px 0",
-                                                                color: "#166534",
-                                                                lineHeight: 1.4,
-                                                            }}
-                                                        >
-                                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
-                                                                <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#15803d" }}>
-                                                                    Say to Panel:
-                                                                </span>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => copyText(s.say!, "panel script")}
-                                                                    style={{
-                                                                        background: "transparent",
-                                                                        border: "none",
-                                                                        color: "#15803d",
-                                                                        cursor: "pointer",
-                                                                        fontSize: 11,
-                                                                        display: "flex",
-                                                                        alignItems: "center",
-                                                                        gap: 3,
-                                                                        fontWeight: 700,
-                                                                    }}
-                                                                >
-                                                                    <Copy size={11} /> Copy
-                                                                </button>
-                                                            </div>
-                                                            “{s.say}”
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-
-                                            {/* Card Bottom: Explicit Action Buttons */}
-                                            <div
-                                                style={{
-                                                    padding: "12px 18px",
-                                                    background: "#f8fafc",
-                                                    borderTop: "1px solid #f1f5f9",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 8,
-                                                }}
-                                            >
-                                                {/* Primary Launch Demo button */}
-                                                <button
-                                                    type="button"
-                                                    className="primary-launch-btn"
-                                                    onClick={(e) => launch(s, e.shiftKey)}
-                                                    title={`Sign in as ${account.label} and launch ${s.path} in demo window`}
-                                                >
-                                                    <span>Launch Demo</span>
-                                                    <ExternalLink size={14} />
-                                                </button>
-
-                                                {/* Open in this tab */}
-                                                <button
-                                                    type="button"
-                                                    className="secondary-btn"
-                                                    onClick={() => launch(s, true)}
-                                                    title="Launch in this tab instead of a separate window"
-                                                >
-                                                    <span>This Tab</span>
-                                                </button>
-
-                                                {/* Toggle individual cue notes */}
-                                                {(s.steps || s.say) && !showPresenterCues && (
+                                            {/* Actions */}
+                                            <div className="mt-4 flex flex-col gap-2">
+                                                {ready && (
                                                     <button
                                                         type="button"
-                                                        className="secondary-btn"
-                                                        onClick={() => toggleCardNote(s.id)}
-                                                        title="Show presenter script and click steps"
-                                                        style={{
-                                                            color: isNotesOpen ? "#059669" : undefined,
-                                                            borderColor: isNotesOpen ? "#10b981" : undefined,
-                                                        }}
+                                                        onClick={() => openDemoRoute(ready.path)}
+                                                        className="inline-flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-500/20 dark:text-emerald-300"
+                                                        title="Click to re-open target route"
                                                     >
-                                                        {isNotesOpen ? <ChevronUp size={15} /> : <Info size={15} />}
+                                                        <span className="flex items-center gap-2 truncate">
+                                                            <CheckCircle2 className="size-4 shrink-0" />
+                                                            Re-open: {ready.path}
+                                                        </span>
+                                                        <ArrowRight className="size-4 shrink-0" />
                                                     </button>
                                                 )}
+
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handlePrepareAndSwitch(scenario)}
+                                                        disabled={isBusy}
+                                                        className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-xs transition hover:bg-primary/90 disabled:opacity-60"
+                                                    >
+                                                        {isBusy ? (
+                                                            <>
+                                                                <Loader2 className="size-4 animate-spin" />
+                                                                Setting Up &amp; Launching…
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Zap className="size-4" />
+                                                                Launch Scenario ⚡
+                                                            </>
+                                                        )}
+                                                    </button>
+
+                                                    {account.email ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                copyText(
+                                                                    `${account.email}\n${account.password ?? password}`,
+                                                                    `${account.label} credentials`,
+                                                                    `creds-${scenario.id}`
+                                                                )
+                                                            }
+                                                            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-border/60 bg-background px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted/60"
+                                                            title="Copy email and password for incognito or mobile"
+                                                        >
+                                                            {copiedKey === `creds-${scenario.id}` ? (
+                                                                <Check className="size-4 text-emerald-600" />
+                                                            ) : (
+                                                                <Copy className="size-4" />
+                                                            )}
+                                                            Copy Creds
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openDemoRoute(scenario.path)}
+                                                            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-border/60 bg-background px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted/60"
+                                                        >
+                                                            <ExternalLink className="size-4" />
+                                                            Open
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
+                                        </article>
                                     );
                                 })}
                             </div>
-                        </section>
-                    ))
+                        )}
+                    </section>
+                )}
+
+                {/* ============================================================ */}
+                {/* TAB 2: ACCOUNTS & CREDENTIALS                                */}
+                {/* ============================================================ */}
+                {activeTab === "accounts" && (
+                    <section aria-label="Accounts and Credentials" className="space-y-8">
+                        {/* Group 1: Landlord & Onboarding */}
+                        <div>
+                            <h2 className="mb-3 text-base font-bold text-foreground">
+                                Landlord &amp; Onboarding
+                            </h2>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                {landlordAccounts.map((acc) => (
+                                    <AccountCard
+                                        key={acc.key}
+                                        account={acc}
+                                        isCurrent={
+                                            Boolean(acc.email) &&
+                                            currentSession?.email?.toLowerCase() === acc.email?.toLowerCase()
+                                        }
+                                        isBusy={busyAccountKey === acc.key}
+                                        copiedKey={copiedKey}
+                                        onCopy={copyText}
+                                        onSwitchAndOpen={() =>
+                                            handleAccountSwitchAndOpen(
+                                                acc.key,
+                                                acc.label,
+                                                acc.email,
+                                                acc.password,
+                                                acc.role
+                                            )
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Group 2: Key Demo Tenants */}
+                        <div>
+                            <h2 className="mb-3 text-base font-bold text-foreground">
+                                Key Demo Tenants (Units 101–303)
+                            </h2>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                {keyTenantAccounts.map((acc) => (
+                                    <AccountCard
+                                        key={acc.key}
+                                        account={acc}
+                                        isCurrent={
+                                            Boolean(acc.email) &&
+                                            currentSession?.email?.toLowerCase() === acc.email?.toLowerCase()
+                                        }
+                                        isBusy={busyAccountKey === acc.key}
+                                        copiedKey={copiedKey}
+                                        onCopy={copyText}
+                                        onSwitchAndOpen={() =>
+                                            handleAccountSwitchAndOpen(
+                                                acc.key,
+                                                acc.label,
+                                                acc.email,
+                                                acc.password,
+                                                acc.role
+                                            )
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Group 3: Collapsible Background Residents */}
+                        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-xs">
+                            <button
+                                type="button"
+                                onClick={() => setShowBackgroundResidents((v) => !v)}
+                                className="flex min-h-[44px] w-full items-center justify-between gap-3 text-left"
+                            >
+                                <div>
+                                    <h2 className="text-base font-bold text-foreground">
+                                        Background Residents ({filteredExtraResidents.length} settled tenants)
+                                    </h2>
+                                    <p className="text-xs text-muted-foreground">
+                                        All share password <span className="font-mono font-semibold">{password}</span>
+                                    </p>
+                                </div>
+                                {showBackgroundResidents || searchQuery ? (
+                                    <ChevronUp className="size-5 text-muted-foreground" />
+                                ) : (
+                                    <ChevronDown className="size-5 text-muted-foreground" />
+                                )}
+                            </button>
+
+                            {(showBackgroundResidents || Boolean(searchQuery)) && (
+                                <div className="mt-4 grid grid-cols-1 gap-3 border-t border-border/50 pt-4 md:grid-cols-2 xl:grid-cols-3">
+                                    {filteredExtraResidents.map((res) => (
+                                        <div
+                                            key={res.key}
+                                            className="flex flex-col justify-between rounded-xl border border-border/60 bg-background p-4"
+                                        >
+                                            <div>
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="font-semibold text-foreground">
+                                                        {res.label}
+                                                    </span>
+                                                    <span className="rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                                                        Room {res.room}
+                                                    </span>
+                                                </div>
+                                                <p className="mt-1 text-xs text-muted-foreground">{res.state}</p>
+                                                <p className="mt-2 truncate font-mono text-xs text-foreground">
+                                                    {res.email}
+                                                </p>
+                                            </div>
+                                            <div className="mt-3 flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleAccountSwitchAndOpen(
+                                                            res.key,
+                                                            res.label,
+                                                            res.email,
+                                                            password,
+                                                            "tenant"
+                                                        )
+                                                    }
+                                                    disabled={busyAccountKey === res.key}
+                                                    className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                                                >
+                                                    {busyAccountKey === res.key ? (
+                                                        <Loader2 className="size-3.5 animate-spin" />
+                                                    ) : (
+                                                        <ExternalLink className="size-3.5" />
+                                                    )}
+                                                    Switch &amp; Open
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        copyText(res.email, `${res.label} email`, `extra-${res.key}`)
+                                                    }
+                                                    className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-border/60 bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted/60"
+                                                >
+                                                    {copiedKey === `extra-${res.key}` ? (
+                                                        <Check className="size-3.5 text-emerald-600" />
+                                                    ) : (
+                                                        <Copy className="size-3.5" />
+                                                    )}
+                                                    Email
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </section>
+                )}
+
+                {/* ============================================================ */}
+                {/* TAB 3: RESET & CREATE                                        */}
+                {/* ============================================================ */}
+                {activeTab === "reset" && (
+                    <section aria-label="Reset and Create" className="space-y-6">
+                        {/* Guided Onboarding & Tour Controls */}
+                        <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-xs">
+                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <h2 className="text-base font-bold text-foreground">
+                                        Guided Onboarding &amp; Product Tours
+                                    </h2>
+                                    <p className="mt-0.5 text-sm text-muted-foreground">
+                                        Turn the guided onboarding prompts ON or OFF on the spot, or reset the full 5-stage setup.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                                {[
+                                    {
+                                        key: "toggle-landlord-onboarding:on",
+                                        action: "toggle-landlord-onboarding" as const,
+                                        mode: "on" as const,
+                                        title: "Landlord Tour: ON",
+                                        desc: "Shows guided tour on John's dashboard.",
+                                        tone: "border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/60",
+                                    },
+                                    {
+                                        key: "toggle-landlord-onboarding:off",
+                                        action: "toggle-landlord-onboarding" as const,
+                                        mode: "off" as const,
+                                        title: "Landlord Tour: OFF",
+                                        desc: "Hides onboarding & tour prompts on dashboard.",
+                                        tone: "border-border/60 bg-background hover:border-primary/40",
+                                    },
+                                    {
+                                        key: "toggle-landlord-onboarding:reset",
+                                        action: "toggle-landlord-onboarding" as const,
+                                        mode: "reset" as const,
+                                        title: "Reset 5-Stage Setup",
+                                        desc: "Resets Practice Landlord 1 back to /setup.",
+                                        tone: "border-amber-500/30 bg-amber-500/5 hover:border-amber-500/60",
+                                    },
+                                    {
+                                        key: "toggle-tenant-tour:on",
+                                        action: "toggle-tenant-tour" as const,
+                                        mode: "on" as const,
+                                        title: "Tenant Tour: ON",
+                                        desc: "Enables Mark Lim's first-login tour.",
+                                        tone: "border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/60",
+                                    },
+                                    {
+                                        key: "toggle-tenant-tour:off",
+                                        action: "toggle-tenant-tour" as const,
+                                        mode: "off" as const,
+                                        title: "Tenant Tour: OFF",
+                                        desc: "Marks Mark Lim's tenant tour complete.",
+                                        tone: "border-border/60 bg-background hover:border-primary/40",
+                                    },
+                                ].map((btn) => {
+                                    const isBusy = busyActionKey === btn.key;
+                                    return (
+                                        <button
+                                            key={btn.key}
+                                            type="button"
+                                            onClick={() => handleOnboardingControl(btn.action, btn.mode, btn.title)}
+                                            disabled={isBusy}
+                                            className={`flex min-h-[76px] flex-col items-start justify-between rounded-xl border p-3.5 text-left transition disabled:opacity-60 ${btn.tone}`}
+                                        >
+                                            <div className="flex w-full items-center justify-between gap-2">
+                                                <span className="text-sm font-bold text-foreground">{btn.title}</span>
+                                                {isBusy && <Loader2 className="size-4 animate-spin text-primary" />}
+                                            </div>
+                                            <p className="mt-1 text-xs text-muted-foreground">{btn.desc}</p>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Quick Resets (< 1s) */}
+                        <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-xs">
+                            <h2 className="text-base font-bold text-foreground">
+                                Quick Resets (&lt; 1 second)
+                            </h2>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                Restore a specific feature without wiping the whole database.
+                            </p>
+
+                            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                {[
+                                    {
+                                        key: "quick-reset-katrina",
+                                        title: "Reset Katrina E-Sign",
+                                        desc: "Sets Room 201 lease back to Pending Tenant Signature + fresh 30d link.",
+                                        icon: PenTool,
+                                    },
+                                    {
+                                        key: "quick-reset-joshua-bill",
+                                        title: "Reset Joshua GCash Bill",
+                                        desc: "Restores Oct Under Review & Nov Pending Pay Now for Room 102.",
+                                        icon: CreditCard,
+                                    },
+                                    {
+                                        key: "reset-tenant-tour",
+                                        title: "Reset Mark Lim Tour",
+                                        desc: "Resets Room 301 tenant to first-login guided tour state.",
+                                        icon: Compass,
+                                    },
+                                    {
+                                        key: "prepare-starter-onboarding",
+                                        title: "Reset Starter Landlord (Setup)",
+                                        desc: "Prepares practice.landlord1@ireside.ph for 5-stage /setup.",
+                                        icon: Building2,
+                                    },
+                                    {
+                                        key: "reset-starter-landlord",
+                                        title: "Reset Starter Landlord (Unclaimed)",
+                                        desc: "Sets practice.landlord1@ireside.ph back to unclaimed state.",
+                                        icon: KeyRound,
+                                    },
+                                    {
+                                        key: "seed-notifications",
+                                        title: "Push Fresh Notifications",
+                                        desc: "Sends 3 unread real-time alerts to John & Joshua.",
+                                        icon: Bell,
+                                    },
+                                ].map((item) => {
+                                    const Icon = item.icon;
+                                    const isBusy = busyActionKey === item.key;
+                                    return (
+                                        <button
+                                            key={item.key}
+                                            type="button"
+                                            onClick={() =>
+                                                handleQuickReset(item.key, item.title, `${item.title} finished.`)
+                                            }
+                                            disabled={isBusy}
+                                            className="flex min-h-[88px] flex-col items-start justify-between rounded-xl border border-border/60 bg-background p-4 text-left transition hover:border-primary/40 hover:bg-muted/30 disabled:opacity-60"
+                                        >
+                                            <div className="flex w-full items-center justify-between gap-2">
+                                                <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+                                                    <Icon className="size-4 text-primary" />
+                                                    {item.title}
+                                                </span>
+                                                {isBusy && <Loader2 className="size-4 animate-spin text-primary" />}
+                                            </div>
+                                            <p className="mt-1.5 text-xs text-muted-foreground">{item.desc}</p>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {quickResetResult && (
+                                <div className="mt-4 flex flex-col gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
+                                            {quickResetResult.title}
+                                        </p>
+                                        <p className="mt-0.5 text-xs text-emerald-700 dark:text-emerald-300">
+                                            {quickResetResult.message}
+                                        </p>
+                                        {quickResetResult.copyValue && (
+                                            <p className="mt-1 truncate font-mono text-xs text-foreground">
+                                                {quickResetResult.copyValue}
+                                            </p>
+                                        )}
+                                    </div>
+                                    {quickResetResult.copyValue && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                copyText(
+                                                    quickResetResult.copyValue!,
+                                                    quickResetResult.copyLabel || "value",
+                                                    "quick-reset-copy"
+                                                )
+                                            }
+                                            className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-xl border border-emerald-600/30 bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted/60"
+                                        >
+                                            <Copy className="size-4" />
+                                            Copy {quickResetResult.copyLabel}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Create & Manage Users */}
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                            {/* Create Fresh Claimable Landlord */}
+                            <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-xs">
+                                <h2 className="text-base font-bold text-foreground">
+                                    Create Fresh Claimable Landlord
+                                </h2>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Generates a brand-new landlord account ready for the account-claim &amp; onboarding flow.
+                                </p>
+
+                                <button
+                                    type="button"
+                                    onClick={handleCreateFreshLandlord}
+                                    disabled={busyActionKey === "create-fresh-landlord"}
+                                    className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-xs transition hover:bg-primary/90 disabled:opacity-60"
+                                >
+                                    {busyActionKey === "create-fresh-landlord" ? (
+                                        <>
+                                            <Loader2 className="size-4 animate-spin" />
+                                            Creating Account…
+                                        </>
+                                    ) : (
+                                        <>
+                                            <UserPlus className="size-4" />
+                                            Create Fresh Landlord
+                                        </>
+                                    )}
+                                </button>
+
+                                {createdLandlord && (
+                                    <div className="mt-4 rounded-xl border border-border/60 bg-muted/30 p-4">
+                                        <p className="text-xs font-semibold text-muted-foreground">
+                                            New Claimable Account Ready
+                                        </p>
+                                        <p className="mt-1 font-mono text-sm font-bold text-foreground">
+                                            {createdLandlord.email}
+                                        </p>
+                                        <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+                                            Temporary Pass: {createdLandlord.password}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                copyText(
+                                                    `${createdLandlord.email}\n${createdLandlord.password}`,
+                                                    "new landlord credentials",
+                                                    "new-landlord"
+                                                )
+                                            }
+                                            className="mt-3 inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-border/60 bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted/60"
+                                        >
+                                            <Copy className="size-3.5" />
+                                            Copy Email &amp; Password
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Delete Test User by Email */}
+                            <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-xs">
+                                <h2 className="text-base font-bold text-foreground">
+                                    Delete Test User by Email
+                                </h2>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Purges a test applicant or user (e.g. Marco Reyes) so they can re-apply cleanly.
+                                </p>
+
+                                <form noValidate onSubmit={handleDeleteUserSubmit} className="mt-4 space-y-3">
+                                    <div>
+                                        <label
+                                            htmlFor="delete-user-email"
+                                            className="mb-1.5 block text-xs font-semibold text-foreground"
+                                        >
+                                            User Email Address
+                                        </label>
+                                        <input
+                                            ref={deleteInputRef}
+                                            id="delete-user-email"
+                                            type="email"
+                                            maxLength={50}
+                                            value={deleteEmail}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setDeleteEmail(val);
+                                                if (deleteTouched) {
+                                                    setDeleteEmailError(validateDeleteEmail(val));
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                setDeleteTouched(true);
+                                                setDeleteEmailError(validateDeleteEmail(deleteEmail));
+                                            }}
+                                            placeholder="marco.reyes@ireside.ph"
+                                            className={`min-h-[44px] w-full rounded-xl border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 ${
+                                                deleteEmailError
+                                                    ? "border-rose-500 focus:ring-rose-500/20"
+                                                    : "border-border/60 focus:border-primary focus:ring-primary/20"
+                                            }`}
+                                        />
+                                        {deleteEmailError && (
+                                            <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">
+                                                <AlertCircle className="size-3.5 shrink-0" />
+                                                {deleteEmailError}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={busyActionKey === "delete-user"}
+                                        className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-500/20 disabled:opacity-60 dark:text-rose-300"
+                                    >
+                                        {busyActionKey === "delete-user" ? (
+                                            <>
+                                                <Loader2 className="size-4 animate-spin" />
+                                                Deleting…
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Trash2 className="size-4" />
+                                                Delete User &amp; Applications
+                                            </>
+                                        )}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        {/* Full Database Reset */}
+                        <div className="rounded-2xl border border-rose-500/30 bg-card p-6 shadow-xs">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
+                                        <ShieldAlert className="size-5 text-rose-600 dark:text-rose-400" />
+                                        Full Database Reset
+                                    </h2>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        Wipes and re-seeds the entire defense baseline (24 units, 18 residents, invoices, leases, messages). Takes ~15 seconds.
+                                    </p>
+                                    {!resetAvailable && (
+                                        <p className="mt-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                                            Disabled in production environment (NODE_ENV=production).
+                                        </p>
+                                    )}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setResetModalOpen(true)}
+                                    disabled={!resetAvailable || resettingDb}
+                                    className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {resettingDb ? (
+                                        <>
+                                            <Loader2 className="size-4 animate-spin" />
+                                            Resetting Database…
+                                        </>
+                                    ) : (
+                                        <>
+                                            <RotateCcw className="size-4" />
+                                            Full Database Reset
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {resetLog && (
+                                <pre className="mt-4 max-h-64 overflow-auto rounded-xl border border-border/60 bg-muted/40 p-4 font-mono text-xs text-foreground">
+                                    {resetLog}
+                                </pre>
+                            )}
+                        </div>
+                    </section>
                 )}
             </main>
+
+            {/* Full Reset Confirmation Modal */}
+            {resetModalOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="reset-modal-title"
+                >
+                    <div className="w-full max-w-md rounded-2xl border border-border/60 bg-card p-6 shadow-xl">
+                        <div className="flex items-start gap-3">
+                            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
+                                <AlertTriangle className="size-5" />
+                            </div>
+                            <div>
+                                <h3 id="reset-modal-title" className="text-base font-bold text-foreground">
+                                    Reset Entire Database?
+                                </h3>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    This will wipe any live edits made during your rehearsal and restore the clean defense baseline.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setResetModalOpen(false)}
+                                className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-border/60 bg-background px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted/60"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleFullDatabaseReset}
+                                className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
+                            >
+                                Reset Entire Database
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Toast Notification */}
+            {toast && (
+                <div
+                    role="status"
+                    className={`fixed bottom-5 right-5 z-50 flex max-w-sm items-center gap-3 rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg ${
+                        toast.type === "error"
+                            ? "border-rose-500/40 bg-rose-600 text-white"
+                            : toast.type === "info"
+                            ? "border-border/60 bg-card text-foreground"
+                            : "border-emerald-500/40 bg-emerald-600 text-white"
+                    }`}
+                >
+                    <span className="flex-1">{toast.message}</span>
+                    <button
+                        type="button"
+                        onClick={() => setToast(null)}
+                        aria-label="Dismiss notification"
+                        className="flex size-11 shrink-0 items-center justify-center rounded-lg hover:bg-black/15"
+                    >
+                        <X className="size-4" />
+                    </button>
+                </div>
+            )}
         </div>
+    );
+}
+
+interface AccountCardProps {
+    account: DemoAccount;
+    isCurrent: boolean;
+    isBusy: boolean;
+    copiedKey: string | null;
+    onCopy: (text: string, label: string, keyId?: string) => void;
+    onSwitchAndOpen: () => void;
+}
+
+function AccountCard({
+    account,
+    isCurrent,
+    isBusy,
+    copiedKey,
+    onCopy,
+    onSwitchAndOpen,
+}: AccountCardProps) {
+    return (
+        <article
+            className={`flex flex-col justify-between rounded-2xl border p-5 shadow-xs transition ${
+                isCurrent
+                    ? "border-emerald-500/50 bg-emerald-500/5"
+                    : "border-border/60 bg-card"
+            }`}
+        >
+            <div>
+                <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
+                            <User className="size-4" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-foreground">{account.label}</h3>
+                            <p className="text-xs text-muted-foreground">
+                                {account.room ? `Room ${account.room}` : account.role.toUpperCase()}
+                            </p>
+                        </div>
+                    </div>
+                    {isCurrent && (
+                        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                            Active
+                        </span>
+                    )}
+                </div>
+
+                <p className="mt-2.5 text-xs text-muted-foreground">{account.state}</p>
+
+                {account.email && (
+                    <div className="mt-3 space-y-1.5 rounded-xl border border-border/50 bg-muted/30 p-3 text-xs">
+                        <div className="flex items-center justify-between gap-2">
+                            <span className="truncate font-mono text-foreground">{account.email}</span>
+                            <button
+                                type="button"
+                                onClick={() => onCopy(account.email!, `${account.label} email`, `email-${account.key}`)}
+                                className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/10"
+                            >
+                                {copiedKey === `email-${account.key}` ? (
+                                    <Check className="size-3.5" />
+                                ) : (
+                                    <Copy className="size-3.5" />
+                                )}
+                                Copy
+                            </button>
+                        </div>
+                        {account.password && (
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="font-mono text-muted-foreground">{account.password}</span>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        onCopy(account.password!, "password", `pass-${account.key}`)
+                                    }
+                                    className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/10"
+                                >
+                                    {copiedKey === `pass-${account.key}` ? (
+                                        <Check className="size-3.5" />
+                                    ) : (
+                                        <Copy className="size-3.5" />
+                                    )}
+                                    Copy
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            <button
+                type="button"
+                onClick={onSwitchAndOpen}
+                disabled={isBusy}
+                className="mt-4 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-xs transition hover:bg-primary/90 disabled:opacity-60"
+            >
+                {isBusy ? (
+                    <>
+                        <Loader2 className="size-4 animate-spin" />
+                        Switching…
+                    </>
+                ) : (
+                    <>
+                        <ExternalLink className="size-4" />
+                        {account.role === "public" ? "Sign Out & Open" : "Switch & Open"}
+                    </>
+                )}
+            </button>
+        </article>
     );
 }

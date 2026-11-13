@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Image from 'next/image';
-import { Search, ArrowLeft, AlertTriangle, X, Bot, Pin } from "lucide-react";
+import { Search, ArrowLeft, AlertTriangle, X, Pin } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
 import { ContactItem as ContactItemType } from "./types";
@@ -44,14 +44,18 @@ export function ContactList({
 }: ContactListProps) {
     const { t } = useLanguageContext();
     const filteredContacts = useMemo(() => {
-        if (!searchQuery.trim()) return contacts;
         const q = searchQuery.trim().toLowerCase();
-        return contacts.filter((c) => {
+        const visibleContacts = q
+            ? contacts
+            : contacts.filter((c) => c.hasMessages !== false || activeConversationId === c.id);
+
+        if (!q) return visibleContacts;
+        return visibleContacts.filter((c) => {
             const nameMatch = (c.name || "").toLowerCase().includes(q);
             const unitMatch = (c.unit || "").toLowerCase().includes(q);
             return nameMatch || unitMatch;
         });
-    }, [contacts, searchQuery]);
+    }, [contacts, searchQuery, activeConversationId]);
 
     return (
         <div className={cn(
@@ -85,7 +89,7 @@ export function ContactList({
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder={t("Search by name or room...")}
-                        className="w-full rounded-2xl neumorphic-inset py-2.5 pl-10 pr-9 text-sm text-high placeholder:text-disabled transition-all focus:ring-4 focus:ring-primary/5"
+                        className="w-full rounded-2xl neumorphic-inset py-2.5 pl-10 pr-9 text-sm text-high placeholder:text-disabled outline-none transition-all focus:ring-4 focus:ring-primary/5"
                     />
                     {searchQuery && (
                         <button
@@ -161,11 +165,14 @@ export function ContactList({
                             : "hover:bg-surface-2/60 neumorphic-extruded"
                     )}
                 >
-                    <div
-                        className="relative size-12 shrink-0 rounded-full flex items-center justify-center shadow-xs"
-                        style={{ backgroundColor: "#8B5CF6" }}
-                    >
-                        <Bot className="size-6 text-white" />
+                    <div className="relative size-12 shrink-0 rounded-full bg-white dark:bg-card border border-border flex items-center justify-center shadow-xs">
+                        <Image
+                            src="/logos/favicon.png"
+                            alt="iRis"
+                            width={40}
+                            height={40}
+                            className="object-cover rounded-full"
+                        />
                         <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-amber-500 text-[9px] text-white shadow-xs">
                             <Pin className="size-2.5 fill-white" />
                         </span>
@@ -174,15 +181,15 @@ export function ContactList({
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5 truncate">
                                 <span className="truncate text-sm font-black text-high">
-                                    {t("iRis Operations Assistant")}
+                                    {t("iRis Assistant")}
                                 </span>
                             </div>
                             <span className="shrink-0 text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded-md">
-                                {t("Hub")}
+                                {t("AI")}
                             </span>
                         </div>
                         <div className="truncate text-xs text-medium">
-                            {t("Automated Assistant & Quick Tools")}
+                            {t("AI Property Assistant")}
                         </div>
                     </div>
                 </button>

@@ -17,6 +17,7 @@ import {
     Building2,
     FileText,
     ClipboardList,
+    History,
     X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -159,6 +160,14 @@ export function QuickToolsFab({
                 },
                 {
                     type: 'link' as const,
+                    href: '/landlord/activity',
+                    icon: History,
+                    iconTone: 'bg-primary/12 text-primary',
+                    title: t('Payment & Actions History'),
+                    subtitle: t('Audit your recent actions & payments'),
+                },
+                {
+                    type: 'link' as const,
                     href: '/mobile/landlord/analytics',
                     icon: TrendingUp,
                     iconTone: 'bg-teal-500/12 text-teal-600 dark:text-teal-400',
@@ -172,7 +181,7 @@ export function QuickToolsFab({
             items: [
                 {
                     type: 'link' as const,
-                    href: '/landlord/unit-map',
+                    href: '/mobile/landlord/unit-map',
                     icon: Map,
                     iconTone: 'bg-violet-500/12 text-violet-600 dark:text-violet-400',
                     title: t('Interactive Unit Map'),

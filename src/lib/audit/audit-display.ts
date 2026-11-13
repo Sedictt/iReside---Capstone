@@ -144,6 +144,31 @@ export function describeAuditEvent(item: AuditDisplaySource, t: AuditTranslate =
                     ? t("A tenant said they would pay bill {bill} in person, but did not pay in time.", { bill })
                     : t("A tenant said they would pay in person, but did not pay in time."),
             };
+        case "INVOICE_ISSUED": {
+            const amount = peso(meta.amount);
+            return {
+                title: bill ? t("Bill {bill} issued", { bill }) : t("Bill issued"),
+                description: amount
+                    ? t("You issued a rent bill of ₱{amount}.", { amount })
+                    : t("You issued a new rent bill to a tenant."),
+            };
+        }
+        case "MAINTENANCE_CREATED":
+            return {
+                title: t("Repair ticket created"),
+                description: text(meta.title)
+                    ? t("You logged a repair ticket: {title}.", { title: text(meta.title)! })
+                    : t("You logged a new repair ticket."),
+            };
+        case "MAINTENANCE_UPDATED": {
+            const nextStatus = text(meta.status);
+            return {
+                title: t("Repair ticket updated"),
+                description: nextStatus
+                    ? t("You changed a repair ticket status to {status}.", { status: nextStatus })
+                    : t("You updated a repair ticket."),
+            };
+        }
     }
 
     if (action.startsWith("landlord_review_")) {

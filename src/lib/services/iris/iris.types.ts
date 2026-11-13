@@ -39,6 +39,47 @@ export type IrisCardData =
       status: string;
       dueDate?: string;
       lastPaymentDate?: string;
+    }
+  | {
+      type: "landlord_overview";
+      totalReceivables: number;
+      overdueCount: number;
+      openTicketsCount: number;
+      expiringLeasesCount: number;
+      occupancyRate: number;
+      activeLeasesCount: number;
+    }
+  | {
+      type: "landlord_unpaid";
+      totalReceivables: number;
+      leases: Array<{
+        id: string;
+        tenantName: string;
+        unitName: string;
+        outstandingBalance: number;
+        daysOverdue: number;
+      }>;
+    }
+  | {
+      type: "landlord_maintenance";
+      tickets: Array<{
+        id: string;
+        title: string;
+        unitName: string;
+        tenantName: string;
+        priority: string;
+        status: string;
+      }>;
+    }
+  | {
+      type: "landlord_renewals";
+      leases: Array<{
+        id: string;
+        tenantName: string;
+        unitName: string;
+        endDate: string;
+        monthlyRent: number;
+      }>;
     };
 
 export interface TenantAiContext {

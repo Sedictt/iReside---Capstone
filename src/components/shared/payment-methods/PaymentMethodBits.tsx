@@ -81,40 +81,40 @@ export function BankTransferDetails({
     const overInstapay = exceedsGcashLimit(amount);
 
     return (
-        <div className={cn("space-y-4", className)} data-testid="bank-transfer-details">
-            <div className="rounded-2xl border border-border bg-background/60 p-4 sm:p-5">
+        <div className={cn("space-y-3", className)} data-testid="bank-transfer-details">
+            <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-card p-4 shadow-sm">
                 <div className="flex items-center gap-3">
                     <span
                         aria-hidden
-                        className="flex h-11 min-w-11 items-center justify-center rounded-xl bg-emerald-600 px-2 text-xs font-black tracking-wide text-white"
+                        className="flex h-10 min-w-10 items-center justify-center rounded-xl bg-emerald-600 px-2 text-xs font-black tracking-wide text-white"
                     >
                         {bankInitials(destination.bankName)}
                     </span>
                     <div className="min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">{t("Send to this bank")}</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("Send to this bank")}</p>
                         <p className="truncate text-base font-black text-foreground">{destination.bankName || t("Bank")}</p>
                     </div>
                 </div>
 
-                <dl className="mt-4 space-y-3">
+                <dl className="mt-3 space-y-2.5">
                     <div>
-                        <dt className="text-[11px] font-bold text-muted-foreground">{t("Account name")}</dt>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("Account name")}</dt>
                         <dd className="break-words text-sm font-black text-foreground">{destination.accountName || "—"}</dd>
                     </div>
                     <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2">
                         <div className="min-w-0">
-                            <dt className="text-[11px] font-bold text-muted-foreground">{t("Account number")}</dt>
-                            <dd className="whitespace-nowrap font-mono text-lg font-black tracking-wide text-foreground">
+                            <dt className="text-xs font-semibold text-muted-foreground">{t("Account number")}</dt>
+                            <dd className="whitespace-nowrap font-mono text-base font-black tracking-wide text-foreground">
                                 {formatAccountNumber(accountDigits) || "—"}
                             </dd>
                         </div>
                         {accountDigits && <CopyValueButton value={accountDigits} label={t("Copy account number")} />}
                     </div>
                     {amountText && (
-                        <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 border-t border-dashed border-border pt-3">
+                        <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 border-t border-dashed border-border pt-2.5">
                             <div>
-                                <dt className="text-[11px] font-bold text-muted-foreground">{t("Amount to send")}</dt>
-                                <dd className="text-lg font-black text-foreground">{formatPhpCurrency(amount)}</dd>
+                                <dt className="text-xs font-semibold text-muted-foreground">{t("Amount to send")}</dt>
+                                <dd className="text-base font-black tabular-nums text-foreground">{formatPhpCurrency(amount)}</dd>
                             </div>
                             <CopyValueButton value={amountText} label={t("Copy amount")} />
                         </div>
@@ -122,14 +122,14 @@ export function BankTransferDetails({
                 </dl>
 
                 {destination.qrImageUrl && !compact && (
-                    <div className="mt-4 flex items-center gap-4 rounded-xl border border-border bg-white p-3">
+                    <div className="mt-3 flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white p-2.5">
                         <Image
                             src={destination.qrImageUrl}
                             alt={t("Bank QR code")}
-                            width={96}
-                            height={96}
+                            width={80}
+                            height={80}
                             unoptimized
-                            className="size-24 shrink-0 rounded-lg object-contain"
+                            className="size-20 shrink-0 rounded-lg object-contain"
                         />
                         <p className="text-xs font-semibold text-zinc-700">
                             {t("You can also scan this QR Ph code with your bank or e-wallet app.")}
@@ -138,22 +138,22 @@ export function BankTransferDetails({
                 )}
             </div>
 
-            <div className="rounded-2xl border border-border bg-muted/30 p-4">
+            <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-muted/60 p-3.5 shadow-xs">
                 <p className="flex items-center gap-2 text-xs font-black text-foreground">
                     <Landmark className="size-4 text-emerald-600" aria-hidden />
                     {t("How to send")}
                 </p>
-                <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs leading-relaxed text-muted-foreground">
+                <ol className="mt-1.5 list-decimal space-y-1 pl-4 text-xs leading-snug text-foreground/80">
                     <li>{t("Open your bank or e-wallet app and choose Send Money / Transfer to another bank.")}</li>
                     <li>{t("Pick InstaPay (instant) or PESONet (same or next banking day).")}</li>
                     <li>{t("Paste the account number and amount, send, then take a screenshot of the receipt.")}</li>
                 </ol>
                 <p
                     className={cn(
-                        "mt-3 rounded-xl px-3 py-2 text-xs font-semibold",
+                        "mt-2.5 rounded-xl border px-3 py-2 text-xs font-semibold",
                         overInstapay
-                            ? "bg-amber-500/10 text-amber-800 dark:text-amber-300"
-                            : "bg-background/60 text-muted-foreground",
+                            ? "border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300"
+                            : "border-zinc-200 dark:border-zinc-800 bg-card text-muted-foreground",
                     )}
                 >
                     {t("Over ₱50,000? Use PESONet or deposit at the bank branch, then take a photo of the deposit slip.")}

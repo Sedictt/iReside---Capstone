@@ -92,26 +92,26 @@ function TenantPropertyHeader({ size = "md" }: { size?: "sm" | "md" }) {
     if (property === undefined) {
         return (
             <div className="flex items-center gap-2.5 min-w-0 w-full">
-                <Skeleton className={cn("shrink-0 rounded-xl", size === "sm" ? "size-7" : "size-9")} />
+                <Skeleton className={cn("shrink-0 rounded-xl", size === "sm" ? "size-7" : "size-8")} />
                 <div className="flex-1 space-y-1.5">
                     <Skeleton className="h-3 w-3/4 rounded-full" />
-                    {size === "md" && <Skeleton className="h-2.5 w-1/2 rounded-full opacity-60" />}
+                    <Skeleton className="h-2.5 w-1/2 rounded-full opacity-60" />
                 </div>
             </div>
         );
     }
 
     if (!property) {
-        return <BrandLogo size={size} className="w-full min-w-0" />;
+        return null;
     }
 
     return (
         <div className="flex items-center gap-2.5 min-w-0 w-full overflow-hidden">
-            <div className={cn("flex shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary", size === "sm" ? "size-7" : "size-9")}>
-                <Building2 className={size === "sm" ? "size-4" : "size-5"} />
+            <div className={cn("flex shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary", size === "sm" ? "size-7" : "size-8")}>
+                <Building2 className={size === "sm" ? "size-4" : "size-4"} />
             </div>
             <div className="flex min-w-0 flex-1 flex-col text-left overflow-hidden">
-                <span className={cn("block truncate font-black tracking-tight text-foreground", size === "sm" ? "text-xs" : "text-sm leading-tight")} title={property.name}>
+                <span className={cn("block truncate font-black tracking-tight text-foreground", size === "sm" ? "text-xs" : "text-xs leading-tight")} title={property.name}>
                     {property.name}
                 </span>
                 {property.detail && (
@@ -158,6 +158,7 @@ export function TenantSidebar() {
     const notificationsRef = useRef<HTMLDivElement>(null);
     const mobileNotificationsRef = useRef<HTMLDivElement>(null);
     const { profile, user } = useAuth();
+    const tenantProperty = useTenantProperty();
     const { 
         notifications, 
         unreadCount, 
@@ -297,7 +298,7 @@ export function TenantSidebar() {
             <header className="md:hidden sticky top-0 z-[90] h-16 border-b border-border/80 bg-background">
                 <div className="h-full px-4 flex items-center justify-between gap-3">
                     <Link href="/tenant/dashboard" className="flex items-center min-w-0 flex-1 overflow-hidden">
-                        <TenantPropertyHeader size="sm" />
+                        <BrandLogo size="sm" className="w-full min-w-0" />
                     </Link>
                     <div className="flex items-center gap-2 sm:gap-3">
                         <LanguageToggle variant="compact" />
@@ -369,25 +370,33 @@ export function TenantSidebar() {
             </header>
 
             <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col text-foreground neumorphic-panel" data-tour-id="tour-tenant-navigation">
-                <div className="h-20 px-5 border-b border-border/70 flex items-center justify-between gap-2">
-                    <div className="flex items-center min-w-0 flex-1 overflow-hidden">
-                        <TenantPropertyHeader />
-                    </div>
+                <div className="h-16 px-4 border-b border-border/70 flex items-center justify-between gap-2 shrink-0">
+                    <Link href="/tenant/dashboard" className="flex items-center min-w-0 flex-1 overflow-hidden">
+                        <BrandLogo size="md" className="w-full min-w-0" />
+                    </Link>
                     <ThemeToggle variant="sidebar" dataTourId="tour-theme-toggle" className="shrink-0" />
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-4 py-8">
+                {tenantProperty !== null && (
+                    <div className="px-4 pt-3 pb-1 shrink-0">
+                        <div className="rounded-xl border border-border/70 bg-muted/40 px-3 py-2">
+                            <TenantPropertyHeader />
+                        </div>
+                    </div>
+                )}
+
+                <div className="flex-1 overflow-y-auto px-4 py-5">
                     {renderNav()}
                 </div>
 
-                <div className="border-t border-border/70 p-4">
-                    <div className="mb-3 flex items-center gap-3 rounded-lg px-3 py-2.5 text-left">
+                <div className="border-t border-border/70 p-4 shrink-0">
+                    <div className="mb-3 flex items-center gap-2.5 rounded-lg px-2 py-2 text-left">
                         <ProfileCardTrigger 
                             userId={user?.id || ""} 
                             initialData={{ full_name: displayName, avatar_url: avatarUrl, role: profile?.role as Profile["role"] }}
                             asChild
                         >
-                            <div className="relative size-10 rounded-full ring-2 ring-border cursor-pointer hover:ring-primary transition-all">
+                            <div className="relative size-10 shrink-0 rounded-full ring-2 ring-border cursor-pointer hover:ring-primary transition-all">
                                 <div 
                                     className="relative size-full overflow-hidden rounded-full flex items-center justify-center" 
                                     style={{ backgroundColor: avatarBgColor }}
@@ -405,19 +414,22 @@ export function TenantSidebar() {
                                 )}
                             </div>
                         </ProfileCardTrigger>
-                        <div className="min-w-0 flex-1">
-                            <div className="flex min-w-0 items-center gap-2">
+                        <div className="min-w-0 flex-1 overflow-hidden">
+                            <div className="flex min-w-0 items-center gap-1.5">
                                 <ProfileCardTrigger 
                                     userId={user?.id || ""} 
                                     initialData={{ full_name: displayName, avatar_url: avatarUrl, role: profile?.role as Profile["role"] }}
+                                    className="block min-w-0 flex-1 overflow-hidden"
                                 >
-                                    <p className="truncate text-sm font-black text-foreground hover:text-primary transition-colors cursor-pointer">{displayName}</p>
+                                    <p className="truncate text-sm font-black text-foreground hover:text-primary transition-colors cursor-pointer" title={displayName}>{displayName}</p>
                                 </ProfileCardTrigger>
-                                <RoleBadge role={profile?.role ?? null} />
+                                <div className="shrink-0">
+                                    <RoleBadge role={profile?.role ?? null} />
+                                </div>
                             </div>
-                            <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || t("Tenant Account")}</p>
+                            <p className="truncate text-xs text-muted-foreground" title={profile?.email || user?.email || undefined}>{profile?.email || user?.email || t("Tenant Account")}</p>
                         </div>
-                        <div className="relative" ref={notificationsRef}>
+                        <div className="relative shrink-0" ref={notificationsRef}>
                             <button
                                 type="button"
                                 onClick={() => {
@@ -514,19 +526,25 @@ export function TenantSidebar() {
                         isMobileOpen ? "translate-x-0" : "-translate-x-full"
                     )}
                 >
-                    <div className="mb-6 flex items-center justify-between">
-                        <Link href="/tenant/dashboard" className="flex items-center min-w-0" onClick={() => setIsMobileOpen(false)}>
-                            <TenantPropertyHeader />
+                    <div className="mb-4 flex items-center justify-between gap-2">
+                        <Link href="/tenant/dashboard" className="flex items-center min-w-0 flex-1 overflow-hidden" onClick={() => setIsMobileOpen(false)}>
+                            <BrandLogo size="sm" className="w-full min-w-0" />
                         </Link>
                         <button
                             type="button"
                             onClick={() => setIsMobileOpen(false)}
-                            className="inline-flex size-8 items-center justify-center rounded-md neumorphic-extruded"
+                            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md neumorphic-extruded"
                             aria-label={t("Close tenant navigation")}
                         >
                             <X className="size-4" />
                         </button>
                     </div>
+
+                    {tenantProperty !== null && (
+                        <div className="mb-4 rounded-xl border border-border/70 bg-muted/40 px-3 py-2">
+                            <TenantPropertyHeader size="sm" />
+                        </div>
+                    )}
 
                     {renderNav(true)}
 

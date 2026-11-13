@@ -20,10 +20,11 @@ import {
 } from "@/lib/messages/client";
 import { redactMessageForSend } from "@/lib/messages/redaction-client";
 import type { BadgeRole } from "@/components/profile/RoleBadge";
-import type { MiniChatContact, MiniChatMenuAction, MiniChatMessage, MiniChatRole, MiniChatState, OpenMiniChat } from "./types";
+import type { MiniChatContact, MiniChatMenuAction, MiniChatMessage, MiniChatRole, MiniChatState, OpenMiniChat, StagedAttachment } from "./types";
 import {
     DEFAULT_CHAT_STATE,
     MAX_OPEN_CHATS,
+    MAX_STAGED_ATTACHMENTS,
     MESSAGE_CACHE_TTL_MS,
     MESSAGE_PAGE_SIZE,
     mapConversationMessage,
@@ -428,39 +429,6 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
         }
     }, [patchChatState, refreshConversations, userId]);
 
-    const sendMessage = useCallback(async (conversationId: string) => {
-        const current = chatStateByIdRef.current[conversationId] ?? DEFAULT_CHAT_STATE;
-        const text = current.draft.trim();
-        if (!text || current.isSending) return;
-
-        const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        const optimistic: MiniChatMessage = {
-            id: localId,
-            senderId: userId ?? "",
-            content: text,
-            createdAt: new Date().toISOString(),
-            isOwn: true,
-            status: "sending",
-            messageType: "text",
-            fileUrl: null,
-            fileName: null,
-            fileMimeType: null,
-            isRedacted: false,
-            redactedContent: null,
-        };
-
-        patchChatState(conversationId, (prev) => ({ draft: "", messages: [...prev.messages, optimistic] }));
-
-        const typingTimeout = typingStopTimeoutRef.current.get(conversationId);
-        if (typingTimeout) {
-            window.clearTimeout(typingTimeout);
-            typingStopTimeoutRef.current.delete(conversationId);
-        }
-        broadcastTyping(conversationId, false);
-
-        await deliverText(conversationId, localId, text);
-    }, [broadcastTyping, deliverText, patchChatState, userId]);
-
     const retryMessage = useCallback(async (conversationId: string, messageId: string) => {
         const current = chatStateByIdRef.current[conversationId];
         const failed = current?.messages.find((message) => message.id === messageId && message.status === "failed");
@@ -538,6 +506,96 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
             patchChatState(conversationId, { isUploading: false, uploadProgress: 0 });
         }
     }, [patchChatState, refreshConversations, userId]);
+
+    const stageFiles = useCallback((conversationId: string, files: File[]) => {
+        if (files.length === 0) return;
+        patchChatState(conversationId, (prev) => {
+            const existing = prev.stagedAttachments ?? [];
+            const remainingSlots = Math.max(0, MAX_STAGED_ATTACHMENTS - existing.length);
+            if (remainingSlots === 0) {
+                toast.error(tr("Too many attachments"), {
+                    description: tr("You can attach up to {count} files at a time.", { count: MAX_STAGED_ATTACHMENTS }),
+                });
+                return {};
+            }
+            const accepted = files.slice(0, remainingSlots);
+            if (files.length > remainingSlots) {
+                toast.info(tr("Attachment limit reached"), {
+                    description: tr("Only the first {count} files were added (max {max}).", { count: accepted.length, max: MAX_STAGED_ATTACHMENTS }),
+                });
+            }
+            const added: StagedAttachment[] = accepted.map((file) => {
+                const isImage = file.type.startsWith("image/");
+                return {
+                    id: `staged-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    file,
+                    previewUrl: isImage ? URL.createObjectURL(file) : null,
+                    isImage,
+                };
+            });
+            return { stagedAttachments: [...existing, ...added] };
+        });
+    }, [patchChatState]);
+
+    const unstageFile = useCallback((conversationId: string, attachmentId: string) => {
+        patchChatState(conversationId, (prev) => {
+            const existing = prev.stagedAttachments ?? [];
+            const target = existing.find((item) => item.id === attachmentId);
+            if (target?.previewUrl) {
+                URL.revokeObjectURL(target.previewUrl);
+            }
+            return { stagedAttachments: existing.filter((item) => item.id !== attachmentId) };
+        });
+    }, [patchChatState]);
+
+    const sendMessage = useCallback(async (conversationId: string) => {
+        const current = chatStateByIdRef.current[conversationId] ?? DEFAULT_CHAT_STATE;
+        const text = current.draft.trim();
+        const staged = current.stagedAttachments ?? [];
+        if ((!text && staged.length === 0) || current.isSending || current.isUploading) return;
+
+        const typingTimeout = typingStopTimeoutRef.current.get(conversationId);
+        if (typingTimeout) {
+            window.clearTimeout(typingTimeout);
+            typingStopTimeoutRef.current.delete(conversationId);
+        }
+        broadcastTyping(conversationId, false);
+
+        if (text) {
+            const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const optimistic: MiniChatMessage = {
+                id: localId,
+                senderId: userId ?? "",
+                content: text,
+                createdAt: new Date().toISOString(),
+                isOwn: true,
+                status: "sending",
+                messageType: "text",
+                fileUrl: null,
+                fileName: null,
+                fileMimeType: null,
+                isRedacted: false,
+                redactedContent: null,
+            };
+
+            patchChatState(conversationId, (prev) => ({
+                draft: "",
+                stagedAttachments: [],
+                messages: [...prev.messages, optimistic],
+            }));
+
+            await deliverText(conversationId, localId, text);
+        } else {
+            patchChatState(conversationId, { stagedAttachments: [] });
+        }
+
+        for (const item of staged) {
+            await uploadFile(conversationId, item.file);
+            if (item.previewUrl) {
+                URL.revokeObjectURL(item.previewUrl);
+            }
+        }
+    }, [broadcastTyping, deliverText, patchChatState, uploadFile, userId]);
 
     const clearError = useCallback((conversationId: string) => {
         patchChatState(conversationId, { error: null });
@@ -836,6 +894,7 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
                 unread: false,
                 isArchived: false,
                 isBlocked: false,
+                hasMessages: false,
             };
             await openChat(contact);
             clearSearch();
@@ -929,6 +988,8 @@ export function useMiniChat({ role }: UseMiniChatOptions) {
         retryMessage,
         discardMessage,
         uploadFile,
+        stageFiles,
+        unstageFile,
         clearError,
         reloadMessages: (conversationId: string) => loadChatMessages(conversationId, { force: true }),
 

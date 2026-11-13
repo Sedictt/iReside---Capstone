@@ -3,6 +3,7 @@ import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { generateMonthlyInvoices, listLandlordInvoices } from "@/lib/billing/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { logUserActivity } from "@/lib/audit/audit-logger";
 import { databaseErrorResponse, parseJsonBody } from "@/lib/validation/server";
 import { computeInvoiceTotal, invoiceGenerateSchema } from "@/lib/validation/schemas/billing.schema";
 
@@ -166,6 +167,23 @@ export async function POST(request: Request) {
                 }
             }
 
+            void logUserActivity({
+                userId,
+                userRole: "landlord",
+                action: "INVOICE_ISSUED",
+                category: "billing",
+                title: `Bill ${paymentRow.invoice_number} issued`,
+                description: `You issued a rent bill of ${formatPhpCurrency(totalAmount)}.`,
+                targetId: paymentRow.id,
+                targetType: "payment",
+                metadata: {
+                    invoiceNumber: paymentRow.invoice_number,
+                    amount: totalAmount,
+                    unitName: (lease as any).unit?.name,
+                },
+                userAgent: request.headers.get("user-agent"),
+            });
+
             return NextResponse.json({
                 success: true,
                 created: 1,
@@ -177,6 +195,23 @@ export async function POST(request: Request) {
 
         const leaseIds = billingParams.leaseIds;
         const generationResult = await generateMonthlyInvoices(supabase, userId, billingParams.billingMonth, leaseIds);
+
+        if ((generationResult as any)?.created > 0) {
+            void logUserActivity({
+                userId,
+                userRole: "landlord",
+                action: "INVOICE_ISSUED",
+                category: "billing",
+                title: "Monthly bills issued",
+                description: `You issued ${(generationResult as any).created} monthly rent bill(s).`,
+                targetType: "payment",
+                metadata: {
+                    createdCount: (generationResult as any).created,
+                    billingMonth: billingParams.billingMonth,
+                },
+                userAgent: request.headers.get("user-agent"),
+            });
+        }
 
         return NextResponse.json(generationResult);
     } catch (error) {

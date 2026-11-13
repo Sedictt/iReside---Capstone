@@ -25,6 +25,7 @@ interface ChatUser {
     lastMessage: string;
     time: string;
     unread?: boolean;
+    hasMessages: boolean;
 }
 
 const FALLBACK_AVATAR = DEFAULT_AVATAR_URL;
@@ -53,6 +54,7 @@ const mapConversationToUser = (conversation: ConversationSummary): ChatUser => {
         lastMessage: conversation.lastMessage?.content ?? tr("No messages yet"),
         time: formatConversationTimestamp(conversation.lastMessage?.createdAt ?? conversation.updatedAt),
         unread: conversation.unreadCount > 0,
+        hasMessages: Boolean(conversation.lastMessage),
     };
 };
 
@@ -79,7 +81,9 @@ export function MobileMessagesSheet() {
     }, [isOpen, loadConversations]);
 
     const filteredConversations = useMemo(() => {
-        if (!searchQuery.trim()) return conversations;
+        if (!searchQuery.trim()) {
+            return conversations.filter((c) => c.hasMessages);
+        }
         const q = searchQuery.toLowerCase();
         return conversations.filter(
             (c) =>

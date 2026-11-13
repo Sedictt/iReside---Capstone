@@ -31,6 +31,7 @@ import {
     Download,
     FileText,
     Filter,
+    History,
     LayoutGrid,
     LayoutList,
     Plus,
@@ -49,7 +50,15 @@ import { RecordExpenseModal } from "@/components/landlord/invoices/RecordExpense
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { InvoiceListItem } from "@/lib/billing/server";
+import { DEFAULT_AVATAR_URL, getSafeAvatarBgColor } from "@/lib/constants";
 import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
 import {
     describeInvoice,
@@ -59,6 +68,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { openLandlordHistoryDrawer } from "@/components/landlord/history/QuickHistoryDrawer";
 
 interface ExpenseItem {
     id: string;
@@ -72,6 +82,7 @@ type SectionId = "invoices" | "ledger" | "expenses";
 type FilterId = InvoiceAttentionGroup | "all";
 type SortId = "newest" | "oldest" | "tenant_az" | "highest_amount" | "lowest_amount";
 type MethodId = "all" | "gcash" | "bank_transfer" | "cash";
+type ProofFilterId = "all" | "with_pop" | "without_pop";
 
 const SECTION_IDS: SectionId[] = ["invoices", "ledger", "expenses"];
 const FILTER_IDS: FilterId[] = ["attention", "late", "waiting", "paid", "all"];
@@ -133,6 +144,7 @@ export default function InvoicesPage() {
     const [search, setSearch] = useState("");
     const [sortBy, setSortBy] = useState<SortId>("newest");
     const [method, setMethod] = useState<MethodId>("all");
+    const [proofFilter, setProofFilter] = useState<ProofFilterId>("all");
     const [viewMode, setViewMode] = useState<"table" | "cards">("table");
     // Table columns the landlord chose to hide. Tenant and the action button always show.
     const [hiddenColumns, setHiddenColumns] = useState<Set<TableColumnId>>(() => new Set());
@@ -318,6 +330,11 @@ export default function InvoicesPage() {
                 return invoice.paymentMethod === method;
             });
         }
+        if (proofFilter === "with_pop") {
+            list = list.filter((invoice) => Boolean(invoice.paymentProofUrl));
+        } else if (proofFilter === "without_pop") {
+            list = list.filter((invoice) => !invoice.paymentProofUrl);
+        }
         return list.toSorted((a, b) => {
             if (sortBy === "oldest") return new Date(a.issuedDate).getTime() - new Date(b.issuedDate).getTime();
             if (sortBy === "tenant_az") return a.tenant.localeCompare(b.tenant);
@@ -325,7 +342,7 @@ export default function InvoicesPage() {
             if (sortBy === "lowest_amount") return a.amount - b.amount;
             return new Date(b.issuedDate).getTime() - new Date(a.issuedDate).getTime();
         });
-    }, [invoices, search, filter, method, sortBy]);
+    }, [invoices, search, filter, method, proofFilter, sortBy]);
 
     const handleExportCSV = () => {
         const ledgerData = [
@@ -367,6 +384,9 @@ export default function InvoicesPage() {
                 amount: expense.amount,
                 title: t(expense.category),
                 detail: expense.description,
+                tenantName: undefined as string | undefined,
+                tenantAvatarUrl: undefined as string | null | undefined,
+                tenantAvatarBgColor: undefined as string | null | undefined,
             })),
             ...invoices
                 .filter((invoice) => getInvoiceAttentionGroup(invoice) === "paid")
@@ -377,6 +397,9 @@ export default function InvoicesPage() {
                     amount: invoice.amount,
                     title: t("Rent Payment: {name}", { name: invoice.tenant }),
                     detail: t("Unit {unit} • Invoice #{num}", { unit: invoice.unit, num: invoice.invoiceNumber }),
+                    tenantName: invoice.tenant,
+                    tenantAvatarUrl: invoice.tenantAvatarUrl ?? null,
+                    tenantAvatarBgColor: invoice.tenantAvatarBgColor ?? null,
                 })),
         ].sort((a, b) => b.date.getTime() - a.date.getTime());
     }, [expenses, invoices, t]);
@@ -384,7 +407,7 @@ export default function InvoicesPage() {
     // Reset invoice page when filters/search/sort/property change
     useEffect(() => {
         setInvoicesPage(1);
-    }, [filter, search, method, sortBy, selectedPropertyId, pageSize]);
+    }, [filter, search, method, proofFilter, sortBy, selectedPropertyId, pageSize]);
 
     useEffect(() => {
         setLedgerPage(1);
@@ -413,18 +436,14 @@ export default function InvoicesPage() {
     );
 
     return (
-        <div ref={pageRootRef} className="mx-auto max-w-[1600px] space-y-8 px-4 py-8 md:px-8 lg:py-10">
-            {/* Header: Financial Center pill + Title + Action buttons */}
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                    <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-black uppercase tracking-[0.2em] text-foreground shadow-xs">
-                        <FileText className="size-3.5 text-primary" />
-                        {t("Financial Center")}
-                    </div>
-                    <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
+        <div ref={pageRootRef} className="mx-auto max-w-7xl space-y-6 px-4 py-8 md:px-8">
+            {/* ─── Page Header (matching Lease Hub) ────────────────────── */}
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div className="space-y-1">
+                    <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
                         {t("Finance Hub")}
                     </h1>
-                    <p className="mt-1 text-sm sm:text-base text-slate-600 dark:text-zinc-400">
+                    <p className="text-sm font-medium text-muted-foreground">
                         {t("Track monthly rent, verify tenant payments, and manage property expenses.")}
                     </p>
                 </div>
@@ -432,7 +451,7 @@ export default function InvoicesPage() {
                 <div className="flex flex-wrap items-center gap-3">
                     <Link
                         href="/landlord/utility-billing"
-                        className="group inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground shadow-xs transition-all hover:border-amber-500 hover:text-amber-600 dark:hover:text-amber-400 active:scale-95"
+                        className="group flex h-11 items-center gap-2 rounded-2xl neumorphic-panel border border-border/50 px-4 text-xs font-black uppercase tracking-wider text-foreground transition-all hover:border-amber-500/40 hover:text-amber-600 dark:hover:text-amber-400 active:scale-95"
                     >
                         <Zap className="size-4 text-amber-500" />
                         <span>{t("Record Submeters")}</span>
@@ -444,7 +463,7 @@ export default function InvoicesPage() {
                             setSection("invoices");
                             setIsIssueInvoiceModalOpen(true);
                         }}
-                        className="group inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground shadow-xs transition-all hover:bg-primary/90 active:scale-95 cursor-pointer"
+                        className="group flex h-11 items-center gap-2 rounded-2xl bg-primary px-5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95 cursor-pointer"
                     >
                         <Plus className="size-4" />
                         <span>{t("Issue Invoice")}</span>
@@ -469,12 +488,13 @@ export default function InvoicesPage() {
                 </div>
             )}
 
-            {/* Top 3 Hero Stat Cards: Solid cards with high-contrast text */}
+            {/* Top 3 Hero Stat Cards */}
             <div className="grid gap-4 sm:grid-cols-3">
                 <HeroStat
                     label={t("Net Cash in Hand (30d)")}
                     value={formatPhpCurrency(netLast30Days)}
                     highlight={netLast30Days >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}
+                    iconBg={netLast30Days >= 0 ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "bg-rose-500/10 text-rose-700 dark:text-rose-400"}
                     loading={loading}
                     subtext={t("Rent collected minus property expenses")}
                     icon={Banknote}
@@ -482,7 +502,8 @@ export default function InvoicesPage() {
                 <HeroStat
                     label={t("Rent Collected (30d)")}
                     value={formatPhpCurrency(metrics.collectedLast30Days)}
-                    highlight="text-blue-700 dark:text-blue-400"
+                    highlight="text-primary"
+                    iconBg="bg-primary/10 text-primary"
                     loading={loading}
                     subtext={t("Total rent collected from tenants")}
                     icon={Receipt}
@@ -490,271 +511,382 @@ export default function InvoicesPage() {
                 <HeroStat
                     label={t("Total Expenses (30d)")}
                     value={formatPhpCurrency(expensesLast30Days)}
-                    highlight="text-amber-800 dark:text-amber-400"
+                    highlight="text-amber-700 dark:text-amber-400"
+                    iconBg="bg-amber-500/10 text-amber-700 dark:text-amber-400"
                     loading={loading}
                     subtext={t("Repairs, utility bills & maintenance costs")}
                     icon={Wallet}
                 />
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="flex items-center gap-2 overflow-x-auto border-b border-border pb-px">
-                <button
-                    type="button"
-                    onClick={() => openSection("invoices")}
-                    className={cn(
-                        "px-6 py-3 text-sm font-black uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 cursor-pointer",
-                        section === "invoices"
-                            ? "border-primary text-primary"
-                            : "border-transparent text-slate-600 dark:text-zinc-400 hover:border-border hover:text-foreground"
-                    )}
-                >
-                    <Receipt className="size-4" />
-                    <span>{t("Rent Invoices")}</span>
-                    <span className={cn(
-                        "rounded-full px-2 py-0.5 text-xs font-mono font-bold",
-                        section === "invoices" ? "bg-primary/20 text-primary" : "bg-muted text-foreground"
-                    )}>
-                        {invoices.length}
-                    </span>
-                </button>
+            {/* ─── Unified Command Bar (flat inner controls, single outer surface) ── */}
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 sm:gap-3 border border-border/60 bg-card shadow-xs p-2 sm:p-2.5 rounded-2xl">
+                {/* Segmented Pill Tabs */}
+                <div className="flex shrink-0 items-center gap-1 w-full sm:w-auto overflow-x-auto no-scrollbar">
+                    <button
+                        type="button"
+                        onClick={() => openSection("invoices")}
+                        className={cn(
+                            "flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer",
+                            section === "invoices"
+                                ? "bg-primary text-primary-foreground shadow-xs"
+                                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                        )}
+                    >
+                        <Receipt className="size-3.5" />
+                        <span>{t("Rent Invoices")}</span>
+                        <span className={cn(
+                            "rounded-md px-1.5 py-0.5 text-[10px] font-mono font-bold",
+                            section === "invoices" ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+                        )}>
+                            {invoices.length}
+                        </span>
+                    </button>
 
-                <button
-                    type="button"
-                    onClick={() => openSection("ledger")}
-                    className={cn(
-                        "px-6 py-3 text-sm font-black uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 cursor-pointer",
-                        section === "ledger"
-                            ? "border-primary text-primary"
-                            : "border-transparent text-slate-600 dark:text-zinc-400 hover:border-border hover:text-foreground"
-                    )}
-                >
-                    <Banknote className="size-4" />
-                    <span>{t("Unified Ledger")}</span>
-                </button>
+                    <button
+                        type="button"
+                        onClick={() => openSection("ledger")}
+                        className={cn(
+                            "flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer",
+                            section === "ledger"
+                                ? "bg-primary text-primary-foreground shadow-xs"
+                                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                        )}
+                    >
+                        <Banknote className="size-3.5" />
+                        <span>{t("Unified Ledger")}</span>
+                    </button>
 
-                <button
-                    type="button"
-                    onClick={() => openSection("expenses")}
-                    className={cn(
-                        "px-6 py-3 text-sm font-black uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 cursor-pointer",
-                        section === "expenses"
-                            ? "border-primary text-primary"
-                            : "border-transparent text-slate-600 dark:text-zinc-400 hover:border-border hover:text-foreground"
-                    )}
-                >
-                    <Wallet className="size-4" />
-                    <span>{t("Expenses")}</span>
-                    <span className={cn(
-                        "rounded-full px-2 py-0.5 text-xs font-mono font-bold",
-                        section === "expenses" ? "bg-primary/20 text-primary" : "bg-muted text-foreground"
-                    )}>
-                        {expenses.length}
-                    </span>
-                </button>
+                    <button
+                        type="button"
+                        onClick={() => openSection("expenses")}
+                        className={cn(
+                            "flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer",
+                            section === "expenses"
+                                ? "bg-primary text-primary-foreground shadow-xs"
+                                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                        )}
+                    >
+                        <Wallet className="size-3.5" />
+                        <span>{t("Expenses")}</span>
+                        <span className={cn(
+                            "rounded-md px-1.5 py-0.5 text-[10px] font-mono font-bold",
+                            section === "expenses" ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+                        )}>
+                            {expenses.length}
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => openLandlordHistoryDrawer("actions")}
+                        className="flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[11px] font-black uppercase tracking-wider text-muted-foreground hover:bg-muted/70 hover:text-foreground transition-all whitespace-nowrap cursor-pointer"
+                        title={t("Check your payment & actions audit log")}
+                    >
+                        <History className="size-3.5 text-primary" />
+                        <span>{t("Audit Log")}</span>
+                    </button>
+                </div>
+
+                {/* Right-side Controls (Search, Refine Filter Menu, View Switcher) */}
+                {section === "invoices" && (
+                    <div className="flex items-center gap-2 w-full xl:w-auto justify-end min-w-0">
+                        <div className="relative flex-1 min-w-[140px] sm:w-52 xl:w-60">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
+                            <input
+                                maxLength={60}
+                                value={search}
+                                onChange={(event) => setSearch(event.target.value)}
+                                placeholder={t("Search tenant, unit, or invoice...")}
+                                className="h-9.5 w-full rounded-xl bg-muted/60 border border-transparent pl-9 pr-8 text-xs font-semibold text-foreground focus:bg-background focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all placeholder:text-muted-foreground/60"
+                            />
+                            {search && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearch("")}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 cursor-pointer"
+                                    aria-label={t("Clear search")}
+                                >
+                                    <X className="size-3.5" />
+                                </button>
+                            )}
+                        </div>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    type="button"
+                                    title={t("Filter & Sort")}
+                                    aria-label={t("Filter & Sort")}
+                                    className={cn(
+                                        "relative flex size-9.5 shrink-0 items-center justify-center rounded-xl transition-all cursor-pointer",
+                                        method !== "all" || proofFilter !== "all" || sortBy !== "newest"
+                                            ? "bg-primary/10 text-primary border border-primary/30"
+                                            : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    )}
+                                >
+                                    <Filter className="size-3.5 sm:size-4" />
+                                    {(method !== "all" || proofFilter !== "all" || sortBy !== "newest") && (
+                                        <span className="absolute -top-1 -right-1 size-2.5 rounded-full bg-primary ring-2 ring-card" />
+                                    )}
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-64 p-2 rounded-2xl neumorphic-panel border border-border">
+                                <div className="px-3 py-1.5">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                        {t("Payment Method")}
+                                    </p>
+                                </div>
+                                {([
+                                    { id: "all", label: t("All Methods") },
+                                    { id: "gcash", label: "GCash" },
+                                    { id: "bank_transfer", label: t("Bank Transfer") },
+                                    { id: "cash", label: t("Cash / In-Person") },
+                                ] as const).map((opt) => (
+                                    <DropdownMenuItem
+                                        key={opt.id}
+                                        onClick={() => setMethod(opt.id)}
+                                        className={cn(
+                                            "rounded-xl text-xs font-semibold cursor-pointer justify-between",
+                                            method === opt.id && "bg-primary/10 text-primary font-bold"
+                                        )}
+                                    >
+                                        <span>{opt.label}</span>
+                                        {method === opt.id && <CheckCircle2 className="size-3.5 text-primary" />}
+                                    </DropdownMenuItem>
+                                ))}
+
+                                <DropdownMenuSeparator className="mx-2 my-1.5 bg-border" />
+
+                                <div className="px-3 py-1.5">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                        {t("Proof of Payment")}
+                                    </p>
+                                </div>
+                                {([
+                                    { id: "all", label: t("All Proof Status") },
+                                    { id: "with_pop", label: t("With Proof of Payment") },
+                                    { id: "without_pop", label: t("No Proof of Payment") },
+                                ] as const).map((opt) => (
+                                    <DropdownMenuItem
+                                        key={opt.id}
+                                        onClick={() => setProofFilter(opt.id)}
+                                        className={cn(
+                                            "rounded-xl text-xs font-semibold cursor-pointer justify-between",
+                                            proofFilter === opt.id && "bg-primary/10 text-primary font-bold"
+                                        )}
+                                    >
+                                        <span>{opt.label}</span>
+                                        {proofFilter === opt.id && <CheckCircle2 className="size-3.5 text-primary" />}
+                                    </DropdownMenuItem>
+                                ))}
+
+                                <DropdownMenuSeparator className="mx-2 my-1.5 bg-border" />
+
+                                <div className="px-3 py-1.5">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                        {t("Sort By")}
+                                    </p>
+                                </div>
+                                {([
+                                    { id: "newest", label: t("Newest First") },
+                                    { id: "oldest", label: t("Oldest First") },
+                                    { id: "tenant_az", label: t("Tenant (A-Z)") },
+                                    { id: "highest_amount", label: t("Highest Amount") },
+                                    { id: "lowest_amount", label: t("Lowest Amount") },
+                                ] as const).map((opt) => (
+                                    <DropdownMenuItem
+                                        key={opt.id}
+                                        onClick={() => setSortBy(opt.id)}
+                                        className={cn(
+                                            "rounded-xl text-xs font-semibold cursor-pointer justify-between",
+                                            sortBy === opt.id && "bg-primary/10 text-primary font-bold"
+                                        )}
+                                    >
+                                        <span>{opt.label}</span>
+                                        {sortBy === opt.id && <CheckCircle2 className="size-3.5 text-primary" />}
+                                    </DropdownMenuItem>
+                                ))}
+
+                                {(method !== "all" || proofFilter !== "all" || sortBy !== "newest") && (
+                                    <>
+                                        <DropdownMenuSeparator className="mx-2 my-1.5 bg-border" />
+                                        <DropdownMenuItem
+                                            onClick={() => { setMethod("all"); setProofFilter("all"); setSortBy("newest"); }}
+                                            className="rounded-xl text-xs font-bold text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer justify-center"
+                                        >
+                                            {t("Reset Filters")}
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        {/* View Switcher: Table vs Cards */}
+                        <div className="inline-flex h-9.5 items-center gap-0.5 rounded-xl bg-muted/60 p-1 shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => setViewMode("table")}
+                                aria-label={t("Table view")}
+                                title={t("Table view")}
+                                className={cn(
+                                    "flex h-full items-center gap-1.5 rounded-lg px-2.5 text-xs font-bold transition-all cursor-pointer",
+                                    viewMode === "table"
+                                        ? "bg-primary text-primary-foreground shadow-xs"
+                                        : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                <LayoutList className="size-3.5" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setViewMode("cards")}
+                                aria-label={t("Cards view")}
+                                title={t("Cards view")}
+                                className={cn(
+                                    "flex h-full items-center gap-1.5 rounded-lg px-2.5 text-xs font-bold transition-all cursor-pointer",
+                                    viewMode === "cards"
+                                        ? "bg-primary text-primary-foreground shadow-xs"
+                                        : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                <LayoutGrid className="size-3.5" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* TAB 1: RENT INVOICES */}
             {section === "invoices" && (
-                <div className="flex min-h-[50vh] flex-col rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xs animate-in fade-in">
-                    {/* Header & Controls Toolbar */}
-                    <div className="mb-4 flex shrink-0 flex-col gap-3 border-b border-border pb-4">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <h2 ref={listHeadingRef} className="text-xl font-black text-foreground lg:text-2xl">
-                                {t("Issued Invoices")}
-                                <span className="sr-only">, </span>
-                                <span className="ml-2 align-middle text-sm font-semibold text-muted-foreground tabular-nums">{counts.all}</span>
-                            </h2>
-
-                            {/* Search bar */}
-                            <div className="relative w-full sm:w-72">
-                                <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-zinc-500" />
-                                <input
-                                    maxLength={60}
-                                    value={search}
-                                    onChange={(event) => setSearch(event.target.value)}
-                                    placeholder={t("Search tenant, unit, or invoice...")}
-                                    className="w-full rounded-xl border border-border bg-background py-2 pl-10 pr-9 text-xs sm:text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/10 shadow-xs"
-                                />
-                                {search && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setSearch("")}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-foreground p-0.5"
-                                        aria-label={t("Clear search")}
-                                    >
-                                        <X className="size-3.5" />
-                                    </button>
+                <div className="flex min-h-[50vh] flex-col space-y-4 animate-in fade-in">
+                    {/* Sub-bar: Status Filter Pills + Result Count */}
+                    <div ref={listHeadingRef} className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="inline-flex items-center gap-1 rounded-xl neumorphic-panel border border-border/50 p-1 overflow-x-auto max-w-full">
+                            <button
+                                type="button"
+                                onClick={() => setFilter("all")}
+                                className={cn(
+                                    "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
+                                    filter === "all"
+                                        ? "bg-card text-foreground shadow-xs font-black border border-border/80"
+                                        : "text-slate-600 dark:text-zinc-400 hover:text-foreground hover:bg-card/80"
                                 )}
-                            </div>
+                            >
+                                <span>{t("All")}</span>
+                                <span className={cn(
+                                    "text-[11px] px-1.5 py-0.5 rounded-md font-mono font-bold",
+                                    filter === "all" ? "bg-primary/20 text-primary" : "bg-muted text-foreground"
+                                )}>
+                                    {counts.all}
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setFilter("attention")}
+                                className={cn(
+                                    "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
+                                    filter === "attention"
+                                        ? "bg-amber-600 text-white shadow-xs font-black"
+                                        : "text-slate-600 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+                                )}
+                            >
+                                <AlertCircle className="size-3.5 shrink-0" />
+                                <span>{t("To Verify")}</span>
+                                <span className={cn(
+                                    "text-[11px] px-1.5 py-0.5 rounded-md font-mono font-bold",
+                                    filter === "attention" ? "bg-white/20 text-white" : "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300"
+                                )}>
+                                    {counts.attention}
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setFilter("late")}
+                                className={cn(
+                                    "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
+                                    filter === "late"
+                                        ? "bg-rose-600 text-white shadow-xs font-black"
+                                        : "text-slate-600 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                )}
+                            >
+                                <CalendarDays className="size-3.5 shrink-0" />
+                                <span>{t("Overdue")}</span>
+                                <span className={cn(
+                                    "text-[11px] px-1.5 py-0.5 rounded-md font-mono font-bold",
+                                    filter === "late" ? "bg-white/20 text-white" : "bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-300"
+                                )}>
+                                    {counts.late}
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setFilter("waiting")}
+                                className={cn(
+                                    "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
+                                    filter === "waiting"
+                                        ? "bg-card text-foreground shadow-xs font-black border border-border/80"
+                                        : "text-slate-600 dark:text-zinc-400 hover:text-foreground hover:bg-card/80"
+                                )}
+                            >
+                                <Clock className="size-3.5 shrink-0" />
+                                <span>{t("Awaiting")}</span>
+                                <span className={cn(
+                                    "text-[11px] px-1.5 py-0.5 rounded-md font-mono font-bold",
+                                    filter === "waiting" ? "bg-primary/20 text-primary" : "bg-muted text-foreground"
+                                )}>
+                                    {counts.waiting}
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setFilter("paid")}
+                                className={cn(
+                                    "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
+                                    filter === "paid"
+                                        ? "bg-emerald-700 text-white shadow-xs font-black"
+                                        : "text-slate-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                                )}
+                            >
+                                <CheckCircle2 className="size-3.5 shrink-0" />
+                                <span>{t("Paid")}</span>
+                                <span className={cn(
+                                    "text-[11px] px-1.5 py-0.5 rounded-md font-mono font-bold",
+                                    filter === "paid" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300"
+                                )}>
+                                    {counts.paid}
+                                </span>
+                            </button>
                         </div>
 
-                        {/* Status pills, then method / sort / view on the same row */}
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                            {/* Segmented Filter Pills */}
-                            <div className="inline-flex items-center gap-1 rounded-xl bg-muted/60 p-1 border border-border overflow-x-auto max-w-full">
+                        <div className="flex flex-wrap items-center gap-2 px-1">
+                            {method !== "all" && (
                                 <button
                                     type="button"
-                                    onClick={() => setFilter("all")}
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
-                                        filter === "all"
-                                            ? "bg-card text-foreground shadow-xs font-black border border-border/80"
-                                            : "text-slate-600 dark:text-zinc-400 hover:text-foreground hover:bg-card/80"
-                                    )}
+                                    onClick={() => setMethod("all")}
+                                    className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary hover:bg-primary/20 cursor-pointer"
                                 >
-                                    <span>{t("All")}</span>
-                                    <span className={cn(
-                                        "text-[11px] px-1.5 py-0.5 rounded-md font-mono font-bold",
-                                        filter === "all" ? "bg-primary/20 text-primary" : "bg-muted text-foreground"
-                                    )}>
-                                        {counts.all}
-                                    </span>
+                                    <span>{method === "gcash" ? "GCash" : method === "bank_transfer" ? t("Bank Transfer") : t("Cash")}</span>
+                                    <X className="size-3" />
                                 </button>
-
+                            )}
+                            {proofFilter !== "all" && (
                                 <button
                                     type="button"
-                                    onClick={() => setFilter("attention")}
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
-                                        filter === "attention"
-                                            ? "bg-amber-600 text-white shadow-xs font-black"
-                                            : "text-slate-600 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40"
-                                    )}
+                                    onClick={() => setProofFilter("all")}
+                                    className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary hover:bg-primary/20 cursor-pointer"
                                 >
-                                    <AlertCircle className="size-3.5 shrink-0" />
-                                    <span>{t("To Verify")}</span>
-                                    <span className={cn(
-                                        "text-[11px] px-1.5 py-0.5 rounded-md font-mono font-bold",
-                                        filter === "attention" ? "bg-white/20 text-white" : "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300"
-                                    )}>
-                                        {counts.attention}
-                                    </span>
+                                    <span>{proofFilter === "with_pop" ? t("With Proof") : t("No Proof")}</span>
+                                    <X className="size-3" />
                                 </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setFilter("late")}
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
-                                        filter === "late"
-                                            ? "bg-rose-600 text-white shadow-xs font-black"
-                                            : "text-slate-600 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                                    )}
-                                >
-                                    <CalendarDays className="size-3.5 shrink-0" />
-                                    <span>{t("Overdue")}</span>
-                                    <span className={cn(
-                                        "text-[11px] px-1.5 py-0.5 rounded-md font-mono font-bold",
-                                        filter === "late" ? "bg-white/20 text-white" : "bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-300"
-                                    )}>
-                                        {counts.late}
-                                    </span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setFilter("waiting")}
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
-                                        filter === "waiting"
-                                            ? "bg-card text-foreground shadow-xs font-black border border-border/80"
-                                            : "text-slate-600 dark:text-zinc-400 hover:text-foreground hover:bg-card/80"
-                                    )}
-                                >
-                                    <Clock className="size-3.5 shrink-0" />
-                                    <span>{t("Awaiting")}</span>
-                                    <span className={cn(
-                                        "text-[11px] px-1.5 py-0.5 rounded-md font-mono font-bold",
-                                        filter === "waiting" ? "bg-primary/20 text-primary" : "bg-muted text-foreground"
-                                    )}>
-                                        {counts.waiting}
-                                    </span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setFilter("paid")}
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
-                                        filter === "paid"
-                                            ? "bg-emerald-700 text-white shadow-xs font-black"
-                                            : "text-slate-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
-                                    )}
-                                >
-                                    <CheckCircle2 className="size-3.5 shrink-0" />
-                                    <span>{t("Paid")}</span>
-                                    <span className={cn(
-                                        "text-[11px] px-1.5 py-0.5 rounded-md font-mono font-bold",
-                                        filter === "paid" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300"
-                                    )}>
-                                        {counts.paid}
-                                    </span>
-                                </button>
-                            </div>
-
-                            {/* Method & Sorting Filters */}
-                            <div className="flex flex-wrap items-center gap-2">
-                                <select
-                                    value={method}
-                                    onChange={(e) => setMethod(e.target.value as MethodId)}
-                                    aria-label={t("Filter by payment method")}
-                                    className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-bold text-foreground outline-none transition-all hover:bg-muted/50 focus:border-primary shadow-xs cursor-pointer"
-                                >
-                                    <option value="all">{t("All Methods")}</option>
-                                    <option value="gcash">GCash</option>
-                                    <option value="bank_transfer">{t("Bank Transfer")}</option>
-                                    <option value="cash">{t("Cash / In-Person")}</option>
-                                </select>
-
-                                <select
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value as SortId)}
-                                    aria-label={t("Sort bills by")}
-                                    className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-bold text-foreground outline-none transition-all hover:bg-muted/50 focus:border-primary shadow-xs cursor-pointer"
-                                >
-                                    <option value="newest">{t("Newest First")}</option>
-                                    <option value="oldest">{t("Oldest First")}</option>
-                                    <option value="tenant_az">{t("Tenant (A-Z)")}</option>
-                                    <option value="highest_amount">{t("Highest Amount")}</option>
-                                    <option value="lowest_amount">{t("Lowest Amount")}</option>
-                                </select>
-
-                                {/* View Switcher: Table vs Cards */}
-                                <div className="inline-flex items-center rounded-xl border border-border bg-background p-1 shadow-xs">
-                                    <button
-                                        type="button"
-                                        onClick={() => setViewMode("table")}
-                                        aria-label={t("Table view")}
-                                        title={t("Table view")}
-                                        className={cn(
-                                            "flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer",
-                                            viewMode === "table"
-                                                ? "bg-card text-foreground shadow-xs border border-border/80"
-                                                : "text-muted-foreground hover:text-foreground"
-                                        )}
-                                    >
-                                        <LayoutList className="size-3.5" />
-                                        <span className="hidden sm:inline">{t("Table")}</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setViewMode("cards")}
-                                        aria-label={t("Cards view")}
-                                        title={t("Cards view")}
-                                        className={cn(
-                                            "flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer",
-                                            viewMode === "cards"
-                                                ? "bg-card text-foreground shadow-xs border border-border/80"
-                                                : "text-muted-foreground hover:text-foreground"
-                                        )}
-                                    >
-                                        <LayoutGrid className="size-3.5" />
-                                        <span className="hidden sm:inline">{t("Cards")}</span>
-                                    </button>
-                                </div>
-
-                            </div>
+                            )}
+                            <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground tabular-nums">
+                                {visibleInvoices.length} {t("Issued Invoices")}
+                            </p>
                         </div>
                     </div>
 
@@ -778,7 +910,7 @@ export default function InvoicesPage() {
                             {invoices.length > 0 && (filter !== "all" || search || method !== "all") && (
                                 <button
                                     type="button"
-                                    onClick={() => { setFilter("all"); setSearch(""); setMethod("all"); }}
+                                    onClick={() => { setFilter("all"); setSearch(""); setMethod("all"); setProofFilter("all"); }}
                                     className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-bold text-foreground hover:bg-muted"
                                 >
                                     <RefreshCw className="size-3.5" />
@@ -790,7 +922,7 @@ export default function InvoicesPage() {
 
                     {/* Invoices: Table View (Adhering to Tufte, Alignment, Fitts, and Miller Laws) */}
                     {!loading && visibleInvoices.length > 0 && viewMode === "table" && (
-                        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
+                        <div className="overflow-hidden rounded-2xl border border-border/50 neumorphic-panel">
                             {/* Hidden columns come back from here: one small chip each, only when something is hidden */}
                             {hiddenColumns.size > 0 && (
                                 <div className="flex flex-wrap items-center justify-end gap-1.5 border-b border-border bg-muted/20 px-4 py-2">
@@ -897,13 +1029,12 @@ export default function InvoicesPage() {
 
             {/* TAB 2: UNIFIED LEDGER */}
             {section === "ledger" && (
-                <div ref={ledgerTopRef} className="flex min-h-[50vh] flex-col rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xs animate-in fade-in">
-                    <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border pb-6">
+                <div ref={ledgerTopRef} className="flex min-h-[50vh] flex-col rounded-2xl md:rounded-[1.75rem] border border-border/50 neumorphic-panel p-6 sm:p-8 animate-in fade-in">
+                    <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/60 pb-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <p className="text-xs font-black uppercase tracking-[0.25em] text-primary">{t("Audit Trail")}</p>
-                                <h2 className="mt-1 text-2xl font-black text-foreground lg:text-3xl">{t("Unified Financial Ledger")}</h2>
-                                <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mt-0.5">
+                                <h2 className="text-xl font-black tracking-tight text-foreground sm:text-2xl">{t("Unified Financial Ledger")}</h2>
+                                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                                     {t("Chronological record of every collected payment and property expense.")}
                                 </p>
                             </div>
@@ -987,9 +1118,23 @@ export default function InvoicesPage() {
                                                                 )}
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <p className="font-bold text-sm text-foreground capitalize truncate">
-                                                                    {entry.title}
-                                                                </p>
+                                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                                    {entry.type === "income" && entry.tenantName && (
+                                                                        <span
+                                                                            className="inline-flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/50"
+                                                                            style={{ backgroundColor: getSafeAvatarBgColor(entry.tenantAvatarBgColor) }}
+                                                                        >
+                                                                            <img
+                                                                                src={entry.tenantAvatarUrl || DEFAULT_AVATAR_URL}
+                                                                                alt={entry.tenantName}
+                                                                                className="size-full object-cover"
+                                                                            />
+                                                                        </span>
+                                                                    )}
+                                                                    <p className="font-bold text-sm text-foreground capitalize truncate">
+                                                                        {entry.title}
+                                                                    </p>
+                                                                </div>
                                                                 {entry.detail && (
                                                                     <p className="text-xs text-muted-foreground font-normal truncate mt-0.5">
                                                                         {entry.detail}
@@ -1050,13 +1195,12 @@ export default function InvoicesPage() {
 
             {/* TAB 3: EXPENSES */}
             {section === "expenses" && (
-                <div ref={expensesTopRef} className="flex min-h-[50vh] flex-col rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xs animate-in fade-in">
-                    <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border pb-6">
+                <div ref={expensesTopRef} className="flex min-h-[50vh] flex-col rounded-2xl md:rounded-[1.75rem] border border-border/50 neumorphic-panel p-6 sm:p-8 animate-in fade-in">
+                    <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/60 pb-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <p className="text-xs font-black uppercase tracking-[0.25em] text-primary">{t("Outflow & Costs")}</p>
-                                <h2 className="mt-1 text-2xl font-black text-foreground lg:text-3xl">{t("Property Expenses")}</h2>
-                                <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mt-0.5">
+                                <h2 className="text-xl font-black tracking-tight text-foreground sm:text-2xl">{t("Property Expenses")}</h2>
+                                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                                     {t("Log building maintenance, utility bills you cover, and property taxes.")}
                                 </p>
                             </div>
@@ -1208,6 +1352,7 @@ function HeroStat({
     label,
     value,
     highlight,
+    iconBg,
     loading,
     subtext,
     icon: Icon,
@@ -1215,29 +1360,34 @@ function HeroStat({
     label: string;
     value: string;
     highlight?: string;
+    iconBg?: string;
     loading?: boolean;
     subtext?: string;
     icon?: LucideIcon;
 }) {
     return (
-        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+        <div className="rounded-2xl border border-border/50 neumorphic-panel p-5 sm:p-6 flex flex-col justify-between transition-colors hover:border-border/90">
             <div>
-                <div className="flex items-center justify-between gap-2">
-                    <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-                    {Icon && <Icon className={cn("size-4 shrink-0 opacity-70", highlight)} />}
+                <div className="flex items-center justify-between gap-3">
+                    <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+                    {Icon && (
+                        <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl", iconBg ?? "bg-muted text-muted-foreground")}>
+                            <Icon className="size-4" aria-hidden />
+                        </span>
+                    )}
                 </div>
                 {loading ? (
                     <div className="mt-3 flex items-center">
                         <Skeleton className="h-8 w-32 rounded-xl bg-muted" />
                     </div>
                 ) : (
-                    <p className={cn("mt-2 text-2xl sm:text-3xl font-bold tracking-tight tabular-nums", highlight)}>
+                    <p className={cn("mt-2 text-2xl sm:text-3xl font-black tracking-tight tabular-nums", highlight)}>
                         {value}
                     </p>
                 )}
             </div>
             {subtext && (
-                <p className="mt-3 text-xs font-normal text-muted-foreground border-t border-border/60 pt-2.5">
+                <p className="mt-3 text-xs font-normal text-muted-foreground border-t border-border/50 pt-2.5">
                     {subtext}
                 </p>
             )}
@@ -1277,6 +1427,8 @@ function InvoiceTableRow({ invoice, onOpen, isColumnShown }: { invoice: InvoiceL
     const isPaid = plain.group === "paid";
     const isAttention = plain.group === "attention";
     const isLate = plain.group === "late";
+    const avatarUrl = invoice.tenantAvatarUrl || DEFAULT_AVATAR_URL;
+    const avatarBg = getSafeAvatarBgColor(invoice.tenantAvatarBgColor);
 
     return (
         <tr
@@ -1289,21 +1441,42 @@ function InvoiceTableRow({ invoice, onOpen, isColumnShown }: { invoice: InvoiceL
                 }
             }}
             aria-label={t("Open bill for {name}, Unit {unit}", { name: invoice.tenant, unit: invoice.unit })}
-            className="group cursor-pointer transition-colors hover:bg-muted/40 focus-visible:bg-muted/50 outline-none select-none"
+            className="group cursor-pointer transition-colors hover:bg-muted/35 focus-visible:bg-muted/50 outline-none select-none"
         >
-            {/* Column 1: Tenant & Unit (Left Aligned - Anchor) */}
+            {/* Column 1: Tenant & Unit (Left Aligned - PFP Anchor) */}
             <td className="py-3.5 pl-5 pr-4 align-middle">
-                <div className="min-w-0">
-                    <p className="font-bold text-sm text-foreground group-hover:text-primary transition-colors tracking-tight truncate">
-                        {invoice.tenant}
-                    </p>
-                    <p className="text-xs text-muted-foreground font-normal truncate mt-0.5">
-                        <span>{t("Unit {unit}", { unit: invoice.unit })}</span>
-                        <span className="mx-1.5 opacity-40">·</span>
-                        <span>{invoice.property}</span>
-                        <span className="mx-1.5 opacity-40">·</span>
-                        <span className="font-mono text-[11px] opacity-75">{invoice.invoiceNumber}</span>
-                    </p>
+                <div className="flex items-center gap-3 min-w-0">
+                    <div
+                        className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/50 shadow-xs"
+                        style={{ backgroundColor: avatarBg }}
+                    >
+                        <img
+                            src={avatarUrl}
+                            alt={invoice.tenant}
+                            className="size-full object-cover"
+                        />
+                    </div>
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <p className="font-bold text-sm text-foreground group-hover:text-primary transition-colors tracking-tight truncate">
+                                {invoice.tenant}
+                            </p>
+                            {invoice.paymentProofUrl && (
+                                <span
+                                    title={t("Receipt photo attached")}
+                                    className="inline-flex shrink-0 items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary"
+                                >
+                                    <Receipt className="size-2.5" aria-hidden />
+                                    {t("Proof")}
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-xs text-muted-foreground font-normal truncate mt-0.5">
+                            <span>{t("Unit {unit}", { unit: invoice.unit })}</span>
+                            <span className="mx-1.5 opacity-40">·</span>
+                            <span className="font-mono text-[11px] opacity-80">{invoice.invoiceNumber}</span>
+                        </p>
+                    </div>
                 </div>
             </td>
 

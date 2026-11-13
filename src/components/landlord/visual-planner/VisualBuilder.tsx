@@ -339,15 +339,7 @@ const ComplaintModal = ({
 
 
 
-export default function VisualBuilder({
-    readOnly = false,
-    propertyId: externalPropertyId,
-    propertyName: externalPropertyName,
-    propertyAddress: externalPropertyAddress,
-    demoMode = false,
-    showBackButton = false,
-    currentUnitId
-}: {
+export interface VisualBuilderProps {
     readOnly?: boolean;
     propertyId?: string;
     propertyName?: string;
@@ -355,7 +347,19 @@ export default function VisualBuilder({
     demoMode?: boolean;
     showBackButton?: boolean;
     currentUnitId?: string;
-} = {}) {
+    mobileEmbedded?: boolean;
+}
+
+export default function VisualBuilder({
+    readOnly = false,
+    propertyId: externalPropertyId,
+    propertyName: externalPropertyName,
+    propertyAddress: externalPropertyAddress,
+    demoMode = false,
+    showBackButton = false,
+    currentUnitId,
+    mobileEmbedded = false,
+}: VisualBuilderProps = {}) {
     const { t, locale } = useLanguageContext();
     const router = useRouter();
     const { back } = router;
@@ -510,7 +514,61 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 : [...prev, status]
         );
     };
-    const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+    const [isMobileViewport, setIsMobileViewport] = useState(false);
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const mq = window.matchMedia("(max-width: 767px)");
+        const update = () => setIsMobileViewport(mq.matches);
+        update();
+        if (typeof mq.addEventListener === "function") {
+            mq.addEventListener("change", update);
+            return () => mq.removeEventListener("change", update);
+        }
+        mq.addListener(update);
+        return () => mq.removeListener(update);
+    }, []);
+    const isMobileUI = Boolean(mobileEmbedded || isMobileViewport);
+    const [isSidebarVisible, setIsSidebarVisible] = useState(() => {
+        if (mobileEmbedded) return false;
+        if (typeof window !== "undefined") {
+            return !window.matchMedia("(max-width: 767px)").matches;
+        }
+        return true;
+    });
+    const [isMobileDetailsOpen, setIsMobileDetailsOpen] = useState(false);
+    const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
+    const prevIsMobileUIRef = useRef(isMobileUI);
+    useEffect(() => {
+        if (isMobileUI && !prevIsMobileUIRef.current) {
+            setIsSidebarVisible(false);
+            setIsMobileDetailsOpen(false);
+            setIsNotesPanelOpen(false);
+        }
+        prevIsMobileUIRef.current = isMobileUI;
+    }, [isMobileUI]);
+    useEffect(() => {
+        if (!selectedItem) {
+            setIsMobileDetailsOpen(false);
+            setIsNotesPanelOpen(false);
+        }
+    }, [selectedItem]);
+    useEffect(() => {
+        if (!isMobileUI || (!isSidebarVisible && !isMobileDetailsOpen && !isNotesPanelOpen)) return;
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                if (isNotesPanelOpen) {
+                    setIsNotesPanelOpen(false);
+                    return;
+                }
+                setIsSidebarVisible(false);
+                setIsMobileDetailsOpen(false);
+            }
+        };
+        window.addEventListener("keydown", handleEsc);
+        return () => window.removeEventListener("keydown", handleEsc);
+    }, [isMobileUI, isSidebarVisible, isMobileDetailsOpen, isNotesPanelOpen]);
+    const pinchStateRef = useRef<{ initialDistance: number; initialScale: number } | null>(null);
+    const lastTapRef = useRef<{ kind: CanvasItemKind; id: string; time: number } | null>(null);
     const [sidebarBlockGhost, setSidebarBlockGhost] = useState<SidebarBlockGhost | null>(null);
     const [resizingCorridorId, setResizingCorridorId] = useState<string | null>(null);
     const [floorLayouts, setFloorLayouts] = useState<Record<FloorId, FloorLayout>>(demoMode ? {
@@ -525,7 +583,6 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     } : DEFAULT_FLOOR_LAYOUTS);
     const [hasHydratedFloorState, setHasHydratedFloorState] = useState(demoMode);
     const [isRenamingFloor, setIsRenamingFloor] = useState(false);
-    const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
     const [unitNotes, setUnitNotes] = useState<UnitNotesState>(EMPTY_OBJECT);
     const [floatingNoteUnitId, setFloatingNoteUnitId] = useState<string | null>(null);
     const [showQuickMessages, setShowQuickMessages] = useState<boolean>(() => {
@@ -871,6 +928,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     useEffect(() => {
         if (typeof window === "undefined") return;
+        if (readOnly) {
+            setUnitNotes({});
+            return;
+        }
         try {
             const raw = window.localStorage.getItem(SCOPED_UNIT_NOTES_KEY);
             if (!raw) {
@@ -884,15 +945,15 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         } catch {
             setUnitNotes({});
         }
-    }, [SCOPED_UNIT_NOTES_KEY]);
+    }, [SCOPED_UNIT_NOTES_KEY, readOnly]);
 
     useEffect(() => {
-        if (typeof window === "undefined") return;
+        if (typeof window === "undefined" || readOnly) return;
         const timeoutId = window.setTimeout(() => {
             window.localStorage.setItem(SCOPED_UNIT_NOTES_KEY, JSON.stringify(unitNotes));
         }, 250);
         return () => window.clearTimeout(timeoutId);
-    }, [unitNotes, SCOPED_UNIT_NOTES_KEY]);
+    }, [unitNotes, SCOPED_UNIT_NOTES_KEY, readOnly]);
     const [editingFloorName, setEditingFloorName] = useState("");
     const scaleRef = useRef(scale);
     const positionRef = useRef(position);
@@ -1494,6 +1555,17 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
         e.preventDefault();
         e.stopPropagation();
+        if (isMobileUI) {
+            const now = Date.now();
+            const prevTap = lastTapRef.current;
+            if (prevTap && prevTap.kind === kind && prevTap.id === id && now - prevTap.time < 320 && kind !== "corridor") {
+                setIsMobileDetailsOpen(true);
+                setIsSidebarVisible(false);
+                lastTapRef.current = null;
+            } else {
+                lastTapRef.current = { kind, id, time: now };
+            }
+        }
         setSelectedItem({ kind, id });
         setFloatingNoteUnitId(null);
         setFloatingChatUnitId(null);
@@ -1998,7 +2070,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     };
 
     const handleViewportPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-        if (draggingUnitId !== null || draggingCorridorId !== null || draggingStructureId !== null || e.button !== 0) return;
+        if (draggingUnitId !== null || draggingCorridorId !== null || draggingStructureId !== null || e.button !== 0 || pinchStateRef.current !== null) return;
         const target = e.target as HTMLElement;
         if (
             target.closest('[data-unit-card="true"]') ||
@@ -2014,6 +2086,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         }
 
         setSelectedItem(null);
+        setIsMobileDetailsOpen(false);
+        setIsNotesPanelOpen(false);
         setTooltipUnit(null);
         setFloatingNoteUnitId(null);
         setFloatingChatUnitId(null);
@@ -2027,6 +2101,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     };
 
     const handleViewportPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (pinchStateRef.current !== null) return;
         if (!isPanningRef.current || panPointerIdRef.current !== e.pointerId) return;
 
         const deltaX = e.clientX - panStartPointerRef.current.x;
@@ -2045,6 +2120,37 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         panPointerIdRef.current = null;
         if (e.currentTarget.hasPointerCapture(e.pointerId)) {
             e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+    };
+
+    const handleCanvasTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (e.touches.length === 2) {
+            const [t1, t2] = [e.touches[0], e.touches[1]];
+            const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+            if (dist > 0) {
+                pinchStateRef.current = { initialDistance: dist, initialScale: scaleRef.current };
+                isPanningRef.current = false;
+                setIsPanning(false);
+                panPointerIdRef.current = null;
+            }
+        }
+    };
+
+    const handleCanvasTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (e.touches.length === 2 && pinchStateRef.current) {
+            const [t1, t2] = [e.touches[0], e.touches[1]];
+            const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+            if (dist > 0 && pinchStateRef.current.initialDistance > 0) {
+                const ratio = dist / pinchStateRef.current.initialDistance;
+                const nextScale = Math.min(Math.max(pinchStateRef.current.initialScale * ratio, 0.4), 2.5);
+                setScale(nextScale);
+            }
+        }
+    };
+
+    const handleCanvasTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (e.touches.length < 2) {
+            pinchStateRef.current = null;
         }
     };
 
@@ -2703,15 +2809,23 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [selectedItem, units, corridors, structures, performUndo, rotateSelectedItem, readOnly]);
 
-    const handleSidebarBlockDragStart = (blockType: SidebarBlockType, dbUnitId?: string) => (e: React.DragEvent<HTMLDivElement>) => {
-        let payload = blockType === "studio"
-            ? { blockType, label: "Studio", unitType: "Studio" as const, w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }
+    const getSidebarBlockPayload = (blockType: SidebarBlockType, dbUnitId?: string) => {
+        let payload: {
+            blockType: SidebarBlockType;
+            label: string;
+            unitType?: "Studio" | "1BR" | "2BR" | "3BR";
+            w: number;
+            h: number;
+            variant?: string;
+            dbUnitId?: string;
+        } = blockType === "studio"
+            ? { blockType, label: "Studio", unitType: "Studio", w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }
             : blockType === "1br"
-                ? { blockType, label: "1 BR Std", unitType: "1BR" as const, w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }
+                ? { blockType, label: "1 BR Std", unitType: "1BR", w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }
                 : blockType === "2br"
-                    ? { blockType, label: "2 BR Corner", unitType: "2BR" as const, w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }
+                    ? { blockType, label: "2 BR Corner", unitType: "2BR", w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }
                     : blockType === "3br"
-                        ? { blockType, label: "3 BR Suite", unitType: "3BR" as const, w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }
+                        ? { blockType, label: "3 BR Suite", unitType: "3BR", w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }
                         : blockType === "corridor"
                             ? { blockType, label: "Corridor", w: 260, h: 60 }
                             : blockType === "elevator"
@@ -2735,9 +2849,47 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 payload = { ...payload, w: dims.w, h: dims.h };
             }
         }
+        return { ...payload, dbUnitId };
+    };
 
-        activeSidebarDragRef.current = { ...payload, dbUnitId };
-        e.dataTransfer.setData(SIDEBAR_BLOCK_DRAG_TYPE, JSON.stringify({ ...payload, dbUnitId }));
+    const findOpenPlacementNearCenter = (w: number, h: number) => {
+        let baseX = 50;
+        let baseY = 50;
+        const container = containerRef.current;
+        if (container) {
+            const rect = container.getBoundingClientRect();
+            const centerWorld = getWorldPointFromClientPoint(
+                rect.left + rect.width / 2,
+                rect.top + rect.height / 2
+            );
+            if (centerWorld) {
+                baseX = clampUnitAxis(snapToGrid(centerWorld.x - w / 2), w, BLUEPRINT_WIDTH);
+                baseY = clampUnitAxis(snapToGrid(centerWorld.y - h / 2), h, BLUEPRINT_HEIGHT);
+            }
+        }
+
+        const MAX_ATTEMPTS = 24;
+        for (let i = 0; i < MAX_ATTEMPTS; i++) {
+            const candidateX = clampUnitAxis(snapToGrid(baseX + i * 40), w, BLUEPRINT_WIDTH);
+            const candidateY = clampUnitAxis(snapToGrid(baseY + i * 40), h, BLUEPRINT_HEIGHT);
+            if (!hasCollisionWithPlacedItems({ x: candidateX, y: candidateY, w, h })) {
+                return { x: candidateX, y: candidateY };
+            }
+        }
+        for (let i = 0; i < MAX_ATTEMPTS; i++) {
+            const candidateX = clampUnitAxis(snapToGrid(50 + i * 40), w, BLUEPRINT_WIDTH);
+            const candidateY = clampUnitAxis(snapToGrid(50 + i * 40), h, BLUEPRINT_HEIGHT);
+            if (!hasCollisionWithPlacedItems({ x: candidateX, y: candidateY, w, h })) {
+                return { x: candidateX, y: candidateY };
+            }
+        }
+        return { x: baseX, y: baseY };
+    };
+
+    const handleSidebarBlockDragStart = (blockType: SidebarBlockType, dbUnitId?: string) => (e: React.DragEvent<HTMLDivElement>) => {
+        const payload = getSidebarBlockPayload(blockType, dbUnitId);
+        activeSidebarDragRef.current = payload;
+        e.dataTransfer.setData(SIDEBAR_BLOCK_DRAG_TYPE, JSON.stringify(payload));
         e.dataTransfer.effectAllowed = "copy";
     };
 
@@ -2746,21 +2898,98 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         activeSidebarDragRef.current = null;
     };
 
+    const handleSidebarBlockClick = (blockType: SidebarBlockType) => {
+        if (readOnly) return;
+        const parsed = getSidebarBlockPayload(blockType);
+        const { x: clampedX, y: clampedY } = findOpenPlacementNearCenter(parsed.w, parsed.h);
+
+        playSound("map_add");
+        updateCanvasDimensions({
+            kind: parsed.blockType === "corridor" ? "corridor" : (parsed.blockType?.includes("stair") || parsed.blockType === "elevator" || parsed.blockType?.includes("facility")) ? "structure" : "unit",
+            id: "temp-tap-place",
+            x: clampedX,
+            y: clampedY,
+            w: parsed.w,
+            h: parsed.h
+        });
+
+        if (parsed.blockType === "corridor") {
+            const newId = `corridor-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+            setCorridors(prev => ([
+                ...prev,
+                {
+                    id: newId,
+                    label: parsed.label ?? "Corridor",
+                    x: clampedX,
+                    y: clampedY,
+                    w: parsed.w,
+                    h: parsed.h,
+                },
+            ]));
+            setSelectedItem({ kind: "corridor", id: newId });
+        } else if (parsed.blockType === "studio" || parsed.blockType === "1br" || parsed.blockType === "2br" || parsed.blockType === "3br") {
+            let createdId = "";
+            setUnits(prev => {
+                const highestNumericId = prev.reduce((highest, unit) => {
+                    const numeric = Number.parseInt(unit.id, 10);
+                    return Number.isNaN(numeric) ? highest : Math.max(highest, numeric);
+                }, 100);
+                const nextNumericId = highestNumericId + 1;
+                createdId = String(nextNumericId);
+                return [
+                    ...prev,
+                    {
+                        id: createdId,
+                        dbId: "",
+                        name: `Unit ${createdId}`,
+                        type: parsed.unitType ?? "Studio",
+                        status: "vacant",
+                        x: clampedX,
+                        y: clampedY,
+                        w: parsed.w,
+                        h: parsed.h,
+                        details: parsed.label,
+                    },
+                ];
+            });
+            if (createdId) {
+                setSelectedItem({ kind: "unit", id: createdId });
+            }
+        } else {
+            const structureType: Structure["type"] = parsed.blockType === "elevator" ? "elevator" : parsed.blockType?.includes("facility") ? "facility" : "stairwell";
+            const newId = `structure-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+            setStructures(prev => ([
+                ...prev,
+                {
+                    id: newId,
+                    type: structureType,
+                    variant: parsed.variant as Structure["variant"],
+                    rotation: 0,
+                    label: parsed.label ?? (structureType === "elevator" ? "Elevator" : structureType === "facility" ? "Facility" : "Stairwell"),
+                    x: clampedX,
+                    y: clampedY,
+                    w: parsed.w,
+                    h: parsed.h,
+                },
+            ]));
+            setSelectedItem({ kind: "structure", id: newId });
+        }
+
+        if (isMobileUI) {
+            setIsSidebarVisible(false);
+            setIsMobileDetailsOpen(false);
+        }
+    };
+
     const handleUnplacedUnitClick = (dbUnit: DbUnit) => {
         if (readOnly) return;
         const dims = getPlacementDimensions(dbUnit, units);
         const w = dims.w;
         const h = dims.h;
-        let x = 50;
-        let y = 50;
-        const MAX_ATTEMPTS = 20;
-        for (let i = 0; i < MAX_ATTEMPTS; i++) {
-            if (!hasCollisionWithPlacedItems({ x, y, w, h })) break;
-            x += 40;
-            y += 40;
-        }
+        const { x, y } = findOpenPlacementNearCenter(w, h);
         const activeFloorConfig = floorConfigs.find(fc => fc.floor_key === activeFloor);
         const activeFloorNum = activeFloorConfig ? activeFloorConfig.floor_number : (parseFloorNumber(activeFloor) ?? 1);
+        playSound("map_add");
         setUnits(prev => [
             ...prev,
             {
@@ -2785,6 +3014,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             return next;
         });
         setSelectedItem({ kind: "unit", id: dbUnit.id });
+        if (isMobileUI) {
+            setIsSidebarVisible(false);
+            setIsMobileDetailsOpen(false);
+        }
     };
 
     const handleBlueprintDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -4014,6 +4247,117 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             {/* Header */}
             <AnimatePresence>
                 {!isCanvasFullscreen && (
+                    isMobileUI ? (
+                        <motion.header
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className={`flex flex-col gap-2 px-3 py-2 shrink-0 z-20 backdrop-blur ${isDark ? 'bg-surface-dark border-b border-zinc-800 shadow-none' : 'bg-card/95 border-b border-border shadow-sm'}`}
+                        >
+                            <div className="flex items-center justify-between gap-2 min-w-0">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    {showBackButton && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (typeof window !== "undefined") {
+                                                    try {
+                                                        window.localStorage.setItem(SCOPED_AWAITING_TENANT_SETUP_KEY, "true");
+                                                    } catch {}
+                                                }
+                                                back();
+                                            }}
+                                            aria-label={t("Go back")}
+                                            className={`size-9 shrink-0 rounded-full flex items-center justify-center border transition-colors ${isDark ? 'bg-zinc-800 border-zinc-700 text-zinc-200' : 'bg-white border-neutral-200 text-zinc-700 shadow-xs'}`}
+                                        >
+                                            <ChevronLeft className="size-4" />
+                                        </button>
+                                    )}
+                                    <div className="min-w-0">
+                                        <h1 className={`text-sm font-black truncate max-w-[140px] ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>
+                                            {activePropertyName || t("All Properties")}
+                                        </h1>
+                                        {!readOnly ? (
+                                            <div className={`flex items-center gap-1.5 text-[10px] font-bold ${
+                                                saveStatus === "idle" ? "text-zinc-400" :
+                                                saveStatus === "waiting" ? "text-amber-500" :
+                                                saveStatus === "saving" ? "text-primary" :
+                                                "text-emerald-500"
+                                            }`}>
+                                                <span className={`size-1.5 rounded-full ${
+                                                    saveStatus === "idle" ? "bg-emerald-500" :
+                                                    saveStatus === "waiting" ? "bg-amber-500 animate-pulse" :
+                                                    saveStatus === "saving" ? "bg-primary animate-pulse" :
+                                                    "bg-emerald-500"
+                                                }`} />
+                                                <span className="truncate">
+                                                    {saveStatus === "idle" ? t("Saved") :
+                                                     saveStatus === "waiting" ? t("Pending…") :
+                                                     saveStatus === "saving" ? t("Saving…") : t("Saved")}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                                                <span className="size-1.5 rounded-full bg-emerald-500" />
+                                                {t("View Only")}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className={`shrink-0 p-0.5 rounded-xl border flex items-center max-w-[165px] ${isDark ? 'bg-background-dark/90 border-zinc-700' : 'bg-background/90 border-border shadow-xs'}`}>
+                                    {!readOnly && isRenamingFloor ? (
+                                        <input
+                                            type="text"
+                                            maxLength={60}
+                                            value={editingFloorName}
+                                            onChange={(e) => setEditingFloorName(e.target.value)}
+                                            onBlur={() => {
+                                                setFloorLayouts(prev => ({
+                                                    ...prev,
+                                                    [activeFloor]: {
+                                                        ...prev[activeFloor],
+                                                        name: editingFloorName.trim() || undefined
+                                                    }
+                                                }));
+                                                setIsRenamingFloor(false);
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    setFloorLayouts(prev => ({
+                                                        ...prev,
+                                                        [activeFloor]: {
+                                                            ...prev[activeFloor],
+                                                            name: editingFloorName.trim() || undefined
+                                                        }
+                                                    }));
+                                                    setIsRenamingFloor(false);
+                                                }
+                                            }}
+                                            className={`border border-primary text-xs font-black px-2 py-1 rounded w-[110px] focus:outline-none ${isDark ? 'bg-background-dark text-zinc-100' : 'bg-card text-zinc-800'}`}
+                                            placeholder={t("Floor Name")}
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <FloorSelector
+                                            floorTabs={floorTabs}
+                                            activeFloor={activeFloor}
+                                            onSelect={switchFloor}
+                                            onCreate={createFloor}
+                                            onRename={() => {
+                                                setEditingFloorName(floorLayoutsWithActiveSnapshot[activeFloor].name || getFloorDisplayLabel(activeFloor));
+                                                setIsRenamingFloor(true);
+                                            }}
+                                            isDark={isDark}
+                                            readOnly={readOnly || isMobileUI}
+                                            itemCount={activeFloorItemCount}
+                                            assignedFloorKey={assignedFloorKey}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        </motion.header>
+                    ) : (
                     <motion.header 
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 64, opacity: 1 }}
@@ -4141,12 +4485,20 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     )}
                 </div>
             </motion.header>
+                    )
         )}
         </AnimatePresence>
 
             <div className="flex-1 flex overflow-hidden">
                 <main className={`flex-1 relative overflow-hidden flex flex-col ${isDark ? 'bg-background-dark' : 'bg-background'}`}>
-                    <div className={`flex-1 overflow-hidden relative ${isPanning ? 'cursor-grabbing' : 'cursor-grab'} ${isDark ? 'bg-[#0b0d11]' : 'bg-[radial-gradient(circle_at_top_left,rgba(173,200,125,0.08),transparent_28%),linear-gradient(180deg,#f8faf6,#f1f5ef)]'} ${styles.bgGridPattern}`} ref={containerRef}>
+                    <div
+                        className={`flex-1 overflow-hidden relative touch-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'} ${isDark ? 'bg-[#0b0d11]' : 'bg-[radial-gradient(circle_at_top_left,rgba(173,200,125,0.08),transparent_28%),linear-gradient(180deg,#f8faf6,#f1f5ef)]'} ${styles.bgGridPattern}`}
+                        ref={containerRef}
+                        onTouchStart={handleCanvasTouchStart}
+                        onTouchMove={handleCanvasTouchMove}
+                        onTouchEnd={handleCanvasTouchEnd}
+                        onTouchCancel={handleCanvasTouchEnd}
+                    >
                         <motion.div
                             className="absolute inset-0 w-full h-full origin-top-left"
                             style={{
@@ -4331,7 +4683,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                              height: corridor.h,
                                              zIndex: isDragging ? 35 : 8,
                                          }}
-                                         onPointerDown={readOnly ? undefined : handleItemPointerDown("corridor", corridor.id, corridor.x, corridor.y, corridor.w, corridor.h)}
+                                         onPointerDown={(readOnly || isMobileUI) ? undefined : handleItemPointerDown("corridor", corridor.id, corridor.x, corridor.y, corridor.w, corridor.h)}
                                      >
                                             <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
                                                 <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
@@ -4350,7 +4702,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 <span className={`text-xs font-black uppercase tracking-[0.4em] px-2 ${isDark ? 'text-zinc-300' : 'text-zinc-500'} ${corridor.h > corridor.w ? '-rotate-90 whitespace-nowrap' : 'whitespace-nowrap'}`}>{t(corridor.label)}</span>
                                             </div>
 
-                                            {!readOnly && selectedItem?.kind === "corridor" && selectedItem.id === corridor.id && (
+                                            {!readOnly && !isMobileUI && selectedItem?.kind === "corridor" && selectedItem.id === corridor.id && (
                                                 <>
                                                     <div
                                                         data-resize-handle="true"
@@ -4435,7 +4787,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                              height: structure.h,
                                              zIndex: isDragging ? 35 : 9,
                                          }}
-                                         onPointerDown={readOnly ? undefined : handleItemPointerDown("structure", structure.id, structure.x, structure.y, structure.w, structure.h)}
+                                         onPointerDown={(readOnly || isMobileUI) ? undefined : handleItemPointerDown("structure", structure.id, structure.x, structure.y, structure.w, structure.h)}
                                      >
                                         {structure.type === "elevator" ? (
                                             <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
@@ -4589,8 +4941,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         const isDragging = activeDragItem?.kind === "unit" && activeDragItem?.id === unit.id;
                                         const displayX = isDragging ? activeDragItem.currentX : unit.x;
                                         const displayY = isDragging ? activeDragItem.currentY : unit.y;
-                                        const unitNoteText = unitNotes[unit.id]?.trim();
-                                        const hasNote = Boolean(unitNoteText && unitNoteText.length > 0);
+                                        const unitNoteText = !readOnly ? unitNotes[unit.id]?.trim() : undefined;
+                                        const hasNote = Boolean(!readOnly && unitNoteText && unitNoteText.length > 0);
                                         const isAnyDragging = Boolean(activeDragItem || draggingUnitId || draggingCorridorId || draggingStructureId || isPanning || sidebarBlockGhost);
                                         const isCurrentTenantUnit = Boolean(readOnly && currentUnitId && (unit.id === currentUnitId || unit.dbId === currentUnitId));
 
@@ -4628,6 +4980,17 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 onPointerDown={readOnly ? (e) => {
                                                     e.stopPropagation();
                                                     setTooltipUnit(unit);
+                                                } : isMobileUI ? (e) => {
+                                                    const target = e.target as HTMLElement;
+                                                    if (target.closest('[data-resize-handle="true"]') || target.closest('button') || target.closest('input')) {
+                                                        return;
+                                                    }
+                                                    e.stopPropagation();
+                                                    setSelectedItem({ kind: "unit", id: unit.id });
+                                                    setFloatingNoteUnitId(null);
+                                                    setFloatingChatUnitId(null);
+                                                    setIsSidebarVisible(false);
+                                                    setIsMobileDetailsOpen(true);
                                                 } : handleItemPointerDown("unit", unit.id, unit.x, unit.y, unit.w, unit.h)}
                                             >
                                                 <div className={`relative h-full w-full overflow-hidden rounded-[1px] select-none transition-all duration-300 ease-out ${
@@ -4798,7 +5161,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 )}
 
                                                 {/* Speech Bubble / Unit Note Badge */}
-                                                {hasNote && (
+                                                {!readOnly && hasNote && (
                                                     <motion.button
                                                         type="button"
                                                         data-no-pan="true"
@@ -4885,7 +5248,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
                                                 {/* Floating Note Popover */}
                                                 <AnimatePresence>
-                                                    {floatingNoteUnitId === unit.id && hasNote && !isAnyDragging && (
+                                                    {!readOnly && floatingNoteUnitId === unit.id && hasNote && !isAnyDragging && (
                                                         <motion.div
                                                             data-no-pan="true"
                                                             initial={{ opacity: 0, y: unit.y < 220 ? -10 : 10, scale: 0.94 }}
@@ -4999,6 +5362,98 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     <AnimatePresence>
                         {!isHUDHidden && (
                             <>
+                                {isMobileUI ? (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -12 }}
+                                        className="absolute top-3 inset-x-3 z-30 pointer-events-none flex flex-col items-start gap-2"
+                                    >
+                                        <div
+                                            data-no-pan="true"
+                                            className={`pointer-events-auto w-full flex flex-nowrap items-center gap-1 overflow-x-auto scrollbar-hide backdrop-blur-xl border p-1 rounded-2xl shadow-lg ${
+                                                isDark ? 'bg-zinc-900/95 border-white/10 text-white' : 'bg-card/95 border-border/80 text-foreground'
+                                            }`}
+                                        >
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleStatusFilter("vacant")}
+                                                className={`min-h-[34px] shrink-0 whitespace-nowrap flex items-center gap-1 px-2 py-1 rounded-xl text-[11px] font-bold border transition-all active:scale-95 ${
+                                                    statusFilters.includes("vacant")
+                                                        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 opacity-100'
+                                                        : 'border-transparent opacity-45'
+                                                }`}
+                                            >
+                                                <span className={`size-3.5 shrink-0 rounded border flex items-center justify-center ${statusFilters.includes("vacant") ? 'bg-emerald-500 border-emerald-500' : 'border-muted-foreground/40'}`}>
+                                                    {statusFilters.includes("vacant") && <span className="material-icons-round text-[10px] text-white">check</span>}
+                                                </span>
+                                                <span>{t("Available")}</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleStatusFilter("occupied")}
+                                                className={`min-h-[34px] shrink-0 whitespace-nowrap flex items-center gap-1 px-2 py-1 rounded-xl text-[11px] font-bold border transition-all active:scale-95 ${
+                                                    statusFilters.includes("occupied")
+                                                        ? 'bg-blue-500/15 border-blue-500/40 text-blue-700 dark:text-blue-300 opacity-100'
+                                                        : 'border-transparent opacity-45'
+                                                }`}
+                                            >
+                                                <span className={`size-3.5 shrink-0 rounded border flex items-center justify-center ${statusFilters.includes("occupied") ? 'bg-blue-500 border-blue-500' : 'border-muted-foreground/40'}`}>
+                                                    {statusFilters.includes("occupied") && <span className="material-icons-round text-[10px] text-white">check</span>}
+                                                </span>
+                                                <span>{t("Occupied")}</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleStatusFilter("maintenance")}
+                                                className={`min-h-[34px] shrink-0 whitespace-nowrap flex items-center gap-1 px-2 py-1 rounded-xl text-[11px] font-bold border transition-all active:scale-95 ${
+                                                    statusFilters.includes("maintenance")
+                                                        ? 'bg-rose-500/15 border-rose-500/40 text-rose-700 dark:text-rose-300 opacity-100'
+                                                        : 'border-transparent opacity-45'
+                                                }`}
+                                            >
+                                                <span className={`size-3.5 shrink-0 rounded border flex items-center justify-center ${statusFilters.includes("maintenance") ? 'bg-rose-500 border-rose-500' : 'border-muted-foreground/40'}`}>
+                                                    {statusFilters.includes("maintenance") && <span className="material-icons-round text-[10px] text-white">check</span>}
+                                                </span>
+                                                <span>{t("Maintenance")}</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleStatusFilter("neardue")}
+                                                className={`min-h-[34px] shrink-0 whitespace-nowrap flex items-center gap-1 px-2 py-1 rounded-xl text-[11px] font-bold border transition-all active:scale-95 ${
+                                                    statusFilters.includes("neardue")
+                                                        ? 'bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300 opacity-100'
+                                                        : 'border-transparent opacity-45'
+                                                }`}
+                                            >
+                                                <span className={`size-3.5 shrink-0 rounded border flex items-center justify-center ${statusFilters.includes("neardue") ? 'bg-amber-500 border-amber-500' : 'border-muted-foreground/40'}`}>
+                                                    {statusFilters.includes("neardue") && <span className="material-icons-round text-[10px] text-white">check</span>}
+                                                </span>
+                                                <span>{t("Near Due")}</span>
+                                            </button>
+                                        </div>
+
+                                        <div
+                                            data-no-pan="true"
+                                            className={`pointer-events-auto flex items-center gap-3 backdrop-blur-xl border px-3 py-1.5 rounded-xl shadow-md ${
+                                                isDark ? 'bg-zinc-900/90 border-white/10 text-white' : 'bg-card/95 border-border/80 text-foreground'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("Live Units")}</span>
+                                                <span className="font-mono text-xs font-bold">{units.filter(u => statusFilters.includes(getUnitVisualStatus(u))).length}</span>
+                                            </div>
+                                            <div className={`h-3.5 w-px ${isDark ? 'bg-white/10' : 'bg-border'}`} />
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("Floor Area")}</span>
+                                                <span className="font-mono text-xs font-bold">
+                                                    {totalArea.toLocaleString()} <span className="text-[10px] font-normal text-muted-foreground">sqft</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ) : (
+                                <>
                                 {/* Top Left Stats HUD */}
                                 <motion.div 
                                     initial={{ opacity: 0, x: -20 }}
@@ -5025,7 +5480,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     </div>
                                 </motion.div>
 
-                                {/* Status Legend Dock */}
+                                {/* Status Legend Dock (Desktop only) */}
                                 <motion.div 
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -5079,8 +5534,58 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         </div>
                                     </div>
                                 </motion.div>
+                                </>
+                                )}
 
                                 {/* Unified Controls Dock & Overview Minimap */}
+                                {isMobileUI ? (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="absolute bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] inset-x-3 z-30 pointer-events-none flex justify-center"
+                                    >
+                                        <div
+                                            data-no-pan="true"
+                                            className={`pointer-events-auto flex items-center gap-1 rounded-2xl shadow-xl p-1.5 backdrop-blur-xl border max-w-full overflow-x-auto ${
+                                                isDark ? 'bg-zinc-900/95 border-white/10 text-white' : 'bg-card/95 border-border/80 text-foreground'
+                                            }`}
+                                        >
+                                            <button
+                                                type="button"
+                                                onClick={handleZoomOut}
+                                                className={`size-11 shrink-0 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
+                                                    isDark ? 'text-white/85 hover:bg-white/10' : 'text-zinc-700 hover:bg-muted'
+                                                }`}
+                                                aria-label={t("Zoom out")}
+                                            >
+                                                <span className="material-icons-round text-xl">remove</span>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={handleFit}
+                                                className={`h-11 min-w-[48px] px-2 shrink-0 rounded-xl flex items-center justify-center font-bold text-xs tabular-nums transition-all active:scale-95 ${
+                                                    isDark ? 'text-white/90 hover:bg-white/10' : 'text-zinc-800 hover:bg-muted'
+                                                }`}
+                                                aria-label={t("Reset zoom and center floor plan view")}
+                                            >
+                                                {Math.round(scale * 100)}%
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={handleZoomIn}
+                                                className={`size-11 shrink-0 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
+                                                    isDark ? 'text-white/85 hover:bg-white/10' : 'text-zinc-700 hover:bg-muted'
+                                                }`}
+                                                aria-label={t("Zoom in")}
+                                            >
+                                                <span className="material-icons-round text-xl">add</span>
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                ) : (
                                 <motion.div 
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -5471,22 +5976,23 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         </div>
                                     </div>
                                 </motion.div>
+                                )}
                             </>
                         )}
                     </AnimatePresence>
 
                     {/* Contextual Item Action HUD */}
                     <AnimatePresence>
-                        {selectedItem && !readOnly && !isHUDHidden && (
+                        {selectedItem && !readOnly && !isMobileUI && !isHUDHidden && (
                             <motion.div
                                 initial={{ opacity: 0, y: -20, x: "-50%" }}
                                 animate={{ opacity: 1, y: 0, x: "-50%" }}
                                 exit={{ opacity: 0, y: -20, x: "-50%" }}
-                                className={`absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 rounded-2xl backdrop-blur-2xl border p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-w-[calc(100%-2rem)] ${isDark ? 'bg-zinc-900/95 border-white/10' : 'bg-white/95 border-zinc-200/80'}`}
+                                className={`absolute ${isMobileUI ? "top-3 max-w-[calc(100%-1.5rem)] overflow-x-auto" : "top-6 max-w-[calc(100%-2rem)]"} left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 rounded-2xl backdrop-blur-2xl border p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${isDark ? 'bg-zinc-900/95 border-white/10' : 'bg-white/95 border-zinc-200/80'}`}
                             >
                                 {selectedItem.kind === "corridor" ? (
                                     <>
-                                        <div className="flex items-center gap-2 px-3 py-1.5">
+                                        <div className="flex items-center gap-2 px-3 py-1.5 shrink-0">
                                             <span className={`material-icons-round text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>edit</span>
                                             <input
                                                 type="text"
@@ -5497,46 +6003,92 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     setCorridors(prev => prev.map(c => c.id === selectedItem.id ? { ...c, label: val } : c));
                                                 }}
                                                 placeholder={t("Corridor Name")}
-                                                className={`bg-transparent border-none outline-none text-xs font-black uppercase tracking-wider w-36 ${isDark ? 'text-white' : 'text-zinc-800'}`}
+                                                className={`bg-transparent border-none outline-none text-xs font-black uppercase tracking-wider ${isMobileUI ? "w-28" : "w-36"} ${isDark ? 'text-white' : 'text-zinc-800'}`}
                                             />
                                         </div>
-                                        <div className={`w-px h-5 mx-1 my-auto ${isDark ? 'bg-white/10' : 'bg-zinc-200'}`} />
+                                        <div className={`w-px h-5 mx-1 my-auto shrink-0 ${isDark ? 'bg-white/10' : 'bg-zinc-200'}`} />
                                         <button
                                             onClick={() => rotateSelectedItem(selectedItem)}
-                                            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
+                                            className={`flex items-center gap-1.5 px-3 ${isMobileUI ? "min-h-[44px]" : "py-2"} text-xs font-black uppercase tracking-wider rounded-xl transition-all shrink-0 ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
                                             title={t("Rotate (R)")}
                                         >
                                             <span className="material-icons-round text-lg">rotate_right</span>
-                                            {t("Rotate")} <span className="text-[9px] opacity-50 ml-1">(R)</span>
+                                            {t("Rotate")} {!isMobileUI && <span className="text-[9px] opacity-50 ml-1">(R)</span>}
                                         </button>
+                                        {isMobileUI && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    deleteCanvasItem(selectedItem);
+                                                    setSelectedItem(null);
+                                                    setIsMobileDetailsOpen(false);
+                                                    triggerDeleteToast();
+                                                }}
+                                                className="flex items-center gap-1.5 px-3 min-h-[44px] text-xs font-black uppercase tracking-wider rounded-xl transition-all shrink-0 text-red-500 hover:bg-red-500/10"
+                                                aria-label={t("Delete item")}
+                                            >
+                                                <span className="material-icons-round text-lg">delete</span>
+                                            </button>
+                                        )}
                                     </>
                                 ) : (
                                     <>
+                                        {isMobileUI && (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setIsSidebarVisible(false);
+                                                        setIsMobileDetailsOpen(true);
+                                                    }}
+                                                    className="flex items-center gap-1.5 px-3 min-h-[44px] text-xs font-black uppercase tracking-wider rounded-xl transition-all whitespace-nowrap shrink-0 bg-primary/15 text-primary hover:bg-primary/25"
+                                                >
+                                                    <span className="material-icons-round text-base">info</span>
+                                                    {t("Details")}
+                                                </button>
+                                                <div className={`w-px h-5 mx-0.5 my-auto shrink-0 ${isDark ? 'bg-white/10' : 'bg-zinc-200'}`} />
+                                            </>
+                                        )}
                                         <button
                                             onClick={() => flipSelectedItem('x')}
-                                            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all whitespace-nowrap ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
+                                            className={`flex items-center gap-1.5 px-3 ${isMobileUI ? "min-h-[44px]" : "py-2"} text-xs font-black uppercase tracking-wider rounded-xl transition-all whitespace-nowrap shrink-0 ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
                                             title={t("Flip Horizontal (X)")}
                                         >
                                             <span className="material-icons-round text-lg">flip</span>
-                                            {t("Flip H")} <span className="text-[9px] opacity-50 ml-1">(X)</span>
+                                            {t("Flip H")} {!isMobileUI && <span className="text-[9px] opacity-50 ml-1">(X)</span>}
                                         </button>
                                         <button
                                             onClick={() => flipSelectedItem('y')}
-                                            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all whitespace-nowrap ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
+                                            className={`flex items-center gap-1.5 px-3 ${isMobileUI ? "min-h-[44px]" : "py-2"} text-xs font-black uppercase tracking-wider rounded-xl transition-all whitespace-nowrap shrink-0 ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
                                             title={t("Flip Vertical (Y)")}
                                         >
                                             <span className="material-icons-round text-lg rotate-90">flip</span>
-                                            {t("Flip V")} <span className="text-[9px] opacity-50 ml-1">(Y)</span>
+                                            {t("Flip V")} {!isMobileUI && <span className="text-[9px] opacity-50 ml-1">(Y)</span>}
                                         </button>
-                                        <div className={`w-px h-5 mx-1 my-auto ${isDark ? 'bg-white/10' : 'bg-zinc-200'}`} />
+                                        <div className={`w-px h-5 mx-0.5 my-auto shrink-0 ${isDark ? 'bg-white/10' : 'bg-zinc-200'}`} />
                                         <button
                                             onClick={() => rotateSelectedItem(selectedItem)}
-                                            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all whitespace-nowrap ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
+                                            className={`flex items-center gap-1.5 px-3 ${isMobileUI ? "min-h-[44px]" : "py-2"} text-xs font-black uppercase tracking-wider rounded-xl transition-all whitespace-nowrap shrink-0 ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
                                             title={t("Rotate (R)")}
                                         >
                                             <span className="material-icons-round text-lg">rotate_right</span>
-                                            {t("Rotate")} <span className="text-[9px] opacity-50 ml-1">(R)</span>
+                                            {t("Rotate")} {!isMobileUI && <span className="text-[9px] opacity-50 ml-1">(R)</span>}
                                         </button>
+                                        {isMobileUI && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    deleteCanvasItem(selectedItem);
+                                                    setSelectedItem(null);
+                                                    setIsMobileDetailsOpen(false);
+                                                    triggerDeleteToast();
+                                                }}
+                                                className="flex items-center gap-1.5 px-3 min-h-[44px] text-xs font-black uppercase tracking-wider rounded-xl transition-all shrink-0 text-red-500 hover:bg-red-500/10"
+                                                aria-label={t("Delete item")}
+                                            >
+                                                <span className="material-icons-round text-lg">delete</span>
+                                            </button>
+                                        )}
                                     </>
                                 )}
                             </motion.div>
@@ -5783,8 +6335,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     />
                 </main>
 
-                {/* Sidebar */}
-                {!readOnly && !isHUDHidden && isSidebarVisible && (
+                {/* Sidebar (Desktop only) */}
+                {!isMobileUI && !readOnly && !isHUDHidden && isSidebarVisible && (
                     <aside className={`w-[340px] shrink-0 flex flex-col z-10 ${isDark ? 'bg-surface-dark border-l border-zinc-800 shadow-none' : 'bg-card border-l border-border shadow-2xl'}`}>
                         <div className="flex flex-col h-full min-h-0">
                             <div className="min-h-0 flex-1">
@@ -5841,6 +6393,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         onDragStart={handleSidebarBlockDragStart}
                                         onDragEnd={handleSidebarBlockDragEnd}
                                         onUnitClick={handleUnplacedUnitClick}
+                                        onBlockClick={handleSidebarBlockClick}
                                         styles={styles}
                                         isDark={isDark}
                                         unplacedUnits={unplacedDbUnits}
@@ -5854,7 +6407,115 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         </div>
                     </aside>
                 )}
-                {!readOnly && selectedUnit && !isHUDHidden && (
+
+                {/* Mobile Bottom Sheet (Unit Details) */}
+                {isMobileUI && !readOnly && !isHUDHidden && isMobileDetailsOpen && selectedUnit && (
+                    <>
+                        <div
+                            className="fixed inset-0 z-[119] bg-black/50 backdrop-blur-xs"
+                            onClick={() => {
+                                setIsSidebarVisible(false);
+                                setIsMobileDetailsOpen(false);
+                                setIsNotesPanelOpen(false);
+                            }}
+                            aria-hidden="true"
+                        />
+                        <div
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label={t("Item Details")}
+                            className={`fixed inset-x-0 bottom-0 z-[120] max-h-[85dvh] rounded-t-3xl border-t shadow-2xl flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom,0px)] ${
+                                isDark ? 'bg-zinc-950 border-zinc-800 text-zinc-100' : 'bg-card border-border text-foreground'
+                            }`}
+                        >
+                            {/* Drag Handle & Sheet Header */}
+                            <div className="shrink-0 flex flex-col items-center pt-2.5 pb-2.5 px-4 border-b border-border/60">
+                                <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mb-2" />
+                                <div className="w-full flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <span className="text-base font-black tracking-tight text-foreground truncate">
+                                            {selectedUnit.name}
+                                        </span>
+                                        <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary">
+                                            {selectedUnit.type}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsNotesPanelOpen((current) => !current)}
+                                            className={`flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-bold transition-colors ${
+                                                isNotesPanelOpen
+                                                    ? "border-primary/40 bg-primary/15 text-primary"
+                                                    : "border-border bg-muted/50 text-foreground hover:bg-muted"
+                                            }`}
+                                        >
+                                            <span className="material-icons-round text-sm">sticky_note_2</span>
+                                            <span>{t("Notes")}</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsSidebarVisible(false);
+                                                setIsMobileDetailsOpen(false);
+                                                setIsNotesPanelOpen(false);
+                                            }}
+                                            aria-label={t("Close panel")}
+                                            className="size-10 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
+                                        >
+                                            <X className="size-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 min-h-0 flex flex-col overflow-y-auto overscroll-y-contain">
+                                <UnitDetailsPanel
+                                    key={`mobile-${selectedUnit.id}`}
+                                    unit={selectedUnit}
+                                    isMobile={true}
+                                    hideRemoveUnit={true}
+                                    onUpdate={(updates) => {
+                                        setUnits(prev => prev.map(u => u.id === selectedUnit.id ? { ...u, ...updates } : u));
+                                        if (updates.status && (selectedUnit.dbId ?? selectedUnit.id)) {
+                                            void fetch(`/api/landlord/units/${selectedUnit.dbId ?? selectedUnit.id}/status`, {
+                                                method: "PATCH",
+                                                headers: { "Content-Type": "application/json" },
+                                                body: JSON.stringify({ status: updates.status }),
+                                            });
+                                        }
+                                    }}
+                                    onSaveConfig={handleSaveUnitConfig}
+                                    onDelete={() => {
+                                        deleteCanvasItem({ kind: "unit", id: selectedUnit.id });
+                                        setSelectedItem(null);
+                                        setIsMobileDetailsOpen(false);
+                                        triggerDeleteToast();
+                                    }}
+                                    onClose={() => {
+                                        setIsMobileDetailsOpen(false);
+                                        setIsNotesPanelOpen(false);
+                                    }}
+                                    notesOpen={isNotesPanelOpen}
+                                    onToggleNotes={() => setIsNotesPanelOpen((current) => !current)}
+                                    onOpenWalkIn={() => setIsWalkInModalOpen(true)}
+                                    onOpenInvite={() => setIsInviteModalOpen(true)}
+                                    onOpenHistory={() => {
+                                        setHistoryInitialTab("tenants");
+                                        setIsHistoryModalOpen(true);
+                                    }}
+                                    onOpenLease={() => setIsLeasePreviewModalOpen(true)}
+                                    onOpenMaintenance={handleOpenMaintenance}
+                                    onOpenServiceLogs={() => {
+                                        setHistoryInitialTab("maintenance");
+                                        setIsHistoryModalOpen(true);
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </>
+                )}
+                {!isMobileUI && !readOnly && selectedUnit && !isHUDHidden && (
                     <UnitNotesPanel
                         isOpen={isNotesPanelOpen}
                         onToggle={() => setIsNotesPanelOpen((current) => !current)}
@@ -5863,6 +6524,66 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                             setUnitNotes((current) => ({ ...current, [selectedUnit.id]: nextValue }));
                         }}
                     />
+                )}
+                {isMobileUI && !readOnly && !isHUDHidden && selectedUnit && isNotesPanelOpen && (
+                    <>
+                        <div
+                            className="fixed inset-0 z-[129] bg-black/50 backdrop-blur-xs"
+                            onClick={() => setIsNotesPanelOpen(false)}
+                            aria-hidden="true"
+                        />
+                        <div
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label={t("Unit Notes")}
+                            className={`fixed inset-x-0 bottom-0 z-[130] max-h-[78dvh] rounded-t-3xl border-t shadow-2xl flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom,0px)] ${
+                                isDark ? 'bg-zinc-950 border-zinc-800 text-zinc-100' : 'bg-card border-border text-foreground'
+                            }`}
+                        >
+                            <div className="shrink-0 flex flex-col items-center pt-2.5 pb-2 px-4 border-b border-border/60">
+                                <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mb-2" />
+                                <div className="w-full flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <span className="material-icons-round text-base text-primary">sticky_note_2</span>
+                                        <span className="text-xs font-black uppercase tracking-wider text-muted-foreground truncate">
+                                            {t("Unit Notes")} • {selectedUnit.name}
+                                        </span>
+                                        <span className="rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300 shrink-0">
+                                            {t("Auto")}
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsNotesPanelOpen(false)}
+                                        aria-label={t("Close notes")}
+                                        className="size-10 rounded-full flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+                                    >
+                                        <X className="size-5" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex-1 min-h-0 flex flex-col p-4 overflow-y-auto overscroll-y-contain">
+                                <p className="text-xs text-muted-foreground mb-3">
+                                    {t("Private note for this unit. Autosaves locally.")}
+                                </p>
+                                <textarea
+                                    maxLength={500}
+                                    value={selectedUnitNote}
+                                    onChange={(event) => {
+                                        setUnitNotes((current) => ({ ...current, [selectedUnit.id]: event.target.value }));
+                                    }}
+                                    placeholder={t("Add reminders, follow-ups, or move-in prep details…")}
+                                    className="w-full min-h-[200px] flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-3.5 text-sm leading-relaxed text-foreground shadow-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary scroll-mb-8"
+                                />
+                                <div className="mt-2.5 flex items-center justify-between px-1">
+                                    <p className="text-[11px] text-muted-foreground">{t("Tip: Use short action-oriented notes.")}</p>
+                                    <p className="text-[11px] font-black text-muted-foreground tabular-nums">
+                                        {selectedUnitNote.trim().length} / 500
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </>
                 )}
                 
                 {selectedUnit && (
@@ -6037,6 +6758,8 @@ const UnitDetailsPanel = ({
     onOpenLease,
     onOpenMaintenance,
     onOpenServiceLogs,
+    hideRemoveUnit = false,
+    isMobile = false,
 }: {
     unit: Unit;
     onUpdate: (updates: Partial<Unit>) => void;
@@ -6054,6 +6777,8 @@ const UnitDetailsPanel = ({
     onOpenLease?: () => void;
     onOpenMaintenance?: (mode: "view" | "create") => void;
     onOpenServiceLogs?: () => void;
+    hideRemoveUnit?: boolean;
+    isMobile?: boolean;
 }) => {
     const { t, locale, language } = useLanguageContext();
     const [tenantActionMenu, setTenantActionMenu] = useState<TenantActionMenuState>({ isOpen: false });
@@ -6296,12 +7021,14 @@ const UnitDetailsPanel = ({
     };
 
     return (
-        <div className="relative flex h-full flex-col overflow-hidden border-l border-white/10 bg-zinc-50/50 font-sans text-foreground shadow-2xl backdrop-blur-xl dark:bg-[#0a0a0a]/90">
-            {/* Glossy Overlay for that Glass look */}
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent z-30" />
+        <div className={`relative flex h-full flex-col overflow-hidden font-sans text-foreground ${isMobile ? "bg-transparent" : "border-l border-white/10 bg-zinc-50/50 shadow-2xl backdrop-blur-xl dark:bg-[#0a0a0a]/90"}`}>
+            {!isMobile && (
+                <>
+                    {/* Glossy Overlay for that Glass look */}
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent z-30" />
 
-            {/* Hero Header Section */}
-            <div className="relative h-72 w-full shrink-0 group overflow-hidden">
+                    {/* Hero Header Section */}
+                    <div className="relative h-72 w-full shrink-0 group overflow-hidden">
                 {/* Background Image / Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-zinc-500/10 to-sky-500/20 z-0"></div>
                 <div className="absolute inset-0 bg-[url('/art/property.svg')] bg-cover bg-center opacity-60 z-0 grayscale-[0.2] transition-transform duration-1000 group-hover:scale-110"></div>
@@ -6374,16 +7101,40 @@ const UnitDetailsPanel = ({
                     </div>
                 </div>
             </div>
+                </>
+            )}
 
             {/* Main Content Area */}
-            <div className="relative z-0 flex-1 space-y-6 overflow-y-auto px-8 pt-8 pb-36 custom-scrollbar">
+            <div className={`relative z-0 flex-1 overflow-y-auto custom-scrollbar ${isMobile ? "px-4 pt-4 pb-8 space-y-4" : `px-8 pt-8 space-y-6 ${hideRemoveUnit ? "pb-10" : "pb-36"}`}`}>
                 <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="space-y-8"
+                    className={isMobile ? "space-y-5" : "space-y-8"}
                 >
+                    {isMobile && (
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/40 px-3 py-1.5">
+                                <span className="material-icons-round text-sm text-primary">king_bed</span>
+                                <span className="text-xs font-bold text-foreground">{unitLayoutLabel}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/40 px-3 py-1.5">
+                                <div className={`size-2 rounded-full ${
+                                    getUnitVisualStatus(unit) === 'occupied' ? 'bg-blue-500' :
+                                    getUnitVisualStatus(unit) === 'vacant' ? 'bg-emerald-500' :
+                                    getUnitVisualStatus(unit) === 'maintenance' ? 'bg-red-500' :
+                                    'bg-amber-500'
+                                }`} />
+                                <span className="text-xs font-bold text-foreground">{t(currentStatus.label)}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/40 px-3 py-1.5">
+                                <span className="material-icons-round text-sm text-cyan-500">aspect_ratio</span>
+                                <span className="text-xs font-bold text-foreground">{unitAreaSqm} m&sup2;</span>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Residence Configuration (Always Editable) */}
-                    <section className="space-y-4">
+                    <section className="space-y-3">
                         <div className="flex items-center justify-between px-1">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400">{t("RESIDENCE CONFIGURATION")}</h3>
                             {hasConfigChanges && !isAskingApplyToAll && !isSavingConfig && (
@@ -6394,7 +7145,7 @@ const UnitDetailsPanel = ({
                             )}
                         </div>
 
-                        <div className="space-y-4 rounded-[24px] border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/5 dark:bg-zinc-900/40">
+                        <div className={`space-y-3.5 border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900/40 ${isMobile ? "rounded-2xl p-4" : "rounded-[24px] p-6 space-y-4"}`}>
                             <div>
                                 <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">{t("Area (sqm)")}</label>
                                 <input
@@ -6629,7 +7380,7 @@ const UnitDetailsPanel = ({
                                         initial={{ opacity: 0, scale: 0.95, y: -10 }}
                                         animate={{ opacity: 1, scale: 1, y: 0 }}
                                         exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                        className="absolute right-0 top-[90px] z-50 w-64 rounded-[28px] border border-zinc-200 bg-white/95 p-2 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-black/90"
+                                        className="absolute right-0 top-[90px] z-50 w-64 max-w-[calc(100vw-2.5rem)] rounded-[28px] border border-zinc-200 bg-white/95 p-2 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-black/90"
                                     >
                                         <Link
                                             href={`/landlord/messages?unitId=${encodeURIComponent(unit.id)}`}
@@ -6674,7 +7425,7 @@ const UnitDetailsPanel = ({
                                 whileHover={{ scale: 1.02, backgroundColor: "rgba(var(--primary), 0.1)" }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={onOpenWalkIn}
-                                className="flex w-full items-center justify-center gap-3 rounded-[32px] border-2 border-dashed border-primary/30 bg-primary/5 p-8 text-[11px] font-black tracking-[0.2em] text-primary transition-all hover:border-primary/50"
+                                className={`flex w-full items-center justify-center gap-3 border-2 border-dashed border-primary/30 bg-primary/5 text-[11px] font-black tracking-[0.2em] text-primary transition-all hover:border-primary/50 ${isMobile ? "rounded-2xl p-4" : "rounded-[32px] p-8"}`}
                             >
                                 <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                     <span className="material-icons-round text-2xl">person_add</span>
@@ -6682,7 +7433,7 @@ const UnitDetailsPanel = ({
                                 {t("START WALK-IN APPLICATION")}
                             </motion.button>
 
-                            <div className="group relative overflow-hidden rounded-[32px] border border-primary/20 bg-primary/5 p-6 shadow-xl shadow-primary/5 dark:bg-primary-950/20">
+                            <div className={`group relative overflow-hidden border border-primary/20 bg-primary/5 shadow-xl shadow-primary/5 dark:bg-primary-950/20 ${isMobile ? "rounded-2xl p-4" : "rounded-[32px] p-6"}`}>
                                 <div className="absolute -right-4 -top-4 size-24 rounded-full bg-primary/10 blur-2xl transition-all group-hover:bg-primary/20" />
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary dark:text-primary">{t("INVITE RESIDENT")}</h3>
@@ -6746,8 +7497,8 @@ const UnitDetailsPanel = ({
 
                         {/* Lease Analytics & Timeline */}
                         {(unit.status === 'occupied' || unit.status === 'neardue') && (
-                            <div className="group relative overflow-hidden rounded-[32px] border border-zinc-200 bg-white p-8 shadow-xl shadow-zinc-200/20 dark:border-white/5 dark:bg-zinc-900/40 dark:shadow-none">
-                                <div className="flex items-center justify-between mb-8">
+                            <div className={`group relative overflow-hidden border border-zinc-200 bg-white shadow-xl shadow-zinc-200/20 dark:border-white/5 dark:bg-zinc-900/40 dark:shadow-none ${isMobile ? "rounded-2xl p-4" : "rounded-[32px] p-8"}`}>
+                                <div className={`flex items-center justify-between ${isMobile ? "mb-4" : "mb-8"}`}>
                                     <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">{t("LEASE ANALYTICS")}</h3>
                                     {onOpenLease && (
                                         <button
@@ -6785,7 +7536,7 @@ const UnitDetailsPanel = ({
 
                                         return (
                                             <>
-                                                <div className="relative h-44 w-72">
+                                                <div className={`relative ${isMobile ? "h-36 w-60" : "h-44 w-72"}`}>
                                                     <svg className="h-full w-full" viewBox="0 0 200 110">
                                                         <defs>
                                                             <linearGradient id={`leaseGradient-${unit.id}`} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -6924,9 +7675,9 @@ const UnitDetailsPanel = ({
                     </section>
 
                     {/* Command Center Quick Actions */}
-                    <section className="rounded-[32px] border border-zinc-200 bg-zinc-900 p-6 shadow-2xl dark:border-white/5">
-                        <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">{t("COMMAND CENTER")}</h3>
-                        <div className="grid grid-cols-2 gap-3">
+                    <section className={`border border-zinc-200 bg-zinc-900 shadow-2xl dark:border-white/5 ${isMobile ? "rounded-2xl p-4" : "rounded-[32px] p-6"}`}>
+                        <h3 className="mb-3 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">{t("COMMAND CENTER")}</h3>
+                        <div className={`grid grid-cols-2 ${isMobile ? "gap-2.5" : "gap-3"}`}>
                             {quickActions.map((action) => (
                                 <motion.button
                                     key={action}
@@ -6983,15 +7734,17 @@ const UnitDetailsPanel = ({
             )}
 
             {/* Footer */}
-            <div className="p-6 border-t border-border bg-card/95 backdrop-blur-xl absolute bottom-0 w-full z-20 flex gap-4">
-                <button
-                    onClick={onDelete}
-                    className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl transition-all font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2"
-                >
-                    <span className="material-icons-round text-sm">delete</span>
-                    {t("Remove Unit")}
-                </button>
-            </div>
+            {!hideRemoveUnit && (
+                <div className="p-6 border-t border-border bg-card/95 backdrop-blur-xl absolute bottom-0 w-full z-20 flex gap-4">
+                    <button
+                        onClick={onDelete}
+                        className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl transition-all font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2"
+                    >
+                        <span className="material-icons-round text-sm">delete</span>
+                        {t("Remove Unit")}
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
@@ -7068,6 +7821,7 @@ export const SidebarBlockLibrary = ({
     onDragStart,
     onDragEnd,
     onUnitClick,
+    onBlockClick,
     styles,
     isDark,
     unplacedUnits = EMPTY_ARRAY,
@@ -7083,6 +7837,7 @@ export const SidebarBlockLibrary = ({
     unplacedUnits?: DbUnit[];
     isPropertyMode?: boolean;
     onUnitClick?: (unit: DbUnit) => void;
+    onBlockClick?: (type: SidebarBlockType) => void;
     setPendingClearFloor: (pending: boolean) => void;
     activeFloorItemCount: number;
     onApplyPreset: (presetType: "double-loaded" | "u-shape" | "l-shape" | "single-loaded") => void;
@@ -7192,6 +7947,7 @@ export const SidebarBlockLibrary = ({
                             draggable="true"
                             onDragStart={onDragStart("studio")}
                             onDragEnd={handleSidebarBlockDragEnd}
+                            onClick={() => onBlockClick?.("studio")}
                         >
                             <div className={`h-8 w-10 rounded transition-colors group-hover:border-primary/50 group-hover:bg-primary/10 ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-300 bg-zinc-200'}`}></div>
                             <div className="text-center">
@@ -7204,6 +7960,7 @@ export const SidebarBlockLibrary = ({
                             draggable="true"
                             onDragStart={onDragStart("1br")}
                             onDragEnd={handleSidebarBlockDragEnd}
+                            onClick={() => onBlockClick?.("1br")}
                         >
                             <div className={`flex h-8 w-12 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-300 bg-zinc-200'}`}><div className={`w-1/2 ${isDark ? 'border-r border-neutral-400' : 'border-r border-zinc-400'}`}></div></div>
                             <div className="text-center">
@@ -7216,6 +7973,7 @@ export const SidebarBlockLibrary = ({
                             draggable="true"
                             onDragStart={onDragStart("2br")}
                             onDragEnd={handleSidebarBlockDragEnd}
+                            onClick={() => onBlockClick?.("2br")}
                         >
                             <div className={`relative h-10 w-12 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-300 bg-zinc-200'}`}><div className="absolute inset-0 grid grid-cols-2 grid-rows-1"><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-zinc-400'}`}></div></div></div>
                             <div className="text-center">
@@ -7228,6 +7986,7 @@ export const SidebarBlockLibrary = ({
                             draggable="true"
                             onDragStart={onDragStart("3br")}
                             onDragEnd={handleSidebarBlockDragEnd}
+                            onClick={() => onBlockClick?.("3br")}
                         >
                             <div className={`relative h-10 w-14 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-300 bg-zinc-200'}`}><div className="absolute inset-0 grid grid-cols-3 grid-rows-1"><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-zinc-400'}`}></div><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-zinc-400'}`}></div></div></div>
                             <div className="text-center">
@@ -7249,6 +8008,7 @@ export const SidebarBlockLibrary = ({
                             draggable="true"
                             onDragStart={onDragStart("corridor")}
                             onDragEnd={handleSidebarBlockDragEnd}
+                            onClick={() => onBlockClick?.("corridor")}
                         >
                             <div className={`h-8 w-14 rounded-[1px] border-y ${isDark ? 'border-neutral-500 bg-neutral-700' : 'border-zinc-500 bg-zinc-100'}`} />
                             <div className="text-center"><p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{t("Corridor")}</p></div>
@@ -7258,6 +8018,7 @@ export const SidebarBlockLibrary = ({
                             draggable="true"
                             onDragStart={onDragStart("elevator")}
                             onDragEnd={handleSidebarBlockDragEnd}
+                            onClick={() => onBlockClick?.("elevator")}
                         >
                             <div className={`flex size-8 items-center justify-center rounded ${isDark ? 'bg-neutral-700' : 'bg-zinc-200'}`}>
                                 <span className={`material-icons-round text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>elevator</span>
@@ -7278,6 +8039,7 @@ export const SidebarBlockLibrary = ({
                             draggable="true"
                             onDragStart={onDragStart("stair-straight")}
                             onDragEnd={handleSidebarBlockDragEnd}
+                            onClick={() => onBlockClick?.("stair-straight")}
                         >
                             <div className={`flex h-10 w-6 flex-col justify-evenly rounded px-0.5 ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
                                 {[...Array(6)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-zinc-400'}`}></div>)}
@@ -7291,6 +8053,7 @@ export const SidebarBlockLibrary = ({
                             draggable="true"
                             onDragStart={onDragStart("stair-l")}
                             onDragEnd={handleSidebarBlockDragEnd}
+                            onClick={() => onBlockClick?.("stair-l")}
                         >
                             <div className={`relative size-8 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
                                 <div className={`absolute top-0 right-0 h-1/2 w-1/2 border-l border-b ${isDark ? 'border-neutral-400' : 'border-zinc-400'}`}></div>
@@ -7310,6 +8073,7 @@ export const SidebarBlockLibrary = ({
                             draggable="true"
                             onDragStart={onDragStart("stair-u")}
                             onDragEnd={handleSidebarBlockDragEnd}
+                            onClick={() => onBlockClick?.("stair-u")}
                         >
                             <div className={`relative size-8 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
                                 <div className={`absolute top-0 left-0 right-0 h-[30%] border-b ${isDark ? 'border-neutral-400' : 'border-zinc-400'}`}></div>
@@ -7330,6 +8094,7 @@ export const SidebarBlockLibrary = ({
                             draggable="true"
                             onDragStart={onDragStart("stair-spiral")}
                             onDragEnd={handleSidebarBlockDragEnd}
+                            onClick={() => onBlockClick?.("stair-spiral")}
                         >
                             <div className={`relative flex size-8 items-center justify-center rounded-full ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
                                 <div className={`size-2 rounded-full ${isDark ? 'border border-neutral-400' : 'border border-zinc-400'}`}></div>
@@ -7355,6 +8120,7 @@ export const SidebarBlockLibrary = ({
                             draggable="true"
                             onDragStart={onDragStart("facility-function")}
                             onDragEnd={handleSidebarBlockDragEnd}
+                            onClick={() => onBlockClick?.("facility-function")}
                         >
                             <div className={`flex h-10 w-14 items-center justify-center rounded border ${isDark ? 'border-neutral-500 bg-neutral-700' : 'border-zinc-400 bg-zinc-200'}`}>
                                 <span className={`material-icons-round text-lg ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>meeting_room</span>
@@ -7368,6 +8134,7 @@ export const SidebarBlockLibrary = ({
                             draggable="true"
                             onDragStart={onDragStart("facility-studio")}
                             onDragEnd={handleSidebarBlockDragEnd}
+                            onClick={() => onBlockClick?.("facility-studio")}
                         >
                             <div className={`flex h-10 w-14 items-center justify-center rounded border ${isDark ? 'border-neutral-500 bg-neutral-700' : 'border-zinc-400 bg-zinc-200'}`}>
                                 <span className={`material-icons-round text-lg ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>fitness_center</span>

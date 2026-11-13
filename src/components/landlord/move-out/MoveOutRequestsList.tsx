@@ -40,7 +40,17 @@ interface MoveOutRequest {
  };
 }
 
-export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview = false }: { onSelect: (request: MoveOutRequest) => void, initialFilter?: MoveOutStatus | "all", preview?: boolean }) {
+export function MoveOutRequestsList({
+  onSelect,
+  initialFilter = "all",
+  preview = false,
+  selectedId,
+}: {
+  onSelect: (request: MoveOutRequest) => void;
+  initialFilter?: MoveOutStatus | "all";
+  preview?: boolean;
+  selectedId?: string | null;
+}) {
  const { selectedPropertyId } = useProperty();
  const { t, locale } = useLanguageContext();
  
@@ -183,6 +193,10 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
  await new Promise(resolve => setTimeout(resolve, 800));
  if (isCancelled) return;
  dispatch({ type: 'FETCH_PREVIEW_SUCCESS', payload: MOCK_REQUESTS });
+ if (selectedId) {
+   const match = MOCK_REQUESTS.find((r) => r.id === selectedId);
+   if (match) onSelect(match);
+ }
  return;
  }
 
@@ -203,6 +217,10 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
  const data = await response.json();
  if (isCancelled) return;
  dispatch({ type: 'FETCH_SUCCESS', payload: data });
+ if (selectedId && Array.isArray(data)) {
+   const match = data.find((r: MoveOutRequest) => r.id === selectedId);
+   if (match) onSelect(match);
+ }
  } catch (err) {
  if (isCancelled) return;
  console.error("Error loading move-out requests:", err);

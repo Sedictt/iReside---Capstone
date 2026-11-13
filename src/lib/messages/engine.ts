@@ -555,6 +555,24 @@ export const findDirectConversation = async (
         return null;
     }
 
+    if (directConversationIds.length === 1) {
+        return directConversationIds[0];
+    }
+
+    // When duplicate direct threads exist between the same two users, prefer
+    // the thread with the most recent message instead of an empty newer row.
+    const { data: latestMessage } = await supabase
+        .from("messages")
+        .select("conversation_id")
+        .in("conversation_id", directConversationIds)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (latestMessage?.conversation_id) {
+        return latestMessage.conversation_id;
+    }
+
     const { data: conversations, error: conversationError } = await supabase
         .from("conversations")
         .select("id, updated_at")

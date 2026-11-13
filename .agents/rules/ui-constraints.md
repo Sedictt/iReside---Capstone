@@ -79,3 +79,7 @@ trigger: always_on
     - Keep the key unmasked by default (with large, clear monospaced lettering) so users can easily read or write it down.
     - Provide a secondary **"Copy Code"** button with immediate checkmark feedback.
   - **Senior-Friendly Readability**: Use high-contrast text, minimum 14px body font size, warm encouraging accents instead of alarming warning badges, and touch targets >= 48px.
+- **Solid Surfaces Over Tonal / Glassmorphism Backgrounds**:
+  - **No Glassmorphism**: Avoid `backdrop-blur-*` and translucent card/header surfaces (`bg-card/80`, `bg-background/50`, `bg-muted/20`) on operational UI cards, modals, and toolbars. Use crisp, opaque surfaces (`bg-card`, `bg-background`, `bg-muted`).
+  - **No Pastel / Tonal Card Fills**: Do not wash out hero cards or status banners with pastel tonal tints (e.g., `bg-emerald-50`, `bg-amber-50`, `bg-rose-50`, `bg-emerald-500/10`, `bg-amber-500/[0.04]`).
+  - **Rich Solid Status Heroes (Light & Dark)**: For status-driven hero banners, use rich, solid semantic color backgrounds with high-contrast white text and tuned dark-mode counterparts (e.g., `bg-emerald-700 text-white dark:bg-emerald-900`, `bg-amber-600 text-white dark:bg-amber-900`, `bg-rose-700 text-white dark:bg-rose-900`), paired with solid `bg-card` action containers and solid semantic badges.

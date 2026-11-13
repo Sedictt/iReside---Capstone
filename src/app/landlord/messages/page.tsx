@@ -541,7 +541,7 @@ const seen = new Set<string>();
         previousConversationFromUrlRef.current = conversationFromUrl;
         if (previousConversationFromUrl === conversationFromUrl) return;
         if (!conversationFromUrl || conversationFromUrl === activeConversationId) return;
-        if (!contacts.some((contact) => contact.id === conversationFromUrl)) return;
+        if (conversationFromUrl !== "iris-assistant" && !contacts.some((contact) => contact.id === conversationFromUrl)) return;
         setActiveConversationId(conversationFromUrl);
     }, [activeConversationId, contacts, conversationFromUrl]);
 
@@ -711,6 +711,7 @@ const seen = new Set<string>();
             hasPaymentHistory: conversation.hasPaymentHistory,
             isArchived: conversation.isArchived,
             isBlocked: conversation.isBlocked,
+            hasMessages: Boolean(conversation.lastMessage),
         };
     };
 
@@ -885,7 +886,9 @@ setPaymentHistoryLoading(true);
                 try { sessionStorage.setItem(`${CONVERSATIONS_CACHE_KEY_PREFIX}:${user.id}`, JSON.stringify({ cachedAt: Date.now(), contacts: mapped })); } catch { }
             }
             setActiveConversationId((current) => {
+                if (current === "iris-assistant") return "iris-assistant";
                 if (current && mapped.some((contact) => contact.id === current)) return current;
+                if (conversationFromUrlRef.current === "iris-assistant") return "iris-assistant";
                 if (conversationFromUrlRef.current && mapped.some((contact) => contact.id === conversationFromUrlRef.current)) return conversationFromUrlRef.current;
                 return mapped[0]?.id ?? null;
             });
@@ -1489,6 +1492,9 @@ setPaymentHistoryLoading(true);
                     <IrisAssistantWorkspace
                         onOpenConversation={(targetUserId) => {
                             void handleStartConversation(targetUserId);
+                        }}
+                        onBroadcastSuccess={() => {
+                            void refreshConversations();
                         }}
                         onBack={() => setActiveConversationId(null)}
                         className="flex-1"

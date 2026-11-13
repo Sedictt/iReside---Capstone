@@ -577,6 +577,8 @@ async function main() {
     return { kwh: base[0] + wobble * 4 + (m >= 4 && m <= 6 ? 18 : 0), cbm: Number((base[1] + wobble * 0.2).toFixed(1)) }; // summer months use more power
   };
 
+  const defaultGcashProof = await gcashProofFor(6092.5);
+
   /**
    * Build one monthly invoice.
    * mode: "paid_gcash" | "paid_bank" | "paid_cash" | "pending" | "under_review" | "awaiting_cash" | "reminder_sent"
@@ -624,7 +626,9 @@ async function main() {
       row = { ...base, status: "completed", workflow_status: "receipted", method, intent_method: withProof ? method : "in_person", amount_tag: "exact", review_action: "confirm_received",
         paid_amount: amount, balance_remaining: 0, paid_at: paidAt, payment_submitted_at: paidAt, landlord_confirmed: true, last_action_at: paidAt, last_action_by: LANDLORD.id,
         reference_number: reference,
-        receipt_number: receiptNo(pid, paidAt.slice(0, 10)) };
+        receipt_number: receiptNo(pid, paidAt.slice(0, 10)),
+        payment_proof_path: withProof ? (opts.proof?.path ?? defaultGcashProof?.path ?? null) : null,
+        payment_proof_url: withProof ? (opts.proof?.url ?? defaultGcashProof?.url ?? null) : null };
       receipts.push({ id: uid(`rcpt:${pid}`), payment_id: pid, landlord_id: LANDLORD.id, tenant_id: t.id, receipt_number: row.receipt_number, amount, issued_at: paidAt, issued_by: LANDLORD.id, method, amount_breakdown: { rent: u.rent, electricity: elec, water, late_fee: lateFee }, notes: receiptNote, created_at: paidAt });
       wfEvents.push({ payment_id: pid, actor_id: t.id, action: withProof ? `tenant_payment_submitted_${method}` : "tenant_in_person_intent_submitted", source: "api", before_state: { workflow_status: "pending" }, after_state: { workflow_status: withProof ? "under_review" : "awaiting_in_person" }, created_at: paidAt },
         { payment_id: pid, actor_id: LANDLORD.id, action: "confirm_received", source: "api", before_state: { workflow_status: withProof ? "under_review" : "awaiting_in_person" }, after_state: { workflow_status: "receipted", receipt_number: row.receipt_number }, created_at: paidAt });

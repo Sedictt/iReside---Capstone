@@ -502,6 +502,11 @@ export function LeaseListRow({ lease: leaseProp, variant, onClick, index = 0, on
  const avatarStyles = useMemo(() => getAvatarStyles(lease.tenant), [lease.tenant]);
  const progress = useMemo(() => leaseProgressPercent(lease), [lease]);
  const isOpenEnded = termState.kind === "open_ended";
+ const statusLabel = isArchive
+ ? t("Closed Lease")
+ : lease.status
+ ? t(lease.status.replace(/_/g, " "))
+ : t("Status Unknown");
 
  return (
  <>
@@ -520,12 +525,12 @@ export function LeaseListRow({ lease: leaseProp, variant, onClick, index = 0, on
  role="button"
  tabIndex={0}
  className={cn(
- "group relative flex flex-col md:flex-row md:items-center justify-between neumorphic-panel rounded-2xl overflow-hidden hover:border-primary/40 hover:neumorphic-inset transition-all duration-200 cursor-pointer p-4 sm:p-5 gap-4 outline-none focus-visible:ring-2 focus-visible:ring-primary",
+ "group relative grid grid-cols-1 md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1.15fr)_auto] md:items-center neumorphic-panel rounded-2xl overflow-hidden hover:border-primary/40 hover:neumorphic-inset transition-all duration-200 cursor-pointer p-4 sm:p-5 gap-4 outline-none focus-visible:ring-2 focus-visible:ring-primary",
  isArchive && "opacity-75 grayscale-[0.25]"
  )}
  >
  {/* 1. Tenant Avatar & Details */}
- <div className="flex items-center gap-3.5 min-w-[220px] max-w-xs">
+ <div className="flex items-center gap-3.5 min-w-0">
  <div className="relative shrink-0">
  <div
  style={avatarStyles.style}
@@ -554,15 +559,24 @@ export function LeaseListRow({ lease: leaseProp, variant, onClick, index = 0, on
  </div>
 
  <div className="min-w-0 flex-1">
- <h4 className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors">
+ <h4
+ className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors"
+ title={lease.tenant?.full_name || t("Unassigned")}
+ >
  {lease.tenant?.full_name || t("Unassigned")}
  </h4>
- <div className="flex items-center gap-1.5 text-[10px] font-bold">
- <span className="uppercase tracking-wider text-muted-foreground/70">
- {isArchive ? t("Closed Lease") : (lease.status ? t(lease.status.replace(/_/g, " ")) : t("Status Unknown"))}
+ <div className="flex items-center gap-1.5 min-w-0 text-[10px] font-bold">
+ <span
+ className="uppercase tracking-wider text-muted-foreground/70 truncate shrink-0 max-w-[70%]"
+ title={statusLabel}
+ >
+ {statusLabel}
  </span>
  {lease.tenant?.email && (
- <span className="text-muted-foreground/40 truncate max-w-[120px] hidden sm:inline">
+ <span
+ className="text-muted-foreground/40 truncate min-w-0 hidden sm:inline"
+ title={lease.tenant.email}
+ >
  • {lease.tenant.email}
  </span>
  )}
@@ -571,12 +585,14 @@ export function LeaseListRow({ lease: leaseProp, variant, onClick, index = 0, on
  </div>
 
  {/* 2. Property & Unit Info */}
- <div className="flex items-center gap-3 min-w-[170px] max-w-xs">
+ <div className="flex items-center gap-3 min-w-0">
  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl neumorphic-inset text-muted-foreground">
  <Building2 className="size-4" />
  </div>
- <div className="min-w-0">
- <p className="truncate text-xs font-bold text-foreground">{lease.unit.property.name}</p>
+ <div className="min-w-0 flex-1">
+ <p className="truncate text-xs font-bold text-foreground" title={lease.unit.property.name}>
+ {lease.unit.property.name}
+ </p>
  <p className="truncate text-[11px] font-semibold text-primary">
  {lease.unit.name?.trim().toLowerCase().startsWith("unit")
  ? lease.unit.name
@@ -586,14 +602,14 @@ export function LeaseListRow({ lease: leaseProp, variant, onClick, index = 0, on
  </div>
 
  {/* 3. Timeline / Progress */}
- <div className="flex flex-col justify-center min-w-[200px] flex-1 max-w-sm">
- <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
+ <div className="flex flex-col justify-center min-w-0">
+ <div className="flex items-center justify-between gap-2 text-[10px] font-bold text-muted-foreground mb-1.5 min-w-0">
  <span className="flex items-center gap-1.5 min-w-0">
  <Calendar className="size-3 shrink-0 text-muted-foreground/70" />
  <span className="truncate">{leaseDateRangeLabel(lease, language)}</span>
  </span>
  {!isArchive && !isOpenEnded && progress !== null && (
- <span className="font-mono text-[10px]">{progress}%</span>
+ <span className="font-mono text-[10px] shrink-0">{progress}%</span>
  )}
  {!isArchive && isOpenEnded && (
  <span className="shrink-0 font-bold text-muted-foreground/80" title={formatTenure(lease.start_date, undefined, language)}>
@@ -626,7 +642,7 @@ export function LeaseListRow({ lease: leaseProp, variant, onClick, index = 0, on
  </div>
 
  {/* 4. Financials (Right-aligned, tabular-nums) & Actions */}
- <div className="flex items-center justify-between md:justify-end gap-5 shrink-0">
+ <div className="flex items-center justify-between md:justify-end gap-4 shrink-0 md:min-w-[180px]">
  <div className="text-left md:text-right">
  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/70 mb-0.5">
  {isArchive ? t("Total Settlement") : t("Monthly Rent")}

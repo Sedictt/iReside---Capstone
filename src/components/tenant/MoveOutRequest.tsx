@@ -196,28 +196,23 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                 ) : variant === "quickAction" ? (
                     /* QuickAction Variant for Existing Request */
                     <button
+                        type="button"
                         onClick={() => setIsOpen(true)}
-                        className="neumorphic-extruded rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-1 group w-full"
+                        className="group flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-card px-4 py-3.5 shadow-xs transition-all hover:border-primary/50 hover:bg-muted/40 min-h-[56px] w-full text-left"
                     >
                         <div className={cn(
-                            "size-12 sm:size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 neumorphic-inset-card",
-                            existingRequest.status === "pending" ? "text-amber-500" :
-                            existingRequest.status === "approved" ? "text-blue-500" :
-                            existingRequest.status === "denied" ? "text-red-500" :
-                            "text-emerald-500"
+                            "flex size-10 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105",
+                            existingRequest.status === "pending" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" :
+                            existingRequest.status === "approved" ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" :
+                            existingRequest.status === "denied" ? "bg-rose-500/10 text-rose-600 dark:text-rose-400" :
+                            "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                         )}>
-                            {existingRequest.status === "pending" ? <Clock className="size-6 sm:size-7" /> :
-                             existingRequest.status === "approved" ? <CheckCircle2 className="size-6 sm:size-7" /> :
-                             existingRequest.status === "denied" ? <XCircle className="size-6 sm:size-7" /> :
-                             <LogOut className="size-6 sm:size-7" />}
+                            {existingRequest.status === "pending" ? <Clock className="size-5" /> :
+                             existingRequest.status === "approved" ? <CheckCircle2 className="size-5" /> :
+                             existingRequest.status === "denied" ? <XCircle className="size-5" /> :
+                             <LogOut className="size-5" />}
                         </div>
-                        <span className={cn(
-                            "text-[10px] sm:text-xs font-black text-center transition-colors uppercase tracking-wider truncate max-w-full",
-                            existingRequest.status === "pending" ? "text-amber-500 group-hover:text-amber-400" :
-                            existingRequest.status === "approved" ? "text-blue-500 group-hover:text-blue-400" :
-                            existingRequest.status === "denied" ? "text-red-500 group-hover:text-red-400" :
-                            "text-emerald-500 group-hover:text-emerald-400"
-                        )}>
+                        <span className="text-sm font-bold text-foreground leading-snug">
                             {t("Move Out")}
                         </span>
                     </button>
@@ -294,13 +289,14 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
             ) : (
                 /* Quick Action Trigger */
                 <button
+                    type="button"
                     onClick={() => setIsOpen(true)}
-                    className="neumorphic-extruded rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-1 group w-full"
+                    className="group flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-card px-4 py-3.5 shadow-xs transition-all hover:border-rose-500/40 hover:bg-muted/40 min-h-[56px] w-full text-left"
                 >
-                    <div className="size-12 sm:size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 text-red-500 neumorphic-inset-card">
-                        <LogOut className="size-6 sm:size-7" />
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 transition-transform group-hover:scale-105">
+                        <LogOut className="size-5" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-black text-center group-hover:text-red-500 transition-colors uppercase tracking-wider truncate max-w-full">{t("Move Out")}</span>
+                    <span className="text-sm font-bold text-foreground leading-snug group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">{t("Move Out")}</span>
                 </button>
             )}
 

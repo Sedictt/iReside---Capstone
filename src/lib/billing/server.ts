@@ -77,6 +77,8 @@ export type InvoiceListItem = {
     id: string;
     invoiceNumber: string;
     tenant: string;
+    tenantAvatarUrl?: string | null;
+    tenantAvatarBgColor?: string | null;
     property: string;
     unit: string;
     amount: number;
@@ -296,6 +298,7 @@ const PAYMENT_RELATION_SELECT = `
         full_name,
         role,
         avatar_url,
+        avatar_bg_color,
         phone,
         created_at,
         updated_at
@@ -306,6 +309,7 @@ const PAYMENT_RELATION_SELECT = `
         full_name,
         role,
         avatar_url,
+        avatar_bg_color,
         phone,
         created_at,
         updated_at
@@ -418,6 +422,8 @@ function buildInvoiceListItem(
         id: payment.id,
         invoiceNumber: payment.invoice_number ?? makeInvoiceNumber(payment.id, payment.billing_cycle ?? payment.due_date),
         tenant: payment.tenant?.full_name ?? "Unknown tenant",
+        tenantAvatarUrl: payment.tenant?.avatar_url ?? null,
+        tenantAvatarBgColor: payment.tenant?.avatar_bg_color ?? null,
         property: payment.lease?.unit?.property?.name ?? "Unknown property",
         unit: payment.lease?.unit?.name ?? "Unknown unit",
         amount: Number(payment.amount ?? 0),

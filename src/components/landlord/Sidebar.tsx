@@ -20,7 +20,8 @@ import {
     Calendar,
     BookOpen,
     Download,
-    Plus
+    Plus,
+    History
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { signOut } from "@/lib/supabase/client-auth";
@@ -84,6 +85,12 @@ export function Sidebar({
                     tourId: "nav-finance-hub", 
                     urgent: isUrgent('payment'),
                     description: "Rental ledger, incoming payments, receipts & automated billing"
+                },
+                { 
+                    label: "Activity & History", 
+                    href: "/landlord/activity", 
+                    icon: History, 
+                    description: "Payment history & audit log of your recent actions"
                 },
                 { 
                     label: "Maintenance", 

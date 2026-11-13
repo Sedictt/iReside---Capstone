@@ -7,8 +7,7 @@ import {
     Folder, 
     AlertTriangle,
     ChevronRight,
-    ArrowLeft,
-    Bot
+    ArrowLeft
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ContactItem, QuickAction } from "./types";
@@ -119,18 +118,6 @@ export function ChatHeader({
 
             {!isPlaceholder && (
                 <div className="flex items-center gap-2">
-                    {onOpenIrisDrawer && (
-                        <button
-                            type="button"
-                            onClick={onOpenIrisDrawer}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold border border-purple-500/20 hover:bg-purple-500/15 transition-all active:scale-95"
-                            title={t("Open iRis Operations Assistant")}
-                        >
-                            <Bot className="size-4" />
-                            <span className="hidden md:inline">{t("iRis Assistant")}</span>
-                        </button>
-                    )}
-
                     <button 
                         onClick={() => openReportWizard()}
                         className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/5 text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-500/10 hover:bg-red-500/10 transition-all active:scale-95"

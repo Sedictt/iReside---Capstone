@@ -122,6 +122,10 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
         }
     }, [role, pathname, router, tabs])
 
+    if (pathname?.startsWith('/mobile/landlord/unit-map')) {
+        return null
+    }
+
     return (
         <nav className="mobile-tab-bar relative z-40 pointer-events-auto" aria-label={t("Main navigation")}>
             {tabs.map((tab) => {

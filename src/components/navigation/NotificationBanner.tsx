@@ -247,7 +247,7 @@ export function NotificationBanner() {
     };
 
     return (
-        <div className="absolute top-0 left-0 right-0 z-40 flex justify-center pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 z-[60] flex justify-center pointer-events-none">
             <motion.div
                 ref={bannerRef}
                 initial={false}

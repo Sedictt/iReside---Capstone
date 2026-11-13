@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useReducer, useEffect, useState } from "react";
+import React, { useReducer, useEffect, useRef, useState } from "react";
 import {
   CheckCircle2,
   ArrowRight,
@@ -78,8 +78,12 @@ export function IrisInvoiceWizard({
   const [electricMeterReset, setElectricMeterReset] = useState(false);
   const [electricSkipped, setElectricSkipped] = useState(false);
 
-  // Initialize wizard with context or start selection
+  // Initialize wizard with context or start selection (guarded against React StrictMode double-invoke)
+  const hasInitializedRef = useRef(false);
   useEffect(() => {
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
     if (initialContext) {
       dispatch({ type: "START_INVOICE" });
       dispatch({ type: "CONTEXT_LOADED", payload: initialContext });

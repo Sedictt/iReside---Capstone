@@ -74,7 +74,7 @@ function LeasesContent() {
  return t("Ended {date}", { date: formatLeaseDate(state.endDate, undefined, language) });
  }
  };
- const leaseId = searchParams.get("id");
+ const leaseId = searchParams.get("id") || searchParams.get("leaseId");
  const unitId = searchParams.get("unitId");
  const { selectedPropertyId, setSelectedPropertyId, properties } = useProperty();
 

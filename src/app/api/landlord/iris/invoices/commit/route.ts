@@ -11,6 +11,7 @@ import {
 } from "@/lib/services/iris";
 import { recordUtilityReading } from "@/lib/billing/server";
 import { getOrCreateDirectConversation } from "@/lib/billing/workflow";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import {
   getMonthStart,
   getMonthEnd,
@@ -21,6 +22,17 @@ import {
 } from "@/lib/billing/utils";
 
 export const dynamic = "force-dynamic";
+
+function getWriteClient(authSupabase: any) {
+  if (process.env.VITEST) {
+    return authSupabase;
+  }
+  try {
+    return createServiceRoleSupabaseClient();
+  } catch {
+    return authSupabase;
+  }
+}
 
 interface CommitInvoiceRequestBody {
   context?: InvoiceBuildContext;
@@ -161,9 +173,14 @@ export async function POST(request: Request) {
       mergedContext.electricity.usage = elecCheck.usage;
     }
 
-    // 5. Billing cycle dates
-    const cycleStart = getMonthStart(mergedContext.billingMonth);
-    const cycleEnd = getMonthEnd(mergedContext.billingMonth);
+    // 5. Billing cycle dates (use UTC for YYYY-MM inputs to avoid local timezone day-shift)
+    const billingMonthMatch = /^(\d{4})-(\d{2})/.exec(mergedContext.billingMonth);
+    const cycleStart = billingMonthMatch
+      ? new Date(Date.UTC(Number(billingMonthMatch[1]), Number(billingMonthMatch[2]) - 1, 1))
+      : getMonthStart(mergedContext.billingMonth);
+    const cycleEnd = billingMonthMatch
+      ? new Date(Date.UTC(Number(billingMonthMatch[1]), Number(billingMonthMatch[2]), 0))
+      : getMonthEnd(mergedContext.billingMonth);
     const cycleKey = toIsoDate(cycleStart);
     const dueDateIso = mergedContext.dueDate;
 
@@ -310,10 +327,12 @@ export async function POST(request: Request) {
     await recordUtility("water", mergedContext.water);
     await recordUtility("electricity", mergedContext.electricity);
 
+    const writeClient = getWriteClient(auth.supabase);
+
     // 11. Insert notification in notifications table for tenant
     if (mergedContext.tenantId) {
       try {
-        await auth.supabase.from("notifications").insert({
+        const { error: notifError } = await writeClient.from("notifications").insert({
           user_id: mergedContext.tenantId,
           type: "payment",
           title: "New Invoice Issued",
@@ -325,6 +344,9 @@ export async function POST(request: Request) {
             due_date: dueDateIso,
           },
         });
+        if (notifError) {
+          console.warn("Failed to create tenant notification:", notifError);
+        }
       } catch (notifErr) {
         console.warn("Failed to create tenant notification:", notifErr);
       }
@@ -337,7 +359,7 @@ export async function POST(request: Request) {
     if (mergedContext.tenantId) {
       try {
         conversationId = await getOrCreateDirectConversation(
-          auth.supabase,
+          writeClient,
           auth.userId,
           mergedContext.tenantId
         );
@@ -349,7 +371,7 @@ export async function POST(request: Request) {
 
         const chatContent = `Official Invoice #${invoiceNum} issued for ₱${formattedAmount}. Due Date: ${dueDateIso}.`;
 
-        const { data: msgRow, error: msgError } = await auth.supabase
+        const { data: msgRow, error: msgError } = await writeClient
           .from("messages")
           .insert({
             conversation_id: conversationId,
@@ -368,7 +390,9 @@ export async function POST(request: Request) {
           .select("id")
           .single();
 
-        if (!msgError && msgRow) {
+        if (msgError) {
+          console.warn("Failed to dispatch chat message:", msgError);
+        } else if (msgRow) {
           messageId = msgRow.id;
         }
       } catch (chatErr) {

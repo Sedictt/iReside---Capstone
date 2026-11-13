@@ -8,8 +8,20 @@ import {
   type TemplateContext,
 } from "@/lib/services/iris";
 import { findDirectConversation } from "@/lib/messages/engine";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
+
+function getWriteClient(authSupabase: any) {
+  if (process.env.VITEST) {
+    return authSupabase;
+  }
+  try {
+    return createServiceRoleSupabaseClient();
+  } catch {
+    return authSupabase;
+  }
+}
 
 const RenewalOfferSchema = z.object({
   leaseId: z.string().min(1, "Lease ID is required"),
@@ -59,11 +71,17 @@ async function getOrCreateDirectConversation(
   }
 
   const newId = crypto.randomUUID();
-  await supabase.from("conversations").insert({ id: newId });
-  await supabase.from("conversation_participants").insert([
+  const { error: convErr } = await supabase.from("conversations").insert({ id: newId });
+  if (convErr) {
+    throw new Error(`Failed to create conversation: ${convErr.message}`);
+  }
+  const { error: partErr } = await supabase.from("conversation_participants").insert([
     { conversation_id: newId, user_id: landlordId },
     { conversation_id: newId, user_id: tenantId },
   ]);
+  if (partErr) {
+    throw new Error(`Failed to add conversation participants: ${partErr.message}`);
+  }
   return newId;
 }
 
@@ -186,10 +204,12 @@ export async function POST(request: Request) {
     const offerDetails = ` Proposed renewal: ${renewalTermMonths} months at ${formatPhpCurrency(proposedRent)}/month.${customMessage ? ` Message from landlord: "${customMessage}"` : ""}`;
     const renderedMessage = `${baseMessage}${offerDetails}`;
 
+    const writeClient = getWriteClient(auth.supabase);
+
     // 8. Dispatch notification in notifications table
     if (lease.tenant_id) {
       try {
-        await auth.supabase.from("notifications").insert({
+        const { error: notifError } = await writeClient.from("notifications").insert({
           user_id: lease.tenant_id,
           type: "lease",
           title: "Lease Renewal Offer",
@@ -202,6 +222,9 @@ export async function POST(request: Request) {
           },
           read: false,
         });
+        if (notifError) {
+          console.warn("Failed to create renewal notification:", notifError);
+        }
       } catch (notifErr) {
         console.warn("Failed to create renewal notification:", notifErr);
       }
@@ -211,12 +234,12 @@ export async function POST(request: Request) {
     if (lease.tenant_id) {
       try {
         const conversationId = await getOrCreateDirectConversation(
-          auth.supabase,
+          writeClient,
           auth.userId,
           lease.tenant_id
         );
 
-        await auth.supabase.from("messages").insert({
+        const { error: msgError } = await writeClient.from("messages").insert({
           conversation_id: conversationId,
           sender_id: auth.userId,
           type: "system",
@@ -230,6 +253,9 @@ export async function POST(request: Request) {
             timestamp: new Date().toISOString(),
           },
         });
+        if (msgError) {
+          console.warn("Failed to dispatch lease renewal direct chat message:", msgError);
+        }
       } catch (chatErr) {
         console.warn("Failed to dispatch lease renewal direct chat message:", chatErr);
       }

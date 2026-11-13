@@ -158,7 +158,9 @@ export function MiniChatSidebar({ controller, onExpandedChange, renderLeading, d
     }, []);
 
     const openIds = new Set(openChats.map((chat) => chat.id));
-    const listedConversations = trimmedQuery ? filteredConversations : conversations;
+    const listedConversations = trimmedQuery
+        ? filteredConversations
+        : conversations.filter((conversation) => conversation.hasMessages !== false || openIds.has(conversation.id));
     const showNoMatches = !isLoadingConversations && trimmedQuery.length > 0 && listedConversations.length === 0 && directoryUsers.length === 0 && !isSearching;
 
     return (

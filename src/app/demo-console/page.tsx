@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { DemoConsole } from "./DemoConsole";
-import { DEMO_ACCOUNTS, DEMO_PASSWORD, DEMO_SCENARIOS } from "./scenarios";
+import { DEMO_ACCOUNTS, DEMO_PASSWORD, DEMO_SCENARIOS, EXTRA_RESIDENTS } from "./scenarios";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-    title: "Defense Console",
+    title: "iReside Defense Console",
     robots: { index: false, follow: false },
 };
 
@@ -23,6 +23,7 @@ export default function DemoConsolePage() {
     return (
         <DemoConsole
             accounts={DEMO_ACCOUNTS}
+            extraResidents={EXTRA_RESIDENTS}
             password={DEMO_PASSWORD}
             scenarios={DEMO_SCENARIOS}
             resetAvailable={resetAvailable}

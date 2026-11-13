@@ -25,7 +25,11 @@ import {
     AlertTriangle,
     ArrowLeft,
     Bell,
+    Check,
     CheckCircle2,
+    ChevronDown,
+    Copy,
+    FileText,
     HandCoins,
     Loader2,
     Trash2,
@@ -41,7 +45,7 @@ import { tr } from "@/hooks/useLanguage";
 import { playSound } from "@/hooks/useSound";
 import { FieldError } from "@/components/ui/field-error";
 import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
-import { INVOICE_TONE_CLASSES, describeInvoice, resolveInvoicePlainState, type InvoicePlainStatus } from "@/lib/billing/invoice-plain-status";
+import { describeInvoice, resolveInvoicePlainState, type InvoicePlainStatus } from "@/lib/billing/invoice-plain-status";
 import { formatAccountNumber, maskAccountNumber, paymentMethodLabel } from "@/lib/billing/payment-methods";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { moneyRule } from "@/lib/validation/rules";
@@ -227,6 +231,7 @@ export function InvoiceModal({
     const [reloadKey, setReloadKey] = useState(0);
 
     const [mode, setMode] = useState<"actions" | "problem">("actions");
+    const [activeSectionTab, setActiveSectionTab] = useState<"review" | "breakdown">("review");
     const [note, setNote] = useState("");
     const [processing, setProcessing] = useState<ReviewAction | "remind" | "refund" | null>(null);
     const [pending, setPending] = useState<PendingAction | null>(null);
@@ -234,18 +239,25 @@ export function InvoiceModal({
     const [actionError, setActionError] = useState<string | null>(null);
     const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
     const [refundProofFile, setRefundProofFile] = useState<File | null>(null);
+    const [showReadings, setShowReadings] = useState(false);
+    const [showHistory, setShowHistory] = useState(false);
+    const [copiedRef, setCopiedRef] = useState(false);
 
     // Everything starts fresh each time a different invoice opens.
     useEffect(() => {
         if (!invoiceId) return;
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setMode("actions");
+        setActiveSectionTab("review");
         setNote("");
         setPending(null);
         setDone(null);
         setActionError(null);
         setRefundProofFile(null);
         setLightboxUrl(null);
+        setShowReadings(false);
+        setShowHistory(false);
+        setCopiedRef(false);
         setLoadError(null);
         setLoading(true);
 
@@ -465,8 +477,13 @@ export function InvoiceModal({
         onClose();
     };
 
+    const unitDisplay = invoice?.unit?.name
+        ? /^(room|unit)\b/i.test(invoice.unit.name.trim())
+            ? invoice.unit.name.trim()
+            : t("Unit {unit}", { unit: invoice.unit.name })
+        : null;
     const headerSubtitle = invoice
-        ? [invoice.unit?.name ? t("Unit {unit}", { unit: invoice.unit.name }) : null, invoice.property?.name ?? null].filter(Boolean).join(" · ")
+        ? [unitDisplay, invoice.property?.name ?? null].filter(Boolean).join(" · ")
         : "";
 
     return (
@@ -478,24 +495,23 @@ export function InvoiceModal({
                     onEscapeKeyDown={(event) => { if (processing || pending || lightboxUrl) event.preventDefault(); }}
                     onPointerDownOutside={(event) => { if (processing || pending || lightboxUrl) event.preventDefault(); }}
                     className={cn(
-                        "fixed inset-0 z-[151] flex flex-col bg-background focus:outline-none",
-                        "sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[94vh] sm:w-[calc(100vw-2rem)] sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border sm:border-border sm:bg-card sm:shadow-2xl",
+                        "fixed inset-0 z-[151] flex flex-col bg-background focus:outline-none pb-[env(safe-area-inset-bottom,0px)]",
+                        "sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[94vh] sm:w-[calc(100vw-2rem)] sm:max-w-2xl md:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border sm:border-border sm:bg-card sm:shadow-2xl",
                     )}
                 >
                     {/* Top bar: where am I, and the way out. Always visible. */}
-                    <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border/50 bg-card/60 px-6 py-5 sm:rounded-t-[2.5rem]">
+                    <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-5 py-4 sm:px-6 sm:rounded-t-3xl">
                         <div className="min-w-0">
-                            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">{t("Rent Bill")}</p>
-                            <Dialog.Title className="truncate text-2xl font-black text-foreground sm:text-3xl mt-0.5">
+                            <Dialog.Title className="truncate text-xl font-black text-foreground sm:text-2xl">
                                 {loading ? t("Loading…") : invoice ? invoice.tenant?.full_name || t("Unknown tenant") : t("Bill")}
                             </Dialog.Title>
-                            {headerSubtitle && <p className="truncate text-xs sm:text-sm text-muted-foreground mt-0.5">{headerSubtitle}</p>}
+                            {headerSubtitle && <p className="truncate text-xs sm:text-sm font-medium text-muted-foreground mt-0.5">{headerSubtitle}</p>}
                         </div>
                         <Dialog.Close asChild>
                             <button
                                 type="button"
                                 disabled={!!processing}
-                                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 cursor-pointer"
+                                className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 cursor-pointer"
                                 aria-label={t("Close")}
                             >
                                 <X className="size-5" aria-hidden />
@@ -503,11 +519,11 @@ export function InvoiceModal({
                         </Dialog.Close>
                     </div>
 
-                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-7">
+                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5">
                         {loading && (
                             <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 text-center">
                                 <Loader2 className="size-10 animate-spin text-foreground" aria-hidden />
-                                <p className="text-lg font-semibold text-muted-foreground">{t("Opening the bill…")}</p>
+                                <p className="text-base font-semibold text-muted-foreground">{t("Opening the bill…")}</p>
                             </div>
                         )}
 
@@ -517,234 +533,542 @@ export function InvoiceModal({
                             </SettingsNotice>
                         )}
 
-                        {!loading && invoice && plain && (
-                            <div className="space-y-8">
-                                {/* 1. What is happening */}
-                                <section aria-labelledby="invoice-status-heading" className={cn("rounded-3xl border-2 p-5 sm:p-6", INVOICE_TONE_CLASSES[plain.tone])}>
-                                    <span className="inline-flex items-center gap-2 rounded-full border-2 border-current/40 bg-background/70 px-3 py-1 text-base font-bold">
-                                        {plain.group === "paid" && <CheckCircle2 className="size-5" aria-hidden />}
-                                        {plain.group === "late" && <AlertCircle className="size-5" aria-hidden />}
-                                        {plain.tag}
-                                    </span>
-                                    <h2 id="invoice-status-heading" className="mt-3 text-2xl font-black leading-tight sm:text-3xl">
-                                        {done ? done.title : plain.headline}
-                                    </h2>
-                                    <p className="mt-2 text-lg leading-relaxed">{done ? done.detail : plain.detail}</p>
-                                    <dl className="mt-5 grid grid-cols-2 gap-4 border-t-2 border-current/15 pt-4 sm:grid-cols-3">
-                                        <div>
-                                            <dt className="text-base font-semibold opacity-80">{t("Bill amount")}</dt>
-                                            <dd className="text-2xl font-black">{formatPhpCurrency(invoice.totalAmount)}</dd>
-                                        </div>
-                                        {invoice.paidAmount > 0 && invoice.balanceRemaining > 0 && (
-                                            <div>
-                                                <dt className="text-base font-semibold opacity-80">{t("Still owed")}</dt>
-                                                <dd className="text-2xl font-black">{formatPhpCurrency(invoice.balanceRemaining)}</dd>
-                                            </div>
-                                        )}
-                                        <div>
-                                            <dt className="text-base font-semibold opacity-80">{t("Due date")}</dt>
-                                            <dd className="text-xl font-bold">{formatDateLong(invoice.dueDate)}</dd>
-                                        </div>
-                                    </dl>
-                                </section>
+                        {!loading && invoice && plain && (() => {
+                            const badgeTone =
+                                plain.tone === "success"
+                                    ? "bg-white text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
+                                    : plain.tone === "warning"
+                                      ? "bg-white text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+                                      : plain.tone === "danger"
+                                        ? "bg-white text-rose-800 dark:bg-rose-950 dark:text-rose-200"
+                                        : plain.tone === "neutral"
+                                          ? "bg-white text-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
+                                          : "bg-white text-sky-800 dark:bg-sky-950 dark:text-sky-200";
 
-                                {actionError && (
-                                    <SettingsNotice tone="danger" live title={t("That did not work")}>
-                                        {actionError} {t("Nothing on the bill was changed.")}
-                                    </SettingsNotice>
-                                )}
+                            const heroTheme =
+                                plain.tone === "success"
+                                    ? {
+                                          card: "border-emerald-600 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white dark:border-emerald-800 dark:from-emerald-800 dark:via-emerald-900 dark:to-teal-950 dark:text-emerald-50",
+                                          dotRgb: "167, 243, 208",
+                                          gridRgb: "209, 250, 229",
+                                          topGlow: "bg-emerald-200/30",
+                                          bottomGlow: "bg-teal-300/25",
+                                          sheen: "linear-gradient(125deg, rgba(167,243,208,0.22) 0%, rgba(110,231,183,0.06) 50%, rgba(13,148,136,0.20) 100%)",
+                                          proofBtn: "bg-emerald-50 hover:bg-white border-emerald-200 text-emerald-900 dark:bg-emerald-900 dark:hover:bg-emerald-800 dark:border-emerald-700 dark:text-emerald-50",
+                                          doneCard: "bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-900 dark:border-emerald-700 dark:text-emerald-50",
+                                          doneSub: "text-emerald-700 dark:text-emerald-200",
+                                      }
+                                    : plain.tone === "warning"
+                                      ? {
+                                            card: "border-orange-600 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 text-white dark:border-amber-800 dark:from-amber-800 dark:via-orange-900 dark:to-orange-950 dark:text-amber-50",
+                                            dotRgb: "254, 240, 138",
+                                            gridRgb: "254, 249, 195",
+                                            topGlow: "bg-yellow-200/35",
+                                            bottomGlow: "bg-orange-300/25",
+                                            sheen: "linear-gradient(125deg, rgba(254,240,138,0.24) 0%, rgba(253,186,116,0.08) 50%, rgba(234,88,12,0.18) 100%)",
+                                            proofBtn: "bg-amber-50 hover:bg-white border-amber-200 text-amber-900 dark:bg-amber-900 dark:hover:bg-amber-800 dark:border-amber-700 dark:text-amber-50",
+                                            doneCard: "bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-900 dark:border-amber-700 dark:text-amber-50",
+                                            doneSub: "text-amber-700 dark:text-amber-200",
+                                        }
+                                      : plain.tone === "danger"
+                                        ? {
+                                              card: "border-rose-600 bg-gradient-to-br from-rose-500 via-rose-600 to-red-600 text-white dark:border-rose-800 dark:from-rose-800 dark:via-rose-900 dark:to-red-950 dark:text-rose-50",
+                                              dotRgb: "254, 205, 211",
+                                              gridRgb: "255, 228, 230",
+                                              topGlow: "bg-rose-200/30",
+                                              bottomGlow: "bg-pink-300/20",
+                                              sheen: "linear-gradient(125deg, rgba(254,205,211,0.22) 0%, rgba(253,164,175,0.06) 50%, rgba(225,29,72,0.18) 100%)",
+                                              proofBtn: "bg-rose-50 hover:bg-white border-rose-200 text-rose-900 dark:bg-rose-900 dark:hover:bg-rose-800 dark:border-rose-700 dark:text-rose-50",
+                                              doneCard: "bg-rose-50 border-rose-200 text-rose-900 dark:bg-rose-900 dark:border-rose-700 dark:text-rose-50",
+                                              doneSub: "text-rose-700 dark:text-rose-200",
+                                          }
+                                        : plain.tone === "neutral"
+                                          ? {
+                                                card: "border-slate-600 bg-gradient-to-br from-slate-600 via-slate-700 to-indigo-700 text-white dark:border-slate-700 dark:from-slate-800 dark:via-slate-900 dark:to-indigo-950 dark:text-slate-50",
+                                                dotRgb: "226, 232, 240",
+                                                gridRgb: "241, 245, 249",
+                                                topGlow: "bg-slate-300/25",
+                                                bottomGlow: "bg-indigo-400/20",
+                                                sheen: "linear-gradient(125deg, rgba(226,232,240,0.20) 0%, rgba(148,163,184,0.06) 50%, rgba(67,56,202,0.18) 100%)",
+                                                proofBtn: "bg-slate-50 hover:bg-white border-slate-200 text-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-600 dark:text-slate-50",
+                                                doneCard: "bg-slate-50 border-slate-200 text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-50",
+                                                doneSub: "text-slate-600 dark:text-slate-300",
+                                            }
+                                          : {
+                                                card: "border-teal-600 bg-gradient-to-br from-primary via-teal-600 to-emerald-600 text-white dark:border-teal-800 dark:from-teal-800 dark:via-teal-900 dark:to-emerald-950 dark:text-teal-50",
+                                                dotRgb: "204, 251, 241",
+                                                gridRgb: "240, 253, 250",
+                                                topGlow: "bg-teal-200/30",
+                                                bottomGlow: "bg-emerald-300/20",
+                                                sheen: "linear-gradient(125deg, rgba(204,251,241,0.22) 0%, rgba(153,246,228,0.06) 50%, rgba(15,118,110,0.18) 100%)",
+                                                proofBtn: "bg-teal-50 hover:bg-white border-teal-200 text-teal-900 dark:bg-teal-900 dark:hover:bg-teal-800 dark:border-teal-700 dark:text-teal-50",
+                                                doneCard: "bg-teal-50 border-teal-200 text-teal-900 dark:bg-teal-900 dark:border-teal-700 dark:text-teal-50",
+                                                doneSub: "text-teal-700 dark:text-teal-200",
+                                            };
 
-                                {/* 2. What to do now */}
-                                {done ? (
-                                    <section className="rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
-                                        <h2 className="text-xl font-bold text-foreground">{t("You are done here")}</h2>
-                                        <p className="mt-1 text-base text-muted-foreground">{t("You can close this bill. The list behind it is already up to date.")}</p>
-                                        <SettingsButton size="lg" className="mt-5 w-full sm:w-auto" onClick={handleClose}>{t("Close this bill")}</SettingsButton>
-                                    </section>
-                                ) : role === "landlord" ? (
-                                    <LandlordActions
-                                        invoice={invoice}
-                                        plain={plain}
-                                        tenantName={tenantName}
-                                        refund={refund}
-                                        refundDone={refundDone}
-                                        isCash={isCash}
-                                        canSendReminder={canSendReminder}
-                                        mode={mode}
-                                        setMode={setMode}
-                                        note={note}
-                                        setNote={setNote}
-                                        processing={processing}
-                                        refundProofFile={refundProofFile}
-                                        setRefundProofFile={setRefundProofFile}
-                                        onConfirmPayment={askConfirmPayment}
-                                        onConfirmCash={askConfirmCash}
-                                        onSendReminder={() => void sendReminder()}
-                                        onMarkRefunded={askMarkRefunded}
-                                        onProblemReady={(action) => setPending(action)}
-                                        onOpenImage={setLightboxUrl}
-                                    />
-                                ) : (
-                                    !isSettled && (
-                                        <section className="rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
-                                            <h2 className="text-xl font-bold text-foreground">{t("What to do now")}</h2>
-                                            <p className="mt-1 text-base text-muted-foreground">{t("Pay with GCash, bank transfer, or cash. You will be able to upload your receipt.")}</p>
-                                            <Link href={`/tenant/payments/${invoiceId}/checkout`} className="mt-5 inline-flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-primary px-7 text-lg font-bold text-primary-foreground hover:brightness-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50 sm:w-auto">
-                                                {t("Pay now")}
-                                            </Link>
-                                        </section>
-                                    )
-                                )}
+                            const amountLabel =
+                                plain.group === "paid"
+                                    ? t("Amount Paid")
+                                    : plain.group === "late"
+                                      ? t("Overdue Amount")
+                                      : t("Total Bill Amount");
 
-                                {/* 3. What the tenant sent */}
-                                {(invoice.paymentMethod || invoice.paymentProofUrl || invoice.referenceNumber || invoice.paymentSubmittedAt) && (
-                                    <section aria-labelledby="invoice-payment-heading" className="space-y-4 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
-                                        <h2 id="invoice-payment-heading" className="text-xl font-bold text-foreground">{role === "tenant" ? t("Your payment") : t("What the tenant sent")}</h2>
-                                        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                            <Fact label={t("Paid with")} value={methodLabel ?? t("Not specified")} />
-                                            <Fact label={t("Reference number")} help={isCash ? undefined : t("From the GCash or bank text message")} value={invoice.referenceNumber || t("None given")} mono={!!invoice.referenceNumber} />
-                                            {invoice.paymentSubmittedAt && <Fact label={t("Sent on")} value={formatDateLong(invoice.paymentSubmittedAt)} />}
-                                            {invoice.paymentNote && <Fact label={t("Note from the tenant")} value={invoice.paymentNote} />}
-                                        </dl>
+                            const hasPaymentSent = Boolean(
+                                invoice.paymentProofUrl ||
+                                    invoice.referenceNumber ||
+                                    invoice.paymentSubmittedAt ||
+                                    invoice.paymentNote ||
+                                    (!isCash && invoice.paymentMethod),
+                            );
 
-                                        <PaidToAccount invoice={invoice} />
+                            const paidTo =
+                                invoice.paymentMethod === "bank_transfer"
+                                    ? invoice.paymentDestinations?.bank_transfer
+                                    : invoice.paymentDestination;
 
-                                        {invoice.paymentProofUrl ? (
-                                            <div className="space-y-3">
-                                                <p className="text-lg font-bold text-foreground">{t("Receipt photo")}</p>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setLightboxUrl(invoice.paymentProofUrl)}
-                                                    className="group relative block w-full overflow-hidden rounded-2xl border-2 border-foreground/20 bg-muted focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50"
-                                                    aria-label={t("See the receipt photo larger")}
-                                                >
-                                                    <span className="relative block aspect-[4/3] w-full">
-                                                        <Image src={invoice.paymentProofUrl} alt={t("Receipt photo sent by the tenant")} fill className="object-contain" sizes="(max-width: 768px) 100vw, 700px" />
-                                                    </span>
-                                                    <span className="absolute bottom-3 right-3 inline-flex items-center gap-2 rounded-2xl bg-foreground px-4 py-2 text-base font-bold text-background shadow-lg">
-                                                        <ZoomIn className="size-5" aria-hidden />
-                                                        {t("See it larger")}
-                                                    </span>
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            !isCash && (
-                                                <p className="rounded-2xl border-2 border-dashed border-foreground/20 p-4 text-base text-muted-foreground">
-                                                    {t("No receipt photo was sent with this payment.")}
-                                                </p>
-                                            )
-                                        )}
+                            const errorBanner = actionError ? (
+                                <SettingsNotice tone="danger" live title={t("That did not work")}>
+                                    {actionError} {t("Nothing on the bill was changed.")}
+                                </SettingsNotice>
+                            ) : null;
 
-                                        {refundProofUrl(invoice) && (
-                                            <div className="space-y-3 border-t-2 border-foreground/10 pt-4">
-                                                <p className="text-lg font-bold text-foreground">{t("Refund receipt")}</p>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setLightboxUrl(refundProofUrl(invoice))}
-                                                    className="relative block w-full overflow-hidden rounded-2xl border-2 border-foreground/20 bg-muted focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50"
-                                                    aria-label={t("See the refund receipt larger")}
-                                                >
-                                                    <span className="relative block aspect-[4/3] w-full">
-                                                        <Image src={refundProofUrl(invoice)!} alt={t("Refund receipt")} fill className="object-contain" sizes="(max-width: 768px) 100vw, 700px" />
-                                                    </span>
-                                                </button>
-                                            </div>
-                                        )}
-                                    </section>
-                                )}
-
-                                {/* 4. What the bill is for */}
-                                <section aria-labelledby="invoice-items-heading" className="space-y-4 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
+                            const actionsContent = done ? (
+                                <div className="rounded-xl border border-border bg-background p-4 flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-start justify-between gap-3">
                                     <div>
-                                        <h2 id="invoice-items-heading" className="text-xl font-bold text-foreground">{t("What this bill is for")}</h2>
-                                        <p className="text-base text-muted-foreground">
-                                            {t("Invoice number")} {invoice.invoiceNumber}
-                                            {invoice.invoicePeriodStart && invoice.invoicePeriodEnd ? ` · ${t("For {start} to {end}", { start: formatDateLong(invoice.invoicePeriodStart), end: formatDateLong(invoice.invoicePeriodEnd) })}` : ""}
+                                        <p className="text-base font-bold text-foreground">{t("You are done here")}</p>
+                                        <p className="text-sm text-muted-foreground">{t("You can close this bill.")}</p>
+                                    </div>
+                                    <SettingsButton size="md" onClick={handleClose}>{t("Close this bill")}</SettingsButton>
+                                </div>
+                            ) : role === "landlord" ? (
+                                <LandlordActions
+                                    invoice={invoice}
+                                    plain={plain}
+                                    tenantName={tenantName}
+                                    refund={refund}
+                                    refundDone={refundDone}
+                                    isCash={isCash}
+                                    canSendReminder={canSendReminder}
+                                    mode={mode}
+                                    setMode={setMode}
+                                    note={note}
+                                    setNote={setNote}
+                                    processing={processing}
+                                    refundProofFile={refundProofFile}
+                                    setRefundProofFile={setRefundProofFile}
+                                    onConfirmPayment={askConfirmPayment}
+                                    onConfirmCash={askConfirmCash}
+                                    onSendReminder={() => void sendReminder()}
+                                    onMarkRefunded={askMarkRefunded}
+                                    onProblemReady={(action) => setPending(action)}
+                                    onOpenImage={setLightboxUrl}
+                                />
+                            ) : !isSettled ? (
+                                <div className="flex flex-col gap-3">
+                                    <p className="text-sm text-muted-foreground">{t("Pay with GCash, bank transfer, or cash and upload your receipt.")}</p>
+                                    <Link href={`/tenant/payments/${invoiceId}/checkout`} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-base font-bold text-primary-foreground hover:brightness-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50">
+                                        {t("Pay now")}
+                                    </Link>
+                                </div>
+                            ) : null;
+
+                            const hasActions = Boolean(
+                                done ||
+                                    (role === "landlord" && (plain.group !== "paid" || (refund && !refundDone))) ||
+                                    (role === "tenant" && !isSettled),
+                            );
+
+                            const heroSection = (
+                                <section
+                                    aria-labelledby="invoice-status-heading"
+                                    className={cn(
+                                        "relative overflow-hidden rounded-2xl border p-5 sm:p-6 shadow-md ring-1 ring-inset ring-white/15 transition-colors",
+                                        heroTheme.card,
+                                    )}
+                                >
+                                    {/* Hue-matched tactile texture & ambient lighting */}
+                                    <div
+                                        aria-hidden="true"
+                                        className="pointer-events-none absolute inset-0 opacity-[0.22]"
+                                        style={{
+                                            backgroundImage: `radial-gradient(circle, rgba(${heroTheme.dotRgb}, 0.9) 1.5px, transparent 1.5px), linear-gradient(to right, rgba(${heroTheme.gridRgb}, 0.22) 1px, transparent 1px), linear-gradient(to bottom, rgba(${heroTheme.gridRgb}, 0.22) 1px, transparent 1px)`,
+                                            backgroundSize: "20px 20px, 40px 40px, 40px 40px",
+                                        }}
+                                    />
+                                    <div
+                                        aria-hidden="true"
+                                        className="pointer-events-none absolute inset-0"
+                                        style={{ backgroundImage: heroTheme.sheen }}
+                                    />
+                                    <div
+                                        aria-hidden="true"
+                                        className={cn("pointer-events-none absolute -top-24 -right-24 size-72 rounded-full blur-2xl", heroTheme.topGlow)}
+                                    />
+                                    <div
+                                        aria-hidden="true"
+                                        className={cn("pointer-events-none absolute -bottom-20 -left-16 size-56 rounded-full blur-2xl", heroTheme.bottomGlow)}
+                                    />
+
+                                    <div className={cn(
+                                        "relative z-10 grid grid-cols-1 gap-5 items-center",
+                                        hasActions && "lg:grid-cols-12 lg:gap-6",
+                                    )}>
+                                        <div className={cn("space-y-3", hasActions ? "lg:col-span-6" : "lg:col-span-12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4")}>
+                                            <div className="space-y-3">
+                                                <div className="flex flex-wrap items-center gap-2.5">
+                                                    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold shadow-xs", badgeTone)}>
+                                                        {plain.group === "paid" && <CheckCircle2 className="size-3.5" aria-hidden />}
+                                                        {plain.group === "late" && <AlertCircle className="size-3.5" aria-hidden />}
+                                                        {plain.tag}
+                                                    </span>
+                                                    <span className="text-xs font-medium text-white/80">
+                                                        {t("Due")} {formatDateLong(invoice.dueDate)}
+                                                    </span>
+                                                </div>
+
+                                                <div className="space-y-0.5">
+                                                    <p className="text-[11px] font-bold uppercase tracking-wider text-white/75">
+                                                        {amountLabel}
+                                                    </p>
+                                                    <div className="flex flex-wrap items-baseline gap-3">
+                                                        <p className="text-4xl sm:text-5xl font-black tracking-tight tabular-nums text-white drop-shadow-xs">
+                                                            {formatPhpCurrency(invoice.totalAmount)}
+                                                        </p>
+                                                        {invoice.paidAmount > 0 && invoice.balanceRemaining > 0 && (
+                                                            <span className="text-sm font-semibold text-white/90 tabular-nums">
+                                                                ({t("Still owed")}: {formatPhpCurrency(invoice.balanceRemaining)})
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {invoice.paymentProofUrl && (
+                                                    <div className="pt-0.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setLightboxUrl(invoice.paymentProofUrl)}
+                                                            className={cn(
+                                                                "inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold shadow-xs transition-all active:scale-95 cursor-pointer",
+                                                                heroTheme.proofBtn,
+                                                            )}
+                                                        >
+                                                            <ZoomIn className="size-4 shrink-0" aria-hidden />
+                                                            <span>{t("View Proof of Payment")}</span>
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                <div className="space-y-0.5 pt-1 border-t border-white/15">
+                                                    <h2 id="invoice-status-heading" className="text-base font-semibold text-white leading-snug">
+                                                        {done ? done.title : plain.headline}
+                                                    </h2>
+                                                    {(done || role !== "landlord" || plain.group === "paid") && (
+                                                        <p className="text-sm font-normal text-white/80 leading-relaxed max-w-prose">
+                                                            {done ? done.detail : plain.detail}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {!hasActions && plain.group === "paid" && (
+                                                <div className={cn("inline-flex items-center gap-2.5 rounded-xl border px-4 py-3 shadow-xs shrink-0", heroTheme.doneCard)}>
+                                                    <CheckCircle2 className="size-5 shrink-0" aria-hidden />
+                                                    <div className="text-sm">
+                                                        <p className="font-bold leading-tight">{t("All Done")}</p>
+                                                        <p className={cn("text-xs", heroTheme.doneSub)}>{t("Nothing more to do")}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {hasActions && (
+                                            <div className="lg:col-span-6 rounded-xl bg-card text-foreground p-4 sm:p-5 border border-border shadow-xs">
+                                                {actionsContent}
+                                            </div>
+                                        )}
+                                    </div>
+                                </section>
+                            );
+
+                            const paymentAndProofSection = (
+                                <section aria-labelledby="invoice-payment-heading" className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs space-y-5">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <h2 id="invoice-payment-heading" className="text-base font-bold text-foreground">
+                                                {role === "tenant" ? t("Your Payment & Proof") : t("Payment & Proof")}
+                                            </h2>
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                {hasPaymentSent ? t("Transaction details for this bill") : t("Awaiting tenant payment")}
+                                            </p>
+                                        </div>
+                                        {methodLabel && (
+                                            <span className="shrink-0 rounded-full border border-border bg-muted px-3 py-1 text-xs font-bold text-foreground">
+                                                {methodLabel}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {hasPaymentSent ? (
+                                        <>
+                                            {(!isCash || invoice.referenceNumber) && (
+                                                <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/50 px-4 py-3">
+                                                    <div className="min-w-0">
+                                                        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                            {t("Reference Number")}
+                                                        </p>
+                                                        <p className={cn("mt-0.5 truncate text-base font-bold text-foreground", invoice.referenceNumber && "font-mono tracking-wider")}>
+                                                            {invoice.referenceNumber || t("None given")}
+                                                        </p>
+                                                    </div>
+                                                    {invoice.referenceNumber && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                navigator.clipboard?.writeText(invoice.referenceNumber || "");
+                                                                setCopiedRef(true);
+                                                                setTimeout(() => setCopiedRef(false), 1800);
+                                                            }}
+                                                            className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                                                        >
+                                                            {copiedRef ? (
+                                                                <>
+                                                                    <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                                                                    <span>{t("Copied")}</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Copy className="size-3.5 text-muted-foreground" aria-hidden />
+                                                                    <span>{t("Copy")}</span>
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <dl className="divide-y divide-border/60">
+                                                <FactRow label={t("Paid with")} value={methodLabel ?? (isCash ? t("Cash") : t("Not specified"))} />
+                                                {invoice.paymentSubmittedAt && (
+                                                    <FactRow label={t("Sent on")} value={formatDateLong(invoice.paymentSubmittedAt)} />
+                                                )}
+                                                {paidTo && (
+                                                    <FactRow
+                                                        label={t("Paid into")}
+                                                        value={`${paidTo.bank_name ? `${paidTo.bank_name} · ` : ""}${paidTo.account_name} (${invoice.paymentMethod === "bank_transfer" ? maskAccountNumber(paidTo.account_number) : paidTo.account_number})`}
+                                                    />
+                                                )}
+                                            </dl>
+
+                                            {invoice.paymentNote && (
+                                                <div className="rounded-r-xl border-l-2 border-primary bg-muted/40 px-3.5 py-2.5">
+                                                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                        {t("Tenant note")}
+                                                    </p>
+                                                    <p className="mt-1 text-sm text-foreground leading-relaxed">
+                                                        “{invoice.paymentNote}”
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {refundProofUrl(invoice) && (
+                                                <div className="space-y-2 pt-3 border-t border-border/60">
+                                                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("Refund receipt")}</p>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setLightboxUrl(refundProofUrl(invoice))}
+                                                        className="relative block w-full overflow-hidden rounded-xl border border-border bg-muted focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50 cursor-pointer"
+                                                        aria-label={t("See the refund receipt larger")}
+                                                    >
+                                                        <span className="relative block h-40 w-full">
+                                                            <Image src={refundProofUrl(invoice)!} alt={t("Refund receipt")} fill className="object-contain" sizes="(max-width: 768px) 100vw, 480px" />
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="flex items-center gap-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+                                            <FileText className="size-5 shrink-0 opacity-60" aria-hidden />
+                                            <span>{t("No payment or receipt has been sent by the tenant yet.")}</span>
+                                        </div>
+                                    )}
+
+                                    {/* Collapsible Activity Timeline */}
+                                    <div className="pt-3 border-t border-border/60">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowHistory((prev) => !prev)}
+                                            aria-expanded={showHistory}
+                                            className="flex w-full min-h-[40px] items-center justify-between text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                        >
+                                            <span>{t("Activity timeline")}</span>
+                                            <ChevronDown className={cn("size-4 transition-transform", showHistory && "rotate-180")} />
+                                        </button>
+                                        {showHistory && (
+                                            <ol className="mt-3 space-y-3 pl-1">
+                                                <HistoryRow date={invoice.issuedDate} text={t("Bill sent to {name}", { name: tenantName })} />
+                                                {invoice.paymentSubmittedAt && <HistoryRow date={invoice.paymentSubmittedAt} text={methodLabel ? t("{name} sent a payment by {method}", { name: tenantName, method: methodLabel }) : t("{name} sent a payment", { name: tenantName })} />}
+                                                {invoice.rejectionReason && invoice.workflowStatus === "rejected" && <HistoryRow text={t("Problem reported to the tenant: “{reason}”", { reason: invoice.rejectionReason })} />}
+                                                {invoice.receipts.map((receipt) => (
+                                                    <HistoryRow key={receipt.id} date={receipt.issued_at} text={t("Receipt {number} issued for {amount}", { number: receipt.receipt_number ?? "", amount: formatPhpCurrency(receipt.amount) })} done />
+                                                ))}
+                                                {refundDone && <HistoryRow text={t("Refund sent to {name}", { name: tenantName })} done />}
+                                            </ol>
+                                        )}
+                                    </div>
+                                </section>
+                            );
+
+                            const breakdownSection = (
+                                <section aria-labelledby="invoice-items-heading" className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs space-y-5">
+                                    <div>
+                                        <h2 id="invoice-items-heading" className="text-base font-bold text-foreground">{t("What This Bill Is For")}</h2>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                            <span className="font-mono font-semibold text-foreground/80">{invoice.invoiceNumber}</span>
+                                            {invoice.invoicePeriodStart && invoice.invoicePeriodEnd ? ` · ${formatDateLong(invoice.invoicePeriodStart)} – ${formatDateLong(invoice.invoicePeriodEnd)}` : ""}
                                         </p>
                                     </div>
-                                    <ul className="divide-y-2 divide-foreground/10 rounded-2xl border border-border/50 bg-card/60">
-                                        {invoice.lineItems.map((item) => (
-                                            <li key={item.id} className="flex items-center justify-between gap-4 px-4 py-3">
-                                                <div className="min-w-0">
-                                                    <p className="text-lg font-semibold text-foreground">{item.label}</p>
-                                                    <p className="text-base capitalize text-muted-foreground">{t(item.category)}</p>
-                                                </div>
-                                                <p className="shrink-0 text-lg font-bold text-foreground">{formatPhpCurrency(item.amount)}</p>
-                                            </li>
-                                        ))}
-                                        {invoice.lineItems.length === 0 && (
-                                            <li className="flex items-center justify-between gap-4 px-4 py-3">
-                                                <p className="text-lg font-semibold text-foreground">{invoice.description || t("Monthly rent")}</p>
-                                                <p className="shrink-0 text-lg font-bold text-foreground">{formatPhpCurrency(invoice.subtotal)}</p>
-                                            </li>
-                                        )}
-                                        <li className="flex items-center justify-between gap-4 bg-muted/60 px-4 py-3">
-                                            <p className="text-lg font-bold text-foreground">{t("Total")}</p>
-                                            <p className="text-2xl font-black text-foreground">{formatPhpCurrency(invoice.totalAmount)}</p>
-                                        </li>
-                                        {invoice.paidAmount > 0 && (
-                                            <>
-                                                <li className="flex items-center justify-between gap-4 px-4 py-3">
-                                                    <p className="text-lg font-semibold text-foreground">{t("Paid so far")}</p>
-                                                    <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{formatPhpCurrency(invoice.paidAmount)}</p>
+
+                                    {/* Tier 1: Line-Item Charges */}
+                                    <div className="space-y-3">
+                                        <ul className="divide-y divide-dashed divide-border/70">
+                                            {invoice.lineItems.map((item) => {
+                                                const isLate = item.category === "late_fee";
+                                                return (
+                                                    <li key={item.id} className="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+                                                        <p className={cn("text-sm font-medium", isLate ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground")}>
+                                                            {item.label}
+                                                        </p>
+                                                        <p className={cn("shrink-0 text-sm font-semibold tabular-nums", isLate ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>
+                                                            {formatPhpCurrency(item.amount)}
+                                                        </p>
+                                                    </li>
+                                                );
+                                            })}
+                                            {invoice.lineItems.length === 0 && (
+                                                <li className="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+                                                    <p className="text-sm font-medium text-muted-foreground">{invoice.description || t("Monthly rent")}</p>
+                                                    <p className="shrink-0 text-sm font-semibold tabular-nums text-foreground">{formatPhpCurrency(invoice.subtotal)}</p>
                                                 </li>
-                                                <li className="flex items-center justify-between gap-4 px-4 py-3">
-                                                    <p className="text-lg font-bold text-foreground">{t("Still owed")}</p>
-                                                    <p className="text-2xl font-black text-foreground">{formatPhpCurrency(invoice.balanceRemaining)}</p>
-                                                </li>
-                                            </>
-                                        )}
-                                    </ul>
+                                            )}
+                                        </ul>
+
+                                        {/* Tier 2: Total Bill */}
+                                        <div className="flex items-baseline justify-between gap-4 border-t-2 border-border pt-3.5">
+                                            <p className="text-sm font-bold text-foreground">{t("Total")}</p>
+                                            <p className="text-xl font-black tabular-nums tracking-tight text-foreground">{formatPhpCurrency(invoice.totalAmount)}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Tier 3: Payment Settlement Summary */}
+                                    {invoice.paidAmount > 0 && (
+                                        <div className="rounded-xl border border-border/80 bg-muted/50 px-4 py-3 space-y-2">
+                                            <div className="flex items-center justify-between gap-4">
+                                                <p className="text-sm font-medium text-muted-foreground">{t("Paid so far")}</p>
+                                                <p className="text-sm font-bold tabular-nums text-emerald-700 dark:text-emerald-400">{formatPhpCurrency(invoice.paidAmount)}</p>
+                                            </div>
+                                            <div className="flex items-baseline justify-between gap-4 border-t border-border/60 pt-2">
+                                                <p className="text-sm font-bold text-foreground">{t("Still owed")}</p>
+                                                <p className={cn(
+                                                    "text-base font-black tabular-nums",
+                                                    invoice.balanceRemaining <= 0
+                                                        ? "text-emerald-700 dark:text-emerald-400"
+                                                        : "text-rose-600 dark:text-rose-400",
+                                                )}>
+                                                    {formatPhpCurrency(invoice.balanceRemaining)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {invoice.lateFeeAmount > 0 && (
-                                        <p className="text-base text-muted-foreground">{t("Late fee if paid after the due date: {amount}", { amount: formatPhpCurrency(invoice.lateFeeAmount) })}</p>
+                                        <p className="text-xs text-muted-foreground">{t("Late fee if paid after the due date: {amount}", { amount: formatPhpCurrency(invoice.lateFeeAmount) })}</p>
+                                    )}
+
+                                    {invoice.readings.length > 0 && (
+                                        <div className="pt-3 border-t border-border/60">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowReadings((prev) => !prev)}
+                                                aria-expanded={showReadings}
+                                                className="flex w-full min-h-[40px] items-center justify-between text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                            >
+                                                <span>{t("Meter readings ({count})", { count: invoice.readings.length })}</span>
+                                                <ChevronDown className={cn("size-4 transition-transform", showReadings && "rotate-180")} />
+                                            </button>
+                                            {showReadings && (
+                                                <ul className="mt-3 space-y-2.5">
+                                                    {invoice.readings.map((reading) => (
+                                                        <li key={reading.id} className="rounded-xl border border-border/70 bg-muted/40 p-3">
+                                                            <div className="flex items-center justify-between gap-2">
+                                                                <p className="text-sm font-bold capitalize text-foreground">{t(reading.utility_type)}</p>
+                                                                <p className="text-sm font-bold tabular-nums text-foreground">{formatPhpCurrency(reading.computed_charge)}</p>
+                                                            </div>
+                                                            <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
+                                                                {t("Prev")}: {reading.previous_reading} → {t("Now")}: {reading.current_reading} ({reading.usage} {t("used")})
+                                                            </p>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </div>
                                     )}
                                 </section>
+                            );
 
-                                {/* 5. Meter readings */}
-                                {invoice.readings.length > 0 && (
-                                    <section aria-labelledby="invoice-readings-heading" className="space-y-4 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
-                                        <h2 id="invoice-readings-heading" className="text-xl font-bold text-foreground">{t("Meter readings on this bill")}</h2>
-                                        <ul className="space-y-3">
-                                            {invoice.readings.map((reading) => (
-                                                <li key={reading.id} className="rounded-2xl border border-border/50 bg-card/60 p-4">
-                                                    <p className="text-lg font-bold capitalize text-foreground">{t(reading.utility_type)}</p>
-                                                    <p className="text-base text-muted-foreground">
-                                                        {formatDateLong(reading.billing_period_start)} – {formatDateLong(reading.billing_period_end)}
-                                                        {reading.billing_mode === "included_in_rent" ? ` · ${t("Included in the rent")}` : ""}
-                                                    </p>
-                                                    <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                                                        <Fact label={t("Previous reading")} value={String(reading.previous_reading)} />
-                                                        <Fact label={t("This reading")} value={String(reading.current_reading)} />
-                                                        <Fact label={t("Used")} value={String(reading.usage)} />
-                                                        <Fact label={t("Charge")} value={formatPhpCurrency(reading.computed_charge)} />
-                                                    </dl>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </section>
-                                )}
+                            return (
+                                <div className="space-y-5">
+                                    {errorBanner}
+                                    {heroSection}
 
-                                {/* 6. History */}
-                                <section aria-labelledby="invoice-history-heading" className="space-y-4 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
-                                    <h2 id="invoice-history-heading" className="text-xl font-bold text-foreground">{t("What happened so far")}</h2>
-                                    <ol className="space-y-3">
-                                        <HistoryRow date={invoice.issuedDate} text={t("Bill sent to {name}", { name: tenantName })} />
-                                        {invoice.paymentSubmittedAt && <HistoryRow date={invoice.paymentSubmittedAt} text={methodLabel ? t("{name} sent a payment by {method}", { name: tenantName, method: methodLabel }) : t("{name} sent a payment", { name: tenantName })} />}
-                                        {invoice.rejectionReason && invoice.workflowStatus === "rejected" && <HistoryRow text={t("Problem reported to the tenant: “{reason}”", { reason: invoice.rejectionReason })} />}
-                                        {invoice.receipts.map((receipt) => (
-                                            <HistoryRow key={receipt.id} date={receipt.issued_at} text={t("Receipt {number} issued for {amount}", { number: receipt.receipt_number ?? "", amount: formatPhpCurrency(receipt.amount) })} done />
-                                        ))}
-                                        {refundDone && <HistoryRow text={t("Refund sent to {name}", { name: tenantName })} done />}
-                                    </ol>
-                                </section>
+                                    {/* Mobile (< lg): 2-tab switcher */}
+                                    <div className="space-y-4 lg:hidden">
+                                        <div
+                                            role="tablist"
+                                            aria-label={t("Bill sections")}
+                                            className="grid grid-cols-2 gap-1 rounded-xl bg-muted/50 p-1 border border-border/60"
+                                        >
+                                            <button
+                                                type="button"
+                                                role="tab"
+                                                aria-selected={activeSectionTab === "review"}
+                                                onClick={() => setActiveSectionTab("review")}
+                                                className={cn(
+                                                    "min-h-[44px] rounded-lg px-3 text-sm font-bold transition-all cursor-pointer",
+                                                    activeSectionTab === "review"
+                                                        ? "bg-primary text-primary-foreground shadow-xs"
+                                                        : "text-muted-foreground hover:text-foreground",
+                                                )}
+                                            >
+                                                {t("Payment & Proof")}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                role="tab"
+                                                aria-selected={activeSectionTab === "breakdown"}
+                                                onClick={() => setActiveSectionTab("breakdown")}
+                                                className={cn(
+                                                    "min-h-[44px] rounded-lg px-3 text-sm font-bold transition-all cursor-pointer",
+                                                    activeSectionTab === "breakdown"
+                                                        ? "bg-primary text-primary-foreground shadow-xs"
+                                                        : "text-muted-foreground hover:text-foreground",
+                                                )}
+                                            >
+                                                {t("Bill Breakdown")}
+                                            </button>
+                                        </div>
 
-                                <div className="pb-2">
-                                    <SettingsButton variant="secondary" size="lg" icon={ArrowLeft} onClick={handleClose} disabled={!!processing}>
-                                        {t("Back to the list")}
-                                    </SettingsButton>
+                                        {activeSectionTab === "review" ? paymentAndProofSection : breakdownSection}
+                                    </div>
+
+                                    {/* Desktop (lg+): single-column reading order under the Hero Band */}
+                                    <div className="hidden lg:flex lg:flex-col lg:gap-4">
+                                        {paymentAndProofSection}
+                                        {breakdownSection}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
                     </div>
                 </Dialog.Content>
             </Dialog.Portal>
@@ -908,74 +1232,85 @@ function LandlordActions(props: LandlordActionsProps) {
     const state = resolveInvoicePlainState({ ...invoice, amount: invoice.totalAmount, hasRefundRequest: !!refund, refundSent: refundDone });
     const underReview = state === "under_review";
     const cashToConfirm = state === "cash_to_confirm";
+    const [showNoteInput, setShowNoteInput] = useState(Boolean(note.trim()));
 
     return (
-        <section aria-labelledby="invoice-actions-heading" className="space-y-5 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6 shadow-xs">
+        <div aria-labelledby="invoice-actions-heading" className="space-y-3">
             <div>
-                <h2 id="invoice-actions-heading" className="text-xl font-bold text-foreground">{t("What to do now")}</h2>
-                <p className="mt-1 text-base text-muted-foreground">
+                <h3 id="invoice-actions-heading" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">{t("What to do now")}</h3>
+                <p className="mt-0.5 text-sm text-foreground leading-relaxed">
                     {underReview
-                        ? t("Look at the receipt photo and the reference number below. Compare them with your own GCash or bank record.")
+                        ? t("Compare the receipt photo and reference number below with your GCash or bank record.")
                         : cashToConfirm
-                          ? t("Wait for {name} to hand you the cash. Press the button only once the money is in your hands.", { name: tenantName })
-                          : t("Pick one of the buttons. Each one tells you what it does.")}
+                          ? t("Wait for {name} to hand you the cash. Tap confirm only after you have the money.", { name: tenantName })
+                          : t("Pick an action below.")}
                 </p>
             </div>
 
-            {(underReview || cashToConfirm) && (
-                <div className="space-y-2">
-                    <label htmlFor={noteId} className="block text-lg font-bold text-foreground">
-                        {t("Message to {name}", { name: tenantName })} <span className="text-base font-semibold text-muted-foreground">({t("optional")})</span>
-                    </label>
-                    <textarea
-                        id={noteId}
-                        value={note}
-                        maxLength={BILLING_LIMITS.reviewNote}
-                        onChange={(event) => setNote(event.target.value)}
-                        rows={2}
-                        placeholder={t("For example: Thank you for paying on time.")}
-                        className={settingsInputClass(false, "min-h-0 resize-y")}
-                    />
-                </div>
-            )}
-
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5">
                 {underReview && !isCash && (
                     <>
-                        <SettingsButton size="lg" icon={CheckCircle2} onClick={onConfirmPayment} loading={processing === "confirm"} disabled={!!processing && processing !== "confirm"}>
+                        <SettingsButton size="lg" className="w-full" icon={CheckCircle2} onClick={onConfirmPayment} loading={processing === "confirm"} disabled={!!processing && processing !== "confirm"}>
                             {t("Yes, the payment is correct")}
                         </SettingsButton>
-                        <SettingsButton size="lg" variant="secondary" icon={AlertTriangle} onClick={() => setMode("problem")} disabled={!!processing}>
+                        <SettingsButton size="lg" className="w-full" variant="secondary" icon={AlertTriangle} onClick={() => setMode("problem")} disabled={!!processing}>
                             {t("No, there is a problem with it")}
                         </SettingsButton>
                     </>
                 )}
                 {(cashToConfirm || (underReview && isCash)) && (
                     <>
-                        <SettingsButton size="lg" icon={HandCoins} onClick={onConfirmCash} loading={processing === "confirm_received"} disabled={!!processing && processing !== "confirm_received"}>
+                        <SettingsButton size="lg" className="w-full" icon={HandCoins} onClick={onConfirmCash} loading={processing === "confirm_received"} disabled={!!processing && processing !== "confirm_received"}>
                             {t("Confirm cash received")}
                         </SettingsButton>
                         {underReview && (
-                            <SettingsButton size="lg" variant="secondary" icon={AlertTriangle} onClick={() => setMode("problem")} disabled={!!processing}>
-                                {t("There is a problem with this payment")}
+                            <SettingsButton size="lg" className="w-full whitespace-nowrap" variant="secondary" icon={AlertTriangle} onClick={() => setMode("problem")} disabled={!!processing}>
+                                {t("Report a problem")}
                             </SettingsButton>
                         )}
                     </>
                 )}
                 {!underReview && !cashToConfirm && canSendReminder && (
                     <>
-                        <SettingsButton size="lg" icon={Bell} onClick={onSendReminder} loading={processing === "remind"} disabled={!!processing && processing !== "remind"}>
-                            {t("Send {name} a reminder", { name: tenantName })}
+                        <SettingsButton size="lg" className="w-full whitespace-nowrap" icon={Bell} onClick={onSendReminder} loading={processing === "remind"} disabled={!!processing && processing !== "remind"}>
+                            {t("Send a reminder")}
                         </SettingsButton>
-                        <p className="text-base text-muted-foreground">{t("This sends a message and a notification about this bill. It does not change the bill.")}</p>
-                        <SettingsButton size="lg" variant="secondary" icon={HandCoins} onClick={onConfirmCash} loading={processing === "confirm_received"} disabled={!!processing && processing !== "confirm_received"}>
-                            {t("{name} paid me in cash", { name: tenantName })}
+                        <SettingsButton size="lg" className="w-full whitespace-nowrap" variant="secondary" icon={HandCoins} onClick={onConfirmCash} loading={processing === "confirm_received"} disabled={!!processing && processing !== "confirm_received"}>
+                            {t("Paid me in cash")}
                         </SettingsButton>
-                        <p className="text-base text-muted-foreground">{t("Use this if you already received the full amount in cash. The bill will be marked as paid.")}</p>
                     </>
                 )}
             </div>
-        </section>
+
+            {(underReview || cashToConfirm) && (
+                <div className="pt-1 border-t border-border/60">
+                    {!showNoteInput ? (
+                        <button
+                            type="button"
+                            onClick={() => setShowNoteInput(true)}
+                            className="min-h-[44px] text-sm font-semibold text-primary hover:underline cursor-pointer"
+                        >
+                            + {t("Add a message to {name} (optional)", { name: tenantName.split(" ")[0] || tenantName })}
+                        </button>
+                    ) : (
+                        <div className="space-y-1.5 pt-2">
+                            <label htmlFor={noteId} className="block text-sm font-bold text-foreground">
+                                {t("Message to {name}", { name: tenantName })} <span className="text-xs font-medium text-muted-foreground">({t("optional")})</span>
+                            </label>
+                            <textarea
+                                id={noteId}
+                                value={note}
+                                maxLength={BILLING_LIMITS.reviewNote}
+                                onChange={(event) => setNote(event.target.value)}
+                                rows={2}
+                                placeholder={t("For example: Thank you for paying on time.")}
+                                className={settingsInputClass(false, "min-h-0 resize-y text-base sm:text-sm")}
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
     );
 }
 
@@ -1231,21 +1566,21 @@ function ChoiceList<V extends string>({ legend, value, onChange, options }: { le
 
 function Fact({ label, value, help, mono }: { label: string; value: string; help?: string; mono?: boolean }) {
     return (
-        <div className="rounded-2xl border border-border/50 bg-card/60 px-4 py-3">
-            <dt className="text-base font-semibold text-muted-foreground">
+        <div className="rounded-xl border border-border/60 bg-card/80 px-3.5 py-2.5">
+            <dt className="text-xs font-semibold text-muted-foreground">
                 {label}
-                {help && <span className="block text-sm font-normal">{help}</span>}
+                {help && <span className="block text-[11px] font-normal">{help}</span>}
             </dt>
-            <dd className={cn("mt-0.5 break-words text-lg font-bold text-foreground", mono && "font-mono tracking-wide")}>{value}</dd>
+            <dd className={cn("mt-0.5 break-words text-sm sm:text-base font-bold text-foreground", mono && "font-mono tracking-wide")}>{value}</dd>
         </div>
     );
 }
 
 function FactRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
     return (
-        <div className="flex items-baseline justify-between gap-4 px-4 py-3">
-            <dt className="text-base font-semibold text-muted-foreground">{label}</dt>
-            <dd className={cn("text-right text-lg font-bold text-foreground", mono && "font-mono tracking-wide")}>{value}</dd>
+        <div className="flex items-baseline justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+            <dt className="shrink-0 whitespace-nowrap text-sm font-medium text-muted-foreground">{label}</dt>
+            <dd className={cn("min-w-0 text-right text-sm font-semibold text-foreground break-words", mono && "font-mono tracking-wide")}>{value}</dd>
         </div>
     );
 }
@@ -1253,11 +1588,11 @@ function FactRow({ label, value, mono }: { label: string; value: string; mono?: 
 function HistoryRow({ date, text, done }: { date?: string | null; text: string; done?: boolean }) {
     const Icon: LucideIcon = done ? CheckCircle2 : AlertCircle;
     return (
-        <li className="flex items-start gap-3">
-            <Icon className={cn("mt-1 size-5 shrink-0", done ? "text-emerald-700 dark:text-emerald-300" : "text-muted-foreground")} aria-hidden />
-            <div>
-                {date && <p className="text-base font-semibold text-muted-foreground">{formatDateLong(date)}</p>}
-                <p className="text-lg text-foreground">{text}</p>
+        <li className="flex items-start gap-2.5">
+            <Icon className={cn("mt-0.5 size-4 shrink-0", done ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")} aria-hidden />
+            <div className="min-w-0">
+                {date && <p className="text-xs font-medium text-muted-foreground">{formatDateLong(date)}</p>}
+                <p className="text-sm font-medium text-foreground leading-snug">{text}</p>
             </div>
         </li>
     );

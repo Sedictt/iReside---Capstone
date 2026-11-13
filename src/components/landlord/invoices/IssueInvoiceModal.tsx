@@ -347,7 +347,7 @@ export function IssueInvoiceModal({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/70 backdrop-blur-md"
+                className="absolute inset-0 bg-black/70"
                 onClick={onClose}
             />
 
@@ -355,10 +355,10 @@ export function IssueInvoiceModal({
                 initial={{ opacity: 0, scale: 0.96, y: 15 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 15 }}
-                className="relative flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-[0_32px_120px_-20px_rgba(0,0,0,0.8)]"
+                className="relative flex w-full max-w-2xl lg:max-w-5xl max-h-[90vh] flex-col overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-[0_32px_120px_-20px_rgba(0,0,0,0.8)]"
             >
                 {/* Header */}
-                <div className="relative shrink-0 border-b border-border/50 bg-background/50 px-6 py-6 sm:px-8">
+                <div className="relative shrink-0 border-b border-border bg-card px-6 py-6 sm:px-8">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3.5">
                             <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shrink-0">
@@ -391,6 +391,9 @@ export function IssueInvoiceModal({
                         </div>
                     )}
 
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        {/* Left Window: Tenant, Dates & Notes */}
+                        <div className="lg:col-span-5 space-y-5">
                     {/* Tenant & Lease Selection */}
                     <div className="space-y-2">
                         <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -471,8 +474,26 @@ export function IssueInvoiceModal({
                         </div>
                     </div>
 
+                    {/* Optional Note */}
+                    <div className="space-y-1.5">
+                        <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
+                            {t("Notes / Memo for Tenant (Optional)")}
+                        </label>
+                        <textarea maxLength={250}
+                            {...form.fieldProps("notes")}
+                            rows={2}
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder={t("e.g. Regular monthly rent and recorded utility consumption.")}
+                            className="w-full rounded-xl border border-border bg-background p-3 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+                        />
+                    </div>
+                        </div>
+
+                        {/* Right Window: Line Items & Total */}
+                        <div className="lg:col-span-7 space-y-5">
                     {/* Itemized Charges Review */}
-                    <div className="space-y-3 pt-2">
+                    <div className="space-y-3">
                         <div className="flex items-center justify-between">
                             <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                 <DollarSign className="size-3.5 text-primary" />
@@ -579,20 +600,7 @@ export function IssueInvoiceModal({
                             <span>{t("Direct delivery to tenant phone portal")}</span>
                         </div>
                     </div>
-
-                    {/* Optional Note */}
-                    <div className="space-y-1.5">
-                        <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
-                            {t("Notes / Memo for Tenant (Optional)")}
-                        </label>
-                        <textarea maxLength={250}
-                            {...form.fieldProps("notes")}
-                            rows={2}
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder={t("e.g. Regular monthly rent and recorded utility consumption.")}
-                            className="w-full rounded-xl border border-border bg-background p-3 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
-                        />
+                        </div>
                     </div>
                 </form>
 

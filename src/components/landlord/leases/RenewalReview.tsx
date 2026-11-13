@@ -32,6 +32,12 @@ interface RenewalRequest {
  term_type?: string | null;
  monthly_rent: number;
  security_deposit: number;
+ tenant?: {
+  id?: string;
+  full_name?: string;
+  email?: string;
+  phone?: string;
+ } | null;
  unit: {
  name: string;
  beds: number;
@@ -375,11 +381,11 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  {/* Left: Tenant & Unit */}
  <div className="flex items-center gap-3.5 min-w-[220px]">
  <div className="size-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-base shrink-0">
- {request.tenant.full_name.charAt(0)}
+ {(request.tenant?.full_name ?? request.current_lease?.tenant?.full_name ?? "T").charAt(0)}
  </div>
  <div className="min-w-0 flex-1">
  <h4 className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors">
- {request.tenant.full_name}
+ {request.tenant?.full_name ?? request.current_lease?.tenant?.full_name ?? t("Tenant")}
  </h4>
  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">
  {request.current_lease.unit.property.name} • {t("Unit {name}", { name: request.current_lease.unit.name })}
@@ -434,10 +440,10 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  <div className="flex justify-between items-start mb-8">
  <div className="flex items-center gap-4">
  <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xl">
- {request.tenant.full_name.charAt(0)}
+ {(request.tenant?.full_name ?? request.current_lease?.tenant?.full_name ?? "T").charAt(0)}
  </div>
  <div>
- <h4 className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{request.tenant.full_name}</h4>
+ <h4 className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{request.tenant?.full_name ?? request.current_lease?.tenant?.full_name ?? t("Tenant")}</h4>
  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
  {request.current_lease.unit.property.name} • {t("Unit {name}", { name: request.current_lease.unit.name })}
  </p>
@@ -493,7 +499,7 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  <div>
  <h3 className="text-xl font-black text-foreground tracking-tight">{t("Review Renewal Terms")}</h3>
  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">
- {t("Reviewing request for {name}", { name: selectedRequest.tenant.full_name })}
+ {t("Reviewing request for {name}", { name: selectedRequest.tenant?.full_name ?? selectedRequest.current_lease?.tenant?.full_name ?? t("Tenant") })}
  </p>
  </div>
  </div>

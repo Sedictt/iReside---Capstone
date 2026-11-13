@@ -1,7 +1,7 @@
 "use client"
 
 import { FormEvent, useEffect, useRef, useState, useTransition } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { AnimatePresence, m as motion } from "framer-motion"
 import { MessageCircle } from "lucide-react"
@@ -93,7 +93,14 @@ export default function TenantCommunityHubPage() {
 
     const [showRules, setShowRules] = useState(false)
     const [isAnnouncementCollapsed, setIsAnnouncementCollapsed] = useState(false)
-    const [activeTab, setActiveTab] = useState<"live" | "mine" | "saved" | "approvals">("live")
+    const searchParams = useSearchParams()
+    const tabParam = searchParams.get("tab")
+    const [activeTab, setActiveTab] = useState<"live" | "mine" | "saved" | "approvals">(() => {
+        if (tabParam === "approvals" || tabParam === "mine" || tabParam === "saved") {
+            return tabParam
+        }
+        return "live"
+    })
     const [searchQuery, setSearchQuery] = useState("")
     const [posts, setPosts] = useState<CommunityPost[]>(() => {
         if (typeof window !== "undefined") {

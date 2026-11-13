@@ -6,12 +6,12 @@ import Link from "next/link";
 import { m as motion, useReducedMotion } from "framer-motion";
 import {
     Archive,
-    ChevronDown,
     ChevronUp,
     ExternalLink,
     Flag,
     FolderOpen,
     Loader2,
+    Minus,
     MoreHorizontal,
     ShieldBan,
     UserRound,
@@ -51,6 +51,8 @@ interface MiniChatWindowProps {
     onRetry: (id: string, messageId: string) => void;
     onDiscard: (id: string, messageId: string) => void;
     onAttach: (id: string, file: File) => void;
+    onStageFiles?: (id: string, files: File[]) => void;
+    onUnstageFile?: (id: string, attachmentId: string) => void;
     onReload: (id: string) => void;
     onDismissError: (id: string) => void;
     onOpenSharedFiles: (id: string) => void;
@@ -71,6 +73,8 @@ export function MiniChatWindow({
     onRetry,
     onDiscard,
     onAttach,
+    onStageFiles,
+    onUnstageFile,
     onReload,
     onDismissError,
     onOpenSharedFiles,
@@ -125,18 +129,18 @@ export function MiniChatWindow({
             data-active={chat.isActive ? "true" : "false"}
             onMouseDownCapture={activate}
             onFocusCapture={activate}
-            style={{ width: WINDOW_WIDTH_PX, height: chat.isMinimized ? "auto" : WINDOW_HEIGHT_PX }}
+            style={{ width: chat.isMinimized ? 236 : WINDOW_WIDTH_PX, height: chat.isMinimized ? "auto" : WINDOW_HEIGHT_PX }}
             className={cn(
                 "pointer-events-auto flex flex-col overflow-hidden rounded-t-2xl border border-b-0 bg-card text-foreground",
                 "shadow-[0_-12px_40px_-12px_rgba(0,0,0,0.25)] dark:shadow-[0_-16px_48px_-12px_rgba(0,0,0,0.6)]",
-                "transition-[box-shadow,border-color] duration-200",
+                "transition-[box-shadow,border-color,width] duration-200",
                 chat.isActive ? "border-primary/50 ring-1 ring-primary/30" : "border-border"
             )}
         >
             {/* Header */}
             <header
                 className={cn(
-                    "flex shrink-0 items-center gap-2 border-b px-2.5 py-2",
+                    "flex shrink-0 items-center gap-1.5 border-b px-2 py-1.5",
                     chat.isActive ? "border-primary/20 bg-primary/5" : "border-border/70 bg-card"
                 )}
             >
@@ -145,18 +149,18 @@ export function MiniChatWindow({
                     onClick={() => onToggleMinimize(chat.id)}
                     aria-expanded={!chat.isMinimized}
                     aria-label={headerLabel}
-                    className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-1 py-0.5 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-primary/40"
+                    className="flex min-w-0 flex-1 items-center gap-2 rounded-xl px-1 py-0.5 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
                     <span className="relative shrink-0">
                         <span
-                            className="block size-9 overflow-hidden rounded-full border border-border/70"
+                            className="block size-8 overflow-hidden rounded-full border border-border/70"
                             style={{ backgroundColor: getSafeAvatarBgColor(chat.avatarBgColor) }}
                         >
-                            <Image src={chat.avatar} alt="" width={36} height={36} className="size-full object-cover" />
+                            <Image src={chat.avatar} alt="" width={32} height={32} className="size-full object-cover" />
                         </span>
                         <span
                             className={cn(
-                                "absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card",
+                                "absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-card",
                                 chatState.isOtherUserOnline ? "bg-emerald-500" : "bg-muted-foreground/40"
                             )}
                             aria-hidden="true"
@@ -169,11 +173,11 @@ export function MiniChatWindow({
                         )}
                     </span>
                     <span className="flex min-w-0 flex-col">
-                        <span className="flex min-w-0 items-center gap-1.5">
-                            <span className="truncate text-sm font-bold leading-tight text-foreground">{chat.name}</span>
-                            <RoleBadge role={chat.role} className="shrink-0" />
+                        <span className="flex min-w-0 items-center gap-1">
+                            <span className="truncate text-[13px] font-semibold leading-tight text-foreground">{chat.name}</span>
+                            {!chat.isMinimized && <RoleBadge role={chat.role} className="shrink-0" />}
                         </span>
-                        <span className={cn("flex items-center gap-1.5 text-[11px] font-medium leading-tight", statusLine.tone)}>
+                        <span className={cn("flex items-center gap-1 text-[10.5px] font-medium leading-tight", statusLine.tone)}>
                             <span className={cn("size-1.5 rounded-full", statusLine.dot)} aria-hidden="true" />
                             <span className="truncate">{statusLine.label}</span>
                         </span>
@@ -188,7 +192,7 @@ export function MiniChatWindow({
                             aria-label={chat.isMinimized ? t("Expand chat") : t("Minimize chat")}
                             className="flex size-7 items-center justify-center rounded-lg transition-colors hover:bg-muted hover:text-foreground"
                         >
-                            {chat.isMinimized ? <ChevronUp className="size-4" aria-hidden="true" /> : <ChevronDown className="size-4" aria-hidden="true" />}
+                            {chat.isMinimized ? <ChevronUp className="size-4" aria-hidden="true" /> : <Minus className="size-4" aria-hidden="true" />}
                         </button>
                     </Tooltip>
 
@@ -324,6 +328,7 @@ export function MiniChatWindow({
                     />
                     <MiniChatComposer
                         draft={chatState.draft}
+                        stagedAttachments={chatState.stagedAttachments}
                         isSending={chatState.isSending}
                         isUploading={chatState.isUploading}
                         uploadProgress={chatState.uploadProgress}
@@ -332,6 +337,8 @@ export function MiniChatWindow({
                         contactName={chat.name}
                         onChange={(draft) => onDraftChange(chat.id, draft)}
                         onSend={() => onSend(chat.id)}
+                        onStageFiles={onStageFiles ? (files) => onStageFiles(chat.id, files) : undefined}
+                        onUnstageFile={onUnstageFile ? (attachmentId) => onUnstageFile(chat.id, attachmentId) : undefined}
                         onAttach={(file) => onAttach(chat.id, file)}
                         onFocus={activate}
                     />

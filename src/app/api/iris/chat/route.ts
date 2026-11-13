@@ -12,14 +12,14 @@ export async function POST(request: Request) {
     try {
         const authContext = await requireAuthenticatedUser(request);
         if (!("userId" in authContext)) return authContext as Response;
-        const { userId, supabase } = authContext;
+        const { userId, userRole, supabase } = authContext;
 
         const parsed = await parseJsonBody(request, irisChatSchema);
         if (!parsed.ok) return parsed.response;
         const { message } = parsed.data;
 
         const irisService = new IrisService(supabase);
-        const result = await irisService.processChatMessage(userId, message);
+        const result = await irisService.processChatMessage(userId, message, userRole);
 
         return NextResponse.json(result);
     } catch (error: any) {

@@ -805,7 +805,7 @@ export function LandlordOverviewView() {
 
                                 {isRoomsEmpty ? (
                                     <Link
-                                        href="/landlord/unit-map"
+                                        href="/mobile/landlord/unit-map"
                                         className="group min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-bold bg-muted/60 hover:bg-muted text-foreground border border-border transition-all active:scale-[0.98] inline-flex items-center gap-1 shrink-0 cursor-pointer"
                                     >
                                         <span>{t("Set Up Rooms")}</span>

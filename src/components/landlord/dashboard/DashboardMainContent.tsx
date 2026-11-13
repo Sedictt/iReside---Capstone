@@ -2,9 +2,10 @@
 
 import React from "react";
 import Link from "next/link";
-import { UserPlus, QrCode, Wrench, Map, Printer, HelpCircle, Banknote } from "lucide-react";
+import { UserPlus, QrCode, Wrench, Map, Printer, HelpCircle, Banknote, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
+import { openLandlordHistoryDrawer } from "@/components/landlord/history/QuickHistoryDrawer";
 
 interface DashboardMainContentProps {
     title: string;
@@ -142,6 +143,15 @@ export function DashboardMainContent({
                         >
                             <Map className="size-4" />
                         </Link>
+                        <button
+                            type="button"
+                            onClick={() => openLandlordHistoryDrawer("payments")}
+                            title={t("Payment & Actions History")}
+                            aria-label={t("Payment & Actions History")}
+                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border transition-colors shrink-0 cursor-pointer"
+                        >
+                            <History className="size-4" />
+                        </button>
                         <Link 
                             href="/landlord/docs" 
                             title={t("Help & User Manual")}
@@ -272,6 +282,15 @@ export function DashboardMainContent({
                         >
                             <Map className="size-4" />
                         </Link>
+                        <button
+                            type="button"
+                            onClick={() => openLandlordHistoryDrawer("payments")}
+                            title={t("Payment & Actions History")}
+                            aria-label={t("Payment & Actions History")}
+                            className="flex h-9 w-9 items-center justify-center rounded-xl bg-background hover:bg-muted border border-border/70 shadow-2xs active:scale-95 text-foreground hover:text-primary cursor-pointer"
+                        >
+                            <History className="size-4 text-primary" />
+                        </button>
                         <Link 
                             href="/landlord/docs" 
                             title={t("Help & User Manual")}

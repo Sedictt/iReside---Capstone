@@ -2,10 +2,12 @@ import type { LucideIcon } from "lucide-react";
 import {
     BarChart3,
     Building2,
+    Calendar,
     ClipboardList,
     FileText,
     FolderSearch2,
     Hammer,
+    History,
     ReceiptText,
     RefreshCw,
     Settings2,
@@ -22,6 +24,8 @@ export type QuickActionId =
     | "maintenance-desk"
     | "lease-lifecycle"
     | "financial-metrics"
+    | "activity-history"
+    | "calendar"
     | "settings";
 
 export type QuickActionSortMode = "custom" | "frequently_used";
@@ -116,6 +120,22 @@ export const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = [
         href: "/landlord/analytics",
         color: "text-teal-500",
         description: "Track monthly rental earnings, collection rates, and expenses.",
+    },
+    {
+        id: "activity-history",
+        label: "Payment & Actions History",
+        icon: History,
+        href: "/landlord/activity",
+        color: "text-primary",
+        description: "Check payment history and audit your recent landlord actions.",
+    },
+    {
+        id: "calendar",
+        label: "Calendar",
+        icon: Calendar,
+        href: "/landlord/calendar",
+        color: "text-sky-500",
+        description: "Viewing schedules, property inspections, and lease milestone dates.",
     },
     {
         id: "settings",

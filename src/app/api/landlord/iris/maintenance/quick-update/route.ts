@@ -5,8 +5,20 @@ import {
   IrisOperationsService,
   type MaintenanceTicketSummary,
 } from "@/lib/services/iris";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
+
+function getWriteClient(authSupabase: any) {
+  if (process.env.VITEST) {
+    return authSupabase;
+  }
+  try {
+    return createServiceRoleSupabaseClient();
+  } catch {
+    return authSupabase;
+  }
+}
 
 const QuickUpdateTicketSchema = z.object({
   ticketId: z.string().min(1, "Ticket ID is required"),
@@ -189,13 +201,14 @@ export async function POST(request: Request) {
     // 9. Dispatch notification to tenant
     if (ticket.tenant_id) {
       try {
+        const writeClient = getWriteClient(auth.supabase);
         const readableStatus = status.replace("_", " ");
         const techNote = updatedTicketSummary.assignedTechnician
           ? ` Assigned to: ${updatedTicketSummary.assignedTechnician}.`
           : "";
         const noteText = notes ? ` Note: ${notes}` : "";
 
-        await auth.supabase.from("notifications").insert({
+        const { error: notifError } = await writeClient.from("notifications").insert({
           user_id: ticket.tenant_id,
           type: "maintenance",
           title: "Maintenance Ticket Updated",
@@ -208,6 +221,9 @@ export async function POST(request: Request) {
           },
           read: false,
         });
+        if (notifError) {
+          console.warn("Failed to create maintenance notification:", notifError);
+        }
       } catch (notifErr) {
         console.warn("Failed to create maintenance notification:", notifErr);
       }
