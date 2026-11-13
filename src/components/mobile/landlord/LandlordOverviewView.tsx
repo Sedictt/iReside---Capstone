@@ -22,7 +22,7 @@ import {
     ArrowUpRight,
     ShieldCheck,
     X,
-    Camera,
+    ImageIcon,
     ChevronRight,
     Bed,
     ArrowRight,
@@ -511,7 +511,7 @@ export function LandlordOverviewView() {
                                 title={t("Customize banner photo")}
                                 aria-label={t("Customize banner photo")}
                             >
-                                <Camera className="size-3.5" />
+                                <ImageIcon className="size-3.5" />
                             </button>
                         </div>
                     </div>

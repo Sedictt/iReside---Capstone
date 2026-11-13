@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { triggerHaptic } from '@/lib/haptics';
 import { MobileAmenityBookingDrawer } from './MobileAmenityBookingDrawer';
+import { TenantQuickToolsFab } from './TenantQuickToolsFab';
 import { useLanguageContext } from '@/context/LanguageContext';
 import { formatPhMobile } from "@/lib/phone";
 import { readViewCache, writeViewCache, hasViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
@@ -372,6 +373,9 @@ export function TenantHomeView() {
                     )}
                 </div>
             </div>
+            {/* Resident Quick Tools Edge FAB */}
+            <TenantQuickToolsFab onOpenAmenities={() => setIsAmenityDrawerOpen(true)} />
+
             {/* Amenity Booking Drawer */}
             <MobileAmenityBookingDrawer
                 isOpen={isAmenityDrawerOpen}

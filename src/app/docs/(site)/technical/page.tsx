@@ -127,7 +127,7 @@ export default function TechnicalDocPage() {
               { label: "Architecture", value: "Event-Driven" },
               { label: "Deployment", value: "Edge Computing" },
               { label: "Database", value: "PostgreSQL 16" },
-              { label: "AI Engine", value: "Llama 3.1 70B" }
+              { label: "AI Engine", value: "openai/gpt-oss-120b" }
             ].map((stat) => (
               <div key={t(stat.label)} className="space-y-1">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t(stat.label)}</p>
@@ -155,9 +155,9 @@ export default function TechnicalDocPage() {
             },
             {
               title: "PostgreSQL Backend",
-              desc: "High-performance relational storage with GIN-optimized indices for vector search and real-time CDC enabled.",
+              desc: "High-performance relational storage with Row-Level Security (RLS) policies and real-time CDC enabled.",
               icon: Database,
-              tags: ["Supabase", "pgvector"]
+              tags: ["Supabase", "PostgreSQL RLS"]
             },
             {
               title: "CI/CD Pipeline",
@@ -266,11 +266,11 @@ USING (
         </div>
       </section>
 
-      {/* 4. iRis Intelligence Pipeline (RAG) */}
+      {/* 4. iRis Intelligence Pipeline (Context Injection) */}
       <section id="iris" className="space-y-12">
         <div className="space-y-4">
-          <h2 className="text-3xl font-black text-foreground tracking-tight">{t("iRis Intelligence & RAG")}</h2>
-          <p className="text-muted-foreground max-w-2xl">{t("The AI brain behind iReside, combining retrieval-augmented generation with property forensics.")}</p>
+          <h2 className="text-3xl font-black text-foreground tracking-tight">{t("iRis Intelligence & Context Injection")}</h2>
+          <p className="text-muted-foreground max-w-2xl">{t("The AI assistant behind iReside, combining database-grounded context injection with Groq inference.")}</p>
         </div>
 
         <div className="grid gap-12 lg:grid-cols-2">
@@ -278,16 +278,16 @@ USING (
             <div className="rounded-[2.5rem] border border-border bg-card p-10 space-y-6 shadow-sm">
               <h3 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-3">
                 <Search className="size-6 text-primary" />
-                {t("Semantic Retrieval Logic")}
+                {t("Database-Grounded Context Injection")}
               </h3>
               <p className="text-muted-foreground leading-relaxed text-sm">
-                {t("iRis doesn't rely on generic knowledge. It performs a high-dimensional vector search against the property's digital handbook and historical maintenance logs before synthesizing a response.")}
+                {t("iRis doesn't rely on generic knowledge or a separate vector pipeline. It queries role-scoped relational records directly from Supabase PostgreSQL before synthesizing a response.")}
               </p>
               <div className="space-y-4 pt-4 relative before:absolute before:left-3 before:top-4 before:bottom-4 before:w-px before:bg-border">
                 {[
-                  { label: "Vector Embedding", text: "User queries are embedded into 1536-dimensional space." },
-                  { label: "pgvector Search", text: "Cosine similarity identifies the most relevant property clauses." },
-                  { label: "Knowledge Augmentation", text: "Retrieved context is injected into the Llama 3.1 system prompt." }
+                  { label: "Auth & Role Scope", text: "Verifies the authenticated user's Landlord or Tenant role via Supabase." },
+                  { label: "Relational Context Query", text: "Fetches scoped property, unit, lease, billing, and maintenance records from PostgreSQL." },
+                  { label: "Prompt Injection", text: "Injects structured context into the Groq (openai/gpt-oss-120b) system prompt." }
                 ].map((item, i) => (
                   <div key={t(item.label)} className="relative pl-10">
                     <div className="absolute left-0 top-1 size-6 rounded-full bg-card border border-border flex items-center justify-center text-[10px] font-black text-primary z-10">
@@ -338,7 +338,7 @@ USING (
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase">
-                    <span>{t("Retrieved Knowledge (RAG)")}</span>
+                    <span>{t("Injected DB Context")}</span>
                     <span>{t("1.2k Tokens")}</span>
                   </div>
                   <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
@@ -607,7 +607,7 @@ USING (
             {
               cat: "Intelligence",
               icon: Chip,
-              items: ["Llama 3.1 LLM (Groq)", "pgvector Embedding Search", "LangChain Triage Orchestration", "Puppeteer Web Scraping"]
+              items: ["Groq (openai/gpt-oss-120b)", "PostgreSQL Context Injection", "Lexicon & Spam Moderation", "AI Maintenance Triage"]
             },
             {
               cat: "Security & QA",
@@ -677,8 +677,8 @@ USING (
         <div className="grid gap-4 md:grid-cols-2">
           {[
             { term: "RLS", full: "Row-Level Security", desc: "A PostgreSQL security feature that restricts database rows based on the authenticated user's identity." },
-            { term: "RAG", full: "Retrieval-Augmented Generation", desc: "An AI architecture that retrieves specific data (handbooks, rules) to provide factual, grounded responses." },
-            { term: "pgvector", full: "Vector Database Extension", desc: "A PostgreSQL extension that allows for high-dimensional semantic search and similarity matching." },
+            { term: "Context Injection", full: "Database-Grounded Context Injection", desc: "An AI architecture that queries role-scoped relational records from PostgreSQL and injects them into the prompt for factual responses." },
+            { term: "Lexicon Moderation", full: "Deterministic Profanity & Spam Filter", desc: "Rule-based English/Filipino profanity lexicon and spam filtering for real-time chat moderation without LLM latency." },
             { term: "Digital Twin", full: "System Synchronicity", desc: "The concept of keeping the database state exactly mirrored with physical real-world status (e.g., vacancy, payment)." },
             { term: "Atomic Transaction", full: "Database Integrity", desc: "A series of database operations that either all succeed or all fail, preventing corrupted or partial data states." },
             { term: "Idempotency", full: "Operational Stability", desc: "Ensuring that performing an operation multiple times (like a payment) has the same effect as performing it once." },
@@ -790,7 +790,6 @@ USING (
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {[
-                { route: "/api/admin", desc: "Admin-only operations" },
                 { route: "/api/auth", desc: "Login, logout, session" },
                 { route: "/api/community", desc: "Posts, announcements, polls" },
                 { route: "/api/iris", desc: "AI Assistant (iRis)" },
@@ -825,7 +824,7 @@ USING (
                   </div>
                   <div>
                     <code className="text-sm font-mono font-bold text-foreground">POST /api/iris/chat</code>
-                    <p className="text-[10px] text-muted-foreground">{t("AI Assistant with RAG context retrieval")}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("AI Assistant with database-grounded context injection")}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -858,7 +857,7 @@ USING (
     "items": ["Pool", "Gym", "Parking"]
   },
   "metadata": {
-    "model": "llama-3.1-8b-instant",
+    "model": "openai/gpt-oss-120b",
     "tokens": 245
   }
 }`}
@@ -877,7 +876,7 @@ USING (
                   </div>
                   <div>
                     <code className="text-sm font-mono font-bold text-foreground">POST /api/landlord/statistics/insights</code>
-                    <p className="text-[10px] text-muted-foreground">{t("AI-powered KPI insights via Groq Llama")}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("AI-powered KPI insights via Groq (openai/gpt-oss-120b)")}</p>
                   </div>
                 </div>
                 <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">{t("Auth Required")}</span>

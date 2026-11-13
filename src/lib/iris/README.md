@@ -17,8 +17,8 @@ iRis is an AI-powered concierge assistant that helps tenants with:
 1. **API Route** (`/api/iris/chat`)
    - Handles chat requests from the frontend
    - Authenticates users via Supabase
-   - Retrieves tenant context for RAG (Retrieval-Augmented Generation)
-   - Calls Groq's Llama 3 API for high-speed, free AI responses
+   - Retrieves role-scoped tenant context via database-grounded context injection from Supabase PostgreSQL
+   - Calls Groq (`openai/gpt-oss-120b`) via the OpenAI-compatible SDK for low-latency AI responses
 
 2. **Context Module** (`context.ts`)
    - `getTenantContext()`: Retrieves relevant tenant data from Supabase
@@ -83,15 +83,15 @@ console.log(data.response); // AI response
   response: string;           // AI-generated response
   hasDataCard: boolean;       // Whether to show a data card (e.g., WiFi info)
   metadata: {
-    model: string;            // Model used (e.g., llama-3.1-8b-instant)
+    model: string;            // Model used (e.g., openai/gpt-oss-120b)
     tokens: number;           // Total tokens used
   }
 }
 ```
 
-## RAG (Retrieval-Augmented Generation)
+## Database-Grounded Context Injection
 
-The system retrieves relevant context for each tenant:
+The system retrieves relevant relational context for each tenant directly from Supabase PostgreSQL (no separate `pgvector` embedding pipeline):
 
 - **Profile**: Name, email, phone
 - **Property**: Building name, address, amenities, house rules
@@ -105,8 +105,7 @@ This context is formatted into a system prompt that guides the AI's responses.
 ## Cost Considerations
 
 **Groq Pricing:**
-- **Llama 3.1 8B**: 100% Free
-- **Mixtral 8x7b**: 100% Free
+- **`openai/gpt-oss-120b`**: Free tier available via GroqConsole
 *(No credit card required)*
 
 **Estimated costs:**

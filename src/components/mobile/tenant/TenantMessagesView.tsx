@@ -36,6 +36,7 @@ import {
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { useLanguageContext } from '@/context/LanguageContext';
 import { ART, artOr } from "@/lib/art/abstract-art";
+import { getSafeAvatarBgColor } from '@/lib/constants';
 import { readViewCache, writeViewCache, hasViewCache, fetchJsonDeduped } from '@/lib/mobile/view-cache';
 
 const FALLBACK_AVATAR = ART.avatar;
@@ -226,11 +227,12 @@ export function TenantMessagesView() {
         const otherParticipant = activeConversation.otherParticipants?.[0];
         const landlordName = otherParticipant?.fullName || t('Property Manager');
         const landlordAvatar = artOr(otherParticipant?.avatarUrl, FALLBACK_AVATAR);
+        const landlordBgColor = getSafeAvatarBgColor(otherParticipant?.avatarBgColor);
 
         return createPortal(
             <div className="fixed inset-0 z-[120] bg-background flex flex-col max-w-md mx-auto h-[100dvh]">
                 {/* Active Chat Header */}
-                <div className="px-4 py-2.5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-card/95 backdrop-blur-md shrink-0">
+                <div className="px-4 py-2.5 border-b border-border/80 flex items-center justify-between bg-card shrink-0">
                     <div className="flex items-center gap-2.5 min-w-0">
                         <button
                             type="button"
@@ -240,7 +242,10 @@ export function TenantMessagesView() {
                         >
                             <ArrowLeft className="size-5" />
                         </button>
-                        <div className="relative size-9 rounded-full overflow-hidden border border-primary/30 bg-muted shrink-0">
+                        <div 
+                            className="relative size-9 rounded-full overflow-hidden border border-border/80 shrink-0"
+                            style={{ backgroundColor: landlordBgColor }}
+                        >
                             <Image src={landlordAvatar} alt={landlordName} fill sizes="36px" className="object-cover" />
                         </div>
                         <div className="min-w-0">
@@ -352,7 +357,7 @@ export function TenantMessagesView() {
                 {/* Message Input Bar */}
                 <form
                     onSubmit={handleSendMessage}
-                    className="p-3 border-t border-slate-200/90 dark:border-white/10 bg-card/95 backdrop-blur-md flex items-center gap-1.5 shrink-0"
+                    className="p-3 border-t border-border/80 bg-card flex items-center gap-1.5 shrink-0"
                 >
                     {/* Hidden Inputs */}
                     <input
@@ -495,6 +500,7 @@ export function TenantMessagesView() {
                                     const otherParticipant = conv.otherParticipants?.[0];
                                     const name = otherParticipant?.fullName || t('Property Manager');
                                     const avatar = artOr(otherParticipant?.avatarUrl, FALLBACK_AVATAR);
+                                    const avatarBgColor = getSafeAvatarBgColor(otherParticipant?.avatarBgColor);
                                     const lastMsg = conv.lastMessage?.content || t('No messages yet');
                                     const time = conv.lastMessage?.createdAt 
                                         ? new Date(conv.lastMessage.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) 
@@ -504,10 +510,13 @@ export function TenantMessagesView() {
                                         <div
                                             key={conv.id}
                                             onClick={() => handleOpenChat(conv)}
-                                            className="p-3 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all hover:border-primary/40"
+                                            className="p-3 rounded-2xl bg-card border border-border/80 shadow-xs flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all hover:border-primary/40"
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
-                                                <div className="relative size-11 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 bg-muted shrink-0">
+                                                <div 
+                                                    className="relative size-11 rounded-full overflow-hidden border border-border/70 shrink-0"
+                                                    style={{ backgroundColor: avatarBgColor }}
+                                                >
                                                     <Image src={avatar} alt={name} fill sizes="44px" className="object-cover" />
                                                 </div>
                                                 <div className="min-w-0">

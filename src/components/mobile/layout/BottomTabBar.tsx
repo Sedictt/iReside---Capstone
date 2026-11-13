@@ -49,10 +49,10 @@ const TENANT_TABS = [
         matchPrefix: '/mobile/tenant/messages',
     },
     {
-        href: '/mobile/tenant/profile',
-        label: 'Profile',
-        icon: User,
-        matchPrefix: '/mobile/tenant/profile',
+        href: '/mobile/tenant/menu',
+        label: 'Menu',
+        icon: Menu,
+        matchPrefix: '/mobile/tenant/menu',
     },
 ]
 
