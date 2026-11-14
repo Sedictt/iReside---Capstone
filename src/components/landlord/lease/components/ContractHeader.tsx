@@ -9,21 +9,22 @@ interface ContractHeaderProps {
 export function ContractHeader({ isFinalApproval, onClose }: ContractHeaderProps) {
     const { t } = useLanguageContext();
     return (
-        <div className="sticky top-0 z-20 bg-[#111] border-b border-white/5 p-6 flex items-center justify-between">
+        <div className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border bg-card px-6 py-4">
             <div>
-                <h2 className="text-xl font-black text-white">
-                    {isFinalApproval ? t("Approve Application") : t("Request Payments")}
+                <h2 className="text-lg font-bold text-foreground sm:text-xl">
+                    {isFinalApproval ? t("Approve Tenant") : t("Send Payment Request")}
                 </h2>
-                <p className="text-xs text-neutral-400">
+                <p className="mt-0.5 text-sm text-muted-foreground">
                     {isFinalApproval
-                        ? t("Confirm tenant approval and generate the digital lease contract.")
-                        : t("Move application to payment-pending and send secure portal link.")}
+                        ? t("Confirm payment and create the lease contract.")
+                        : t("Set the move-in amounts and send a payment link to the tenant.")}
                 </p>
             </div>
             <button
+                type="button"
                 onClick={onClose}
                 aria-label={t("Close")}
-                className="p-2 text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors"
+                className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
                 <X className="size-5" />
             </button>

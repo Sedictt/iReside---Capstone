@@ -517,6 +517,12 @@ export const applicationActionSchema = z.object({
   lease_data: leaseDataSchema.nullish(),
   advance_payment: actionPaymentSchema.nullish(),
   security_deposit_payment: actionPaymentSchema.nullish(),
+  payment_portal_max_uses: z.coerce
+    .number({ error: "Use limit must be a number." })
+    .int("Use limit must be a whole number.")
+    .min(1, "Use limit must be at least 1.")
+    .max(50, "Use limit cannot exceed 50.")
+    .nullish(),
 });
 
 export const paymentBypassSchema = z.object({

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
+import { createClient } from '@/lib/supabase/client';
 import { 
     CreditCard, 
     Upload, 
@@ -79,7 +80,7 @@ export function TenantPayView() {
         setMounted(true);
     }, []);
 
-    const fetchPayments = async () => {
+    const fetchPayments = useCallback(async () => {
         try {
             const json = await fetchJsonDeduped<PaymentOverviewResponse>('/api/tenant/payments');
             setData(json);
@@ -89,11 +90,34 @@ export function TenantPayView() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
-        fetchPayments();
-    }, []);
+        void fetchPayments();
+    }, [fetchPayments]);
+
+    useEffect(() => {
+        const supabase = createClient();
+        const channel = supabase
+            .channel('tenant-pay-realtime')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'payments' },
+                () => {
+                    void fetchPayments();
+                }
+            )
+            .subscribe();
+
+        const timer = setInterval(() => {
+            void fetchPayments();
+        }, 3500);
+
+        return () => {
+            clearInterval(timer);
+            void supabase.removeChannel(channel);
+        };
+    }, [fetchPayments]);
 
     const payments = useMemo(() => toMobilePayItems(data), [data]);
     const { unpaidTotal, overdueTotal, awaitingReview } = useMemo(() => mobilePayTotals(payments), [payments]);
@@ -563,7 +587,7 @@ export function TenantPayView() {
                             <button
                                 type="submit"
                                 disabled={submitting}
-                                className="m-btn m-btn-primary w-full min-h-[52px] text-[15px] mt-1"
+                                className="m-btn m-btn-primary w-full min-h-[52px] text-[15px] mt-1 whitespace-nowrap"
                             >
                                 {submitting ? t('Submitting…') : t('Confirm & Submit Proof')}
                             </button>

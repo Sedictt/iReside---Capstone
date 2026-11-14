@@ -72,7 +72,7 @@ export function AddTenantModal({
   const [activeTab, setActiveTab] = useState<'quick_add' | 'invite' | 'walk_in'>(() => normalizeTab(initialTab))
   const [loading, setLoading] = useState(false)
   const [successData, setSuccessData] = useState<{ tempPassword: string | null; email: string } | null>(null)
-  const [inviteResult, setInviteResult] = useState<{ shareUrl: string; qrUrl: string } | null>(null)
+  const [inviteResult, setInviteResult] = useState<{ shareUrl: string; inviteCode: string; qrUrl: string } | null>(null)
   
   // Quick Add Form Data
   const [formData, setFormData] = useState({
@@ -773,6 +773,7 @@ export function AddTenantModal({
 
       setInviteResult({
         shareUrl: data.invite.shareUrl,
+        inviteCode: data.invite.inviteCode || data.invite.shareUrl.split('/apply/')[1] || '',
         qrUrl: data.invite.qrUrl
       })
       toast.success(t('Onboarding link generated!'))
@@ -2071,6 +2072,18 @@ export function AddTenantModal({
                           </button>
                         </div>
                       </div>
+
+                      {inviteResult.inviteCode && (
+                        <div className="flex items-center justify-between rounded-2xl neumorphic-inset p-4">
+                          <div className="text-left truncate max-w-[300px]">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("Invite Code")}</p>
+                            <p className="text-sm font-mono font-black text-foreground truncate">{inviteResult.inviteCode}</p>
+                          </div>
+                          <button onClick={() => copyToClipboard(inviteResult.inviteCode)} aria-label={t("Copy Invite Code")} className="p-2 text-muted-foreground hover:text-primary">
+                            <Copy className="size-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}

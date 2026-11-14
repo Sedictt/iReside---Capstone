@@ -132,16 +132,22 @@ function LeasesContent() {
  useEffect(() => {
  if (leaseId) {
  void fetchLease(leaseId);
+ const interval = setInterval(() => {
+ void fetchLease(leaseId, true);
+ }, 2500);
+ return () => clearInterval(interval);
  } else if (unitId) {
  setActiveTab("renewals");
  }
  }, [leaseId, unitId]);
 
- const fetchLease = async (id: string) => {
+ const fetchLease = async (id: string, silent = false) => {
+ if (!silent) {
  setLoading(true);
  setError(null);
+ }
  try {
- const res = await fetch(`/api/landlord/leases/${id}`);
+ const res = await fetch(`/api/landlord/leases/${id}`, { cache: "no-store" });
  if (!res.ok) {
  if (res.status === 404) throw new Error(t("Lease not found"));
  throw new Error(t("Failed to fetch lease details"));
@@ -149,9 +155,13 @@ function LeasesContent() {
  const leaseDetails = await res.json();
  setLease(leaseDetails);
  } catch (err: any) {
+ if (!silent) {
  setError(tr(err.message));
+ }
  } finally {
+ if (!silent) {
  setLoading(false);
+ }
  }
  };
 

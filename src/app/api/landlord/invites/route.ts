@@ -385,6 +385,7 @@ export async function POST(request: Request) {
             createdAt: new Date().toISOString(),
             paymentTerms,
             paymentPreview,
+            inviteCode: token,
             shareUrl,
             qrUrl: buildInviteQrUrl(shareUrl),
         },

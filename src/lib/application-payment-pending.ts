@@ -31,6 +31,8 @@ export type PaymentPendingConfig = {
     lease_data: PaymentPendingLeaseData;
     advance_amount: number;
     security_amount: number;
+    portal_max_uses?: number | null;
+    portal_use_count?: number;
 };
 
 export const ADVANCE_TEMPLATE_KEYS = [
@@ -163,6 +165,12 @@ export function readPaymentPendingConfig(value: unknown): PaymentPendingConfig |
         },
         advance_amount,
         security_amount,
+        ...(typeof config.portal_max_uses === "number" && Number.isFinite(config.portal_max_uses)
+            ? { portal_max_uses: Math.max(1, Math.floor(config.portal_max_uses)) }
+            : {}),
+        ...(typeof config.portal_use_count === "number" && Number.isFinite(config.portal_use_count)
+            ? { portal_use_count: Math.max(0, Math.floor(config.portal_use_count)) }
+            : {}),
     };
 }
 

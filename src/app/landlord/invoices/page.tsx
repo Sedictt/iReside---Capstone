@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 import {
     AlertCircle,
     ArrowDownRight,
@@ -276,8 +277,8 @@ export default function InvoicesPage() {
         if (tab && (SECTION_IDS as string[]).includes(tab)) setSection(tab as SectionId);
     }, [searchParams]);
 
-    const loadData = useCallback(async () => {
-        setLoading(true);
+    const loadData = useCallback(async (silent = false) => {
+        if (!silent) setLoading(true);
         setLoadError(null);
         try {
             const params = new URLSearchParams({ propertyId: selectedPropertyId });
@@ -292,15 +293,40 @@ export default function InvoicesPage() {
             setExpenses(expensesPayload.expenses ?? []);
             setMetrics(invoicePayload.metrics ?? { totalOutstanding: 0, overdueAmount: 0, collectedLast30Days: 0, totalInvoices: 0 });
         } catch {
-            setLoadError(t("Unable to load billing operations. Check your connection and try again."));
+            if (!silent) {
+                setLoadError(t("Unable to load billing operations. Check your connection and try again."));
+            }
         } finally {
             setLoadedAt(Date.now());
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     }, [selectedPropertyId, t]);
 
     useEffect(() => {
-        void loadData();
+        void loadData(false);
+    }, [loadData]);
+
+    useEffect(() => {
+        const supabase = createClient();
+        const channel = supabase
+            .channel("landlord-invoices-realtime")
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "payments" },
+                () => {
+                    void loadData(true);
+                }
+            )
+            .subscribe();
+
+        const timer = setInterval(() => {
+            void loadData(true);
+        }, 4000);
+
+        return () => {
+            clearInterval(timer);
+            void supabase.removeChannel(channel);
+        };
     }, [loadData]);
 
     const counts = useMemo(() => {

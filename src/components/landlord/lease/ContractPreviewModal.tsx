@@ -52,6 +52,7 @@ type ApprovalResult = {
     reviewedAt?: string;
     payment_portal_url?: string;
     payment_pending_expires_at?: string;
+    payment_portal_max_uses?: number;
     lease_id?: string;
     payment_ids?: { advance: string; deposit: string };
     tenant_account?: { email: string; tempPassword?: string | null; inviteUrl?: string | null };
@@ -161,7 +162,9 @@ export function ContractPreviewModal({
     const [monthlyRent, setMonthlyRent] = useState(0);
     const [securityDeposit, setSecurityDeposit] = useState(0);
     const [advanceAmount, setAdvanceAmount] = useState(0);
-    const [policyConfirmed, setPolicyConfirmed] = useState(false);
+    const [portalMaxUses, setPortalMaxUses] = useState<number>(3);
+    const [isCustomPortalUses, setIsCustomPortalUses] = useState<boolean>(false);
+    const [customPortalUsesInput, setCustomPortalUsesInput] = useState<string>("3");
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<ApprovalResult | null>(null);
@@ -205,7 +208,9 @@ export function ContractPreviewModal({
         setMonthlyRent(initialRent);
         setAdvanceAmount(initialAdvance);
         setSecurityDeposit(initialDeposit);
-        setPolicyConfirmed(false);
+        setPortalMaxUses(3);
+        setIsCustomPortalUses(false);
+        setCustomPortalUsesInput("3");
         setSubmitting(false);
         setError(null);
         setResult(null);
@@ -217,6 +222,13 @@ export function ContractPreviewModal({
     };
 
     const isFinalApproval = contractData?.application_status === "payment_pending";
+
+    const effectivePortalMaxUses = useMemo(() => {
+        if (!isCustomPortalUses) return portalMaxUses;
+        const parsed = Number.parseInt(customPortalUsesInput, 10);
+        if (!Number.isFinite(parsed) || parsed < 1) return 0;
+        return Math.min(50, parsed);
+    }, [isCustomPortalUses, portalMaxUses, customPortalUsesInput]);
 
     // Same rules as the actions API (lease_data / payment amounts).
     const leaseForm = useFormValidation<LeaseFormValues>(
@@ -239,10 +251,11 @@ export function ContractPreviewModal({
             monthlyRent > 0 &&
             advanceAmount >= 0 &&
             securityDeposit >= 0 &&
-            policyConfirmed &&
+            effectivePortalMaxUses >= 1 &&
+            effectivePortalMaxUses <= 50 &&
             !submitting
         );
-    }, [advanceAmount, isFinalApproval, leaseStart, monthlyRent, policyConfirmed, securityDeposit, submitting]);
+    }, [advanceAmount, effectivePortalMaxUses, isFinalApproval, leaseStart, monthlyRent, securityDeposit, submitting]);
 
     if (!isOpen || !contractData) return null;
 
@@ -258,10 +271,11 @@ export function ContractPreviewModal({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     status: isFinalApproval ? "approved" : "payment_pending",
+                    ...(!isFinalApproval ? { payment_portal_max_uses: effectivePortalMaxUses } : {}),
                     lease_data: {
                         start_date: leaseStart,
                         term_type: termType,
-                        end_date: termType === "fixed" ? leaseEnd : null,
+                        end_date: termType === "fixed" ? leaseEnd : undefined,
                         monthly_rent: monthlyRent,
                         security_deposit: securityDeposit,
                         terms: {
@@ -325,69 +339,82 @@ export function ContractPreviewModal({
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] flex items-end justify-center sm:items-center sm:p-4">
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/65"
             />
             <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                initial={{ opacity: 0, scale: 0.97, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#111] border border-white/10 rounded-3xl shadow-2xl z-10"
+                exit={{ opacity: 0, scale: 0.97, y: 10 }}
+                className="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-border bg-card shadow-2xl sm:rounded-2xl"
             >
                 <ContractHeader isFinalApproval={isFinalApproval} onClose={onClose} />
 
-                <div className="p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-5">
                     {error && (
-                        <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-                            <AlertCircle className="size-5 text-red-400 shrink-0" />
-                            <p className="text-sm text-red-400">{error}</p>
+                        <div className="flex items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4">
+                            <AlertCircle className="size-5 shrink-0 text-rose-500" />
+                            <p className="text-sm font-medium text-rose-600 dark:text-rose-400">{error}</p>
                         </div>
                     )}
 
                     {result ? (
-                        <div className="space-y-6">
-                            <div className="text-center py-6">
-                                <div className="size-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
-                                    <CheckCircle2 className="size-8 text-emerald-400" />
+                        <div className="space-y-5">
+                            <div className="py-4 text-center">
+                                <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-emerald-500/15">
+                                    <CheckCircle2 className="size-7 text-emerald-600 dark:text-emerald-400" />
                                 </div>
-                                <h3 className="text-2xl font-black text-white mb-2">
-                                    {result.status === "approved" ? t("Approval Complete") : t("Payment Request Sent")}
+                                <h3 className="text-xl font-bold text-foreground mb-1.5">
+                                    {result.status === "approved" ? t("Tenant Approved") : t("Payment Link Sent")}
                                 </h3>
-                                <p className="text-neutral-400 text-sm max-w-md mx-auto">
+                                <p className="mx-auto max-w-md text-sm text-muted-foreground">
                                     {result.status === "approved"
                                         ? t("Tenant approval has been finalized after payment confirmation.")
-                                        : t("Prospect payment portal link has been generated and emailed to {email}.", { email: contractData.applicant_email })}
+                                        : t("A private payment link has been sent to {email}.", { email: contractData.applicant_email })}
                                 </p>
-                                {result.payment_pending_expires_at && (
-                                    <p className="mt-2 text-xs text-amber-300">
-                                        {t("Portal deadline:")} <ClientOnlyDate date={result.payment_pending_expires_at} locale={locale} format={{ dateStyle: 'full', timeStyle: 'short' }} />
-                                    </p>
-                                )}
+                                <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs font-semibold text-muted-foreground">
+                                    {result.payment_pending_expires_at && (
+                                        <span>
+                                            {t("Deadline:")}{" "}
+                                            <ClientOnlyDate
+                                                date={result.payment_pending_expires_at}
+                                                locale={locale}
+                                                format={{ dateStyle: "medium", timeStyle: "short" }}
+                                            />
+                                        </span>
+                                    )}
+                                    {result.payment_portal_max_uses && (
+                                        <span>
+                                            · {t("Valid for up to {count} uses", { count: result.payment_portal_max_uses })}
+                                        </span>
+                                    )}
+                                </div>
                                 {result.payment_portal_url && (
-                                    <div className="mt-5 space-y-2 text-left bg-white/5 border border-white/10 rounded-2xl p-4">
+                                    <div className="mt-5 space-y-2.5 rounded-xl border border-border bg-muted/30 p-4 text-left">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                                            <span className="text-xs font-bold text-foreground">
                                                 {t("Payment Portal Link")}
                                             </span>
                                             <a
                                                 href={result.payment_portal_url}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="text-[11px] font-bold text-primary hover:underline"
+                                                className="text-xs font-semibold text-primary hover:underline"
                                             >
                                                 {t("Open in Tab →")}
                                             </a>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <input maxLength={500}
+                                            <input
+                                                maxLength={500}
                                                 readOnly
                                                 value={result.payment_portal_url}
-                                                className="flex-1 rounded-xl bg-black/40 border border-white/10 px-3 py-2 text-xs font-mono text-emerald-400 select-all focus:outline-none"
+                                                className="h-11 flex-1 rounded-xl border border-border bg-background px-3 text-xs font-mono text-foreground select-all focus:outline-none"
                                             />
                                             <button
                                                 type="button"
@@ -396,23 +423,24 @@ export function ContractPreviewModal({
                                                     setCopiedLink(true);
                                                     setTimeout(() => setCopiedLink(false), 2000);
                                                 }}
-                                                className="flex items-center gap-1.5 rounded-xl bg-white/10 hover:bg-white/20 px-3.5 py-2 text-xs font-bold text-white transition-colors cursor-pointer"
+                                                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 cursor-pointer"
                                             >
-                                                {copiedLink ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
-                                                <span>{copiedLink ? t("Copied") : t("Copy")}</span>
+                                                {copiedLink ? <Check className="size-4" /> : <Copy className="size-4" />}
+                                                <span>{copiedLink ? t("Copied!") : t("Copy")}</span>
                                             </button>
                                         </div>
-                                        <p className="text-[10px] text-muted-foreground">
+                                        <p className="text-xs text-muted-foreground">
                                             {t("You can share this link directly with the applicant if they cannot check their email right now.")}
                                         </p>
                                     </div>
                                 )}
                             </div>
                             <button
+                                type="button"
                                 onClick={onClose}
-                                className="w-full h-12 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-medium transition-colors"
+                                className="h-12 w-full rounded-xl border border-border bg-background font-semibold text-foreground transition-colors hover:bg-muted"
                             >
-                                {t("Close")}
+                                {t("Done")}
                             </button>
                         </div>
                     ) : (
@@ -425,8 +453,8 @@ export function ContractPreviewModal({
                             />
 
                             {contractData.invite_payment_terms && (
-                                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium">
-                                    <span>{t("Move-in payment terms were pre-filled from this applicant's invite link. You can adjust amounts if needed.")}</span>
+                                <div className="rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-xs font-medium text-primary">
+                                    {t("Amounts below were pre-filled from the invite link. You can adjust them if needed.")}
                                 </div>
                             )}
 
@@ -437,6 +465,9 @@ export function ContractPreviewModal({
                                 monthlyRent={monthlyRent}
                                 advanceAmount={advanceAmount}
                                 securityDeposit={securityDeposit}
+                                portalMaxUses={portalMaxUses}
+                                isCustomPortalUses={isCustomPortalUses}
+                                customPortalUsesInput={customPortalUsesInput}
                                 isFinalApproval={isFinalApproval}
                                 onLeaseStartChange={setLeaseStart}
                                 onTermTypeChange={handleTermTypeChange}
@@ -444,24 +475,33 @@ export function ContractPreviewModal({
                                 onMonthlyRentChange={setMonthlyRent}
                                 onAdvanceAmountChange={setAdvanceAmount}
                                 onSecurityDepositChange={setSecurityDeposit}
+                                onPortalMaxUsesPreset={(uses) => {
+                                    setIsCustomPortalUses(false);
+                                    setPortalMaxUses(uses);
+                                    setCustomPortalUsesInput(String(uses));
+                                }}
+                                onPortalCustomUsesToggle={() => setIsCustomPortalUses(true)}
+                                onCustomPortalUsesInputChange={setCustomPortalUsesInput}
                                 form={isFinalApproval ? undefined : leaseForm}
                             />
 
                             <PolicyConfirmation
-                                policyConfirmed={policyConfirmed}
                                 isFinalApproval={isFinalApproval}
-                                onPolicyConfirmedChange={setPolicyConfirmed}
-                            />
-
-                            <ContractActions
-                                canSubmit={canSubmit}
-                                submitting={submitting}
-                                isFinalApproval={isFinalApproval}
-                                onClick={handleFinalize}
+                                applicantEmail={contractData.applicant_email}
                             />
                         </>
                     )}
                 </div>
+
+                {!result && (
+                    <ContractActions
+                        canSubmit={canSubmit}
+                        submitting={submitting}
+                        isFinalApproval={isFinalApproval}
+                        onClick={handleFinalize}
+                        onCancel={onClose}
+                    />
+                )}
             </motion.div>
         </div>
     );

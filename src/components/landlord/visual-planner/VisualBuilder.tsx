@@ -779,7 +779,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         const targetStructures = newFloorLayouts[targetFloorKey]?.structures ?? [];
 
         const isLocallyComplete = typeof window !== "undefined" && window.localStorage.getItem(`ireside_map_setup_complete_${selectedPropertyId}`) === "true";
-        const finalSetupComplete = data.isSetupComplete || isLocallyComplete;
+        const finalSetupComplete = Boolean(data.isSetupComplete || isLocallyComplete || (readOnly && data.placedCount > 0));
         const finalPlacedCount = isLocallyComplete && data.placedCount === 0 ? data.totalUnits : data.placedCount;
 
         setDbUnits(data.units);
@@ -4251,7 +4251,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         );
     }
 
-    if (readOnly && !demoMode && (!isSetupComplete || unplacedDbUnits.length > 0 || placedCount === 0)) {
+    if (readOnly && !demoMode && (!isSetupComplete || placedCount === 0)) {
         return (
             <TenantMapNotReady
                 propertyName={activePropertyName}

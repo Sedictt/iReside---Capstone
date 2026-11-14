@@ -1,5 +1,4 @@
-import { Home, User, Mail } from "lucide-react";
-import { useLanguageContext } from "@/context/LanguageContext";
+import { Home, User } from "lucide-react";
 
 interface ApplicationInfoProps {
     propertyName: string;
@@ -14,24 +13,19 @@ export function ApplicationInfo({
     applicantName,
     applicantEmail,
 }: ApplicationInfoProps) {
-    const { t } = useLanguageContext();
     return (
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-3 text-sm">
-            <div className="flex items-center gap-3 text-neutral-300">
-                <Home className="size-4 text-neutral-500" />
-                <span className="font-medium text-white">{propertyName}</span>
-                <span className="text-neutral-500">-</span>
+        <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2 text-sm">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-foreground">
+                <User className="size-4 shrink-0 text-muted-foreground" />
+                <span className="font-bold">{applicantName}</span>
+                <span className="text-muted-foreground">·</span>
+                <span className="text-muted-foreground break-all">{applicantEmail}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
+                <Home className="size-4 shrink-0 text-muted-foreground" />
+                <span className="font-medium text-foreground">{propertyName}</span>
+                <span>·</span>
                 <span>{unitName}</span>
-            </div>
-            <div className="flex items-center gap-3 text-neutral-300">
-                <User className="size-4 text-neutral-500" />
-                <span>
-                    {t("Tenant:")} <span className="text-white font-medium">{applicantName}</span>
-                </span>
-            </div>
-            <div className="flex items-center gap-3 text-neutral-300">
-                <Mail className="size-4 text-neutral-500" />
-                <span>{applicantEmail}</span>
             </div>
         </div>
     );

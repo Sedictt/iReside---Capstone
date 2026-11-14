@@ -33,6 +33,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useProperty } from "@/context/PropertyContext";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { triggerHaptic } from "@/lib/haptics";
+import { TenantUtilitiesPanel } from "@/components/mobile/tenant/TenantUtilitiesPanel";
 import type { BillingWorkspace, InvoiceListItem } from "@/lib/billing/server";
 import { formatPhpCurrency as formatCurrency } from "@/lib/billing/utils";
 import { paymentMethodLabel } from "@/lib/billing/payment-methods";
@@ -1193,28 +1194,7 @@ export function MobileUtilitiesView() {
 
 	// Guard for tenant accounts
 	if (!authLoading && !isLandlordOrAdmin) {
-		return (
-			<div className="px-4 py-10 max-w-md mx-auto">
-				<div className="rounded-2xl border border-border bg-card p-6 text-center space-y-4 shadow-sm">
-					<div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-						<Gauge className="h-6 w-6" />
-					</div>
-					<h2 className="text-lg font-bold text-foreground">
-						{t("Landlord Meter Workspace")}
-					</h2>
-					<p className="text-sm text-muted-foreground">
-						{t("Your own water and electricity charges appear inside your Bills screen.")}
-					</p>
-					<button
-						type="button"
-						onClick={() => router.push("/mobile/billing")}
-						className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground"
-					>
-						{t("Go to My Bills")}
-					</button>
-				</div>
-			</div>
-		);
+		return <TenantUtilitiesPanel />;
 	}
 
 	if (loading && !workspace) {

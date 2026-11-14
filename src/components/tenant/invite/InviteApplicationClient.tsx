@@ -920,7 +920,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                         type="button"
                                         onClick={handleBack}
                                         className={cn(
-                                            "flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm transition-all active:scale-95",
+                                            "flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-3 rounded-2xl font-black text-sm whitespace-nowrap shrink-0 transition-all active:scale-95",
                                             step === 0 ? "opacity-0 pointer-events-none" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                                         )}
                                     >
@@ -932,7 +932,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                         type="button"
                                         onClick={step === finalStepIndex ? handleSubmit : handleNext}
                                         disabled={submitting}
-                                        className="h-13 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm transition-all shadow-md flex items-center gap-2.5 disabled:opacity-50 active:scale-[0.98] relative overflow-hidden group"
+                                        className="h-13 px-5 sm:px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm whitespace-nowrap shrink-0 transition-all shadow-md flex items-center gap-2 disabled:opacity-50 active:scale-[0.98] relative overflow-hidden group"
                                     >
                                         {submitting ? (
                                             <>

@@ -683,9 +683,26 @@ export function RentApplications() {
           refreshApplications({ silent: true });
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "leases",
+          filter: `landlord_id=eq.${user.id}`,
+        },
+        () => {
+          refreshApplications({ silent: true });
+        }
+      )
       .subscribe();
 
+    const pollInterval = setInterval(() => {
+      refreshApplications({ silent: true });
+    }, 2500);
+
     return () => {
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
   }, [user?.id, supabase, refreshApplications]);
@@ -828,6 +845,7 @@ export function RentApplications() {
  body: JSON.stringify({ status }),
  });
  if (!response.ok) throw new Error("Failed update");
+ refreshApplications({ silent: true });
  reloadKey.current += 1;
  } catch { setActionError("Unable to update application status."); } finally { setUpdatingStatusId(null); }
  };
@@ -912,7 +930,7 @@ export function RentApplications() {
     action: PaymentReviewAction,
     options?: { note?: string; amount?: number; refundProofUrl?: string; refundProofFile?: File | null }
   ) => {
-    if (!selectedApp) return;
+    if (!selectedApp || reviewingReqId) return;
     setReviewingReqId(requestId);
     setActionError(null);
     try {
@@ -954,7 +972,19 @@ export function RentApplications() {
       };
       toast.success(t(successLabels[action] || "Payment updated successfully."));
       setShowResolutionModal(false);
-      refreshApplications();
+      if (action === "confirm") {
+        setSelectedApp((prev) =>
+          prev
+            ? {
+                ...prev,
+                preApprovalPayments: prev.preApprovalPayments?.map((p) =>
+                  p.id === requestId ? { ...p, status: "completed" } : p
+                ),
+              }
+            : null
+        );
+      }
+      refreshApplications({ silent: true });
     } catch (err: any) {
       setActionError(tr(err.message || "Failed to review payment request."));
       toast.error(t(err.message || "Failed to review payment request."));
@@ -2212,10 +2242,19 @@ export function RentApplications() {
 
  <div className="border-t border-white/5 neumorphic-panel p-6 sm:p-8 backdrop-blur-xl">
   {selectedApp.status === "pending" || selectedApp.status === "reviewing" ? (
-  <div className="flex gap-3">
+  <div className="flex flex-wrap gap-3">
   <button onClick={() => { setDeclineReason(""); setShowDeclineConfirm(true); }} className="flex-1 min-h-[48px] rounded-2xl border border-red-500/25 bg-red-500/10 py-3.5 px-4 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer">
   {t("Decline")}
   </button>
+  {selectedApp.status === "pending" && (
+  <button
+    onClick={() => updateApplicationStatus(selectedApp.id, "reviewing")}
+    disabled={updatingStatusId === selectedApp.id}
+    className="flex-1 min-h-[48px] rounded-2xl border border-blue-500/30 bg-blue-500/10 py-3.5 px-4 text-sm font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+  >
+    {t("Mark Under Review")}
+  </button>
+  )}
   <button onClick={() => openApprovalModal(selectedApp)} className="flex-[2] min-h-[48px] rounded-2xl bg-primary py-3.5 px-5 text-sm font-bold text-primary-foreground shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95 cursor-pointer">
   {t("Review & Approve")}
   </button>

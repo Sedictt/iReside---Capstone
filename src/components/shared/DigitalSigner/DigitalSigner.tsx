@@ -533,7 +533,8 @@ export function DigitalSigner({
           ref={scrollContainerRef}
           className="flex-1 overflow-auto bg-neutral-100 dark:bg-surface-0 relative custom-scrollbar p-6 md:p-16 lg:p-20 scroll-smooth"
           onScroll={(e) => {
-            const scrollPos = (e.target as HTMLDivElement).scrollTop;
+            const el = e.target as HTMLDivElement;
+            const scrollPos = el.scrollTop + el.clientHeight * 0.45;
             const pageHeights = pageRefs.current.map(p => p?.offsetHeight || 0);
             let cumulative = 0;
             const padding = window.innerWidth < 768 ? 16 : 48;
@@ -551,9 +552,10 @@ export function DigitalSigner({
               <div 
                 key={`pdf-page-${idx}`}
                 ref={el => { pageRefs.current[idx] = el; }}
+                onPointerDown={() => { if (currentPage !== idx) setCurrentPage(idx); }}
                 className={cn(
                   "relative bg-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transition-[opacity,transform] duration-300",
-                  currentPage === idx ? "scale-100" : (isPenActive ? "scale-100 opacity-40" : "scale-[0.95] opacity-50")
+                  currentPage === idx ? "scale-100" : (isPenActive ? "scale-100 opacity-95" : "scale-[0.95] opacity-50")
                 )}
                 style={{ 
                   width: `${page.width * zoom}px`, 
@@ -568,10 +570,10 @@ export function DigitalSigner({
                   ref={el => { canvasRefs.current[idx] = el; }}
                   className={cn(
                     "absolute inset-0 w-full h-full z-10 signature-pad-canvas",
-                    isPenActive && currentPage === idx ? "cursor-crosshair pointer-events-auto" : "pointer-events-none"
+                    isPenActive ? "cursor-crosshair pointer-events-auto" : "pointer-events-none"
                   )}
                   style={{
-                    touchAction: isPenActive && currentPage === idx ? 'none' : 'auto'
+                    touchAction: isPenActive ? 'none' : 'auto'
                   }}
                 />
 
@@ -665,13 +667,13 @@ export function DigitalSigner({
             )}
           </AnimatePresence>
 
-          <div className="bg-background/90 backdrop-blur-2xl border border-border p-2 rounded-[2.5rem] shadow-2xl flex items-center gap-4">
+          <div className="bg-background/90 backdrop-blur-2xl border border-border p-1.5 sm:p-2 rounded-[2.5rem] shadow-2xl flex items-center gap-1.5 sm:gap-4 max-w-[calc(100vw-1.5rem)]">
             {/* Zoom Controls */}
             <div className="flex items-center bg-muted/50 rounded-full p-1 gap-1 ml-1">
               <button onClick={() => setZoom(Math.max(0.1, zoom - 0.2))} aria-label={t("Zoom out")} className="p-2 hover:bg-background rounded-full transition-all active:scale-90">
                 <ZoomOut className="size-4" />
               </button>
-              <span className="text-[10px] font-black w-12 text-center tabular-nums">{Math.round(zoom * 100)}%</span>
+              <span className="text-[10px] font-black w-9 sm:w-12 text-center tabular-nums">{Math.round(zoom * 100)}%</span>
               <button onClick={() => setZoom(Math.min(2, zoom + 0.2))} aria-label={t("Zoom in")} className="p-2 hover:bg-background rounded-full transition-all active:scale-90">
                 <ZoomIn className="size-4" />
               </button>
@@ -683,7 +685,7 @@ export function DigitalSigner({
             <button
               onClick={() => setIsPenActive(!isPenActive)}
               className={cn(
-                "h-14 px-8 rounded-full flex items-center gap-3 transition-all font-black text-xs uppercase tracking-widest shadow-lg active:scale-95",
+                "h-11 px-4 sm:h-14 sm:px-8 rounded-full flex items-center gap-2 sm:gap-3 whitespace-nowrap transition-all font-black text-xs uppercase tracking-widest shadow-lg active:scale-95",
                 isPenActive 
                   ? "bg-red-500 text-white shadow-red-500/20" 
                   : "bg-primary text-primary-foreground shadow-primary/20 hover:scale-105"
@@ -705,7 +707,7 @@ export function DigitalSigner({
             <div className="h-8 w-px bg-border/50" />
 
             {/* Page Indicator / Quick Nav */}
-            <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-full">
+            <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-muted/50 rounded-full">
               <button 
                 onClick={() => currentPage > 0 && scrollToPage(currentPage - 1)}
                 aria-label={t("Previous page")}

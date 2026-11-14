@@ -4,6 +4,8 @@ import {
     applyPaymentPendingExpiry,
     hashPortalToken,
     logApplicationPaymentAudit,
+    readPaymentPendingConfig,
+    withPaymentPendingConfig,
 } from "@/lib/application-payment-pending";
 import { BILLING_BUCKETS, uploadBillingFile } from "@/lib/billing/storage";
 import { NotificationService } from "@/lib/services/notification/notification.service";
@@ -44,6 +46,7 @@ type PortalApplication = {
     payment_pending_expires_at: string | null;
     payment_portal_token_hash: string | null;
     payment_portal_token_expires_at: string | null;
+    requirements_checklist?: unknown;
     landlord_id: string;
     unit: {
         id: string;
@@ -112,6 +115,7 @@ async function loadApplicationByToken(token: string) {
             payment_pending_expires_at,
             payment_portal_token_hash,
             payment_portal_token_expires_at,
+            requirements_checklist,
             landlord_id,
             unit:units (
                 id,
@@ -177,7 +181,20 @@ async function resolvePortalContext(token: string) {
         };
     }
 
-    return { adminClient, application };
+    const pendingConfig = readPaymentPendingConfig(application.requirements_checklist);
+    if (
+        pendingConfig?.portal_max_uses &&
+        (pendingConfig.portal_use_count ?? 0) >= pendingConfig.portal_max_uses
+    ) {
+        return {
+            error: NextResponse.json(
+                { error: "This payment link has reached its maximum number of uses. Please ask your landlord for a new link." },
+                { status: 410 }
+            ),
+        };
+    }
+
+    return { adminClient, application, pendingConfig };
 }
 
 async function fetchPortalPayload(adminClient: ReturnType<typeof createAdminClient>, application: PortalApplication) {
@@ -263,7 +280,7 @@ export async function GET(_request: Request, context: RouteContext) {
     const portalContext = await resolvePortalContext(token);
     if ("error" in portalContext) return portalContext.error;
 
-    const { adminClient, application } = portalContext;
+    const { adminClient, application, pendingConfig } = portalContext;
     await logApplicationPaymentAudit(adminClient, {
         application_id: application.id,
         actor_role: "prospect",
@@ -279,7 +296,7 @@ export async function POST(request: Request, context: RouteContext) {
     const portalContext = await resolvePortalContext(token);
     if ("error" in portalContext) return portalContext.error;
 
-    const { adminClient, application } = portalContext;
+    const { adminClient, application, pendingConfig } = portalContext;
 
     let rawInput: Record<string, unknown>;
     let proofFile: File | null = null;
@@ -424,6 +441,17 @@ export async function POST(request: Request, context: RouteContext) {
 
     if (updateError || !updatedRows) {
         return NextResponse.json({ error: "Failed to submit payment proof." }, { status: 500 });
+    }
+
+    if (pendingConfig?.portal_max_uses) {
+        const nextChecklist = withPaymentPendingConfig(application.requirements_checklist, {
+            ...pendingConfig,
+            portal_use_count: (pendingConfig.portal_use_count ?? 0) + 1,
+        });
+        await adminClient
+            .from("applications")
+            .update({ requirements_checklist: nextChecklist as any })
+            .eq("id", application.id);
     }
 
     // Log audit events

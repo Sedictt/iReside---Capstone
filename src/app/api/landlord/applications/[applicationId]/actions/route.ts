@@ -35,6 +35,7 @@ import { invalidatePropertyUnitsCache } from "@/app/api/landlord/property-units/
 type ActionBody = {
     status?: ApplicationStatus;
     rejection_reason?: string;
+    payment_portal_max_uses?: number | null;
     lease_data?: {
         start_date: string;
         term_type?: LeaseTermType;
@@ -575,6 +576,7 @@ export async function POST(
         const now = new Date();
         const expiresAt = resolvePaymentPendingExpiry(now);
         paymentPendingExpiresAt = expiresAt.toISOString();
+        const portalMaxUses = body.payment_portal_max_uses ?? null;
 
         const { token, hash: tokenHash } = buildPortalToken();
 
@@ -593,6 +595,7 @@ export async function POST(
             },
             advance_amount: advanceAmount,
             security_amount: securityAmount,
+            ...(portalMaxUses ? { portal_max_uses: portalMaxUses, portal_use_count: 0 } : {}),
         };
 
         const updatedChecklist = withPaymentPendingConfig((application as any).requirements_checklist, config);
@@ -1187,6 +1190,7 @@ export async function POST(
         reviewedAt,
         ...(paymentPortalUrl ? { payment_portal_url: paymentPortalUrl } : {}),
         ...(paymentPendingExpiresAt ? { payment_pending_expires_at: paymentPendingExpiresAt } : {}),
+        ...(body.payment_portal_max_uses ? { payment_portal_max_uses: body.payment_portal_max_uses } : {}),
         ...(emailSentToProspect !== null ? { email_sent: emailSentToProspect } : {}),
         ...(leaseId ? { lease_id: leaseId } : {}),
         ...(paymentIds ? { payment_ids: paymentIds } : {}),

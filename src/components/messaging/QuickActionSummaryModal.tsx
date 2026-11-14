@@ -106,6 +106,15 @@ export function QuickActionSummaryModal({
     const [reminderError, setReminderError] = useState<string | null>(null);
 
     useEffect(() => {
+        if (!isOpen) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen, onClose]);
+
+    useEffect(() => {
         if (!isOpen || !actionKey || !contact) return;
 
         let isMounted = true;
@@ -244,7 +253,7 @@ export function QuickActionSummaryModal({
         return () => {
             isMounted = false;
         };
-    }, [isOpen, actionKey, contact, currentUserRole]);
+    }, [isOpen, actionKey, contact?.id, contact?.participantUserId, contact?.unit, contact?.name, currentUserRole]);
 
     const canRender = Boolean(isOpen && actionKey && contact);
 
@@ -462,13 +471,15 @@ export function QuickActionSummaryModal({
                                                         paymentData?.pendingAmount && paymentData.pendingAmount > 0 ? "text-amber-500" : "text-emerald-500"
                                                     )}>
                                                         {paymentData?.pendingAmount !== undefined && paymentData.pendingAmount > 0 
-                                                            ? `₱${paymentData.pendingAmount.toLocaleString()}`
-                                                            : (paymentData?.pendingAmount === 0 ? "₱0.00" : (leaseData?.monthlyRent ? `₱${leaseData.monthlyRent.toLocaleString()}` : "₱0.00"))}
+                                                            ? `₱${paymentData.pendingAmount.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                            : (paymentData?.pendingAmount === 0 ? "₱0.00" : (leaseData?.monthlyRent ? `₱${leaseData.monthlyRent.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "₱0.00"))}
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="text-[10px] font-black uppercase tracking-wider text-disabled">{t("Target Unit")}</p>
-                                                    <p className="text-xs font-black text-high mt-1">{leaseData?.unitName || contact.unit || t("Unit")}</p>
+                                                    <p className="text-xs font-black text-high mt-1">
+                                                        {leaseData?.unitName || (contact.unit && contact.unit !== "Landlord" ? contact.unit : t("Assigned Unit"))}
+                                                    </p>
                                                 </div>
                                             </div>
 
@@ -553,7 +564,7 @@ export function QuickActionSummaryModal({
                                                             onClick={() => handleNavigate(paymentData.invoiceId ? `/tenant/payments/${paymentData.invoiceId}/checkout` : "/tenant/payments?action=pay")}
                                                             className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
                                                         >
-                                                            <span>{t("Pay Outstanding Balance ({amount})", { amount: `₱${paymentData.pendingAmount.toLocaleString()}` })}</span>
+                                                            <span>{t("Pay Outstanding Balance ({amount})", { amount: `₱${paymentData.pendingAmount.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` })}</span>
                                                             <ArrowUpRight className="size-4" />
                                                         </button>
                                                     ) : null}

@@ -67,12 +67,12 @@ export function ChatHeader({
     const isPlaceholder = !contact.id;
 
     return (
-        <div className="z-20 flex h-20 shrink-0 items-center justify-between px-6 pt-2">
-            <div className="flex items-center gap-4">
+        <div className="z-20 flex h-16 sm:h-20 shrink-0 items-center justify-between gap-2 px-3 sm:px-6 pt-1 sm:pt-2">
+            <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 flex-1">
                 {onBack && (
                     <button
                         onClick={onBack}
-                        className="flex sm:hidden items-center justify-center p-2 rounded-xl neumorphic-extruded transition-all active:scale-95"
+                        className="shrink-0 flex sm:hidden items-center justify-center p-2 rounded-xl neumorphic-extruded transition-all active:scale-95"
                         title={t("Back to List")}
                     >
                         <ArrowLeft className="size-4" />
@@ -80,7 +80,7 @@ export function ChatHeader({
                 )}
                 <div 
                     className={cn(
-                        "relative size-12 rounded-full neumorphic-inset-card overflow-hidden flex items-center justify-center transition-all",
+                        "relative size-10 sm:size-12 shrink-0 rounded-full neumorphic-inset-card overflow-hidden flex items-center justify-center transition-all",
                         isPlaceholder ? "bg-surface-2" : ""
                     )}
                     style={{ backgroundColor: contact.avatarBgColor || 'var(--surface-3)' }}
@@ -91,22 +91,22 @@ export function ChatHeader({
                         <span className="text-sm font-black text-high">{contact.initials}</span>
                     )}
                 </div>
-                <div>
-                    <div className="flex items-center gap-2">
-                        <h3 className="text-base font-black text-high">{contact.name}</h3>
-                        {!isPlaceholder && <RoleBadge role={contact.role} />}
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                        <h3 className="text-sm sm:text-base font-black text-high truncate">{contact.name}</h3>
+                        {!isPlaceholder && <div className="shrink-0"><RoleBadge role={contact.role} /></div>}
                     </div>
                     {!isPlaceholder && (
-                        <div className="flex items-center gap-2 text-xs font-medium text-medium">
-                            <span>{contact.unit}</span>
-                            <span className="size-1 rounded-full bg-disabled" />
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-medium text-medium min-w-0">
+                            <span className="truncate">{contact.unit}</span>
+                            <span className="size-1 rounded-full bg-disabled shrink-0" />
                             {contact.isOnline ? (
-                                <span className="text-emerald-500 flex items-center gap-1">
+                                <span className="text-emerald-500 flex items-center gap-1 shrink-0">
                                     <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                     {t("Online")}
                                 </span>
                             ) : (
-                                <span className="text-disabled flex items-center gap-1">
+                                <span className="text-disabled flex items-center gap-1 shrink-0">
                                     <span className="size-1.5 rounded-full bg-disabled" />
                                     {t("Offline")}
                                 </span>
@@ -117,16 +117,17 @@ export function ChatHeader({
             </div>
 
             {!isPlaceholder && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                     <button 
                         onClick={() => openReportWizard()}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/5 text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-500/10 hover:bg-red-500/10 transition-all active:scale-95"
+                        className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 rounded-xl bg-red-500/5 text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-500/10 hover:bg-red-500/10 transition-all active:scale-95"
+                        aria-label={t("Report")}
                     >
-                        <AlertTriangle className="size-3.5" />
+                        <AlertTriangle className="size-4 sm:size-3.5" />
                         <span className="hidden sm:inline">{t("Report")}</span>
                     </button>
                     
-                    <div className="h-8 w-[1px] bg-divider mx-2" />
+                    <div className="hidden sm:block h-8 w-[1px] bg-divider mx-2" />
                     
                     <button
                         onClick={() => {
@@ -134,14 +135,15 @@ export function ChatHeader({
                             setShowInfoSidebar(false);
                         }}
                         className={cn(
-                            "p-2.5 rounded-xl transition-all active:scale-95",
+                            "p-2 sm:p-2.5 rounded-xl transition-all active:scale-95",
                             showFilesSidebar 
                                 ? "neumorphic-primary text-white" 
                                 : "text-medium hover:bg-surface-2"
                         )}
                         title={t("Shared Files")}
+                        aria-label={t("Shared Files")}
                     >
-                        <Folder className="size-5" />
+                        <Folder className="size-4 sm:size-5" />
                     </button>
                     
                     <button
@@ -150,14 +152,15 @@ export function ChatHeader({
                             setShowFilesSidebar(false);
                         }}
                         className={cn(
-                            "p-2.5 rounded-xl transition-all active:scale-95",
+                            "p-2 sm:p-2.5 rounded-xl transition-all active:scale-95",
                             showInfoSidebar 
                                 ? "neumorphic-primary text-white" 
                                 : "text-medium hover:bg-surface-2"
                         )}
                         title={t("Conversation Details")}
+                        aria-label={t("Conversation Details")}
                     >
-                        <MoreVertical className="size-5" />
+                        <MoreVertical className="size-4 sm:size-5" />
                     </button>
                 </div>
             )}

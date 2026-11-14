@@ -396,7 +396,7 @@ function ApplicationStatusContent() {
     }, []);
 
     const fetchStatus = useCallback(
-        async (isManualRefresh = false) => {
+        async (isManualRefresh = false, isSilentPoll = false) => {
             if (!token) {
                 setError("Missing application status token.");
                 setLoading(false);
@@ -407,7 +407,7 @@ function ApplicationStatusContent() {
             if (isManualRefresh) {
                 setRefreshing(true);
                 setJustChecked(false);
-            } else {
+            } else if (!isSilentPoll) {
                 setLoading(true);
             }
 
@@ -421,8 +421,10 @@ function ApplicationStatusContent() {
                 };
 
                 if (!res.ok) {
-                    setStatusData(null);
-                    setError(payload.error || "Unable to load application status.");
+                    if (!isSilentPoll) {
+                        setStatusData(null);
+                        setError(payload.error || "Unable to load application status.");
+                    }
                 } else {
                     setError(null);
                     setStatusData(payload);
@@ -437,11 +439,13 @@ function ApplicationStatusContent() {
                     }
                 }
             } catch {
-                if (!isManualRefresh) {
+                if (!isManualRefresh && !isSilentPoll) {
                     setError("Unable to reach the server. Please try again.");
                 }
             } finally {
-                setLoading(false);
+                if (!isSilentPoll) {
+                    setLoading(false);
+                }
                 setRefreshing(false);
             }
         },
@@ -449,8 +453,16 @@ function ApplicationStatusContent() {
     );
 
     useEffect(() => {
-        void fetchStatus(false);
+        void fetchStatus(false, false);
     }, [fetchStatus]);
+
+    useEffect(() => {
+        if (!token) return;
+        const interval = setInterval(() => {
+            void fetchStatus(false, true);
+        }, 2500);
+        return () => clearInterval(interval);
+    }, [token, fetchStatus]);
 
     const summary = statusData ? resolveStatusSummary(statusData, t) : null;
     const timeline = statusData ? buildMilestoneSteps(statusData, t) : null;

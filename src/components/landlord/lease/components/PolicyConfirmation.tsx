@@ -1,39 +1,28 @@
+import { ShieldCheck } from "lucide-react";
 import { useLanguageContext } from "@/context/LanguageContext";
 
 interface PolicyConfirmationProps {
-    policyConfirmed: boolean;
     isFinalApproval: boolean;
-    onPolicyConfirmedChange: (checked: boolean) => void;
+    applicantEmail?: string;
 }
 
 export function PolicyConfirmation({
-    policyConfirmed,
     isFinalApproval,
-    onPolicyConfirmedChange,
+    applicantEmail,
 }: PolicyConfirmationProps) {
     const { t } = useLanguageContext();
     return (
-        <>
-            <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-4 text-xs text-amber-100">
-                <p className="font-black mb-1">{t("Policy enforcement")}</p>
-                <p>
-                    {t("Approval creates pending invoices only. Move-in payment completion is counted after landlord-confirmed proof, not at application submission.")}
-                </p>
-            </div>
-
-            {!isFinalApproval && (
-                <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 cursor-pointer">
-                    <input
-                        type="checkbox"
-                        checked={policyConfirmed}
-                        onChange={(event) => onPolicyConfirmedChange(event.target.checked)}
-                        className="mt-0.5 size-4 rounded border-white/20 bg-transparent"
-                    />
-                    <span className="text-xs text-neutral-300 leading-relaxed">
-                        {t("I confirm this should start payment-pending stage and send the payment portal link to the prospect.")}
-                    </span>
-                </label>
-            )}
-        </>
+        <div className="flex items-start gap-2.5 rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+            <p className="leading-relaxed">
+                {isFinalApproval
+                    ? t("This will finalize the lease and mark the tenant as approved.")
+                    : applicantEmail
+                        ? t("This sends a private payment link to {email}. You will still confirm their receipt before move-in.", {
+                              email: applicantEmail,
+                          })
+                        : t("This sends a private payment link to the applicant. You will still confirm their receipt before move-in.")}
+            </p>
+        </div>
     );
 }

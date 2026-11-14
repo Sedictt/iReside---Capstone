@@ -683,7 +683,7 @@ export async function getBillingWorkspace(supabase: AppSupabaseClient, landlordI
             .in("provider", ["gcash", "bank_transfer"]),
         supabase
             .from("properties")
-            .select("*")
+            .select("id, landlord_id, name, address, city, description, type, amenities, house_rules, images, is_featured, created_at, updated_at, contract_template, total_units, total_floors, base_rent_amount, renewal_window_days, renewal_settings, advance_rent_months, security_deposit_months")
             .eq("landlord_id", landlordId)
             .order("name", { ascending: true }),
         supabase
@@ -707,7 +707,7 @@ export async function getBillingWorkspace(supabase: AppSupabaseClient, landlordI
                 monthly_rent,
                 terms,
                 status,
-                unit:units (*, property:properties (*)),
+                unit:units (*),
                 tenant:profiles!leases_tenant_id_fkey (id, full_name, email)
             `)
             .eq("landlord_id", landlordId)
@@ -726,6 +726,9 @@ export async function getBillingWorkspace(supabase: AppSupabaseClient, landlordI
     if (utilityError) throw utilityError;
 
     const destinations = groupDestinations(destinationRows ?? []);
+    const propertyById = new Map(
+        (propertyRows ?? []).map((p) => [p.id, { ...p, map_decorations: null } as unknown as Property])
+    );
     const unitsByProperty = new Map<string, Unit[]>();
     for (const unit of unitRows ?? []) {
         const group = unitsByProperty.get(unit.property_id);
@@ -740,14 +743,14 @@ export async function getBillingWorkspace(supabase: AppSupabaseClient, landlordI
         paymentDestination: destinations.gcash,
         paymentDestinations: destinations,
         properties: (propertyRows ?? []).map((property) => ({
-            ...property,
+            ...(propertyById.get(property.id)!),
             units: (unitsByProperty.get(property.id) ?? []).toSorted((a, b) => a.name.localeCompare(b.name)),
         })),
         activeLeases: ((leaseRows ?? []) as unknown as ActiveLeaseWorkspaceRow[]).map((lease) => ({
             id: lease.id,
             tenant: lease.tenant ?? null,
             unit: lease.unit ?? null,
-            property: lease.unit?.property ?? null,
+            property: lease.unit?.property_id ? (propertyById.get(lease.unit.property_id) ?? null) : null,
             monthly_rent: Number(lease.monthly_rent ?? lease.unit?.rent_amount ?? 0),
             terms: lease.terms ?? null,
         })),

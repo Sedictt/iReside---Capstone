@@ -208,7 +208,6 @@ export function MessageComposer({
                                     ? "bg-primary/20 text-primary scale-105" 
                                     : "hover:bg-surface-3 text-medium hover:text-high"
                             )}
-                            title={t("Attach files, invoices, or quick actions")}
                             aria-label={t("Attachment options")}
                         >
                             <Paperclip className="size-5" />
@@ -221,7 +220,7 @@ export function MessageComposer({
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95, y: 10 }}
                                     transition={{ duration: 0.15 }}
-                                    className="absolute bottom-full left-0 mb-3 z-50 w-64 rounded-3xl border border-border bg-card p-2 shadow-2xl animate-in fade-in zoom-in-95 backdrop-blur-md"
+                                    className="absolute bottom-full left-0 mb-3 z-50 w-64 max-w-[calc(100vw-2rem)] rounded-3xl border border-border bg-card p-2 shadow-2xl animate-in fade-in zoom-in-95 backdrop-blur-md"
                                 >
                                     <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-disabled">
                                         {t("Attachments & Actions")}
@@ -387,7 +386,7 @@ export function MessageComposer({
                                 {pendingAttachments.length === 1 ? t("{count} file selected", { count: 1 }) : t("{count} files selected", { count: pendingAttachments.length })}
                             </span>
                         ) : (
-                            <span className="flex items-center gap-1.5">
+                            <span className="hidden sm:flex items-center gap-1.5">
                                 <Zap className="size-3 text-primary" />
                                 {t("Shift+Enter for newline")}
                             </span>
